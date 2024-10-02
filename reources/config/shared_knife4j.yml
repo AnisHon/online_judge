@@ -1,0 +1,18 @@
+knife4j:
+  enable: true
+  openapi:
+    title: API文档
+    description: "Powered by Knife4j"
+    email: 114514@gmail.com
+    concat:
+    url: github
+    version: v1.0
+    license: Apache 114.514
+    license-url: https://stackoverflow.com/
+    terms-of-service-url: nope
+    group:
+      test1:
+        group-name: anishan组
+        api-rule: package
+        api-rule-resources:
+          ${oj.knife4j.resource}

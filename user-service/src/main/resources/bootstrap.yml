@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: user-service # 服务名称
+  profiles:
+    active: server
+  cloud:
+    nacos:
+      server-addr: 8.149.133.76:8848
+      config:
+        file-extension: yaml
+        shared-configs:
+          - data-id: shared-jdbc.yaml  # 共享mybatis配置
+          - data-id: shared_logging.yaml
+          - data-id: shared_knife4j.yaml
+
