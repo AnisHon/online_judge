@@ -53,24 +53,43 @@ insert into sys_role(role_id, role_name, remark) values (3, 'admin', '管理员'
 
 
 -- ----------------------------
--- 3、菜单权限表
+-- 3、班级信息表
 -- ----------------------------
 drop table if exists sys_class;
 create table sys_class (
     class_id          bigint(20)      not null auto_increment    comment '角色ID',
     class_name        varchar(30)     not null                   comment '角色名称',
     del_flag          boolean         default 0                  comment '删除标志(0代表存在 2代表删除)',
-    teacher_id        bigint(20)      not null                   comment '班级创建者(教师)',
     create_time       datetime        default now()              comment '创建时间',
     update_time       datetime        default now()              comment '更新时间，用于乐观锁',
     remark            varchar(500)    default null               comment '备注',
     primary key (class_id)
-) engine=innodb auto_increment=100 comment = '角色信息表';
+) engine=innodb auto_increment=100 comment = '班级信息表';
 
 
+-- ---------------------------
+-- 4、教师(用户)班级关系表
+-- ----------------------------
+drop table if exists teacher_class;
+create table teacher_class (
+    teacher_id   bigint(20) not null comment '教师ID(user_id)',
+    class_id     bigint(20) not null comment '班级ID',
+    primary key(teacher_id, class_id)
+) engine=innodb comment = '教师班级关系表';
+
+
+-- ---------------------------
+-- 5、学生(用户)班级关系表
+-- ----------------------------
+drop table if exists student_class;
+create table student_class (
+   student_id   bigint(20) not null comment '学生ID(user_id)',
+   class_id     bigint(20) not null comment '班级ID',
+   primary key(student_id, class_id)
+) engine=innodb comment = '学生班级关系表';
 
 -- ----------------------------
--- 4、菜单权限表
+-- 6、菜单权限表
 -- ----------------------------
 drop table if exists sys_menu;
 create table sys_menu (
@@ -88,7 +107,7 @@ create table sys_menu (
 ) engine=innodb auto_increment=2000 comment = '菜单权限表';
 
 -- ----------------------------
--- 5、用户和角色关联表  用户N-1角色
+-- 7、用户和角色关联表  用户N-1角色
 -- ----------------------------
 drop table if exists sys_user_role;
 create table sys_user_role (
@@ -106,7 +125,7 @@ insert into sys_user_role values ('3', '3');
 
 
 -- ----------------------------
--- 6、角色和菜单关联表  角色1-N菜单
+-- 8、角色和菜单关联表  角色1-N菜单
 -- ----------------------------
 drop table if exists sys_role_menu;
 create table sys_role_menu (
