@@ -1,15 +1,11 @@
 package com.anishan.user.entity.dto;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.Version;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
-import java.util.Date;
 
 @Data
 @ApiModel("用于添加用户，拥有几乎所有属性，有权限和密码，密码自动加密。不同于UserDto")
