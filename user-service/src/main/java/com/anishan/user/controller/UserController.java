@@ -1,0 +1,100 @@
+package com.anishan.user.controller;
+
+import com.anishan.commons.entity.R;
+import com.anishan.commons.entity.dto.PagedQuery;
+import com.anishan.commons.entity.dto.UserDto;
+import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.user.entity.dto.UserPagedQuery;
+import com.anishan.user.entity.po.SysUser;
+import com.anishan.user.entity.vo.UserVo;
+import com.anishan.user.service.SysUserService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.constraints.NotNull;
+import java.util.List;
+
+
+@Api("用户实体操作接口，增删改查")
+@RestController("/user")
+public class UserController {
+
+    SysUserService sysUserService;
+
+    @Autowired
+    public UserController(SysUserService sysUserService) {
+        this.sysUserService = sysUserService;
+    }
+
+
+    @GetMapping("/get/{id}")
+    @PreAuthorize("hasAuthority('user:user:list')")
+    @ApiOperation("通过id获取用户，要求有user:user:get")
+    public R<UserVo> getUserById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
+        UserVo user = sysUserService.getUserById(id);
+        return R.success(user);
+    }
+
+    @GetMapping("/list/{ids}")
+    @PreAuthorize("hasAuthority('user:user:list')")
+    @ApiOperation("通过多个id获取用户，id之间用','隔开 要求有user:user:get")
+    public R<List<UserVo>> listUser(@PathVariable("ids") List<String> ids) {
+        List<UserVo> users = sysUserService.listUserById(ids);
+        return R.success(users);
+    }
+
+    @GetMapping("/page")
+    @PreAuthorize("hasAuthority('user:user:list')")
+    @ApiOperation("分页获取User")
+    public R<PagedResult<UserVo>> listUsers(@Validated PagedQuery<SysUser> pagedQuery) {
+        PagedResult<UserVo> userVoPagedResult = sysUserService.listUsers(pagedQuery);
+        return userVoPagedResult.toR();
+    }
+
+    @GetMapping("/query")
+    @PreAuthorize("hasAuthority('user:user:list')")
+    @ApiOperation("查询User")
+    public R<PagedResult<UserVo>> queryUser(UserPagedQuery userPagedQuery) {
+        if (userPagedQuery == null) {
+            userPagedQuery = new UserPagedQuery();
+        }
+
+        PagedResult<UserVo> result = sysUserService.queryUser(userPagedQuery);
+
+        return result.toR();
+    }
+
+
+    @PostMapping("/update")
+    @PreAuthorize("hasAuthority('user:user:change')")
+    @ApiOperation("更新User，不能更改密码和Id和用户名")
+    public R<String> update(@RequestBody UserDto userDto) {
+        sysUserService.updateUser(userDto);
+        return R.success();
+    }
+
+    @GetMapping("/remove/{id}")
+    @PreAuthorize("hasAuthority('user:user:change')")
+    @ApiOperation("删除用户")
+    public R<Boolean> remove(@PathVariable @NotNull Long id) {
+        boolean b = sysUserService.removeById(id);
+        return R.success(b);
+    }
+
+    @GetMapping("/removeBatch/{ids}")
+    @PreAuthorize("hasAuthority('user:user:change')")
+    @ApiOperation("删除用户")
+    public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
+        boolean b = sysUserService.removeBatchByIds(ids);
+        return R.success(b);
+    }
+
+
+
+
+
+}

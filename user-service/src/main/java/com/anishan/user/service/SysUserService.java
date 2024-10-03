@@ -1,7 +1,14 @@
 package com.anishan.user.service;
 
+import com.anishan.commons.entity.dto.PagedQuery;
+import com.anishan.commons.entity.dto.UserDto;
+import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.user.entity.dto.UserPagedQuery;
 import com.anishan.user.entity.po.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.anishan.user.entity.vo.UserVo;
+
+import java.util.List;
 
 /**
 * @author anishan
@@ -10,4 +17,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface SysUserService extends IService<SysUser> {
 
+    UserVo getUserById(Long id);
+
+    List<UserVo> listUserById(List<String> ids);
+
+    PagedResult<UserVo> listUsers(PagedQuery<SysUser> pagedQuery);
+
+    PagedResult<UserVo> queryUser(UserPagedQuery userPagedQuery);
+
+    void updateUser(UserDto userVo);
 }

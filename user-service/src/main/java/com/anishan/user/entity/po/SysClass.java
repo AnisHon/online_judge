@@ -1,9 +1,7 @@
 package com.anishan.user.entity.po;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
@@ -39,6 +37,7 @@ public class SysClass implements Serializable {
     /**
      * 更新时间，用于乐观锁
      */
+    @Version
     private Date updateTime;
 
     /**
