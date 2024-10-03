@@ -21,7 +21,8 @@ import java.util.List;
 
 
 @Api("用户实体操作接口，删改查")
-@RestController()
+@Validated
+@RestController
 @RequestMapping("/user")
 public class UserController {
 
@@ -35,7 +36,7 @@ public class UserController {
 
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:user:list')")
-    @ApiOperation("通过id获取用户，要求有user:user:get")
+    @ApiOperation("通过id获取用户")
     public R<UserVo> getUserById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
         UserVo user = sysUserService.getUserById(id);
         return R.success(user);
@@ -43,7 +44,7 @@ public class UserController {
 
     @GetMapping("/list/{ids}")
     @PreAuthorize("hasAuthority('user:user:list')")
-    @ApiOperation("通过多个id获取用户，id之间用','隔开 要求有user:user:get")
+    @ApiOperation("通过多个id获取用户，id之间用','隔开")
     public R<List<UserVo>> listUser(@PathVariable("ids") List<String> ids) {
         List<UserVo> users = sysUserService.listUserById(ids);
         return R.success(users);
@@ -57,10 +58,10 @@ public class UserController {
         return userVoPagedResult.toR();
     }
 
-    @GetMapping("/query")
+    @PostMapping("/query")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("查询User")
-    public R<PagedResult<UserVo>> queryUser(UserPagedQuery userPagedQuery) {
+    public R<PagedResult<UserVo>> queryUser(@Validated @RequestBody UserPagedQuery userPagedQuery) {
         if (userPagedQuery == null) {
             userPagedQuery = new UserPagedQuery();
         }

@@ -1,2 +1,3 @@
 com.anishan.commons.config.SecurityConfig
 com.anishan.commons.config.MybatisConfig
+com.anishan.commons.config.MvcConfig

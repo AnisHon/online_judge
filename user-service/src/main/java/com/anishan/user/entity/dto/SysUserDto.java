@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 @Data
-@ApiModel("用于添加用户，有权限和密码，密码自动加密")
+@ApiModel("用于添加用户，拥有几乎所有属性，有权限和密码，密码自动加密。不同于UserDto")
 public class SysUserDto {
     @NotNull
     @ApiModelProperty(value = "用户名，唯一，可用于登陆", required = true)

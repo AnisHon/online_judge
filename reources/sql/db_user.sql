@@ -58,7 +58,7 @@ insert into sys_role(role_id, role_name, remark) values (3, 'admin', '管理员'
 drop table if exists sys_class;
 create table sys_class (
     class_id          bigint(20)      not null auto_increment    comment '角色ID',
-    class_name        varchar(30)     not null                   comment '角色名称',
+    class_name        varchar(30)     not null unique            comment '角色名称',
     del_flag          boolean         default 0                  comment '删除标志(0代表存在 2代表删除)',
     create_time       datetime        default now()              comment '创建时间',
     update_time       datetime        default now()              comment '更新时间，用于乐观锁',

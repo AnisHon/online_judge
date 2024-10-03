@@ -13,6 +13,7 @@ import com.anishan.user.entity.po.SysUserRoleRelation;
 import com.anishan.user.entity.vo.UserVo;
 import com.anishan.user.service.SysRoleService;
 import com.anishan.user.service.SysUserRoleService;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -78,7 +79,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     @Override
     public PagedResult<UserVo> queryUser(UserPagedQuery userPagedQuery) {
-        LambdaQueryWrapper<SysUser> wrapper = userPagedQuery.wrapper();
+        Wrapper<SysUser> wrapper = userPagedQuery.wrapper();
         Page<SysUser> page = userPagedQuery.page();
         page = page(page, wrapper);
         return PagedResult.build(page, UserVo.class);
