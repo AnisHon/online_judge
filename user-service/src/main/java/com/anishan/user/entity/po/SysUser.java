@@ -58,6 +58,7 @@ public class SysUser implements Serializable {
     /**
      * 删除标记(1删除, 0没删除)
      */
+    @TableLogic
     private Integer delFlag;
 
     /**

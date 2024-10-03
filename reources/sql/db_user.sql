@@ -38,7 +38,7 @@ insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) va
 drop table if exists sys_role;
 create table sys_role (
     role_id           bigint(20)      not null auto_increment    comment '角色ID',
-    role_name         varchar(30)     not null                   comment '角色名称',
+    role_name         varchar(30)     not null unique            comment '角色名称',
     status            boolean         default 0                  comment '角色状态（0正常 1停用）',
     del_flag          boolean         default 0                  comment '删除标志（0代表存在 2代表删除）',
     create_time       datetime        default now()              comment '创建时间',

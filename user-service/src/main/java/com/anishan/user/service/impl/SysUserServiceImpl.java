@@ -1,11 +1,18 @@
 package com.anishan.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.dto.UserDto;
 import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.user.entity.dto.SysUserDto;
 import com.anishan.user.entity.dto.UserPagedQuery;
+import com.anishan.user.entity.po.SysRole;
+import com.anishan.user.entity.po.SysUserRoleRelation;
 import com.anishan.user.entity.vo.UserVo;
+import com.anishan.user.service.SysRoleService;
+import com.anishan.user.service.SysUserRoleService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,7 +20,9 @@ import com.anishan.user.entity.po.SysUser;
 import com.anishan.user.service.SysUserService;
 import com.anishan.user.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,11 +35,25 @@ import java.util.List;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     implements SysUserService{
 
-    SysUserMapper sysUserMapper;
+    private final String baseString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+                                      "abcdefghijklmnopqrstuvwxyz" +
+                                      "0123456789";
+
+    private SysUserMapper sysUserMapper;
+    private SysRoleService sysRoleService;
+    private SysUserRoleService sysUserRoleService;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public SysUserServiceImpl(SysUserMapper sysUserMapper) {
+    public SysUserServiceImpl(SysUserMapper sysUserMapper,
+                              SysRoleService sysRoleService,
+                              SysUserRoleService sysUserRoleService,
+                              PasswordEncoder passwordEncoder
+    ) {
         this.sysUserMapper = sysUserMapper;
+        this.sysRoleService = sysRoleService;
+        this.sysUserRoleService = sysUserRoleService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -67,7 +90,44 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         this.updateById(sysUser);
     }
 
+    @Override
+    @Transactional
+    public void addUser(SysUserDto sysUserDto) {
+        SysRole sysRole = sysRoleService.getOne(new LambdaQueryWrapper<SysRole>()
+                .eq(SysRole::getRoleName, sysUserDto.getRole()));
+        if (sysRole == null) {
+           throw new RuntimeException("unknown role");
+        }
 
+        // 自动填充字段，添加User，会抛出异常
+        SysUser sysUser = doSaveUser(sysUserDto);
+
+        // 添加关系
+        SysUserRoleRelation sysUserRoleRelation = new SysUserRoleRelation(sysUser.getUserId(), sysRole.getRoleId());
+        sysUserRoleService.save(sysUserRoleRelation);
+    }
+
+    private SysUser doSaveUser(SysUserDto sysUserDto) {
+        sysUserDto = doFillEmptyProperties(sysUserDto);
+        SysUser sysUser = BeanUtil.copyProperties(sysUserDto, SysUser.class, "role");
+        boolean save = this.save(sysUser);
+        if (!save) {
+            throw new RuntimeException("save failed");
+        }
+        return sysUser;
+    }
+
+    private SysUserDto doFillEmptyProperties(SysUserDto sysUserDto) {
+        // 如果nike name没有就生成随机的
+        if (StrUtil.isBlank(sysUserDto.getNikeName())) {
+            sysUserDto.setNikeName(RandomUtil.randomString(baseString, 10));
+        }
+        if (StrUtil.isBlank(sysUserDto.getEmail())) {
+            sysUserDto.setEmail(sysUserDto.getUserName() + "@" + sysUserDto.getRole() + ".com");
+        }
+        sysUserDto.setPassword(passwordEncoder.encode(sysUserDto.getPassword()));
+        return sysUserDto;
+    }
 
 }
 

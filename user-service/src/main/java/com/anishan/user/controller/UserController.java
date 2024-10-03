@@ -4,6 +4,7 @@ import com.anishan.commons.entity.R;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.dto.UserDto;
 import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.user.entity.dto.SysUserDto;
 import com.anishan.user.entity.dto.UserPagedQuery;
 import com.anishan.user.entity.po.SysUser;
 import com.anishan.user.entity.vo.UserVo;
@@ -19,8 +20,9 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 
-@Api("用户实体操作接口，增删改查")
-@RestController("/user")
+@Api("用户实体操作接口，删改查")
+@RestController()
+@RequestMapping("/user")
 public class UserController {
 
     SysUserService sysUserService;
@@ -93,8 +95,18 @@ public class UserController {
         return R.success(b);
     }
 
+    @PostMapping("/add")
+    @PreAuthorize("hasAuthority('user:user:change')")
+    @ApiOperation("添加用户")
+    public R<String> addUser(@RequestBody SysUserDto sysUserDto) {
+        try {
+            sysUserService.addUser(sysUserDto);
+        } catch (RuntimeException e) {
+            return R.error(400, e.getMessage());
+        }
 
-
+        return R.success();
+    }
 
 
 }
