@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -47,13 +48,13 @@ public class SysUser implements Serializable {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 最新更新时间用于乐观锁
      */
     @Version
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     /**
      * 删除标记(1删除, 0没删除)

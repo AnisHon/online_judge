@@ -3,8 +3,10 @@ package com.anishan.user.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.entity.dto.ClassDto;
 import com.anishan.user.entity.dto.ClassPagedQuery;
+import com.anishan.user.entity.po.SysUser;
 import com.anishan.user.entity.vo.ClassVo;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -15,6 +17,7 @@ import com.anishan.user.mapper.SysClassMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -41,7 +44,7 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
     }
 
     @Override
-    public List<ClassVo> listClassById(List<String> ids) {
+    public List<ClassVo> listClassById(List<Long> ids) {
         List<SysClass> sysClasses = this.listByIds(ids);
         return BeanUtil.copyToList(sysClasses, ClassVo.class);
     }
@@ -63,11 +66,14 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
 
     @Override
     public boolean updateClass(ClassDto classDto) {
-        if (classDto.getClassId() == null) {
-            return false;
-        }
 
+        LocalDateTime updateTime = MysqlMappingUtils.getUpdateTime(
+                this,
+                SysClass::getClassId,
+                classDto.getClassId(),
+                SysClass::getUpdateTime);
         SysClass sysClass = BeanUtil.copyProperties(classDto, SysClass.class);
+        sysClass.setUpdateTime(updateTime);
         return this.updateById(sysClass);
     }
 

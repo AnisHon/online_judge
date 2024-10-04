@@ -1,10 +1,12 @@
 package com.anishan.user.entity.vo;
 
+import com.baomidou.mybatisplus.core.conditions.update.Update;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.Date;
+import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @Data
 @ApiModel("班级视图表")
@@ -18,7 +20,7 @@ public class ClassVo {
     private String className;
 
     @ApiModelProperty("创建时间")
-    private Date createTime;
+    private LocalDateTime createTime;
 
     @ApiModelProperty("备注")
     private String remark;

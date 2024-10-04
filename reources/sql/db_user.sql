@@ -40,7 +40,7 @@ create table sys_role (
     role_id           bigint(20)      not null auto_increment    comment '角色ID',
     role_name         varchar(30)     not null unique            comment '角色名称',
     status            boolean         default 0                  comment '角色状态（0正常 1停用）',
-    del_flag          boolean         default 0                  comment '删除标志（0代表存在 2代表删除）',
+    del_flag          boolean         default 0                  comment '删除标志（0代表存在 1代表删除）',
     create_time       datetime        default now()              comment '创建时间',
     update_time       datetime        default now()              comment '更新时间，用于乐观锁',
     remark            varchar(500)    default null               comment '备注',
@@ -102,6 +102,7 @@ create table sys_menu (
     icon              varchar(100)    default '#'                comment '菜单图标',
     create_time       datetime        default now()              comment '创建时间',
     update_time       datetime        default now()              comment '更新时间',
+    del_flag          boolean         default 0                  comment '删除标志（0未删除 1删除）',
     remark            varchar(500)    default ''                 comment '备注',
     primary key (menu_id)
 ) engine=innodb auto_increment=2000 comment = '菜单权限表';

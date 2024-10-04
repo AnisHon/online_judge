@@ -1,10 +1,11 @@
 package com.anishan.user.e;
 
+import com.baomidou.mybatisplus.annotation.IEnum;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
-public enum MenuType {
+public enum MenuType implements IEnum<String>, Enumerator<String> {
 
     Item("I"),
     MenuBar("M"),
@@ -25,4 +26,8 @@ public enum MenuType {
     }
 
 
+    @Override
+    public String value() {
+        return getValue();
+    }
 }

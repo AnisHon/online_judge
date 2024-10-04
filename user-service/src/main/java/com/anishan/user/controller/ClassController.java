@@ -3,23 +3,20 @@ package com.anishan.user.controller;
 import com.anishan.commons.entity.R;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.user.e.ValidationGroup;
 import com.anishan.user.entity.dto.ClassDto;
 import com.anishan.user.entity.dto.ClassPagedQuery;
-import com.anishan.user.entity.dto.SysUserDto;
 import com.anishan.user.entity.po.SysClass;
 import com.anishan.user.entity.vo.ClassVo;
-import com.anishan.user.entity.vo.UserVo;
 import com.anishan.user.service.SysClassService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
-import org.apache.http.protocol.HTTP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotNull;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 
 @RestController
@@ -46,7 +43,7 @@ public class ClassController {
     @GetMapping("/list/{ids}")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("通过多个id获取class，id之间用','隔开 要求有user:user:get")
-    public R<List<ClassVo>> listClass(@PathVariable("ids") List<String> ids) {
+    public R<List<ClassVo>> listClass(@PathVariable("ids") List<Long> ids) {
         List<ClassVo> classes = sysClassService.listClassById(ids);
         return R.success(classes);
     }
@@ -54,7 +51,7 @@ public class ClassController {
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("分页获取class")
-    public R<PagedResult<ClassVo>> listClasss(@Validated PagedQuery<SysClass> pagedQuery) {
+    public R<PagedResult<ClassVo>> listClasses(@Validated PagedQuery<SysClass> pagedQuery) {
         PagedResult<ClassVo> classVoPagedResult = sysClassService.listClasses(pagedQuery);
         return classVoPagedResult.toR();
     }
@@ -62,10 +59,7 @@ public class ClassController {
     @GetMapping("/query")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("查询class")
-    public R<PagedResult<ClassVo>> queryUser(ClassPagedQuery classPagedQuery) {
-        if (classPagedQuery == null) {
-            classPagedQuery = new ClassPagedQuery();
-        }
+    public R<PagedResult<ClassVo>> queryUser(@NotNull ClassPagedQuery classPagedQuery) {
 
         PagedResult<ClassVo> result = sysClassService.queryClass(classPagedQuery);
 
@@ -74,15 +68,15 @@ public class ClassController {
 
 
     @PostMapping("/update")
-    @PreAuthorize("hasAuthority('user:class:change')")
+    @PreAuthorize("hasAuthority('user:class:edit')")
     @ApiOperation("更新Class，不能更改classId")
-    public R<Boolean> update(@RequestBody ClassDto classDto) {
+    public R<Boolean> update(@RequestBody @Validated({ValidationGroup.Update.class}) ClassDto classDto) {
         boolean b = sysClassService.updateClass(classDto);
         return R.success(b);
     }
 
     @GetMapping("/remove/{id}")
-    @PreAuthorize("hasAuthority('user:class:change')")
+    @PreAuthorize("hasAuthority('user:class:remove')")
     @ApiOperation("删除Class")
     public R<Boolean> remove(@PathVariable @NotNull Long id) {
         boolean b = sysClassService.removeById(id);
@@ -90,7 +84,7 @@ public class ClassController {
     }
 
     @GetMapping("/removeBatch/{ids}")
-    @PreAuthorize("hasAuthority('user:class:change')")
+    @PreAuthorize("hasAuthority('user:class:remove')")
     @ApiOperation("删除class")
     public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
         boolean b = sysClassService.removeBatchByIds(ids);
@@ -98,9 +92,9 @@ public class ClassController {
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasAuthority('user:class:change')")
+    @PreAuthorize("hasAuthority('user:class:add')")
     @ApiOperation("添加class")
-    public R<Boolean> addUser(@RequestBody ClassDto classDto) {
+    public R<Boolean> addClass(@RequestBody ClassDto classDto) {
 
         try {
             sysClassService.addClass(classDto);

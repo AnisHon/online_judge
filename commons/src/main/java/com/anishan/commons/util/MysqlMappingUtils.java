@@ -4,12 +4,17 @@ import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -108,6 +113,16 @@ public class MysqlMappingUtils {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    @SafeVarargs
+    public static <T> LocalDateTime getUpdateTime(IService<T> service, SFunction<T, ?> idColumn, Long id, SFunction<T, ?>... columns) {
+        return service.getObj(new LambdaQueryWrapper<T>()
+                        .select(columns)
+                        .eq(idColumn, id),
+                k -> (LocalDateTime) k
+        );
     }
 
 }

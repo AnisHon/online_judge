@@ -6,6 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.dto.UserDto;
 import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.entity.dto.SysUserDto;
 import com.anishan.user.entity.dto.UserPagedQuery;
 import com.anishan.user.entity.po.SysRole;
@@ -25,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -57,6 +59,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         this.passwordEncoder = passwordEncoder;
     }
 
+
+
     @Override
     public UserVo getUserById(Long id) {
         SysUser sysUser = this.getById(id);
@@ -86,9 +90,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     }
 
     @Override
-    public void updateUser(UserDto userDto) {
+    public boolean updateUser(UserDto userDto) {
+        LocalDateTime updateTime = MysqlMappingUtils.getUpdateTime(
+                this,
+                SysUser::getUserId,
+                userDto.getUserId(),
+                SysUser::getUpdateTime);
+
         SysUser sysUser = BeanUtil.copyProperties(userDto, SysUser.class);
-        this.updateById(sysUser);
+        sysUser.setUpdateTime(updateTime);
+        return this.updateById(sysUser);
     }
 
     @Override

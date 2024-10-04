@@ -1,10 +1,29 @@
 package com.anishan.user.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.anishan.commons.entity.dto.PagedQuery;
+import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.util.MysqlMappingUtils;
+import com.anishan.user.e.MenuType;
+import com.anishan.user.entity.dto.MenuDto;
+import com.anishan.user.entity.dto.MenuPagedQuery;
+import com.anishan.user.entity.po.SysUser;
+import com.anishan.user.entity.vo.MenuVo;
+import com.anishan.user.entity.vo.TreedMenuVo;
+import com.anishan.user.service.SysRoleMenuService;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.user.entity.po.SysMenu;
 import com.anishan.user.service.SysMenuService;
 import com.anishan.user.mapper.SysMenuMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
 * @author anishan
@@ -15,6 +34,133 @@ import org.springframework.stereotype.Service;
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     implements SysMenuService{
 
+    SysMenuMapper sysMenuMapper;
+    SysRoleMenuService sysRoleMenuService;
+
+    @Autowired
+    public SysMenuServiceImpl(SysMenuMapper sysMenuMapper, SysRoleMenuService sysRoleMenuService) {
+        this.sysMenuMapper = sysMenuMapper;
+        this.sysRoleMenuService = sysRoleMenuService;
+    }
+
+
+
+    // dfs
+    private void buildTreeMenuRecursion(Set<TreedMenuVo> menus, TreedMenuVo treeNode) {
+        // If not MenuBar, exits
+        if (treeNode == null || !MenuType.MenuBar.equals(treeNode.getType())) {
+            return;
+        }
+
+        // search all children nodes
+        List<TreedMenuVo> children = menus
+                .stream()
+                .filter(menu -> Objects.equals(menu.getParentId(), treeNode.getMenuId()))
+                .collect(Collectors.toList());
+
+        // set children
+        treeNode.setChildren(children);
+
+        children.forEach(menus::remove);
+
+        // build TreeMenu for subMenu
+        for (TreedMenuVo menu : treeNode.getChildren()) {
+            buildTreeMenuRecursion(menus, menu);
+        }
+
+    }
+
+    private List<TreedMenuVo> buildTreeMenu(Set<MenuVo> menus) {
+        Set<TreedMenuVo> treedMenus = menus
+                .stream()
+                .map(TreedMenuVo::new)
+                .collect(Collectors.toSet());
+
+        List<TreedMenuVo> rootMenus = treedMenus
+                .stream()
+                .filter(TreedMenuVo::isRoot)
+                .collect(Collectors.toList());
+
+        rootMenus.forEach(treedMenus::remove);
+
+        for (TreedMenuVo rootMenu : rootMenus) {
+            buildTreeMenuRecursion(treedMenus, rootMenu);
+        }
+        return rootMenus;
+    }
+
+    @Override
+    public List<MenuVo> getMenusByRole(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Long> menuIds = sysRoleMenuService.getMenuIdByRole(roleIds);
+        List<SysMenu> sysMenus = this.listByIds(menuIds);
+        return BeanUtil.copyToList(sysMenus, MenuVo.class);
+    }
+
+    @Override
+    public List<TreedMenuVo> getTreedMenuByRole(List<Long> roleIds) {
+        HashSet<MenuVo> menuVos = new HashSet<>(getMenusByRole(roleIds));
+
+        return buildTreeMenu(menuVos);
+    }
+
+    @Override
+    public List<String> getAuthorities(List<Long> roleIds) {
+        List<Long> menuIds = sysRoleMenuService.getMenuIdByRole(roleIds);
+        return this.listObjs(
+                new LambdaQueryWrapper<SysMenu>()
+                        .select(SysMenu::getPerms)
+                        .in(SysMenu::getMenuId, menuIds)
+        );
+    }
+
+
+    @Override
+    public MenuVo getMenuById(Long id) {
+        MenuVo menuById = this.getMenuById(id);
+        return BeanUtil.copyProperties(menuById, MenuVo.class);
+    }
+
+    @Override
+    public List<MenuVo> listMenuById(List<Long> ids) {
+        List<SysMenu> sysMenus = this.listByIds(ids);
+        return BeanUtil.copyToList(sysMenus, MenuVo.class);
+    }
+
+    @Override
+    public PagedResult<MenuVo> listMenus(PagedQuery<SysMenu> pagedQuery) {
+        Page<SysMenu> page = pagedQuery.page();
+        page = this.page(page);
+        return PagedResult.build(page, MenuVo.class);
+    }
+
+    @Override
+    public PagedResult<MenuVo> queryMenu(MenuPagedQuery menuPagedQuery) {
+        Page<SysMenu> page = menuPagedQuery.page();
+        Wrapper<SysMenu> wrapper = menuPagedQuery.wrapper();
+        page = this.page(page, wrapper);
+        return PagedResult.build(page, MenuVo.class);
+    }
+
+    @Override
+    public boolean updateMenu(MenuDto menuDto) {
+        SysMenu sysMenu = BeanUtil.copyProperties(menuDto, SysMenu.class);
+        LocalDateTime updateTime = MysqlMappingUtils.getUpdateTime(
+                this,
+                SysMenu::getMenuId,
+                sysMenu.getMenuId(),
+                SysMenu::getUpdateTime);
+        sysMenu.setUpdateTime(updateTime);
+        return this.updateById(sysMenu);
+    }
+
+    @Override
+    public void addMenu(MenuDto menuDto) {
+        SysMenu sysMenu = BeanUtil.copyProperties(menuDto, SysMenu.class, "menuId");
+        sysMenuMapper.insert(sysMenu);
+    }
 }
 
 

@@ -1,26 +1,25 @@
-package com.anishan.user.entity.vo;
+package com.anishan.user.entity.dto;
 
 import com.anishan.user.e.MenuType;
 import com.anishan.user.e.ValidationGroup;
-import com.baomidou.mybatisplus.core.conditions.update.Update;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 
 @Data
-@ApiModel("权限/菜单类")
-public class MenuVo {
+@ApiModel("菜单参数")
+public class MenuDto {
 
-    @ApiModelProperty("菜单ID")
+    @NotNull(groups = ValidationGroup.Update.class)
+    @ApiModelProperty("菜单ID，插入时不管用，不用设置")
     private Long menuId;
 
     @ApiModelProperty("菜单名称")
     private String menuName;
 
-    @ApiModelProperty("父菜单ID")
+    @ApiModelProperty("父菜单ID, 0表示没有父菜单")
     private Long parentId;
 
     @ApiModelProperty("路由路径")
@@ -35,14 +34,6 @@ public class MenuVo {
     @ApiModelProperty("菜单图标")
     private String icon;
 
-    @ApiModelProperty("创建时间")
-    private LocalDateTime createTime;
-
     @ApiModelProperty("标记")
     private String remark;
-
-    public boolean isRoot() {
-        return parentId == null || parentId == 0 ;
-    }
-
 }

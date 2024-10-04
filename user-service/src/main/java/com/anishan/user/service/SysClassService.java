@@ -20,7 +20,7 @@ public interface SysClassService extends IService<SysClass> {
 
     ClassVo getClassById(@NotNull(message = "id为Null") Long id);
 
-    List<ClassVo> listClassById(List<String> ids);
+    List<ClassVo> listClassById(List<Long> ids);
 
     PagedResult<ClassVo> listClasses(PagedQuery<SysClass> pagedQuery);
 

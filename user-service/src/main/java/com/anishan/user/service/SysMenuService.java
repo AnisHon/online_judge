@@ -1,20 +1,16 @@
 package com.anishan.user.service;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.lang.tree.Tree;
-import com.anishan.user.e.MenuType;
+import com.anishan.commons.entity.dto.PagedQuery;
+import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.user.entity.dto.MenuDto;
+import com.anishan.user.entity.dto.MenuPagedQuery;
 import com.anishan.user.entity.po.SysMenu;
 import com.anishan.user.entity.vo.MenuVo;
 import com.anishan.user.entity.vo.TreedMenuVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
 * @author anishan
@@ -23,25 +19,24 @@ import java.util.stream.Collectors;
 */
 public interface SysMenuService extends IService<SysMenu> {
 
-    private void buildTreeMenu(Set<SysMenu> menus, TreedMenuVo treeNode) {
-        if (treeNode == null || !MenuType.MenuBar.equals(treeNode.getType())) {
-            return;
-        }
 
-        List<SysMenu> children = menus
-                .stream()
-                .filter(menu -> Objects.equals(menu.getParentId(), treeNode.getMenuId()))
-                .collect(Collectors.toList());
+    // 用于获取权限列表
+    List<MenuVo> getMenusByRole(List<Long> roleIds);
 
-        children.forEach(menus::remove);
+    List<TreedMenuVo> getTreedMenuByRole(List<Long> roleIds);
 
-        List<MenuVo> menuVos = BeanUtil.copyToList(children, MenuVo.class);
-        treeNode.setChild(menuVos);
+    List<String> getAuthorities(List<Long> roleIds);
 
-        for (TreedMenuVo menu : treeNode.getChildren()) {
-            buildTreeMenu(menus, menu);
-        }
+    MenuVo getMenuById(@NotNull(message = "id为Null") Long id);
 
-    }
+    List<MenuVo> listMenuById(List<Long> ids);
+
+    PagedResult<MenuVo> listMenus(PagedQuery<SysMenu> pagedQuery);
+
+    PagedResult<MenuVo> queryMenu(MenuPagedQuery menuPagedQuery);
+
+    boolean updateMenu(MenuDto menuDto);
+
+    void addMenu(MenuDto menuDto);
 
 }

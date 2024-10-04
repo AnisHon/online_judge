@@ -1,8 +1,10 @@
 package com.anishan.user.entity.po;
 
+import com.anishan.user.e.MenuType;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -37,7 +39,7 @@ public class SysMenu implements Serializable {
     /**
      * 菜单类型（I菜单项item M菜单栏MenuBar B按钮）
      */
-    private String menuType;
+    private MenuType menuType;
 
     /**
      * 权限Security标识
@@ -52,19 +54,24 @@ public class SysMenu implements Serializable {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 更新时间
      */
     @Version
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     /**
      * 备注
      */
     private String remark;
 
+    @TableLogic
+    private Integer delFlag;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+
 }

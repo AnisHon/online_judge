@@ -3,6 +3,7 @@ package com.anishan.user.entity.po;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -44,7 +45,7 @@ public class SysRole implements Serializable {
      * 更新时间，用于乐观锁
      */
     @Version
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     /**
      * 备注

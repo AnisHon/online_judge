@@ -1,5 +1,7 @@
 package com.anishan.user.entity.dto;
 
+import com.anishan.user.e.ValidationGroup;
+import com.baomidou.mybatisplus.core.conditions.update.Update;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -11,6 +13,7 @@ import java.util.Date;
 @ApiModel("班级参数类")
 public class ClassDto {
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("班级Id")
     private Long classId;
 

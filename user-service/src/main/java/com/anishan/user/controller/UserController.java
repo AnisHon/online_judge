@@ -4,6 +4,7 @@ import com.anishan.commons.entity.R;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.dto.UserDto;
 import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.user.e.ValidationGroup;
 import com.anishan.user.entity.dto.SysUserDto;
 import com.anishan.user.entity.dto.UserPagedQuery;
 import com.anishan.user.entity.po.SysUser;
@@ -11,6 +12,7 @@ import com.anishan.user.entity.vo.UserVo;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -53,7 +55,7 @@ public class UserController {
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("分页获取User")
-    public R<PagedResult<UserVo>> listUsers(@Validated PagedQuery<SysUser> pagedQuery) {
+    public R<PagedResult<UserVo>> listUsers(@Validated @NotNull PagedQuery<SysUser> pagedQuery) {
         PagedResult<UserVo> userVoPagedResult = sysUserService.listUsers(pagedQuery);
         return userVoPagedResult.toR();
     }
@@ -61,27 +63,21 @@ public class UserController {
     @PostMapping("/query")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("查询User")
-    public R<PagedResult<UserVo>> queryUser(@Validated @RequestBody UserPagedQuery userPagedQuery) {
-        if (userPagedQuery == null) {
-            userPagedQuery = new UserPagedQuery();
-        }
-
+    public R<PagedResult<UserVo>> queryUser(@Validated  @NotNull @RequestBody UserPagedQuery userPagedQuery) {
         PagedResult<UserVo> result = sysUserService.queryUser(userPagedQuery);
-
         return result.toR();
     }
 
-
     @PostMapping("/update")
-    @PreAuthorize("hasAuthority('user:user:change')")
+    @PreAuthorize("hasAuthority('user:user:edit')")
     @ApiOperation("更新User，不能更改密码和Id和用户名")
-    public R<String> update(@RequestBody UserDto userDto) {
-        sysUserService.updateUser(userDto);
-        return R.success();
+    public R<Boolean> update(@RequestBody @Validated({ValidationGroup.Update.class}) UserDto userDto) {
+        boolean b = sysUserService.updateUser(userDto);
+        return R.success(b);
     }
 
     @GetMapping("/remove/{id}")
-    @PreAuthorize("hasAuthority('user:user:change')")
+    @PreAuthorize("hasAuthority('user:user:remove')")
     @ApiOperation("删除用户")
     public R<Boolean> remove(@PathVariable @NotNull Long id) {
         boolean b = sysUserService.removeById(id);
@@ -89,7 +85,7 @@ public class UserController {
     }
 
     @GetMapping("/removeBatch/{ids}")
-    @PreAuthorize("hasAuthority('user:user:change')")
+    @PreAuthorize("hasAuthority('user:user:remove')")
     @ApiOperation("删除用户")
     public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
         boolean b = sysUserService.removeBatchByIds(ids);
@@ -97,7 +93,7 @@ public class UserController {
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasAuthority('user:user:change')")
+    @PreAuthorize("hasAuthority('user:user:add')")
     @ApiOperation("添加用户")
     public R<String> addUser(@RequestBody SysUserDto sysUserDto) {
         try {
@@ -105,7 +101,6 @@ public class UserController {
         } catch (RuntimeException e) {
             return R.error(400, e.getMessage());
         }
-
         return R.success();
     }
 
