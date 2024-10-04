@@ -81,7 +81,7 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
 
     @Override
     public boolean addClass(ClassDto classDto) {
-        SysClass sysClass = BeanUtil.copyProperties(classDto, SysClass.class);
+        SysClass sysClass = BeanUtil.copyProperties(classDto, SysClass.class, "classId");
         int insert = sysClassMapper.insert(sysClass);
         return insert > 0;
     }

@@ -39,7 +39,7 @@ public class SysRole implements Serializable {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 更新时间，用于乐观锁

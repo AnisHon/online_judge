@@ -22,6 +22,7 @@ import com.anishan.user.entity.po.SysUser;
 import com.anishan.user.service.SysUserService;
 import com.anishan.user.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

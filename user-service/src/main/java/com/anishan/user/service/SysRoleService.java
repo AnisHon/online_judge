@@ -1,7 +1,15 @@
 package com.anishan.user.service;
 
+import com.anishan.commons.entity.dto.PagedQuery;
+import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.user.entity.dto.RoleDto;
+import com.anishan.user.entity.dto.RolePagedQuery;
 import com.anishan.user.entity.po.SysRole;
+import com.anishan.user.entity.vo.RoleVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
 * @author anishan
@@ -10,4 +18,17 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface SysRoleService extends IService<SysRole> {
 
+    boolean addRole(RoleDto roleDto);
+
+    List<RoleVo> listRoleByIds(List<Long> ids);
+
+    PagedResult<RoleVo> listRolesByPage(PagedQuery<SysRole> pagedQuery);
+
+//    List<RoleVo> listRoleById(List<Long> ids);
+
+    RoleVo getRoleById(@NotNull(message = "id为Null") Long id);
+
+    PagedResult<RoleVo> queryRole(RolePagedQuery rolePagedQuery);
+
+    boolean updateRole(RoleDto roleDto);
 }

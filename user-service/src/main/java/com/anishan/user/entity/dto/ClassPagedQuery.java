@@ -29,7 +29,7 @@ public class ClassPagedQuery extends SortedPagedQuery<SysClass> {
     @ConditionColumn("eq")
     private Long classId;
     @SortedColumn
-    @ConditionColumn()
+    @ConditionColumn
     private String className;
 
     @Override
