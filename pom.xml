@@ -11,6 +11,8 @@
     <modules>
         <module>user-service</module>
         <module>commons</module>
+        <module>gateway-server</module>
+        <module>common-api</module>
     </modules>
 
     <parent>
@@ -30,12 +32,38 @@
         <hutool.version>5.8.11</hutool.version>
         <spring-cloud.version>2021.0.3</spring-cloud.version>
         <spring-cloud-alibaba.version>2021.0.4.0</spring-cloud-alibaba.version>
+        <jakarta.mail-api>2.1.2</jakarta.mail-api>
     </properties>
 
 
 
     <dependencyManagement>
         <dependencies>
+
+            <dependency>
+                <groupId>com.anishan</groupId>
+                <artifactId>commons</artifactId>
+                <version>1.0.0-beta</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.anishan</groupId>
+                <artifactId>common-api</artifactId>
+                <version>1.0.0-beta</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi2-spring-boot-starter</artifactId>
+                <version>4.4.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.mail</groupId>
+                <artifactId>jakarta.mail-api</artifactId>
+                <version>${jakarta.mail-api}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -73,11 +101,8 @@
                 <artifactId>mybatis-plus-boot-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.anishan</groupId>
-                <artifactId>commons</artifactId>
-                <version>1.0.0-beta</version>
-            </dependency>
+
+
 
 
             <dependency>
@@ -102,6 +127,10 @@
                 <version>${spring-boot.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-gateway</artifactId>
+            </dependency>
 
             <dependency>
                 <groupId>cn.hutool</groupId>

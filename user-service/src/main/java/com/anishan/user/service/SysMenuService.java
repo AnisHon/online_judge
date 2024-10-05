@@ -5,6 +5,7 @@ import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.user.entity.dto.MenuDto;
 import com.anishan.user.entity.dto.MenuPagedQuery;
 import com.anishan.user.entity.po.SysMenu;
+import com.anishan.api.entity.SysRole;
 import com.anishan.user.entity.vo.MenuVo;
 import com.anishan.user.entity.vo.TreedMenuVo;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -26,6 +27,10 @@ public interface SysMenuService extends IService<SysMenu> {
     List<TreedMenuVo> getTreedMenuByRole(List<Long> roleIds);
 
     List<String> getAuthorities(List<Long> roleIds);
+
+    List<String> getAuthoritiesByIds(List<Long> menuIds);
+
+    List<String> getAuthorities_(List<SysRole> roleIds);
 
     MenuVo getMenuById(@NotNull(message = "id为Null") Long id);
 

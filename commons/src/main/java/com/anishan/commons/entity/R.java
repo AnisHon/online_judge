@@ -55,6 +55,10 @@ public class R<T> {
         return error(HTTP_UNAUTHORIZED, "unauthorized");
     }
 
+    public static R<String> unauthorized(String msg) {
+        return error(HTTP_UNAUTHORIZED, msg);
+    }
+
 
     /**
      * 没权限

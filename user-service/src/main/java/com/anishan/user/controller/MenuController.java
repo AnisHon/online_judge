@@ -3,7 +3,7 @@ package com.anishan.user.controller;
 import com.anishan.commons.entity.R;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
-import com.anishan.user.e.ValidationGroup;
+import com.anishan.commons.e.ValidationGroup;
 import com.anishan.user.entity.dto.MenuDto;
 import com.anishan.user.entity.dto.MenuPagedQuery;
 import com.anishan.user.entity.po.SysMenu;

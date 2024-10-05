@@ -4,7 +4,7 @@ import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.user.entity.dto.RoleDto;
 import com.anishan.user.entity.dto.RolePagedQuery;
-import com.anishan.user.entity.po.SysRole;
+import com.anishan.api.entity.SysRole;
 import com.anishan.user.entity.vo.RoleVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 

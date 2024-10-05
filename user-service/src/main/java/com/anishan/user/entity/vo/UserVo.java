@@ -1,7 +1,7 @@
 package com.anishan.user.entity.vo;
 
-import com.anishan.user.e.ValidationGroup;
-import com.baomidou.mybatisplus.core.conditions.update.Update;
+import com.anishan.commons.e.UserState;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -27,7 +27,7 @@ public class UserVo {
     private String nikeName;
 
     @ApiModelProperty("状态(1封禁, 0正常)")
-    private Integer status;
+    private UserState status;
 
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;

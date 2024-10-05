@@ -1,11 +1,11 @@
 package com.anishan.user.entity.po;
 
-import com.anishan.user.e.MenuType;
+import com.anishan.commons.e.MenuType;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
+
 import lombok.Data;
 
 /**

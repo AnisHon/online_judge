@@ -1,18 +1,27 @@
 package com.anishan.user.mapper;
 
-import com.anishan.user.entity.po.SysUser;
+import com.anishan.api.entity.SysUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
 * @author anishan
 * @description 针对表【sys_user(用户表)】的数据库操作Mapper
 * @createDate 2024-10-02 23:14:28
-* @Entity com.anishan.user.entity.po.SysUser
+* @Entity com.anishan.api.entity.SysUser
 */
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
 
+    List<SysUser> selectByTeacherIdLimit(
+            @Param("teacherId") Long teacherId,
+            @Param("currentPage") Long currentPage,
+            @Param("pageSize") Long pageSize);
 }
 
 

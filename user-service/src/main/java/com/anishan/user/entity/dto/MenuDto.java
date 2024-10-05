@@ -1,7 +1,7 @@
 package com.anishan.user.entity.dto;
 
-import com.anishan.user.e.MenuType;
-import com.anishan.user.e.ValidationGroup;
+import com.anishan.commons.e.MenuType;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

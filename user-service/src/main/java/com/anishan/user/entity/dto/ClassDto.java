@@ -1,13 +1,11 @@
 package com.anishan.user.entity.dto;
 
-import com.anishan.user.e.ValidationGroup;
-import com.baomidou.mybatisplus.core.conditions.update.Update;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import java.util.Date;
 
 @Data
 @ApiModel("班级参数类")

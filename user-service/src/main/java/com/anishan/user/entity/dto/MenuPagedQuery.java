@@ -4,7 +4,7 @@ import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
 import com.anishan.commons.entity.dto.SortedPagedQuery;
 import com.anishan.commons.util.MysqlMappingUtils;
-import com.anishan.user.e.MenuType;
+import com.anishan.commons.e.MenuType;
 import com.anishan.user.entity.po.SysMenu;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

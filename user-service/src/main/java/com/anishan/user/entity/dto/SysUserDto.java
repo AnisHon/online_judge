@@ -1,6 +1,7 @@
 package com.anishan.user.entity.dto;
 
-import com.anishan.user.e.ValidationGroup;
+import com.anishan.commons.e.UserState;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -26,7 +27,7 @@ public class SysUserDto {
     @ApiModelProperty(value = "密码，明文", required = true)
     private String password;
     @ApiModelProperty("状态(1封禁, 0正常) 默认为正常")
-    private Integer status = 0;
+    private UserState status = UserState.NORMAL;
     @ApiModelProperty("备注")
     private String remark;
     @ApiModelProperty("删除标记，默认0未被删除")

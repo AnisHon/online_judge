@@ -1,6 +1,6 @@
 package com.anishan.user.entity.vo;
 
-import com.anishan.user.e.MenuType;
+import com.anishan.commons.e.MenuType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data

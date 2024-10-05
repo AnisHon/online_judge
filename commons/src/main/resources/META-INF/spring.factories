@@ -1,2 +1,0 @@
-#org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.anishan.commons.config.SecurityConfig \
-#  com.anishan.commons.config.MybatisConfig

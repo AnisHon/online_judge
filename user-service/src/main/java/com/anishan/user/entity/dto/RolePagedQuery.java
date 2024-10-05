@@ -2,16 +2,14 @@ package com.anishan.user.entity.dto;
 
 import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
-import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.dto.SortedPagedQuery;
 import com.anishan.commons.util.MysqlMappingUtils;
-import com.anishan.user.entity.po.SysRole;
+import com.anishan.api.entity.SysRole;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)

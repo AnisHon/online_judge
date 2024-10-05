@@ -4,13 +4,14 @@ import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.exception.UnknownKeyException;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Map;
-import java.util.Optional;
 
 @Data
 public abstract class SortedPagedQuery<T> extends PagedQuery<T> {
@@ -33,6 +34,14 @@ public abstract class SortedPagedQuery<T> extends PagedQuery<T> {
 //                .like(email != null, SysUser::getEmail, email)
 //                .like(nikeName != null, SysUser::getNikeName, nikeName)
 //                .eq(status != null, SysUser::getStatus, status);
+    }
+
+    public QueryWrapper<T> queryWrapper() {
+        return (QueryWrapper<T>) wrapper();
+    }
+
+    public LambdaQueryWrapper<T> lambdaQueryWrapper() {
+        return queryWrapper().lambda();
     }
 
     @Override

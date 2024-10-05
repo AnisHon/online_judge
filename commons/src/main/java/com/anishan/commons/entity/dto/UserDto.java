@@ -1,5 +1,6 @@
 package com.anishan.commons.entity.dto;
 
+import com.anishan.commons.e.UserState;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -17,7 +18,7 @@ public class UserDto {
     @ApiModelProperty("昵称")
     private String nikeName;
     @ApiModelProperty("状态(1封禁, 0正常)")
-    private Integer status;
+    private UserState status;
     @ApiModelProperty("备注")
     private String remark;
 }

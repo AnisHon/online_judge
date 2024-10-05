@@ -1,7 +1,7 @@
 package com.anishan.user.service;
 
 
-import com.anishan.user.entity.LoginUser;
+import com.anishan.api.entity.LoginUser;
 
 public interface RedisService {
 

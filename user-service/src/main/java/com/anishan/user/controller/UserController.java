@@ -4,15 +4,14 @@ import com.anishan.commons.entity.R;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.dto.UserDto;
 import com.anishan.commons.entity.vo.PagedResult;
-import com.anishan.user.e.ValidationGroup;
+import com.anishan.commons.e.ValidationGroup;
 import com.anishan.user.entity.dto.SysUserDto;
 import com.anishan.user.entity.dto.UserPagedQuery;
-import com.anishan.user.entity.po.SysUser;
+import com.anishan.api.entity.SysUser;
 import com.anishan.user.entity.vo.UserVo;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -105,6 +104,6 @@ public class UserController {
     }
 
     // change myself
-
+    // todo
 
 }

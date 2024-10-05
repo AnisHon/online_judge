@@ -2,27 +2,41 @@ package com.anishan.user.controller;
 
 
 import com.anishan.commons.entity.R;
+import com.anishan.api.entity.LoginUser;
+import com.anishan.user.entity.dto.LoginForm;
+import com.anishan.user.entity.dto.RegistrationForm;
+import com.anishan.user.entity.vo.AuthResultVo;
+import com.anishan.user.entity.vo.CaptchaCodeVo;
+import com.anishan.user.entity.vo.LoginVo;
 import com.anishan.user.entity.vo.TreedMenuVo;
+import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.SysMenuService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Api("认证相关接口")
-@RestController("/auth")
+@RestController()
+@RequestMapping("/auth")
 public class AuthenticationController {
 
 
     SysMenuService sysMenuService;
+    AuthenticationService authenticationService;
 
     @Autowired
-    public AuthenticationController(SysMenuService sysMenuService) {
+    public AuthenticationController(SysMenuService sysMenuService, AuthenticationService authenticationService) {
         this.sysMenuService = sysMenuService;
+        this.authenticationService = authenticationService;
     }
 
     @GetMapping("/menus")
@@ -30,6 +44,102 @@ public class AuthenticationController {
     public R<List<TreedMenuVo>> menus() {
         return R.success(sysMenuService.getTreedMenuByRole(List.of()));
     }
+
+    @GetMapping("/me")
+    @ApiOperation("获取用户个人信息")
+    public R<LoginUser> me() {
+        LoginUser me = authenticationService.me();
+        return R.success(me);
+    }
+
+    @GetMapping("/logout")
+    @ApiOperation("登出")
+    public R<String> logout() {
+        authenticationService.logout();
+        return R.success();
+    }
+
+    @PostMapping("/login")
+    @ApiOperation("登陆接口")
+    public R<LoginVo> login(@RequestBody @Validated LoginForm loginUser) {
+        LoginVo login = authenticationService.login(loginUser);
+        return R.success(login);
+    }
+
+    @PostMapping("/registration")
+    @ApiOperation("注册接口")
+    public R<LoginVo> registration(@RequestBody @Validated RegistrationForm registrationForm) {
+        LoginVo registration = authenticationService.registration(registrationForm);
+        return R.success(registration);
+    }
+
+
+    @PostMapping("/reset-pass")
+    @ApiOperation("重制密码，重新设置密码")
+    public R<AuthResultVo> resetPass(
+            @RequestBody @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
+            @RequestBody @Length(min = 8, max = 16) @ApiParam(value = "新密码", required = true) String password
+    ) {
+        AuthResultVo authResultVo = authenticationService.resetPassword(code, password);
+        return R.success(authResultVo);
+    }
+
+    @PostMapping("/forget-pass")
+    @ApiOperation("忘记密码，重设密码")
+    public R<AuthResultVo> forgetPass(
+            @RequestBody @NotNull @ApiParam(value = "邮箱或者用户名", required = true) String username,
+            @RequestBody @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
+            @RequestBody @Length(min = 8, max = 16) @ApiParam(value = "新密码", required = true) String password
+    ) {
+        AuthResultVo authResultVo = authenticationService.resetPassword(code, password);
+        return R.success(authResultVo);
+    }
+
+
+    @PostMapping("/reset-email")
+    @ApiOperation("重制邮箱")
+    public R<AuthResultVo> resetEmail(@RequestBody @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
+                                      @RequestBody @Email @ApiParam(value = "新邮箱", required = true) String newEmail
+    ) {
+        AuthResultVo authResultVo = authenticationService.resetEmail(code, newEmail);
+        return R.success(authResultVo);
+    }
+
+    @PostMapping("/send-email-code")
+    @ApiOperation("发送邮箱验证码")
+
+    public R<AuthResultVo> sendEmailCode(@RequestBody @Email @ApiParam(value = "邮箱", required = true) String email,
+                                         @RequestBody @NotNull @ApiParam(value = "验证码token", required = true) String captchaToken,
+                                         @RequestBody @NotNull @ApiParam(value = "验证码code", required = true) String captchaCode) {
+        AuthResultVo authResultVo = authenticationService.sendEmailCode(email, captchaToken, captchaCode);
+        return R.success(authResultVo);
+    }
+
+    @GetMapping("/captcha-code")
+    @ApiOperation("获取Captcha验证码")
+    public R<CaptchaCodeVo> captchaCode() {
+        CaptchaCodeVo captchaCodeVo = authenticationService.sendCaptchaCode();
+        return R.success(captchaCodeVo);
+    }
+
+    @GetMapping("/ban/{id}")
+    @ApiOperation("封禁用户")
+    @PreAuthorize("hasAuthority('user:auth:ban')")
+    public R<String> ban(@PathVariable @NotNull @ApiParam(value = "用户id", required = true) Long id) {
+        String ban = authenticationService.ban(id);
+        return R.success(ban);
+    }
+
+    @GetMapping("/unban/{id}")
+    @ApiOperation("解封用户")
+    @PreAuthorize("hasAuthority('user:auth:unban')")
+    public R<String> unban(@PathVariable @NotNull @ApiParam(value = "用户id", required = true) Long id) {
+        String ban = authenticationService.unban(id);
+        return R.success(ban);
+    }
+
+
+
 
 
 

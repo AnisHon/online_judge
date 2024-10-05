@@ -1,8 +1,6 @@
 package com.anishan.user.entity.dto;
 
-import com.anishan.user.e.ValidationGroup;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

@@ -5,7 +5,7 @@ import com.anishan.commons.entity.dto.UserDto;
 import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.user.entity.dto.SysUserDto;
 import com.anishan.user.entity.dto.UserPagedQuery;
-import com.anishan.user.entity.po.SysUser;
+import com.anishan.api.entity.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.anishan.user.entity.vo.UserVo;
 
@@ -29,4 +29,16 @@ public interface SysUserService extends IService<SysUser> {
     boolean updateUser(UserDto userVo);
 
     void addUser(SysUserDto sysUserDto);
+
+    SysUser getUserByUsernameOrEmail(String username);
+
+    boolean existsUsername(String username);
+
+    boolean existsEmail(String email);
+
+    PagedResult<UserVo> queryUserWithin(UserPagedQuery userPagedQuery, List<Long> studentIds);
+
+    PagedResult<UserVo> listStudentsOfTeacher(PagedQuery<SysUser> userPagedQuery);
+
+    PagedResult<UserVo> listStudentsOfTeacher(Long userId, PagedQuery<SysUser> userPagedQuery);
 }

@@ -1,0 +1,30 @@
+package com.anishan.api.handler;
+
+import com.anishan.commons.entity.R;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.HttpStatus;
+import org.apache.http.protocol.HTTP;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.access.AccessDeniedHandler;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class AccessDeniedHandlerImpl implements AccessDeniedHandler {
+
+
+    @Override
+    public void handle(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AccessDeniedException accessDeniedException
+    ) throws IOException, ServletException {
+        response.setStatus(HttpStatus.SC_FORBIDDEN);
+        response.setContentType("application/json");
+
+        R<String> forbidden = R.forbidden();
+        new ObjectMapper().writeValue(response.getWriter(), forbidden);
+    }
+}

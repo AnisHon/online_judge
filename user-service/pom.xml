@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.anishan</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>common-api</artifactId>
         </dependency>
 
         <dependency>
@@ -53,6 +53,18 @@
             <version>${spring-boot.version}</version>
             <scope>test</scope>
         </dependency>
+
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/jakarta.mail/jakarta.mail-api &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>jakarta.mail</groupId>-->
+<!--            <artifactId>jakarta.mail-api</artifactId>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4.7</version>
+        </dependency>
+
 
     </dependencies>
 

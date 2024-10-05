@@ -3,14 +3,9 @@ package com.anishan.user.entity.dto;
 import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
 import com.anishan.commons.entity.dto.SortedPagedQuery;
-import com.anishan.commons.exception.UnknownKeyException;
 import com.anishan.commons.util.MysqlMappingUtils;
-import com.anishan.user.entity.po.SysUser;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.anishan.commons.e.UserState;
+import com.anishan.api.entity.SysUser;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -55,7 +50,7 @@ public class UserPagedQuery extends SortedPagedQuery<SysUser> {
 
     @ConditionColumn("eq")
     @ApiModelProperty("用户状态(0 1封禁)")
-    private Integer status;
+    private UserState status;
 
 
     @Override

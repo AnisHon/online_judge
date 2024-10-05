@@ -1,13 +1,14 @@
 package com.anishan.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.commons.util.MysqlMappingUtils;
-import com.anishan.user.e.MenuType;
+import com.anishan.commons.e.MenuType;
 import com.anishan.user.entity.dto.MenuDto;
 import com.anishan.user.entity.dto.MenuPagedQuery;
-import com.anishan.user.entity.po.SysUser;
+import com.anishan.api.entity.SysRole;
 import com.anishan.user.entity.vo.MenuVo;
 import com.anishan.user.entity.vo.TreedMenuVo;
 import com.anishan.user.service.SysRoleMenuService;
@@ -108,12 +109,32 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
 
     @Override
     public List<String> getAuthorities(List<Long> roleIds) {
+        if (CollectionUtil.isEmpty(roleIds)) {
+            return new ArrayList<>();
+        }
+
         List<Long> menuIds = sysRoleMenuService.getMenuIdByRole(roleIds);
+
+        return getAuthoritiesByIds(menuIds);
+    }
+
+    @Override
+    public List<String> getAuthoritiesByIds(List<Long> menuIds) {
+        if (CollectionUtil.isEmpty(menuIds)) {
+            return new ArrayList<>();
+        }
+
         return this.listObjs(
                 new LambdaQueryWrapper<SysMenu>()
                         .select(SysMenu::getPerms)
-                        .in(SysMenu::getMenuId, menuIds)
-        );
+                        .in(SysMenu::getMenuId, menuIds));
+    }
+
+    @Override
+    public List<String> getAuthorities_(List<SysRole> roleIds) {
+        List<Long> collect = roleIds.stream().map(role -> role.getRoleId()).collect(Collectors.toList());
+
+        return getAuthorities(collect);
     }
 
 

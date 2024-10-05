@@ -10,7 +10,7 @@ import com.anishan.user.entity.vo.RoleVo;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.user.entity.po.SysRole;
+import com.anishan.api.entity.SysRole;
 import com.anishan.user.service.SysRoleService;
 import com.anishan.user.mapper.SysRoleMapper;
 import org.springframework.beans.factory.annotation.Autowired;

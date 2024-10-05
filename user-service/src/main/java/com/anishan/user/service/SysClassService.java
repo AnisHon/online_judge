@@ -5,6 +5,7 @@ import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.user.entity.dto.ClassDto;
 import com.anishan.user.entity.dto.ClassPagedQuery;
 import com.anishan.user.entity.po.SysClass;
+import com.anishan.user.entity.vo.BinaryResultOv;
 import com.anishan.user.entity.vo.ClassVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -29,4 +30,23 @@ public interface SysClassService extends IService<SysClass> {
     boolean updateClass(ClassDto classDto);
 
     boolean addClass(ClassDto sysClassDto);
+
+    // join class
+    BinaryResultOv joinClass(Long userId, Long clasId);
+
+    BinaryResultOv joinClass(Long clasId);
+
+    BinaryResultOv quitClass(Long userId, Long classId);
+
+    BinaryResultOv quitClass(Long classId);
+
+    PagedResult<ClassVo> listClassOfUser(ClassPagedQuery classPagedQuery);
+
+    PagedResult<ClassVo> listClassOfUser(ClassPagedQuery classPagedQuery, Long userId);
+
+    PagedResult<ClassVo> listClassOfTeacher(ClassPagedQuery classPagedQuery);
+
+    PagedResult<ClassVo> listClassOfTeacher(ClassPagedQuery classPagedQuery, Long userId);
+
+    boolean createClass(ClassDto classDto);
 }

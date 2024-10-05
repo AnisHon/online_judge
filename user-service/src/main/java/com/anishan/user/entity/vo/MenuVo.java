@@ -1,13 +1,10 @@
 package com.anishan.user.entity.vo;
 
-import com.anishan.user.e.MenuType;
-import com.anishan.user.e.ValidationGroup;
-import com.baomidou.mybatisplus.core.conditions.update.Update;
+import com.anishan.commons.e.MenuType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
