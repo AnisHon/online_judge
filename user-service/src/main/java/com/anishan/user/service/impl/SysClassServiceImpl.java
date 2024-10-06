@@ -41,10 +41,10 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
     implements SysClassService{
 
 
-    SysClassMapper sysClassMapper;
-    StudentClassService studentClassService;
-    AuthenticationService authenticationService;
-    TeacherClassService teacherClassService;
+    private final SysClassMapper sysClassMapper;
+    private final StudentClassService studentClassService;
+    private final AuthenticationService authenticationService;
+    private final TeacherClassService teacherClassService;
 
     @Autowired
     public SysClassServiceImpl(

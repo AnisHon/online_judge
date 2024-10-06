@@ -13,6 +13,7 @@ import com.anishan.user.entity.vo.LoginVo;
 import com.anishan.user.entity.vo.AuthResultVo;
 import com.anishan.user.service.*;
 import com.anishan.api.util.AuthUtil;
+import com.anishan.user.util.EmailSender;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +35,14 @@ import java.util.List;
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    SysUserService sysUserService;
-    SysUserRoleService sysUserRoleService;
-    SysRoleMenuService sysRoleMenuService;
-    SysMenuService sysMenuService;
-    StringRedisTemplate stringRedisTemplate;
-    RedisTemplate<String, Object> redisTemplate;
-    PasswordEncoder passwordEncoder;
-    AuthenticationManager authenticationManager;
-    SysRoleService sysRoleService;
+    private final SysUserService sysUserService;
+    private final SysUserRoleService sysUserRoleService;
+    private final SysMenuService sysMenuService;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final SysRoleService sysRoleService;
     // 默认就是student
     private static final Long DEFAULT_ROLE_ID = 1L;
 
@@ -50,7 +50,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AuthenticationServiceImpl(
             SysUserService sysUserService,
             SysUserRoleService sysUserRoleService,
-            SysRoleMenuService sysRoleMenuService,
             SysMenuService sysMenuService,
             RedisTemplate<String, Object> redisTemplate,
             StringRedisTemplate stringRedisTemplate,
@@ -60,7 +59,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     ) {
         this.sysUserService = sysUserService;
         this.sysUserRoleService = sysUserRoleService;
-        this.sysRoleMenuService = sysRoleMenuService;
         this.sysMenuService = sysMenuService;
         this.redisTemplate = redisTemplate;
         this.stringRedisTemplate = stringRedisTemplate;
@@ -97,7 +95,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     public Authentication doCheckLogin(LoginForm loginForm) {
 
-        if (!AuthUtil.checkAndRemoveCaptchaCode(stringRedisTemplate, loginForm.getToken(), loginForm.getCaptchaCode())) {
+        if (AuthUtil.checkAndRemoveCaptchaCode(stringRedisTemplate, loginForm.getToken(), loginForm.getCaptchaCode())) {
             throw new RuntimeException("验证码错误");
         }
 
@@ -142,6 +140,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private LoginVo doCheckRegistration(RegistrationForm registrationForm) {
         LoginVo loginVo = new LoginVo();
         loginVo.setSuccess(false);
+
         if (!doCheckEmailCode(registrationForm.getCode())) {
             loginVo.setMessage("邮箱验证码错误");
         } else if (sysUserService.existsUsername(registrationForm.getUserName())) {
@@ -211,7 +210,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private boolean doCheckEmailCode(String email, String code) {
-        return !AuthUtil.checkEmailCode(stringRedisTemplate, email, code);
+        return AuthUtil.checkEmailCode(stringRedisTemplate, email, code);
     }
     private AuthResultVo checkEmailCode(String code) {
         String email = me().getUser().getEmail();
@@ -223,7 +222,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         AuthResultVo authResultVo = new AuthResultVo();
         authResultVo.setSuccess(false);
 
-        if (doCheckEmailCode(email, code)) {
+        if (!doCheckEmailCode(email, code)) {
             authResultVo.setMessage("验证码错误");
 
         } else {
@@ -322,7 +321,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return authResultVo;
         }
 
-        String code = AuthUtil.sendEmailCodeAsync(email);
+        String code = EmailSender.sendEmailCodeAsync(email);
 
         AuthUtil.cacheEmailCode(stringRedisTemplate, email, code);
 

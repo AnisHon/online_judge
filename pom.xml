@@ -13,6 +13,7 @@
         <module>commons</module>
         <module>gateway-server</module>
         <module>common-api</module>
+        <module>problem-service</module>
     </modules>
 
     <parent>

@@ -1,0 +1,12 @@
+spring:
+  config:
+    name: problem-service
+
+
+oj:
+  db:
+    database: db_problem
+
+  knife4j:
+    resource: com.anishan.problem
+

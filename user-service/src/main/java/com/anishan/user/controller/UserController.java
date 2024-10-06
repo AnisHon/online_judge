@@ -27,7 +27,7 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
 
-    SysUserService sysUserService;
+    private final SysUserService sysUserService;
 
     @Autowired
     public UserController(SysUserService sysUserService) {

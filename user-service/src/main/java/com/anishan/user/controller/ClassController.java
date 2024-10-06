@@ -25,7 +25,7 @@ import java.util.List;
 public class ClassController {
 
 
-    SysClassService sysClassService;
+    private final SysClassService sysClassService;
     @Autowired
     public ClassController(SysClassService sysClassService) {
         this.sysClassService = sysClassService;

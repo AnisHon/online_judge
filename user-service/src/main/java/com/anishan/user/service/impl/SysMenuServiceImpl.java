@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     implements SysMenuService{
 
-    SysMenuMapper sysMenuMapper;
-    SysRoleMenuService sysRoleMenuService;
+    private final SysMenuMapper sysMenuMapper;
+    private final SysRoleMenuService sysRoleMenuService;
 
     @Autowired
     public SysMenuServiceImpl(SysMenuMapper sysMenuMapper, SysRoleMenuService sysRoleMenuService) {

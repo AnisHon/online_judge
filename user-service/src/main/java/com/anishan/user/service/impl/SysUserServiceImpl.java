@@ -44,10 +44,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
                                       "abcdefghijklmnopqrstuvwxyz" +
                                       "0123456789";
 
-    private SysUserMapper sysUserMapper;
-    private SysRoleService sysRoleService;
-    private SysUserRoleService sysUserRoleService;
-    private PasswordEncoder passwordEncoder;
+    private final SysUserMapper sysUserMapper;
+    private final SysRoleService sysRoleService;
+    private final SysUserRoleService sysUserRoleService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public SysUserServiceImpl(SysUserMapper sysUserMapper,

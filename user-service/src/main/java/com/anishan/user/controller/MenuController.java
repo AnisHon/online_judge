@@ -23,7 +23,7 @@ import java.util.List;
 public class MenuController {
 
 
-    SysMenuService sysMenuService;
+    private final SysMenuService sysMenuService;
     @Autowired
     public MenuController(SysMenuService sysMenuService) {
         this.sysMenuService = sysMenuService;

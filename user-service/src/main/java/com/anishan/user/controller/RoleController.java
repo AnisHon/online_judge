@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping("/role")
 public class RoleController {
 
-    private SysRoleService sysRoleService;
+    private final SysRoleService sysRoleService;
 
     @Autowired
     public RoleController(SysRoleService sysRoleService) {

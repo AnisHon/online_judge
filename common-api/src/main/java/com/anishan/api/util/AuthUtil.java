@@ -1,9 +1,6 @@
 package com.anishan.api.util;
 
 import cn.hutool.captcha.AbstractCaptcha;
-import cn.hutool.captcha.generator.RandomGenerator;
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.extra.mail.MailUtil;
 import com.anishan.api.entity.LoginUser;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -15,14 +12,8 @@ import java.util.concurrent.TimeUnit;
 
 public class AuthUtil {
 
-    private static final int SIZE = 6;
-    private static final String RANDOM_BASE = "1234567890";
-    private static final String SUBJECT = "OJ网 验证码";
+    public static final int CODE_TIME_OUT_SECOND = 60 * 2;
 
-
-    private static String getRandomCode() {
-        return new RandomGenerator(RANDOM_BASE, SIZE).generate();
-    }
 
     @NotNull
     @Contract(pure = true)
@@ -44,24 +35,6 @@ public class AuthUtil {
 
     @NotNull
     @Contract(pure = true)
-    private static String getContent(String code) {
-        return "您的验证码是:" + code;
-    }
-
-    public static final int CODE_TIME_OUT_SECOND = 60 * 2;
-
-
-
-    public static String sendEmailCodeAsync(String email) {
-        final String randomCode = getRandomCode();
-        ThreadUtil.execAsync(() -> {
-            MailUtil.send(email, SUBJECT, getContent(randomCode), false);
-            System.out.println("Test");
-            System.out.println(email);
-            System.out.println(randomCode);
-        });
-        return randomCode;
-    }
 
     public static AbstractCaptcha generateCaptchaCode() {
         return cn.hutool.captcha.CaptchaUtil.createShearCaptcha(150, 75);
@@ -126,7 +99,7 @@ public class AuthUtil {
 
     public static boolean checkAndRemoveCaptchaCode(@NotNull StringRedisTemplate redisTemplate, String captchaToken, String inputCode) {
         String code = getAndRemoveCaptchaCode(redisTemplate, captchaToken);
-        return Objects.equals(code, inputCode);
+        return !Objects.equals(code, inputCode);
     }
 
     public static String createToken(Long userId) {

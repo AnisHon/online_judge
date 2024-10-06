@@ -18,9 +18,9 @@ import java.util.Optional;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    SysUserService sysUserService;
-    SysUserRoleService sysUserRoleService;
-    SysMenuService sysMenuService;
+    private final SysUserService sysUserService;
+    private final SysUserRoleService sysUserRoleService;
+    private final SysMenuService sysMenuService;
 
     public UserDetailsServiceImpl(
             SysUserService sysUserService,

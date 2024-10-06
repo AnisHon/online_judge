@@ -1,6 +1,7 @@
 package com.anishan.user.controller;
 
 
+import com.anishan.api.entity.SysUser;
 import com.anishan.commons.entity.R;
 import com.anishan.api.entity.LoginUser;
 import com.anishan.user.entity.dto.LoginForm;
@@ -11,9 +12,11 @@ import com.anishan.user.entity.vo.LoginVo;
 import com.anishan.user.entity.vo.TreedMenuVo;
 import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.SysMenuService;
+import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,21 +26,18 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
 
 @Api("认证相关接口")
 @RestController()
 @RequestMapping("/auth")
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class AuthenticationController {
 
 
-    SysMenuService sysMenuService;
-    AuthenticationService authenticationService;
-
-    @Autowired
-    public AuthenticationController(SysMenuService sysMenuService, AuthenticationService authenticationService) {
-        this.sysMenuService = sysMenuService;
-        this.authenticationService = authenticationService;
-    }
+    private final SysMenuService sysMenuService;
+    private final AuthenticationService authenticationService;
+    private final SysUserService sysUserService;
 
     @GetMapping("/menus")
     @ApiOperation("获取所有菜单，以树状的形式返回")
@@ -77,42 +77,53 @@ public class AuthenticationController {
     @PostMapping("/reset-pass")
     @ApiOperation("重制密码，重新设置密码")
     public R<AuthResultVo> resetPass(
-            @RequestBody @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
-            @RequestBody @Length(min = 8, max = 16) @ApiParam(value = "新密码", required = true) String password
+            @RequestParam @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
+            @RequestParam @Length(min = 8, max = 16) @ApiParam(value = "新密码", required = true) String password
     ) {
         AuthResultVo authResultVo = authenticationService.resetPassword(code, password);
-        return R.success(authResultVo);
+        return authResultVo.toR();
     }
 
     @PostMapping("/forget-pass")
     @ApiOperation("忘记密码，重设密码")
     public R<AuthResultVo> forgetPass(
-            @RequestBody @NotNull @ApiParam(value = "邮箱或者用户名", required = true) String username,
-            @RequestBody @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
-            @RequestBody @Length(min = 8, max = 16) @ApiParam(value = "新密码", required = true) String password
+            @RequestParam @NotNull @ApiParam(value = "邮箱或者用户名", required = true) String username,
+            @RequestParam @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
+            @RequestParam @Length(min = 8, max = 16) @ApiParam(value = "新密码", required = true) String password
     ) {
-        AuthResultVo authResultVo = authenticationService.resetPassword(code, password);
-        return R.success(authResultVo);
+        SysUser user = sysUserService.getUserByUsernameOrEmail(username);
+        if (Objects.isNull(user)) {
+            return AuthResultVo.fail("用户不存在").toR();
+        }
+        AuthResultVo authResultVo = authenticationService.resetPassword(
+                user.getUserId(),
+                user.getEmail(),
+                code,
+                password
+        );
+        return authResultVo.toR();
     }
 
 
     @PostMapping("/reset-email")
     @ApiOperation("重制邮箱")
-    public R<AuthResultVo> resetEmail(@RequestBody @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
-                                      @RequestBody @Email @ApiParam(value = "新邮箱", required = true) String newEmail
+    public R<AuthResultVo> resetEmail(
+            @RequestParam @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
+            @RequestParam @Email @ApiParam(value = "新邮箱", required = true) String newEmail
     ) {
         AuthResultVo authResultVo = authenticationService.resetEmail(code, newEmail);
-        return R.success(authResultVo);
+        return authResultVo.toR();
     }
 
     @PostMapping("/send-email-code")
     @ApiOperation("发送邮箱验证码")
 
-    public R<AuthResultVo> sendEmailCode(@RequestBody @Email @ApiParam(value = "邮箱", required = true) String email,
-                                         @RequestBody @NotNull @ApiParam(value = "验证码token", required = true) String captchaToken,
-                                         @RequestBody @NotNull @ApiParam(value = "验证码code", required = true) String captchaCode) {
+    public R<AuthResultVo> sendEmailCode(
+            @RequestParam @Email @ApiParam(value = "邮箱", required = true) String email,
+            @RequestParam @NotNull @ApiParam(value = "验证码token", required = true) String captchaToken,
+            @RequestParam @NotNull @ApiParam(value = "验证码code", required = true) String captchaCode) {
         AuthResultVo authResultVo = authenticationService.sendEmailCode(email, captchaToken, captchaCode);
-        return R.success(authResultVo);
+        return authResultVo.toR();
     }
 
     @GetMapping("/captcha-code")

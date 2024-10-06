@@ -20,8 +20,8 @@ import java.util.List;
 @RequestMapping("/student")
 public class StudentController {
 
-    SysUserService sysUserService;
-    SysClassService classService;
+    private final SysUserService sysUserService;
+    private final SysClassService classService;
     public StudentController(
             SysUserService sysUserService,
             SysClassService classService

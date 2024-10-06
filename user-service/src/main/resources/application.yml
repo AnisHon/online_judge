@@ -2,9 +2,11 @@ spring:
   config:
     name: user-service
 
+
 oj:
   db:
     database: db_user
 
   knife4j:
     resource: com.anishan.user
+

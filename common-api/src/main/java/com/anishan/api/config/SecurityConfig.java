@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,6 +22,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @ComponentScan("com.anishan.api.filter")
 public class SecurityConfig {
 
+    private static final String[] SWAGGER_API_URL = {
+            "/swagger-resources/**", "/v2/**", "/v3/**"
+    };
     private final String[] PERMIT_URI = {
             "/auth/login",
             "/auth/registration",
@@ -53,7 +55,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(conf -> {
                     // todo
                     conf.antMatchers(PERMIT_URI).permitAll();
-                    conf.anyRequest().permitAll();
+                    conf.antMatchers(SWAGGER_API_URL).permitAll();
+                    conf.anyRequest().authenticated();
                 })
 
                 .exceptionHandling(conf -> {

@@ -27,7 +27,7 @@ import java.util.List;
 @Service
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole>
     implements SysRoleService{
-    SysRoleMapper sysRoleMapper;
+    private final SysRoleMapper sysRoleMapper;
 
     @Autowired
     public SysRoleServiceImpl(SysRoleMapper sysRoleMapper) {

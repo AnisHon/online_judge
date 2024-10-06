@@ -1,8 +1,6 @@
 package com.anishan.user.controller;
 
-import com.anishan.api.entity.SysUser;
 import com.anishan.commons.entity.R;
-import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.user.entity.dto.ClassDto;
 import com.anishan.user.entity.dto.ClassPagedQuery;
@@ -11,41 +9,25 @@ import com.anishan.user.entity.vo.BinaryResultOv;
 import com.anishan.user.entity.vo.ClassVo;
 import com.anishan.user.entity.vo.UserVo;
 import com.anishan.user.service.*;
-import com.anishan.user.service.impl.AuthenticationServiceImpl;
-import com.anishan.user.util.UserUtil;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 @RestController
 @RequestMapping("/teacher")
 public class TeacherController {
 
-    private final AuthenticationServiceImpl authenticationServiceImpl;
-    SysUserService sysUserService;
-    SysClassService sysClassService;
-    StudentClassService studentClassService;
-    SysUserRoleService sysUserRoleService;
-    TeacherClassService teacherClassService;
+    private final SysUserService sysUserService;
+    private final SysClassService sysClassService;
     public TeacherController(
             SysUserService sysUserService,
-            SysClassService sysClassService,
-            StudentClassService studentClassService,
-            SysUserRoleService sysUserRoleService,
-            TeacherClassService teacherClassService,
-            AuthenticationServiceImpl authenticationServiceImpl) {
+            SysClassService sysClassService
+    ) {
         this.sysUserService = sysUserService;
         this.sysClassService = sysClassService;
-        this.studentClassService = studentClassService;
-        this.sysUserRoleService = sysUserRoleService;
-        this.teacherClassService = teacherClassService;
-        this.authenticationServiceImpl = authenticationServiceImpl;
     }
 
 
