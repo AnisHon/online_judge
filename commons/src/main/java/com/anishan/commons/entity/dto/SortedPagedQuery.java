@@ -8,12 +8,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
+@ApiModel("排序范型类")
 public abstract class SortedPagedQuery<T> extends PagedQuery<T> {
     @ApiModelProperty("排序列，只能是以上列，名字也要严格按照以上列写")
     protected String sortColumn;

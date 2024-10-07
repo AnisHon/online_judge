@@ -65,9 +65,7 @@ public class MysqlMappingUtils {
         Class<?> clazz = t.getClass();
         Field[] declaredFields = clazz.getDeclaredFields();
 
-        Wrapper<K> wrapper = doBuildWrapper(declaredFields, t);
-
-        return wrapper;
+        return doBuildWrapper(declaredFields, t);
     }
 
     private static <T> Wrapper<T> doBuildWrapper(Field[] declaredFields, Object obj) {

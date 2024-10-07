@@ -1,18 +1,10 @@
 package com.anishan.user.util;
 
-import cn.hutool.captcha.AbstractCaptcha;
 import cn.hutool.captcha.generator.RandomGenerator;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.extra.mail.MailUtil;
-import com.anishan.api.entity.LoginUser;
-import com.anishan.api.util.JwtUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public class EmailSender {
 

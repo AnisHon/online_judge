@@ -97,11 +97,12 @@ public class RoleController {
     @ApiOperation("添加role")
     public R<Boolean> addRole(@RequestBody @Validated(ValidationGroup.Update.class) RoleDto roleDto) {
 
+        boolean b;
         try {
-            sysRoleService.addRole(roleDto);
+            b = sysRoleService.addRole(roleDto);
         } catch (Exception e) {
             return R.success(false);
         }
-        return R.success(true);
+        return R.success(b);
     }
 }

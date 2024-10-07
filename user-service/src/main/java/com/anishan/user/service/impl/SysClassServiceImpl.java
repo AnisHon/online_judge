@@ -21,7 +21,6 @@ import com.anishan.user.entity.po.SysClass;
 import com.anishan.user.service.SysClassService;
 import com.anishan.user.mapper.SysClassMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

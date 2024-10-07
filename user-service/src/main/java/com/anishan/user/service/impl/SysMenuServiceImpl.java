@@ -132,7 +132,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
 
     @Override
     public List<String> getAuthorities_(List<SysRole> roleIds) {
-        List<Long> collect = roleIds.stream().map(role -> role.getRoleId()).collect(Collectors.toList());
+        List<Long> collect = roleIds.stream().map(SysRole::getRoleId).collect(Collectors.toList());
 
         return getAuthorities(collect);
     }

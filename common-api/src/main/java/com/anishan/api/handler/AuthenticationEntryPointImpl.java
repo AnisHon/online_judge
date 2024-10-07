@@ -19,7 +19,7 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException authException
-    ) throws IOException, ServletException {
+    ) throws IOException {
 
         R<String> rest;
         if (authException instanceof IllegalTokenException) {

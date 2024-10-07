@@ -1,8 +1,5 @@
 package com.anishan.commons.entity;
 
-import static cn.hutool.http.HttpStatus.*;
-
-import cn.hutool.core.lang.hash.Hash;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -10,6 +7,8 @@ import lombok.Data;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static cn.hutool.http.HttpStatus.*;
 
 
 @Data

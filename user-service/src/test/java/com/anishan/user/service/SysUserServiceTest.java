@@ -1,6 +1,5 @@
 package com.anishan.user.service;
 
-import cn.hutool.extra.mail.MailUtil;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.entity.dto.UserPagedQuery;
 import com.anishan.user.util.EmailSender;

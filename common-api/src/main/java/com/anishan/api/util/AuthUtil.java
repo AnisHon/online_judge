@@ -18,7 +18,7 @@ public class AuthUtil {
     @NotNull
     @Contract(pure = true)
     private static String getLoginKey(@NotNull Long id) {
-        return "user-service:userId:" + id.toString();
+        return "user-service:userId:" + id;
     }
 
     @NotNull

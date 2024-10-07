@@ -9,9 +9,11 @@ import com.anishan.api.entity.SysUser;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.*;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("用户查询,String类型支持模糊查询")
 public class UserPagedQuery extends SortedPagedQuery<SysUser> {
