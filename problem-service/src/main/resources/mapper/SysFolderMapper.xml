@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.SysFolderMapper">
+
+    <resultMap id="BaseResultMap" type="com.anishan.problem.entity.po.SysFolder">
+            <id property="folderId" column="folder_id" jdbcType="BIGINT"/>
+            <result property="folderName" column="folder_name" jdbcType="VARCHAR"/>
+            <result property="folderType" column="folder_type" jdbcType="CHAR"/>
+            <result property="parentId" column="parent_id" jdbcType="BIGINT"/>
+            <result property="listId" column="list_id" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        folder_id,folder_name,folder_type,
+        parent_id,list_id
+    </sql>
+</mapper>

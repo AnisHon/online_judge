@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.SysLanguageMapper">
+
+    <resultMap id="BaseResultMap" type="com.anishan.problem.entity.po.SysLanguage">
+            <id property="languageId" column="language_id" jdbcType="BIGINT"/>
+            <result property="languageName" column="language_name" jdbcType="VARCHAR"/>
+            <result property="compileCommand" column="compile_command" jdbcType="VARCHAR"/>
+            <result property="seq" column="seq" jdbcType="INTEGER"/>
+            <result property="gmtCreate" column="gmt_create" jdbcType="TIMESTAMP"/>
+            <result property="gmtModified" column="gmt_modified" jdbcType="TIMESTAMP"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        language_id,language_name,compile_command,
+        seq,gmt_create,gmt_modified,
+        del_flag
+    </sql>
+</mapper>
