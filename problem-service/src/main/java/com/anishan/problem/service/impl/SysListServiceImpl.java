@@ -1,7 +1,6 @@
 package com.anishan.problem.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.problem.entity.po.SysList;
 import com.anishan.problem.service.SysListService;
 import com.anishan.problem.mapper.SysListMapper;
 import org.springframework.stereotype.Service;

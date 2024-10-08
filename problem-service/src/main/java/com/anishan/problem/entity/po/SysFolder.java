@@ -1,5 +1,6 @@
 package com.anishan.problem.entity.po;
 
+import com.anishan.commons.e.FolderType;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
@@ -26,7 +27,7 @@ public class SysFolder implements Serializable {
     /**
      * 类型(D directory 目录，F file 文件)
      */
-    private String folderType;
+    private FolderType folderType;
 
     /**
      * 父文件夹名，默认0表示没有父文件夹

@@ -1,7 +1,6 @@
 package com.anishan.problem.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.problem.entity.po.SysFolder;
 import com.anishan.problem.service.SysFolderService;
 import com.anishan.problem.mapper.SysFolderMapper;
 import org.springframework.stereotype.Service;

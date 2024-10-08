@@ -1,5 +1,6 @@
 package com.anishan.problem.entity.po;
 
+import com.anishan.commons.e.JudgeResult;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -7,6 +8,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 /**
@@ -40,7 +43,8 @@ public class SubmitRecord implements Serializable {
     /**
      * 结果，取值范围 (AC, RE, WA, TLE, MLE)
      */
-    private String result;
+    @JsonFormat
+    private JudgeResult result;
 
     /**
      * 耗时 单位ms
