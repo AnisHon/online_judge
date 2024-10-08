@@ -8,6 +8,7 @@
             <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
             <result property="title" column="title" jdbcType="VARCHAR"/>
             <result property="author" column="author" jdbcType="VARCHAR"/>
+            <result property="typeId" column="type_id" jdbcType="BIGINT"/>
             <result property="timeLimit" column="time_limit" jdbcType="INTEGER"/>
             <result property="memoryLimit" column="memory_limit" jdbcType="INTEGER"/>
             <result property="stackLimit" column="stack_limit" jdbcType="INTEGER"/>
@@ -19,13 +20,6 @@
             <result property="source" column="source" jdbcType="VARCHAR"/>
             <result property="hint" column="hint" jdbcType="VARCHAR"/>
             <result property="auth" column="auth" jdbcType="INTEGER"/>
-            <result property="ioScore" column="io_score" jdbcType="INTEGER"/>
-            <result property="judgeMode" column="judge_mode" jdbcType="VARCHAR"/>
-            <result property="judgeCaseMode" column="judge_case_mode" jdbcType="VARCHAR"/>
-            <result property="userExtraFile" column="user_extra_file" jdbcType="VARCHAR"/>
-            <result property="judgeExtraFile" column="judge_extra_file" jdbcType="VARCHAR"/>
-            <result property="spjCode" column="spj_code" jdbcType="VARCHAR"/>
-            <result property="spjLanguage" column="spj_language" jdbcType="VARCHAR"/>
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
@@ -33,12 +27,10 @@
 
     <sql id="Base_Column_List">
         problem_id,title,author,
-        time_limit,memory_limit,stack_limit,
-        description,input,output,
-        input_example,output_example,source,
-        hint,auth,io_score,
-        judge_mode,judge_case_mode,user_extra_file,
-        judge_extra_file,spj_code,spj_language,
+        type_id,time_limit,memory_limit,
+        stack_limit,description,input,
+        output,input_example,output_example,
+        source,hint,auth,
         del_flag,create_time,update_time
     </sql>
 </mapper>

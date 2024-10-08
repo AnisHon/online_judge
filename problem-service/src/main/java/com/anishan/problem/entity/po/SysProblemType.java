@@ -7,42 +7,36 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * 题目标签表
- * @TableName sys_tag
+ * 题目类型信息表
+ * @TableName sys_problem_type
  */
-@TableName(value ="sys_tag")
+@TableName(value ="sys_problem_type")
 @Data
-public class SysTag implements Serializable {
+public class SysProblemType implements Serializable {
     /**
-     * 主键
+     * 类型id
      */
     @TableId(type = IdType.AUTO)
-    private Long tagId;
+    private Long typeId;
 
     /**
-     * 题目标签
+     * 类型名
      */
-    private String tagName;
+    private String typeName;
 
     /**
-     * 颜色RGB值，带#
+     * 创建时间
      */
-    private String tagColor;
-
-    /**
-     * 
-     */
-
     private LocalDateTime createTime;
 
     /**
-     * 
+     * 更新时间，用于乐观锁
      */
     @Version
     private LocalDateTime updateTime;
 
     /**
-     * 删除标记
+     * 逻辑删除
      */
     @TableLogic
     private Integer delFlag;

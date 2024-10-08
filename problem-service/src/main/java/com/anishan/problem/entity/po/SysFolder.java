@@ -38,8 +38,11 @@ public class SysFolder implements Serializable {
      */
     private Long listId;
 
+    /**
+     * logic delete
+     */
     @TableLogic
-    private boolean delFlag;
+    private Integer delFlag;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

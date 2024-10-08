@@ -1,9 +1,11 @@
 package com.anishan.problem.entity.po;
 
-import com.baomidou.mybatisplus.annotation.*;
-
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.Date;
 import lombok.Data;
 
 /**
@@ -30,20 +32,23 @@ public class SysList implements Serializable {
     private String description;
 
     /**
-     * 
+     * 提交次数限制
      */
-    private LocalDateTime createTime;
+    private Integer changes;
 
     /**
      * 
      */
-    @Version
-    private LocalDateTime updateTime;
+    private Date createTime;
+
+    /**
+     * 
+     */
+    private Date updateTime;
 
     /**
      * 删除标记
      */
-    @TableLogic
     private Integer delFlag;
 
     @TableField(exist = false)

@@ -23,7 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private static final String[] SWAGGER_API_URL = {
-            "/swagger-resources/**", "/v2/**", "/v3/**"
+            "/swagger-resources/**", "/v2/**", "/v3/**", "/doc.html", "/webjars/**"
     };
     private final String[] PERMIT_URI = {
             "/auth/login",

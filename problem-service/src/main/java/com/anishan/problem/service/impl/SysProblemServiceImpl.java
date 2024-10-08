@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 /**
 * @author anishan
 * @description 针对表【sys_problem(题目信息)】的数据库操作Service实现
-* @createDate 2024-10-08 11:36:22
+* @createDate 2024-10-08 14:59:21
 */
 @Service
 public class SysProblemServiceImpl extends ServiceImpl<SysProblemMapper, SysProblem>

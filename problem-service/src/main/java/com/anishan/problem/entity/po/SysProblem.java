@@ -30,6 +30,11 @@ public class SysProblem implements Serializable {
     private String author;
 
     /**
+     * 类型ID，如果不是0就用answer属性
+     */
+    private Long typeId;
+
+    /**
      * 单位ms
      */
     private Integer timeLimit;
@@ -80,44 +85,9 @@ public class SysProblem implements Serializable {
     private String hint;
 
     /**
-     * 默认为1公开，2为私有，3为比赛题目
+     * 默认为1公开，2为比赛题目
      */
     private Integer auth;
-
-    /**
-     * 当该题目为OI题目时的分数
-     */
-    private Integer ioScore;
-
-    /**
-     * 题目评测模式,default、spj、interactive
-     */
-    private String judgeMode;
-
-    /**
-     * 题目样例评测模式,default,subtask_lowest,subtask_average
-     */
-    private String judgeCaseMode;
-
-    /**
-     * 题目评测时用户程序的额外文件 json key:name value:content
-     */
-    private String userExtraFile;
-
-    /**
-     * 题目评测时交互或特殊程序的额外文件 json key:name value:content
-     */
-    private String judgeExtraFile;
-
-    /**
-     * 特判程序或交互程序代码
-     */
-    private String spjCode;
-
-    /**
-     * 特判程序或交互程序代码的语言
-     */
-    private String spjLanguage;
 
     /**
      * 删除标记(0未删除 1删除)

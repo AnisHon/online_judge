@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 /**
 * @author anishan
 * @description 针对表【sys_list(题单表)】的数据库操作Service实现
-* @createDate 2024-10-08 11:36:15
+* @createDate 2024-10-08 14:59:21
 */
 @Service
 public class SysListServiceImpl extends ServiceImpl<SysListMapper, SysList>

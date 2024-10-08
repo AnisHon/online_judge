@@ -10,10 +10,11 @@
             <result property="folderType" column="folder_type" jdbcType="CHAR"/>
             <result property="parentId" column="parent_id" jdbcType="BIGINT"/>
             <result property="listId" column="list_id" jdbcType="BIGINT"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         folder_id,folder_name,folder_type,
-        parent_id,list_id
+        parent_id,list_id,del_flag
     </sql>
 </mapper>

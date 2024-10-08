@@ -3,13 +3,17 @@ package com.anishan.api.advice;
 import cn.hutool.http.HttpStatus;
 import com.anishan.commons.entity.R;
 import com.anishan.api.exception.IllegalTokenException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+import java.util.Objects;
 
 @ControllerAdvice
 public class GlobalExceptionAdvice {
@@ -52,6 +56,14 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(NoHandlerFoundException.class)
     public R<String> handleNoHandlerFoundException(NoHandlerFoundException e) {
         return R.error(HttpStatus.HTTP_NOT_FOUND, e.getMessage());
+    }
+
+    @ResponseBody
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public R<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        String defaultMessage = Objects.requireNonNull(e.getFieldError()).getDefaultMessage();
+        String field = e.getFieldError().getField();
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, field + ":" + defaultMessage);
     }
 
 

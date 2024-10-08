@@ -8,7 +8,6 @@
             <id property="contestId" column="contest_id" jdbcType="BIGINT"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
             <result property="title" column="title" jdbcType="VARCHAR"/>
-            <result property="type" column="type" jdbcType="INTEGER"/>
             <result property="listId" column="list_id" jdbcType="BIGINT"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="auth" column="auth" jdbcType="INTEGER"/>
@@ -22,9 +21,8 @@
 
     <sql id="Base_Column_List">
         contest_id,user_id,title,
-        type,list_id,description,
-        auth,pwd,start_time,
-        end_time,del_flag,create_time,
-        update_time
+        list_id,description,auth,
+        pwd,start_time,end_time,
+        del_flag,create_time,update_time
     </sql>
 </mapper>

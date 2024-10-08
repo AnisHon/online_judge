@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 import lombok.Data;
 
 /**
@@ -31,11 +30,6 @@ public class SysContest implements Serializable {
     private String title;
 
     /**
-     * 0为acm赛制，1为比分赛制
-     */
-    private Integer type;
-
-    /**
      * 题单
      */
     private Long listId;
@@ -58,12 +52,12 @@ public class SysContest implements Serializable {
     /**
      * 开始时间
      */
-    private Date startTime;
+    private LocalDateTime startTime;
 
     /**
      * 结束时间
      */
-    private Date endTime;
+    private LocalDateTime endTime;
 
     /**
      * 删除标记

@@ -12,11 +12,11 @@ import javax.validation.constraints.NotNull;
 public class LoginForm {
 
     @NotNull
-    @Length(min = 1, max = 20)
+    @Length(min = 1, max = 20, message = "不能为空")
     @ApiModelProperty(required = true)
     private String username;
 
-    @Length(min = 1, max = 16)
+    @Length(min = 8, max = 16)
     @ApiModelProperty(required = true)
     private String password;
 
