@@ -1,5 +1,6 @@
 package com.anishan.problem.service;
 
+import com.anishan.problem.entity.po.SysProblem;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

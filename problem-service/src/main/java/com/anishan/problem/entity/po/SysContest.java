@@ -1,5 +1,6 @@
 package com.anishan.problem.entity.po;
 
+import com.anishan.commons.e.ProblemAuth;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
@@ -40,9 +41,9 @@ public class SysContest implements Serializable {
     private String description;
 
     /**
-     * 0公开赛，1为私有赛（访问需要密码）
+     * 0公开赛，1为私有赛（访问需要密码）2为白名单模式
      */
-    private Integer auth;
+    private ProblemAuth auth;
 
     /**
      * 比赛密码

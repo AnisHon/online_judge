@@ -1,9 +1,12 @@
 package com.anishan.problem.entity.dto;
 
 import com.anishan.commons.e.FolderType;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import javax.validation.constraints.NotNull;
 
 /**
  *
@@ -12,6 +15,8 @@ import lombok.Data;
 @Data
 @ApiModel("文件夹，文件")
 public class SysFolderDto {
+
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("文件夹ID，不存在ID为0的wjj")
     private Long folderId;
 

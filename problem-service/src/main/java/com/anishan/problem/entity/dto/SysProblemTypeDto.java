@@ -1,9 +1,11 @@
 package com.anishan.problem.entity.dto;
 
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 
@@ -11,13 +13,11 @@ import java.time.LocalDateTime;
 @ApiModel("题目类型信息")
 public class SysProblemTypeDto {
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("类型id")
     private Long typeId;
 
     @ApiModelProperty("类型名")
     private String typeName;
-
-    @ApiModelProperty("创建时间")
-    private LocalDateTime createTime;
 
 }

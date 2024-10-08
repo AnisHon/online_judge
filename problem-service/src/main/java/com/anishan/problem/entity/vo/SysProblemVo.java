@@ -1,6 +1,7 @@
 package com.anishan.problem.entity.vo;
 
 import com.anishan.commons.e.ContestAuth;
+import com.anishan.commons.e.ProblemAuth;
 import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -56,7 +57,7 @@ public class SysProblemVo implements Serializable {
     private String hint;
 
     @ApiModelProperty("默认为1公开，2为比赛题目")
-    private ContestAuth auth;
+    private ProblemAuth auth;
 
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;

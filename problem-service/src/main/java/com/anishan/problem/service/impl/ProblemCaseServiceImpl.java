@@ -1,5 +1,6 @@
 package com.anishan.problem.service.impl;
 
+import com.anishan.problem.entity.po.ProblemCase;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.service.ProblemCaseService;
 import com.anishan.problem.mapper.ProblemCaseMapper;

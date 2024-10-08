@@ -1,5 +1,6 @@
 package com.anishan.problem.mapper;
 
+import com.anishan.problem.entity.po.SubmitRecord;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

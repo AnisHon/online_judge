@@ -1,5 +1,6 @@
 package com.anishan.problem.service.impl;
 
+import com.anishan.problem.entity.po.SysContest;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.service.SysContestService;
 import com.anishan.problem.mapper.SysContestMapper;

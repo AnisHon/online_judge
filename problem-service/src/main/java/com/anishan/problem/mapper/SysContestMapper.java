@@ -1,5 +1,6 @@
 package com.anishan.problem.mapper;
 
+import com.anishan.problem.entity.po.SysContest;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

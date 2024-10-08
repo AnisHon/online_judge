@@ -120,7 +120,7 @@ CREATE TABLE sys_contest (
     title varchar(255) DEFAULT NULL COMMENT '比赛标题',
     list_id bigint(20) not null comment '题单',
     description longtext COMMENT '比赛说明',
-    auth int(11) NOT NULL COMMENT '0公开赛，1为私有赛（访问需要密码）',
+    auth int(11) NOT NULL COMMENT '0公开赛，1为私有赛（访问需要密码）2为白名单模式',
     pwd varchar(255) DEFAULT NULL COMMENT '比赛密码',
     start_time datetime DEFAULT NULL COMMENT '开始时间',
     end_time datetime DEFAULT NULL COMMENT '结束时间',

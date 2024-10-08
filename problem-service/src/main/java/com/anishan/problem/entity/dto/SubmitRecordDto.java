@@ -32,7 +32,4 @@ public class SubmitRecordDto {
     @ApiModelProperty("内存使用 单位kb")
     private Integer memory;
 
-    @ApiModelProperty("提交时间")
-    private LocalDateTime submitTime;
-
 }

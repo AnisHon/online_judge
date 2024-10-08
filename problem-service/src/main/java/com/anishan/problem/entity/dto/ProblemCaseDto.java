@@ -1,15 +1,18 @@
 package com.anishan.problem.entity.dto;
 
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
 @ApiModel("判题测试用例")
 public class ProblemCaseDto {
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("主键id")
     private Long caseId;
 
@@ -27,8 +30,5 @@ public class ProblemCaseDto {
 
     @ApiModelProperty("答对的分数")
     private Integer score;
-
-    @ApiModelProperty("创建时间")
-    private LocalDateTime createTime;
 
 }

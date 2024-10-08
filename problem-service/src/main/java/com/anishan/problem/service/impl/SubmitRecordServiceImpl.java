@@ -1,5 +1,6 @@
 package com.anishan.problem.service.impl;
 
+import com.anishan.problem.entity.po.SubmitRecord;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.service.SubmitRecordService;
 import com.anishan.problem.mapper.SubmitRecordMapper;

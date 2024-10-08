@@ -1,10 +1,13 @@
 package com.anishan.problem.entity.dto;
 
 import com.anishan.commons.e.ContestAuth;
+import com.anishan.commons.e.ProblemAuth;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -12,6 +15,7 @@ import java.time.LocalDateTime;
 @ApiModel("题目信息")
 public class SysProblemDto {
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("主键")
     private Long problemId;
 
@@ -55,8 +59,6 @@ public class SysProblemDto {
     private String hint;
 
     @ApiModelProperty("默认为1公开，2为比赛题目")
-    private ContestAuth auth;
+    private ProblemAuth auth;
 
-    @ApiModelProperty("创建时间")
-    private LocalDateTime createTime;
 }

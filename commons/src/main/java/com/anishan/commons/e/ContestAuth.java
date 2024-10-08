@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum ContestAuth implements IEnum<Integer>, Enumerator<Integer> {
 
     PUBLIC(0),
-    PRIVATE(1)
+    PRIVATE(1),
+    WhiteList(2),
     ;
 
     private final int value;

@@ -1,6 +1,14 @@
 package com.anishan.problem.service;
 
+import com.anishan.commons.entity.dto.PagedQuery;
+import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.problem.entity.dto.SysTagDto;
+import com.anishan.problem.entity.po.SysTag;
+import com.anishan.problem.entity.vo.SysTagVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
 * @author anishan
@@ -9,4 +17,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface SysTagService extends IService<SysTag> {
 
+    SysTagVo getTagById(@NotNull(message = "id为Null") Long id);
+
+    List<SysTagVo> listTagById(List<Long> ids);
+
+    PagedResult<SysTagVo> listTages(PagedQuery<SysTag> pagedQuery);
+
+    boolean updateTag(SysTagDto tagDto);
+
+    void addTag(SysTagDto tagDto);
 }

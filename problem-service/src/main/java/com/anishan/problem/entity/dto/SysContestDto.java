@@ -1,16 +1,19 @@
 package com.anishan.problem.entity.dto;
 
 import com.anishan.commons.e.ContestAuth;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
 @ApiModel("比赛")
 public class SysContestDto {
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("比赛主键")
     private Long contestId;
 
@@ -26,7 +29,7 @@ public class SysContestDto {
     @ApiModelProperty("比赛说明")
     private String description;
 
-    @ApiModelProperty("0公开赛，1为私有赛（访问需要密码）")
+    @ApiModelProperty("0公开赛，1为私有赛（访问需要密码）2为白名单模式")
     private ContestAuth auth;
 
     @ApiModelProperty("比赛密码")
@@ -38,8 +41,6 @@ public class SysContestDto {
     @ApiModelProperty("结束时间")
     private LocalDateTime endTime;
 
-    @ApiModelProperty("创建时间")
-    private LocalDateTime createTime;
 
 
 }

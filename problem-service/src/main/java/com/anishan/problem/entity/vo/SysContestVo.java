@@ -28,7 +28,7 @@ public class SysContestVo {
     @ApiModelProperty("比赛说明")
     private String description;
 
-    @ApiModelProperty("0公开赛，1为私有赛（访问需要密码）")
+    @ApiModelProperty("0公开赛，1为私有赛（访问需要密码）2为白名单模式")
     private ContestAuth auth;
 
     @ApiModelProperty("比赛密码")
