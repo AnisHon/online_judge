@@ -62,7 +62,9 @@ public class AuthUtil {
 
     public static String getAndRemoveCaptchaCode(@NotNull StringRedisTemplate redisTemplate, String captchaToken) {
         String captchaCodeKey = getCaptchaCodeKey(captchaToken);
-        return redisTemplate.opsForValue().getAndDelete(captchaCodeKey);
+        String s = redisTemplate.opsForValue().get(captchaCodeKey);
+        redisTemplate.delete(captchaCodeKey);
+        return s;
     }
 
 
