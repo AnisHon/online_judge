@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anishan.problem.mapper.SysLanguageMapper">
 
-    <resultMap id="BaseResultMap" type="com.anishan.problem.entity.po.SysLanguage">
+    <resultMap id="BaseResultMap" type="com.anishan.problem.domain.entity.SysLanguage">
             <id property="languageId" column="language_id" jdbcType="BIGINT"/>
             <result property="languageName" column="language_name" jdbcType="VARCHAR"/>
             <result property="compileCommand" column="compile_command" jdbcType="VARCHAR"/>

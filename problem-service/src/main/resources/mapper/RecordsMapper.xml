@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.RecordsMapper">
+
+    <resultMap id="BaseResultMap" type="com.anishan.problem.domain.entity.Records">
+            <id property="recordId" column="record_id" jdbcType="BIGINT"/>
+            <result property="contestId" column="contest_id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="problemId" column="problem_id" jdbcType="BIGINT"/>
+            <result property="score" column="score" jdbcType="DECIMAL"/>
+            <result property="answer" column="answer" jdbcType="OTHER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        record_id,contest_id,user_id,
+        problem_id,score,answer
+    </sql>
+</mapper>
