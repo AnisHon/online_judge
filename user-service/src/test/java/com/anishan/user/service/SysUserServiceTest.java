@@ -1,7 +1,7 @@
 package com.anishan.user.service;
 
 import com.anishan.commons.util.MysqlMappingUtils;
-import com.anishan.user.entity.dto.UserPagedQuery;
+import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.user.util.EmailSender;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

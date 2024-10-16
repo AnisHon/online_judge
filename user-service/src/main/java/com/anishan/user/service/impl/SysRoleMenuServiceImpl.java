@@ -1,10 +1,9 @@
 package com.anishan.user.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import com.anishan.user.mapper.SysRoleMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.user.entity.po.SysRoleMenuRelation;
+import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.anishan.user.service.SysRoleMenuService;
 import com.anishan.user.mapper.SysRoleMenuMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
 * @author anishan

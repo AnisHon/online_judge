@@ -1,6 +1,6 @@
 package com.anishan.user.mapper;
 
-import com.anishan.user.entity.po.SysClass;
+import com.anishan.user.domain.entity.SysClass;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anishan.user.mapper.StudentClassMapper">
 
-    <resultMap id="BaseResultMap" type="com.anishan.user.entity.po.StudentClassRelation">
+    <resultMap id="BaseResultMap" type="com.anishan.user.domain.entity.StudentClassRelation">
             <id property="studentId" column="student_id" jdbcType="BIGINT"/>
             <id property="classId" column="class_id" jdbcType="BIGINT"/>
     </resultMap>

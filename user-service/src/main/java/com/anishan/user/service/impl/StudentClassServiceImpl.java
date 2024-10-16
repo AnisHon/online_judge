@@ -2,7 +2,7 @@ package com.anishan.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.user.entity.po.StudentClassRelation;
+import com.anishan.user.domain.entity.StudentClassRelation;
 import com.anishan.user.service.StudentClassService;
 import com.anishan.user.mapper.StudentClassMapper;
 import org.springframework.stereotype.Service;

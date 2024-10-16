@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.OjProblemMapper">
+
+    <resultMap id="BaseResultMap" type="com.anishan.problem.domain.entity.OjProblem">
+            <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
+            <result property="timeLimit" column="time_limit" jdbcType="INTEGER"/>
+            <result property="difficulty" column="difficulty" jdbcType="INTEGER"/>
+            <result property="memoryLimit" column="memory_limit" jdbcType="INTEGER"/>
+            <result property="stackLimit" column="stack_limit" jdbcType="INTEGER"/>
+            <result property="input" column="input" jdbcType="VARCHAR"/>
+            <result property="output" column="output" jdbcType="VARCHAR"/>
+            <result property="inputExample" column="input_example" jdbcType="VARCHAR"/>
+            <result property="outputExample" column="output_example" jdbcType="VARCHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        problem_id,time_limit,difficulty,
+        memory_limit,stack_limit,input,
+        output,input_example,output_example,
+        del_flag,create_time,update_time
+    </sql>
+</mapper>

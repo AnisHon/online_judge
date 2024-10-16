@@ -2,9 +2,9 @@ package com.anishan.user.controller;
 
 import com.anishan.commons.entity.R;
 import com.anishan.commons.entity.vo.PagedResult;
-import com.anishan.user.entity.dto.ClassPagedQuery;
-import com.anishan.user.entity.vo.BinaryResultOv;
-import com.anishan.user.entity.vo.ClassVo;
+import com.anishan.user.domain.dto.ClassPagedQuery;
+import com.anishan.user.domain.vo.BinaryResultOv;
+import com.anishan.user.domain.vo.ClassVo;
 import com.anishan.user.service.SysClassService;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.ApiOperation;
@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/student")

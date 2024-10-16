@@ -4,7 +4,7 @@ import com.anishan.api.entity.SysRole;
 import com.anishan.user.service.SysRoleService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.user.entity.po.SysUserRoleRelation;
+import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.mapper.SysUserRoleMapper;
 import org.springframework.beans.factory.annotation.Autowired;
