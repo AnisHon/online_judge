@@ -3,16 +3,16 @@ package com.anishan.api.advice;
 import cn.hutool.http.HttpStatus;
 import com.anishan.commons.entity.R;
 import com.anishan.api.exception.IllegalTokenException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import java.util.Objects;
 
 @ControllerAdvice
@@ -66,5 +66,29 @@ public class GlobalExceptionAdvice {
         return R.error(HttpStatus.HTTP_BAD_REQUEST, field + ":" + defaultMessage);
     }
 
+    @ResponseBody
+    @ExceptionHandler(DuplicateKeyException.class)
+    public R<String> handleDuplicateKeyException(DuplicateKeyException e) {
+        return R.error(HttpStatus.HTTP_CONFLICT, e.getMessage());
+    }
+
+    @ResponseBody
+    @ExceptionHandler(RuntimeException.class)
+    public R<String> handleRuntimeException(RuntimeException e) {
+        e.printStackTrace();
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+    }
+
+    @ResponseBody
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public R<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, "JSON语法错误");
+    }
+//
+//    @ResponseBody
+//    @ExceptionHandler(MismatchedInputException.class)
+//    public R<String> handleMismatchedInputException(MismatchedInputException e) {
+//        return R.error(HttpStatus.HTTP_BAD_REQUEST, "JSON语法错误");
+//    }
 
 }

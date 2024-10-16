@@ -93,7 +93,7 @@ CREATE TABLE sys_list (
     changes     int unsigned DEFAULT '4294967295' comment '提交次数限制',
     create_time datetime DEFAULT now(),
     update_time datetime DEFAULT now() ON UPDATE now(),
-    del_flag boolean comment '删除标记',
+    del_flag boolean DEFAULT 0 comment '删除标记',
     PRIMARY KEY (list_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 comment '题单表';
 
@@ -143,7 +143,7 @@ CREATE TABLE sys_tag (
     tag_color varchar(10) comment '颜色RGB值，带#',
     create_time datetime DEFAULT now(),
     update_time datetime DEFAULT now() ON UPDATE now(),
-    del_flag boolean comment '删除标记',
+    del_flag boolean DEFAULT 0 comment '删除标记',
     PRIMARY KEY (tag_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT '题目标签表';
 

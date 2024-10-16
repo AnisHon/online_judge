@@ -56,7 +56,8 @@ public class SecurityConfig {
                     // todo
                     conf.antMatchers(PERMIT_URI).permitAll();
                     conf.antMatchers(SWAGGER_API_URL).permitAll();
-                    conf.anyRequest().authenticated();
+//                    conf.anyRequest().authenticated();
+                    conf.anyRequest().permitAll();
                 })
 
                 .exceptionHandling(conf -> {

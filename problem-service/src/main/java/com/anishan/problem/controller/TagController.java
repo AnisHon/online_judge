@@ -12,6 +12,7 @@ import com.anishan.problem.service.SysTagService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/tag")
-@ApiModel("班级API，增删改查")
+@ApiModel("标签API，增删改查，可以代替难度和用于其他分类")
 public class TagController {
 
 
@@ -34,7 +35,7 @@ public class TagController {
 
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:tag:list')")
-    @ApiOperation("通过id获取班级")
+    @ApiOperation("通过id获取Tag")
     public R<SysTagVo> getTagById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
         SysTagVo clazz = sysTagService.getTagById(id);
         return R.success(clazz);
@@ -44,14 +45,14 @@ public class TagController {
     @PreAuthorize("hasAuthority('user:tag:list')")
     @ApiOperation("通过多个id获取tag，id之间用','隔开 要求有user:user:get")
     public R<List<SysTagVo>> listTag(@PathVariable("ids") List<Long> ids) {
-        List<SysTagVo> tages = sysTagService.listTagById(ids);
-        return R.success(tages);
+        List<SysTagVo> tags = sysTagService.listTagById(ids);
+        return R.success(tags);
     }
 
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:tag:list')")
     @ApiOperation("分页获取tag")
-    public R<PagedResult<SysTagVo>> listTages(@Validated PagedQuery<SysTag> pagedQuery) {
+    public R<PagedResult<SysTagVo>> listTags(@Validated PagedQuery<SysTag> pagedQuery) {
         PagedResult<SysTagVo> tagVoPagedResult = sysTagService.listTages(pagedQuery);
         return tagVoPagedResult.toR();
     }
@@ -87,12 +88,15 @@ public class TagController {
     @ApiOperation("添加tag")
     public R<Boolean> addTag(@RequestBody SysTagDto tagDto) {
 
+        boolean b;
         try {
-            sysTagService.addTag(tagDto);
+            b = sysTagService.addTag(tagDto);
+        } catch (DuplicateKeyException e) {
+            return R.conflict("name冲突");
         } catch (Exception e) {
-            return R.success(false);
+            return R.badRequest("错误");
         }
-        return R.success(true);
+        return R.success(b);
     }
 
 }

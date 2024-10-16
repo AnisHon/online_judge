@@ -36,12 +36,12 @@ public class R<T> {
         return success("ok");
     }
 
-    public static R<String> error(int code, String message) {
+    public static <T> R<T> error(int code, String message) {
         return new R<>(code, message, null);
     }
 
 
-    public static R<String> error404() {
+    public static <T> R<T> error404() {
         return error(HTTP_NOT_FOUND, "Not Found");
     }
 
@@ -50,11 +50,11 @@ public class R<T> {
      * 没有登陆
      * @return 401
      */
-    public static R<String> unauthorized() {
+    public static <T> R<T> unauthorized() {
         return error(HTTP_UNAUTHORIZED, "unauthorized");
     }
 
-    public static R<String> unauthorized(String msg) {
+    public static <T> R<T> unauthorized(String msg) {
         return error(HTTP_UNAUTHORIZED, msg);
     }
 
@@ -63,10 +63,24 @@ public class R<T> {
      * 没权限
      * @return 403
      */
-    public static R<String> forbidden() {
+    public static <T> R<T> forbidden() {
         return error(HTTP_FORBIDDEN, "Forbidden");
     }
 
+    public static <T> R<T> badRequest() {
+        return error(HTTP_BAD_REQUEST, "Bad Request");
+    }
+
+    public static <T> R<T> badRequest(String msg) {
+        return error(HTTP_BAD_REQUEST, msg);
+    }
+
+    public static <T> R<T> conflict() {
+        return error(HTTP_CONFLICT, "Conflict");
+    }
+    public static <T> R<T> conflict(String msg) {
+        return error(HTTP_CONFLICT, msg);
+    }
     /**
      * 专属于网络爬虫的返回体
      * @return 返回403，拒绝网络爬虫

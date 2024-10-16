@@ -8,6 +8,7 @@ import com.anishan.problem.entity.vo.SysTagVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -25,5 +26,7 @@ public interface SysTagService extends IService<SysTag> {
 
     boolean updateTag(SysTagDto tagDto);
 
-    void addTag(SysTagDto tagDto);
+    LocalDateTime getUpdateTime(Long id);
+
+    boolean addTag(SysTagDto tagDto);
 }

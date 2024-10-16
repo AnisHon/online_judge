@@ -18,6 +18,9 @@ public enum ContestAuth implements IEnum<Integer>, Enumerator<Integer> {
         this.value = value;
     }
 
+    public Integer getValue() {
+        return value;
+    }
 
     @Override
     public Integer value() {
