@@ -1,6 +1,6 @@
 package com.anishan.user.mapper;
 
-import com.anishan.user.entity.po.TeacherClassRelation;
+import com.anishan.user.domain.entity.TeacherClassRelation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

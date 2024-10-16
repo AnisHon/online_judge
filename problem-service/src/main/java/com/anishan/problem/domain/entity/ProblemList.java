@@ -1,10 +1,9 @@
 package com.anishan.problem.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -34,16 +33,18 @@ public class ProblemList implements Serializable {
     /**
      * 
      */
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 
      */
-    private Date updateTime;
+    @Version
+    private LocalDateTime updateTime;
 
     /**
      * 删除标记
      */
+    @TableLogic
     private Integer delFlag;
 
     @TableField(exist = false)

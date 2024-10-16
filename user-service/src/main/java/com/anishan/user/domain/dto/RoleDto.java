@@ -1,25 +1,24 @@
-package com.anishan.user.entity.vo;
+package com.anishan.user.domain.dto;
 
-import io.swagger.annotations.ApiModel;
+import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
-@ApiModel("角色数据类")
-public class RoleVo {
+public class RoleDto {
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("角色ID")
     private Long roleId;
 
     @ApiModelProperty("角色名称")
     private String roleName;
 
-
     @ApiModelProperty("角色状态（0正常 1停用）")
     private Integer status;
-
 
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;

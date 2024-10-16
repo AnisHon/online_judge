@@ -1,10 +1,10 @@
 package com.anishan.problem.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.anishan.commons.e.ContestAuth;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -42,9 +42,9 @@ public class Contest implements Serializable {
     private String description;
 
     /**
-     * 0公开赛，1为私有赛（访问需要密码）2为白名单模式
+     * 0 公开赛，1为私有赛（访问需要密码）2为白名单模式
      */
-    private Integer auth;
+    private ContestAuth auth;
 
     /**
      * 比赛密码
@@ -69,12 +69,13 @@ public class Contest implements Serializable {
     /**
      * 
      */
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 
      */
-    private Date updateTime;
+    @Version
+    private LocalDateTime updateTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

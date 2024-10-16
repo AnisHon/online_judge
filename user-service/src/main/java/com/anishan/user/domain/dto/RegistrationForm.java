@@ -1,4 +1,4 @@
-package com.anishan.user.entity.dto;
+package com.anishan.user.domain.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

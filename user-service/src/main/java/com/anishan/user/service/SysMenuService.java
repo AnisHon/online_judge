@@ -2,12 +2,12 @@ package com.anishan.user.service;
 
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
-import com.anishan.user.entity.dto.MenuDto;
-import com.anishan.user.entity.dto.MenuPagedQuery;
-import com.anishan.user.entity.po.SysMenu;
+import com.anishan.user.domain.dto.MenuDto;
+import com.anishan.user.domain.dto.MenuPagedQuery;
+import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.api.entity.SysRole;
-import com.anishan.user.entity.vo.MenuVo;
-import com.anishan.user.entity.vo.TreedMenuVo;
+import com.anishan.user.domain.vo.MenuVo;
+import com.anishan.user.domain.vo.TreedMenuVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.validation.constraints.NotNull;

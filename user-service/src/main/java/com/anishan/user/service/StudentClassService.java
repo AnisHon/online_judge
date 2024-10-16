@@ -1,6 +1,6 @@
 package com.anishan.user.service;
 
-import com.anishan.user.entity.po.StudentClassRelation;
+import com.anishan.user.domain.entity.StudentClassRelation;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;

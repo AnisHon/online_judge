@@ -2,12 +2,12 @@ package com.anishan.user.controller;
 
 import com.anishan.commons.entity.R;
 import com.anishan.commons.entity.vo.PagedResult;
-import com.anishan.user.entity.dto.ClassDto;
-import com.anishan.user.entity.dto.ClassPagedQuery;
-import com.anishan.user.entity.dto.UserPagedQuery;
-import com.anishan.user.entity.vo.BinaryResultOv;
-import com.anishan.user.entity.vo.ClassVo;
-import com.anishan.user.entity.vo.UserVo;
+import com.anishan.user.domain.dto.ClassDto;
+import com.anishan.user.domain.dto.ClassPagedQuery;
+import com.anishan.user.domain.dto.UserPagedQuery;
+import com.anishan.user.domain.vo.BinaryResultOv;
+import com.anishan.user.domain.vo.ClassVo;
+import com.anishan.user.domain.vo.UserVo;
 import com.anishan.user.service.*;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.dao.DuplicateKeyException;

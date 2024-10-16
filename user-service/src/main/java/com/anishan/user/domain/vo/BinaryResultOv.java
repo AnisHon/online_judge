@@ -1,4 +1,4 @@
-package com.anishan.user.entity.vo;
+package com.anishan.user.domain.vo;
 
 import com.anishan.commons.entity.R;
 import io.swagger.annotations.ApiModel;

@@ -1,4 +1,4 @@
-package com.anishan.user.entity.dto;
+package com.anishan.user.domain.dto;
 
 import com.anishan.commons.e.MenuType;
 import com.anishan.commons.e.ValidationGroup;

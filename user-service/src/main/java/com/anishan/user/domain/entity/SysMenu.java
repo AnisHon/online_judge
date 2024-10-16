@@ -1,4 +1,4 @@
-package com.anishan.user.entity.po;
+package com.anishan.user.domain.entity;
 
 import com.anishan.commons.e.MenuType;
 import com.baomidou.mybatisplus.annotation.*;

@@ -1,6 +1,6 @@
 package com.anishan.user.service;
 
-import com.anishan.user.entity.po.SysRoleMenuRelation;
+import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;

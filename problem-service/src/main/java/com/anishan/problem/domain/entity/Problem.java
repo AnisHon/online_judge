@@ -1,10 +1,10 @@
 package com.anishan.problem.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.anishan.commons.e.ProblemAuth;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -49,22 +49,25 @@ public class Problem implements Serializable {
     /**
      * 默认为1公开，2为比赛题目
      */
-    private Integer auth;
+    @EnumValue
+    private ProblemAuth auth;
 
     /**
      * 删除标记(0未删除 1删除)
      */
+    @TableLogic
     private Integer delFlag;
 
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 更新时间，用于乐观锁
      */
-    private Date updateTime;
+    @Version
+    private LocalDateTime updateTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

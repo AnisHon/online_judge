@@ -2,11 +2,11 @@ package com.anishan.user.service;
 
 import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
-import com.anishan.user.entity.dto.ClassDto;
-import com.anishan.user.entity.dto.ClassPagedQuery;
-import com.anishan.user.entity.po.SysClass;
-import com.anishan.user.entity.vo.BinaryResultOv;
-import com.anishan.user.entity.vo.ClassVo;
+import com.anishan.user.domain.dto.ClassDto;
+import com.anishan.user.domain.dto.ClassPagedQuery;
+import com.anishan.user.domain.entity.SysClass;
+import com.anishan.user.domain.vo.BinaryResultOv;
+import com.anishan.user.domain.vo.ClassVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.validation.constraints.NotNull;

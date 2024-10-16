@@ -1,7 +1,7 @@
 package com.anishan.user.service;
 
 import com.anishan.api.entity.SysRole;
-import com.anishan.user.entity.po.SysUserRoleRelation;
+import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;

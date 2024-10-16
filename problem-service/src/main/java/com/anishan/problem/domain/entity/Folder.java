@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 public class Folder implements Serializable {
     /**
-     * 文件夹ID，不存在ID为0的wjj
+     * 文件夹ID，不存在ID为0的文件夹
      */
     @TableId(type = IdType.AUTO)
     private Long folderId;

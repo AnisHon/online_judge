@@ -1,4 +1,4 @@
-package com.anishan.user.entity.dto;
+package com.anishan.user.domain.dto;
 
 import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
