@@ -13,7 +13,7 @@ CREATE TABLE sys_language (
     seq             int(11)         default 0               comment '语言排序',
     gmt_create      datetime        default now()           comment '创建时间',
     gmt_modified    datetime        default now() on update now(),
-    del_flag        boolean         default 0               comment '删除标记',
+    del_flag        boolean         default 0 not null      comment '删除标记',
     PRIMARY KEY (language_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '编程语言表';
 
@@ -30,7 +30,7 @@ CREATE TABLE problem (
     description     longtext       not null                comment '题目描述，图片放在这里吧',
     hint            longtext       default null            comment '备注,提醒',
     auth            int(11)        default '1'             comment '默认为1公开，2为比赛题目',
-    del_flag        boolean        default 0               comment '删除标记(0未删除 1删除)',
+    del_flag        boolean        default 0 not null      comment '删除标记(0未删除 1删除)',
     create_time     datetime       default now()           comment '创建时间',
     update_time     datetime       default now()           comment '更新时间，用于乐观锁',
     PRIMARY KEY (problem_id)
@@ -50,7 +50,7 @@ CREATE TABLE oj_problem (
     output          longtext       not null                comment '输出描述',
     input_example   longtext       not null                comment '输入样例',
     output_example  longtext       not null                comment '输出样例',
-    del_flag        boolean        default 0               comment '删除标记(0未删除 1删除)',
+    del_flag        boolean        default 0 not null      comment '删除标记(0未删除 1删除)',
     create_time     datetime       default now()           comment '创建时间',
     update_time     datetime       default now()           comment '更新时间，用于乐观锁',
     PRIMARY KEY (problem_id)
@@ -66,7 +66,7 @@ CREATE TABLE oj_problem_case (
     input       longtext                            comment '测试样例的输入',
     output      longtext                            comment '测试样例的输出',
     score       int(11) default 100                 comment '答对的分数',
-    del_flag    boolean default 0                   comment '删除标记',
+    del_flag    boolean default 0 not null          comment '删除标记',
     create_time datetime default now(),
     update_time datetime default now() on update now(),
     PRIMARY KEY (case_id)
@@ -81,13 +81,13 @@ create index oj_problem_case_problem_id_idx on oj_problem_case(problem_id);
 drop table if exists choice_fill_answers;
 CREATE TABLE choice_fill_answers (
     answer_id   bigint(20)  not null auto_increment comment '主键id',
-    problem_id bigint(20)  not null                comment '题目id',
+    problem_id bigint(20)   not null                comment '题目id',
     answer_text text        not null                comment '选项或填空答案',
     is_correct  bool        default false           comment '是否为正确答案（选择题专用）默认false',
     blank_index int         null                    comment '填空题空格索引, 选择题ABCD索引 1表示A',
-    del_flag    boolean     default 0               comment '删除标记',
-    create_time datetime    default now(),
-    update_time datetime    default now() on update now(),
+    del_flag    boolean     default 0 not null      comment '删除标记',
+    create_time datetime    default now() not null ,
+    update_time datetime    default now() on update now() not null ,
     PRIMARY KEY (answer_id)
 )ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '填空选择题答案表';
 create index choice_fill_answers_problem_id_idx on choice_fill_answers(problem_id);
@@ -101,9 +101,9 @@ CREATE TABLE problem_list (
     list_id     bigint(20)      not null auto_increment comment '主键',
     list_name   varchar(32)     unique                  comment '题单名字，必须唯一',
     description varchar(255)    not null                comment '题单说明，字数不应该太多',
-    create_time datetime        default now(),
-    update_time datetime        default now() on update now(),
-    del_flag    boolean                                 comment '删除标记',
+    create_time datetime        default now() not null ,
+    update_time datetime        default now() on update now() not null ,
+    del_flag    boolean         default 0 not null      comment '删除标记',
     PRIMARY KEY (list_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题单表';
 
@@ -112,10 +112,10 @@ CREATE TABLE problem_list (
 -- ----------------------------
 drop table if exists problem_problem_list;
 CREATE TABLE problem_problem_list (
-    list_id         bigint(20)      not null        comment '单子id',
-    problem_id      bigint(20)      not null        comment '题目id',
-    problem_order   int(11)         not null        comment '题目顺序',
-    score           decimal(4,2)    default 10      comment '每道题对应分数',
+    list_id         bigint(20)      not null            comment '单子id',
+    problem_id      bigint(20)      not null            comment '题目id',
+    problem_order   int(11)         not null            comment '题目顺序',
+    score           decimal(4,2)    default 10 not null comment '每道题对应分数',
     primary key (list_id, problem_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题单 题目关系表';
 create index problem_problem_list_list_id_idx on problem_problem_list(list_id);
@@ -136,7 +136,7 @@ CREATE TABLE contest (
     pwd         varchar(255)    default null            comment '比赛密码',
     start_time  datetime        default null            comment '开始时间',
     end_time    datetime        default null            comment '结束时间',
-    del_flag    boolean         default 0               comment '删除标记',
+    del_flag    boolean         default 0  not null     comment '删除标记',
     create_time datetime        default now(),
     update_time datetime        default now() on update now(),
     primary key (contest_id)
@@ -151,9 +151,9 @@ CREATE TABLE tag (
     tag_id      bigint(20)      not null auto_increment comment '主键',
     tag_name    varchar(255)    unique                  comment '题目标签',
     tag_color   varchar(10)     not null                comment '颜色RGB值，带#',
-    create_time datetime        default now(),
+    create_time datetime        default now() not null ,
     update_time datetime        default now() on update now(),
-    del_flag    boolean                                 comment '删除标记',
+    del_flag    boolean         default 0 not null      comment '删除标记',
     PRIMARY KEY (tag_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题目标签表';
 
@@ -181,7 +181,7 @@ CREATE TABLE submit_log (
     status      varchar(10) null                    comment '提交结果，取值范围 (AC, RE, WA, TLE, MLE)',
     time        int(11)     null                    comment '耗时 单位ms',
     memory      int(11)     null                    comment '内存使用 单位kb',
-    submit_time datetime    default now(),
+    submit_time datetime    default now() not null,
     PRIMARY KEY (submit_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment 'OJ判题提交记录';
 create index submit_log_problem_id on submit_log(problem_id);
@@ -196,10 +196,10 @@ drop table if exists folder;
 create table folder(
     folder_id   bigint(20)  not null auto_increment comment '文件夹ID，不存在ID为0的wjj',
     folder_name varchar(32) not null unique         comment '唯一文件夹名',
-    folder_type char(1)     default 'M'             comment '类型(D directory 目录，F file 文件, M 菜单栏)',
-    parent_id   bigint(20)  default 0               comment '父文件夹名，默认0表示没有父文件夹',
+    folder_type char(1)     default 'M' not null    comment '类型(D directory 目录，F file 文件, M 菜单栏)',
+    parent_id   bigint(20)  default 0 not null      comment '父文件夹名，默认0表示没有父文件夹',
     list_id     bigint(20)  null                    comment '题单，如果是D类型则应该为空',
-    del_flag    boolean     default 0               comment '逻辑删除',
+    del_flag    boolean     default 0  not null     comment '逻辑删除',
     primary key (folder_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '文件夹表';
 

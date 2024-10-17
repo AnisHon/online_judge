@@ -21,7 +21,5 @@ public class PagedProblem extends PagedQuery<Problem> {
     @ApiModelProperty("tag的id")
     private List<Long> tagIds;
 
-    @ApiModelProperty("难度")
-    private Difficulty difficulty;
 
 }

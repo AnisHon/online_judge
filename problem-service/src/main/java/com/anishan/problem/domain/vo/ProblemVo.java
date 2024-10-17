@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  */
 @TableName(value ="problem")
 @Data
-public class ProblemVo implements Serializable {
+public class ProblemVo {
 
     @TableId(type = IdType.AUTO)
     @ApiModelProperty("主键")
@@ -42,9 +42,5 @@ public class ProblemVo implements Serializable {
 
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-
 
 }

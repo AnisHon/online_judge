@@ -35,7 +35,7 @@
         <if test="problemId != null">
             and p.problem_id = #{problemId}
         </if>
-        <if test="tagIds != null">
+        <if test="tagIds != null and tagIds.size > 0 ">
             and tag.tagId in
             <foreach collection="tagIds" item="item" open="(" separator="," close=")">
                 #{item}

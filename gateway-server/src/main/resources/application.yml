@@ -17,6 +17,7 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/user-api/**
+
         - id: problem
           uri: lb://problem-service
           predicates:
@@ -43,16 +44,14 @@ knife4j:
         # 路由前缀
         # 兼容OpenAPI3规范在聚合时丢失contextPath属性的异常情况，由开发者自己配置contextPath,Knife4j的前端Ui做兼容处理,与url属性独立不冲突，仅OpenAPI3规范聚合需要，OpenAPI2规范不需要设置此属性,默认为(apiPathPrefix)
         context-path: /
-        order: 2
-      - name: 题目服务
-        # 真实子服务访问url地址-提供OpenAPI的文档
-        url: /problem-api/v2/api-docs?group=default
-        service-name: problem-service
-        # 路由前缀
-        # 兼容OpenAPI3规范在聚合时丢失contextPath属性的异常情况，由开发者自己配置contextPath,Knife4j的前端Ui做兼容处理,与url属性独立不冲突，仅OpenAPI3规范聚合需要，OpenAPI2规范不需要设置此属性,默认为(apiPathPrefix)
-        context-path: /
         order: 1
 
+
+      - name: 题目服务
+        url: /problem-api/v2/api-docs?group=default
+        service-name: problem-service
+        context-path: /
+        order: 2
 
 
 

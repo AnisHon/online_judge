@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @TableName(value ="oj_problem")
 @Data
-public class OjProblemDto implements Serializable {
+public class OjProblemDto {
     /**
      * 主键
      */
@@ -77,8 +77,6 @@ public class OjProblemDto implements Serializable {
     @Version
     private LocalDateTime updateTime;
 
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
 
 
 }

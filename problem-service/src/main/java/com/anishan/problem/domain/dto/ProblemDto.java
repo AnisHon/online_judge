@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  */
 @TableName(value ="problem")
 @Data
-public class ProblemDto implements Serializable {
+public class ProblemDto {
     /**
      * 主键
      */
@@ -68,9 +68,5 @@ public class ProblemDto implements Serializable {
      */
     @Version
     private LocalDateTime updateTime;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-
 
 }
