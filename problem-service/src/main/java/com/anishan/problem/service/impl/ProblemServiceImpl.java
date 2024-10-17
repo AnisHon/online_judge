@@ -4,12 +4,10 @@ import cn.hutool.core.bean.BeanUtil;
 import com.anishan.commons.e.ProblemAuth;
 import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.problem.domain.dto.PagedProblem;
-import com.anishan.problem.domain.vo.OjProblemVo;
-import com.anishan.problem.domain.vo.ProblemChoice;
-import com.anishan.problem.domain.vo.ProblemVo;
-import com.anishan.problem.domain.vo.DetailProblem;
+import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.service.ChoiceFillAnswersService;
 import com.anishan.problem.service.OjProblemService;
+import com.anishan.problem.service.TagService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -35,7 +33,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final OjProblemService ojProblemService;
     private final ProblemMapper problemMapper;
     private final ChoiceFillAnswersService choiceFillAnswersService;
-
+    private final TagService tagService;
 
     public Problem doGetProblem(Long id) {
         return this.getOne(new LambdaQueryWrapper<Problem>()
@@ -78,7 +76,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             return null;
         }
 
-        DetailProblem detailProblem = new DetailProblem(problem, null, null);
+        List<TagVo> tags = tagService.getTagByProblemId(problem.getProblemId());
+
+        DetailProblem detailProblem = new DetailProblem(problem, null, null, tags);
         switch (problem.getType()) {
             case OJ:
                 OjProblemVo ojProblem = ojProblemService.getOjProblemById(ojId);

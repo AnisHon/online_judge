@@ -8,6 +8,7 @@ public enum FolderType implements Enumerator<String>, IEnum<String> {
 
     Dictionary("D"),
     Folder("F"),
+    Menu("M"),
     ;
 
     private final String value;

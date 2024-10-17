@@ -26,4 +26,10 @@ public interface TagService extends IService<Tag> {
     boolean addTagForProblem(ProblemTagDto problemTagDto);
 
     boolean removeTagForProblem(ProblemTagDto problemTagDto);
+
+    List<TagVo> getBatchById(List<Long> ids);
+
+    List<Long> getProblemTagIds(Long problem_id);
+
+    List<TagVo> getTagByProblemId(Long problemId);
 }

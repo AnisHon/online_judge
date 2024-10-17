@@ -1,5 +1,6 @@
 package com.anishan.problem.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.service.ProblemListService;
@@ -15,6 +16,11 @@ import org.springframework.stereotype.Service;
 public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, ProblemList>
     implements ProblemListService{
 
+    public boolean isExistId(Long id) {
+        return this.exists(new LambdaQueryWrapper<ProblemList>()
+                .eq(ProblemList::getListId, id)
+        );
+    }
 }
 
 

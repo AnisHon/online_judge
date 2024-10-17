@@ -8,7 +8,6 @@ import com.anishan.problem.domain.vo.DetailProblem;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.service.TagService;
-import com.anishan.problem.service.impl.TagServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +46,7 @@ public class ProblemController {
 
     @PostMapping("/add-tag")
     @PreAuthorize("hasAuthority('problem:problem:add-tag')")
+    @ApiOperation("给题目添加标签")
     public R<Boolean> addTag(ProblemTagDto problemTagDto) {
         boolean b = tagService.addTagForProblem(problemTagDto);
         return R.success(b);
@@ -54,6 +54,7 @@ public class ProblemController {
 
     @PostMapping("/del-tag")
     @PreAuthorize("hasAuthority('problem:problem:del-tag')")
+    @ApiOperation("删除某个题目的标签")
     public R<Boolean> delTag(ProblemTagDto problemTagDto) {
         boolean b = tagService.removeTagForProblem(problemTagDto);
         return R.success(b);

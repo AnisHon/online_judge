@@ -45,7 +45,7 @@ public class TagController {
 
     @PostMapping("/update")
     @PreAuthorize("hasAuthority('problem:tag:update')")
-    @ApiOperation("添加标签")
+    @ApiOperation("更改标签")
     public R<Boolean> update(@RequestBody @Validated(ValidationGroup.Update.class)  TagDto tag) {
         boolean b = tagService.updateTag(tag);
         return R.success(b);
@@ -53,7 +53,7 @@ public class TagController {
 
     @PostMapping("/delete/{id}")
     @PreAuthorize("hasAuthority('problem:tag:delete')")
-    @ApiOperation("添加标签")
+    @ApiOperation("删除标签")
     public R<Boolean> delete(@PathVariable @NotNull Long id) {
         boolean b = tagService.deleteTag(id);
         return R.success(b);

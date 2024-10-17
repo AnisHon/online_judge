@@ -19,4 +19,6 @@ public class DetailProblem {
     private OjProblemVo ojProblemVo;
     @ApiModelProperty("选择问题的选项")
     private List<ProblemChoice> choices;
+    @ApiModelProperty("对应的几个Tag")
+    private List<TagVo> tagVo;
 }

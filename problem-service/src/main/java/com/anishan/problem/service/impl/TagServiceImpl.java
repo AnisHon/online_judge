@@ -1,12 +1,12 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.problem.domain.dto.ProblemTagDto;
 import com.anishan.problem.domain.dto.TagDto;
 import com.anishan.problem.domain.entity.ProblemTagRelation;
 import com.anishan.problem.domain.vo.TagVo;
 import com.anishan.problem.service.ProblemTagService;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.Tag;
@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -128,6 +129,32 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
     public boolean removeTagForProblem(ProblemTagDto problemTagDto) {
         ProblemTagRelation problemTagRelation = BeanUtil.copyProperties(problemTagDto, ProblemTagRelation.class);
         return problemTagService.removeById(problemTagRelation);
+    }
+
+
+    @Override
+    public List<TagVo> getBatchById(List<Long> ids) {
+        if (CollectionUtil.isEmpty(ids)) {
+            return new ArrayList<>();
+        }
+        List<Tag> batchById = this.listByIds(ids);
+        return BeanUtil.copyToList(batchById, TagVo.class);
+    }
+
+    @Override
+    public List<Long> getProblemTagIds(Long problem_id) {
+        return problemTagService.listObjs(new LambdaQueryWrapper<ProblemTagRelation>()
+                        .select(ProblemTagRelation::getTagId)
+                        .eq(ProblemTagRelation::getProblemId, problem_id),
+                x -> (Long) x
+        );
+    }
+
+
+    @Override
+    public List<TagVo> getTagByProblemId(Long problemId) {
+        List<Long> problemTagIds = getProblemTagIds(problemId);
+        return getBatchById(problemTagIds);
     }
 
 

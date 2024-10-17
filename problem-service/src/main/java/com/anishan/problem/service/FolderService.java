@@ -1,7 +1,12 @@
 package com.anishan.problem.service;
 
+import com.anishan.problem.domain.dto.FolderDto;
 import com.anishan.problem.domain.entity.Folder;
+import com.anishan.problem.domain.vo.FolderVo;
+import com.anishan.problem.domain.vo.TreedFolder;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -10,4 +15,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface FolderService extends IService<Folder> {
 
+    List<FolderVo> getAllFolders();
+
+    List<TreedFolder> getAllTreedFolders();
+
+    boolean addFolder(FolderDto folderDto);
 }
