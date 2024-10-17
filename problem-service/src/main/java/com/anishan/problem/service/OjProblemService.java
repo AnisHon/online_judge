@@ -1,6 +1,7 @@
 package com.anishan.problem.service;
 
 import com.anishan.problem.domain.entity.OjProblem;
+import com.anishan.problem.domain.vo.OjProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -10,4 +11,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface OjProblemService extends IService<OjProblem> {
 
+    OjProblemVo getOjProblemById(Long id);
 }

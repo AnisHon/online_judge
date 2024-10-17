@@ -7,7 +7,7 @@
     <resultMap id="BaseResultMap" type="com.anishan.problem.domain.entity.Problem">
             <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
             <result property="title" column="title" jdbcType="VARCHAR"/>
-            <result property="typeId" column="type_id" jdbcType="INTEGER"/>
+            <result property="type" column="type" jdbcType="INTEGER"/>
             <result property="source" column="source" jdbcType="VARCHAR"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="hint" column="hint" jdbcType="VARCHAR"/>
@@ -23,4 +23,25 @@
         auth,del_flag,create_time,
         update_time
     </sql>
+<!--    List<Problem> selectAllByProblemIdAndTagId(Wrapper<Problem> wrapper);-->
+    <select id="selectAllByProblemIdAndTagId" resultType="com.anishan.problem.domain.entity.Problem">
+        select
+            p.problem_id as problem_id,
+            oj_id, title, type, source, description, hint, auth, del_flag, create_time, update_time
+        from problem p
+        left join problem_tag tag on tag.problem_id = p.problem_id
+        where p.auth = 1
+
+        <if test="problemId != null">
+            and p.problem_id = #{problemId}
+        </if>
+        <if test="tagIds != null">
+            and tag.tagId in
+            <foreach collection="tagIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+
+    </select>
 </mapper>

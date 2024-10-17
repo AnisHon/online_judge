@@ -2,6 +2,10 @@ package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.Problem;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -10,7 +14,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.anishan.problem.entity.Problem
 */
 public interface ProblemMapper extends BaseMapper<Problem> {
-
+//    List<Problem> s()
+    List<Problem> selectAllByProblemIdAndTagId(Page<Problem> page, @Param("problemId") Long problemId, @Param("tagIds") List<Long> tagIds);
 }
 
 

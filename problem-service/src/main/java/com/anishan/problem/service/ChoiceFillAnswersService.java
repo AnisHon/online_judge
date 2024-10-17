@@ -1,7 +1,10 @@
 package com.anishan.problem.service;
 
 import com.anishan.problem.domain.entity.ChoiceFillAnswers;
+import com.anishan.problem.domain.vo.ProblemChoice;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -10,4 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface ChoiceFillAnswersService extends IService<ChoiceFillAnswers> {
 
+    List<ProblemChoice> getChoice(Long problemId);
 }

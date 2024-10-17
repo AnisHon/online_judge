@@ -1,10 +1,26 @@
 package com.anishan.problem.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.anishan.commons.e.ProblemAuth;
+import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.problem.domain.dto.PagedProblem;
+import com.anishan.problem.domain.vo.OjProblemVo;
+import com.anishan.problem.domain.vo.ProblemChoice;
+import com.anishan.problem.domain.vo.ProblemVo;
+import com.anishan.problem.domain.vo.DetailProblem;
+import com.anishan.problem.service.ChoiceFillAnswersService;
+import com.anishan.problem.service.OjProblemService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.mapper.ProblemMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -12,8 +28,83 @@ import org.springframework.stereotype.Service;
 * @createDate 2024-10-16 22:39:16
 */
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     implements ProblemService{
+
+    private final OjProblemService ojProblemService;
+    private final ProblemMapper problemMapper;
+    private final ChoiceFillAnswersService choiceFillAnswersService;
+
+
+    public Problem doGetProblem(Long id) {
+        return this.getOne(new LambdaQueryWrapper<Problem>()
+                .eq(Problem::getProblemId, id)
+                .ne(Problem::getAuth, ProblemAuth.Contest)
+        );
+    }
+
+    public ProblemVo toVo(Problem problem) {
+        return BeanUtil.copyProperties(problem, ProblemVo.class);
+    }
+
+    @Override
+    public ProblemVo getProblemById(Long id) {
+
+        Problem problem = doGetProblem(id);
+
+        return toVo(problem);
+    }
+
+    public List<Problem> doGetProblems(PagedProblem pagedProblem) {
+        Page<Problem> page = pagedProblem.page();
+        return problemMapper
+                .selectAllByProblemIdAndTagId(page, pagedProblem.getProblemId(), pagedProblem.getTagIds());
+    }
+
+    @Override
+    public PagedResult<ProblemVo> getProblems(PagedProblem pagedProblem) {
+        List<Problem> problems = doGetProblems(pagedProblem);
+        List<ProblemVo> problemVos = BeanUtil.copyToList(problems, ProblemVo.class);
+        return PagedResult.fromPage(pagedProblem.page(), problemVos);
+    }
+
+
+
+
+
+    public DetailProblem doGetDetail(ProblemVo problem, Long ojId) {
+        if (problem == null) {
+            return null;
+        }
+
+        DetailProblem detailProblem = new DetailProblem(problem, null, null);
+        switch (problem.getType()) {
+            case OJ:
+                OjProblemVo ojProblem = ojProblemService.getOjProblemById(ojId);
+                detailProblem.setOjProblemVo(ojProblem);
+                break;
+            case FILL:
+                break;
+            case CHOICE:
+                List<ProblemChoice> choices = choiceFillAnswersService.getChoice(problem.getProblemId());
+                detailProblem.setChoices(choices);
+                break;
+        }
+
+        return detailProblem;
+    }
+
+    @Override
+    public DetailProblem getDetailProblem(Long id) {
+        Problem problem = doGetProblem(id);
+        ProblemVo problemVo = toVo(problem);
+
+        return doGetDetail(problemVo, problem.getOjId());
+    }
+
+
+
 
 }
 

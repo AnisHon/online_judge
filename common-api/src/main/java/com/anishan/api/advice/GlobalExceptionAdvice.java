@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import java.util.Objects;
 
 @ControllerAdvice
@@ -75,6 +74,7 @@ public class GlobalExceptionAdvice {
     @ResponseBody
     @ExceptionHandler(RuntimeException.class)
     public R<String> handleRuntimeException(RuntimeException e) {
+        // todo
         e.printStackTrace();
         return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
     }

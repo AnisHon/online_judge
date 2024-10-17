@@ -23,10 +23,11 @@ CREATE TABLE sys_language (
 drop table if exists problem;
 CREATE TABLE problem (
     problem_id      bigint(20)     not null auto_increment comment '主键',
+    oj_id           bigint(20)     null                    comment 'oj题目ID',
     title           varchar(255)   not null                comment '题目名称',
-    type_id         int(11)        default 0               comment '题目类型，(1, 2, 3)',
+    type            int(11)        default 1               comment '题目类型，(1 OJ, 2 FILL, 3 CHOICE)',
     source          varchar(255)   default '公有题库'       comment '题目来源',
-    description     longtext       not null                comment '题目描述',
+    description     longtext       not null                comment '题目描述，图片放在这里吧',
     hint            longtext       default null            comment '备注,提醒',
     auth            int(11)        default '1'             comment '默认为1公开，2为比赛题目',
     del_flag        boolean        default 0               comment '删除标记(0未删除 1删除)',
@@ -83,7 +84,7 @@ CREATE TABLE choice_fill_answers (
     problem_id bigint(20)  not null                comment '题目id',
     answer_text text        not null                comment '选项或填空答案',
     is_correct  bool        default false           comment '是否为正确答案（选择题专用）默认false',
-    blank_index int         null                    comment '对于填空题，标识是第几个空格（填空题专用）',
+    blank_index int         null                    comment '填空题空格索引, 选择题ABCD索引 1表示A',
     del_flag    boolean     default 0               comment '删除标记',
     create_time datetime    default now(),
     update_time datetime    default now() on update now(),

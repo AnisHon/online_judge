@@ -1,12 +1,12 @@
-package com.anishan.problem.domain.entity;
+package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.e.ProblemAuth;
 import com.anishan.commons.e.ProblemType;
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * 题目主表，OJ题目有分表，非OJ不需要继续分表
@@ -14,7 +14,7 @@ import lombok.Data;
  */
 @TableName(value ="problem")
 @Data
-public class Problem implements Serializable {
+public class ProblemDto implements Serializable {
     /**
      * 主键
      */
@@ -22,19 +22,13 @@ public class Problem implements Serializable {
     private Long problemId;
 
     /**
-     * OJ题目ID
-     */
-    private Long ojId;
-
-    /**
      * 题目名称
      */
     private String title;
 
     /**
-     * 题目类型，(1, 2, 3)
+     * 题目类型，
      */
-    @EnumValue
     private ProblemType type;
 
     /**

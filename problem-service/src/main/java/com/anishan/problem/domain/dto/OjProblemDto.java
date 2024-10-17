@@ -1,11 +1,11 @@
-package com.anishan.problem.domain.entity;
+package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.e.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * OJ题目分表
@@ -13,7 +13,7 @@ import lombok.Data;
  */
 @TableName(value ="oj_problem")
 @Data
-public class OjProblem implements Serializable {
+public class OjProblemDto implements Serializable {
     /**
      * 主键
      */
@@ -28,7 +28,6 @@ public class OjProblem implements Serializable {
     /**
      * 难度 (0 未分类, 1 简单, 2 中等, 3 困难)
      */
-    @EnumValue
     private Difficulty difficulty;
 
     /**

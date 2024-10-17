@@ -1,11 +1,13 @@
-package com.anishan.problem.domain.entity;
+package com.anishan.problem.domain.vo;
 
 import com.anishan.commons.e.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * OJ题目分表
@@ -13,70 +15,43 @@ import lombok.Data;
  */
 @TableName(value ="oj_problem")
 @Data
-public class OjProblem implements Serializable {
-    /**
-     * 主键
-     */
+@ApiModel("OJ题目")
+public class OjProblemVo implements Serializable {
+
     @TableId(type = IdType.AUTO)
+    @ApiModelProperty("主键")
     private Long problemId;
 
-    /**
-     * 单位ms
-     */
+    @ApiModelProperty("时间限制单位ms")
     private Integer timeLimit;
 
-    /**
-     * 难度 (0 未分类, 1 简单, 2 中等, 3 困难)
-     */
-    @EnumValue
+    @ApiModelProperty("难度 (0 未分类, 1 简单, 2 中等, 3 困难)")
     private Difficulty difficulty;
 
-    /**
-     * 单位kb
-     */
+    @ApiModelProperty("内存限制单位kb")
     private Integer memoryLimit;
 
-    /**
-     * 单位mb
-     */
+    @ApiModelProperty("堆栈内存限制单位mb")
     private Integer stackLimit;
 
-    /**
-     * 输入描述
-     */
+    @ApiModelProperty("输入描述")
     private String input;
 
-    /**
-     * 输出描述
-     */
+    @ApiModelProperty("输出描述")
     private String output;
 
-    /**
-     * 输入样例
-     */
+    @ApiModelProperty("输入样例")
     private String inputExample;
 
-    /**
-     * 输出样例
-     */
+    @ApiModelProperty("输出样例")
     private String outputExample;
 
-    /**
-     * 删除标记(0未删除 1删除)
-     */
     @TableLogic
+    @ApiModelProperty("删除标记(0未删除 1删除)")
     private Integer delFlag;
 
-    /**
-     * 创建时间
-     */
+    @ApiModelProperty("创建时间")
     private LocalDateTime createTime;
-
-    /**
-     * 更新时间，用于乐观锁
-     */
-    @Version
-    private LocalDateTime updateTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

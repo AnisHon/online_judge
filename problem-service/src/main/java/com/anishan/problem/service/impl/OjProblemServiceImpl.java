@@ -1,5 +1,7 @@
 package com.anishan.problem.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.anishan.problem.domain.vo.OjProblemVo;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.OjProblem;
 import com.anishan.problem.service.OjProblemService;
@@ -15,6 +17,13 @@ import org.springframework.stereotype.Service;
 public class OjProblemServiceImpl extends ServiceImpl<OjProblemMapper, OjProblem>
     implements OjProblemService{
 
+
+
+    @Override
+    public OjProblemVo getOjProblemById(Long id) {
+        OjProblem problem = this.getById(id);
+        return BeanUtil.copyProperties(problem, OjProblemVo.class);
+    }
 }
 
 

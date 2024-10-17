@@ -1,6 +1,10 @@
 package com.anishan.problem.service;
 
+import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.problem.domain.dto.PagedProblem;
 import com.anishan.problem.domain.entity.Problem;
+import com.anishan.problem.domain.vo.ProblemVo;
+import com.anishan.problem.domain.vo.DetailProblem;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -10,4 +14,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface ProblemService extends IService<Problem> {
 
+    ProblemVo getProblemById(Long id);
+
+    PagedResult<ProblemVo> getProblems(PagedProblem pagedProblem);
+
+    DetailProblem getDetailProblem(Long id);
 }

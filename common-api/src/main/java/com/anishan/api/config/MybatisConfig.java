@@ -21,12 +21,14 @@ public class MybatisConfig {
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+
+        //乐观锁
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
         
         PaginationInnerInterceptor pageInterceptor = new PaginationInnerInterceptor(DbType.MYSQL);
         pageInterceptor.setMaxLimit(100L);
         interceptor.addInnerInterceptor(pageInterceptor);
-        //乐观锁
-        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+
         return interceptor;
     }
 
