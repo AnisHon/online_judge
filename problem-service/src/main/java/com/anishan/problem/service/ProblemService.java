@@ -7,6 +7,8 @@ import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.DetailProblem;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
 * @author happy
 * @description 针对表【problem(题目主表，OJ题目有分表，非OJ不需要继续分表)】的数据库操作Service
@@ -19,4 +21,8 @@ public interface ProblemService extends IService<Problem> {
     PagedResult<ProblemVo> getProblems(PagedProblem pagedProblem);
 
     DetailProblem getDetailProblem(Long id);
+
+    List<ProblemVo> getBatchByIds(List<Long> pIds);
+
+    boolean isExisted(Long problemId);
 }

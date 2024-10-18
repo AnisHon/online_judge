@@ -15,4 +15,47 @@
         list_id,problem_id,problem_order,
         score
     </sql>
+
+    <resultMap id="ProblemListRelation" type="com.anishan.problem.domain.entity.ProblemListRelation">
+        <id column="list_id"/>
+        <id column="problem_id"/>
+        <result property="problemOrder" column="problem_order" jdbcType="INTEGER"/>
+        <result property="score" column="score" jdbcType="DECIMAL"/>
+        <association property="problem">
+            <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
+            <result property="title" column="title" jdbcType="VARCHAR"/>
+            <result property="type" column="type" jdbcType="INTEGER"/>
+            <result property="source" column="source" jdbcType="VARCHAR"/>
+            <result property="description" column="description" jdbcType="VARCHAR"/>
+            <result property="hint" column="hint" jdbcType="VARCHAR"/>
+            <result property="auth" column="auth" jdbcType="INTEGER"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        </association>
+
+    </resultMap>
+
+
+    <select id="getByListId" resultMap="ProblemListRelation">
+        select ppl.list_id       as list_id,
+               ppl.problem_id    as problem_id,
+               ppl.problem_order as problem_order,
+               ppl.score         as score,
+               p.problem_id      as problem_id,
+               title,
+               type,
+               source,
+               description,
+               hint,
+               auth,
+               del_flag,
+               create_time,
+               update_time
+        from problem_problem_list ppl
+                 left join problem p on p.problem_id = ppl.problem_id
+        where list_id = #{list_id}
+        order by problem_order
+
+    </select>
 </mapper>

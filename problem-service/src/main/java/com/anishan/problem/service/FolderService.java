@@ -19,5 +19,11 @@ public interface FolderService extends IService<Folder> {
 
     List<TreedFolder> getAllTreedFolders();
 
+    boolean existFolder(Long id);
+
+    boolean existFolder(String name);
+
     boolean addFolder(FolderDto folderDto);
+
+    boolean updateFolder(FolderDto folderDto);
 }

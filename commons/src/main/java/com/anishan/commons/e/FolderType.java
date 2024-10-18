@@ -7,7 +7,7 @@ import lombok.Getter;
 public enum FolderType implements Enumerator<String>, IEnum<String> {
 
     Dictionary("D"),
-    Folder("F"),
+    File("F"),
     Menu("M"),
     ;
 

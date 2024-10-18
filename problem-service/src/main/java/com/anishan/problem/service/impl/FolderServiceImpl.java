@@ -11,10 +11,8 @@ import com.anishan.problem.service.FolderService;
 import com.anishan.problem.mapper.FolderMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -41,11 +39,14 @@ public class FolderServiceImpl extends ServiceImpl<FolderMapper, Folder>
     }
 
     public void doBuildTreeRecursion(Set<TreedFolder> folders, TreedFolder parent) {
-        if(parent == null || !parent.isFolder()) {
+        if(parent == null || parent.isFile()) {
             return;
         }
 
-        List<TreedFolder> child = folders.stream().filter(parent::isParent).collect(Collectors.toList());
+        List<TreedFolder> child = folders
+                .stream()
+                .filter(f -> Objects.equals(parent.getFolder().getFolderId(), f.getFolder().getParentId()))
+                .collect(Collectors.toList());
 
         parent.setChildren(child);
         child.forEach(folders::remove);
@@ -65,7 +66,7 @@ public class FolderServiceImpl extends ServiceImpl<FolderMapper, Folder>
             doBuildTreeRecursion(trees, header);
         }
 
-        return trees;
+        return treedHeader;
     }
 
     @Override
@@ -77,15 +78,49 @@ public class FolderServiceImpl extends ServiceImpl<FolderMapper, Folder>
 
     }
 
+    @Override
+    public boolean existFolder(Long id) {
+        return this.exists(new LambdaQueryWrapper<Folder>()
+                .eq(Folder::getFolderId, id)
+        );
+    }
 
-    void doAddCheck() {
+    @Override
+    public boolean existFolder(String name) {
+        return this.exists(new LambdaQueryWrapper<Folder>()
+                .eq(Folder::getFolderName, name)
+        );
+    }
 
+    private void notExistIdAndThrow(Long id) {
+        if (id != 0 && !existFolder(id)) {
+            throw new RuntimeException("不存在id:" + id);
+        }
+    }
+
+    private void doAddCheck(FolderDto folderDto) {
+        notExistIdAndThrow(folderDto.getParentId());
+        if (existFolder(folderDto.getFolderName())) {
+            throw new RuntimeException("已经存在同名Folder");
+        }
     }
 
     @Override
     public boolean addFolder(FolderDto folderDto) {
-        Folder folder = BeanUtil.copyProperties(folderDto, Folder.class);
+        doAddCheck(folderDto);
+        Folder folder = BeanUtil.copyProperties(folderDto, Folder.class, "folderId");
         return this.save(folder);
+    }
+
+    private void doCheckUpdate(FolderDto folderDto) {
+        notExistIdAndThrow(folderDto.getFolderId());
+    }
+
+    @Override
+    public boolean updateFolder(FolderDto folderDto) {
+        doCheckUpdate(folderDto);
+        Folder folder = BeanUtil.copyProperties(folderDto, Folder.class);
+        return this.updateById(folder);
     }
 
 

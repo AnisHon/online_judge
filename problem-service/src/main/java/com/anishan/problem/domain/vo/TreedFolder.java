@@ -2,6 +2,7 @@ package com.anishan.problem.domain.vo;
 
 import com.anishan.commons.e.FolderType;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,8 +16,9 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TreedFolder {
-
+    @ApiModelProperty("folder本体")
     private FolderVo folder;
+    @ApiModelProperty("folder的下一级")
     private List<TreedFolder> children;
 
     public TreedFolder(FolderVo folder) {
@@ -24,15 +26,8 @@ public class TreedFolder {
         this.children = new ArrayList<>();
     }
 
-    public boolean isFolder() {
-        return !(folder.getFolderType() == FolderType.Dictionary);
-    }
-
-    public boolean isParent(Long id) {
-        return Objects.equals(folder.getParentId(), id);
-    }
-    public boolean isParent(TreedFolder treedFolder) {
-        return isParent(treedFolder.folder.getFolderId());
+    public boolean isFile() {
+        return folder.getFolderType() == FolderType.File;
     }
 
     public void addChild(TreedFolder treedFolder) {

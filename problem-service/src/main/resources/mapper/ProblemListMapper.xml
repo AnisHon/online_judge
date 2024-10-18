@@ -17,4 +17,5 @@
         list_id,list_name,description,
         create_time,update_time,del_flag
     </sql>
+
 </mapper>

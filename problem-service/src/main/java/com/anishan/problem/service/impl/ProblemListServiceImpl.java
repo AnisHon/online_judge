@@ -1,11 +1,28 @@
 package com.anishan.problem.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import com.anishan.problem.domain.dto.ProblemListDto;
+import com.anishan.problem.domain.dto.ProblemListRelationDto;
+import com.anishan.problem.domain.entity.ProblemProblemListRelation;
+import com.anishan.problem.domain.vo.ProblemListRelationVo;
+import com.anishan.problem.domain.vo.ProblemListVo;
+import com.anishan.problem.service.ProblemProblemListService;
+import com.anishan.problem.service.ProblemService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.mapper.ProblemListMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
 * @author happy
@@ -13,14 +30,110 @@ import org.springframework.stereotype.Service;
 * @createDate 2024-10-16 22:39:16
 */
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, ProblemList>
     implements ProblemListService{
+
+
+    private final ProblemProblemListService problemProblemListService;
+    private final ProblemService problemService;
 
     public boolean isExistId(Long id) {
         return this.exists(new LambdaQueryWrapper<ProblemList>()
                 .eq(ProblemList::getListId, id)
         );
     }
+
+
+    private ProblemListVo buildProblemListVo(ProblemList pl) {
+        ProblemListVo problemListVo = BeanUtil.copyProperties(pl, ProblemListVo.class);
+
+        List<ProblemListRelationVo> listedProblem = problemProblemListService.getListedProblem(problemListVo.getListId());
+        problemListVo.setProblems(listedProblem);
+
+        return problemListVo;
+    }
+
+    @Override
+    public ProblemListVo getProblemListByListId(Long id) {
+        ProblemList pl = this.getById(id);
+
+        return buildProblemListVo(pl);
+    }
+
+    @Override
+    public boolean addProblemList(ProblemListDto pl) {
+        ProblemList problemList = BeanUtil.copyProperties(pl, ProblemList.class);
+        return this.save(problemList);
+    }
+
+    @Override
+    @Transactional
+    public void delProblemList(List<Long> ids) {
+        if (CollectionUtil.isEmpty(ids)) {
+            return;
+        }
+        this.remove(new LambdaQueryWrapper<ProblemList>()
+                .in(ProblemList::getListId, ids)
+        );
+        problemProblemListService.delByListIds(ids);
+    }
+
+    @Override
+    public LocalDateTime getDataTime(Long id) {
+        return this.getObj(
+                new LambdaQueryWrapper<ProblemList>()
+                        .select(ProblemList::getUpdateTime)
+                        .eq(ProblemList::getListId, id),
+                x -> (LocalDateTime) x
+        );
+    }
+
+    @Override
+    public boolean updateProblem(ProblemListDto problemListDto) {
+        LocalDateTime dataTime = getDataTime(problemListDto.getListId());
+        ProblemList problemList = BeanUtil.copyProperties(problemListDto, ProblemList.class);
+        problemList.setUpdateTime(dataTime);
+
+        return this.updateById(problemList);
+    }
+
+
+    private void doCheckBeforeAddProblem(ProblemListRelationDto plr) {
+        if (!problemService.isExisted(plr.getProblemId())) {
+            throw new RuntimeException("不存在题目ID:" + plr.getProblemId());
+        } else if (isExistId(plr.getListId())) {
+            throw new RuntimeException("不存在列表ID:" + plr.getListId());
+        }
+    }
+    private void checkBeforeAddProblem(List<ProblemListRelationDto> relations) {
+        for (ProblemListRelationDto relation : relations) {
+            doCheckBeforeAddProblem(relation);
+        }
+    }
+    @Override
+    public boolean addProblem(List<ProblemListRelationDto> relations) {
+
+        checkBeforeAddProblem(relations);
+
+        List<ProblemProblemListRelation> list = BeanUtil.copyToList(relations, ProblemProblemListRelation.class);
+
+        return problemProblemListService.saveBatch(list);
+
+    }
+
+
+    @Override
+    public boolean delProblem(ProblemListRelationDto relation) {
+
+        return problemProblemListService.remove(
+                new LambdaUpdateWrapper<ProblemProblemListRelation>()
+                        .eq(ProblemProblemListRelation::getListId, relation.getListId())
+                        .eq(ProblemProblemListRelation::getProblemId, relation.getProblemId())
+        );
+    }
+
+
 }
 
 

@@ -1,10 +1,14 @@
 package com.anishan.user.service;
 
+import com.anishan.api.entity.SysUser;
+import com.anishan.commons.entity.dto.UserDto;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.user.util.EmailSender;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.annotation.Resource;
 import java.util.Map;
@@ -15,11 +19,18 @@ public class SysUserServiceTest {
 
     @Resource
     SysUserService sysUserService;
+    @Resource
+    PasswordEncoder passwordEncoder;
+    @Resource
+    AuthenticationService authenticationService;
+
 
     @Test
     public void getUserByIdTest() {
-        Map<String, String> stringStringMap = MysqlMappingUtils.mapColumn(UserPagedQuery.class);
-        System.out.println(stringStringMap);
+        sysUserService.update(new LambdaUpdateWrapper<SysUser>()
+                .set(SysUser::getPassword, passwordEncoder.encode("change-this-default-password"))
+                .eq(SysUser::getUserId, 3)
+        );
     }
 
     @Test

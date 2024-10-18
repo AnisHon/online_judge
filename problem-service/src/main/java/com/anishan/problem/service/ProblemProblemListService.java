@@ -1,7 +1,11 @@
 package com.anishan.problem.service;
 
+import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
+import com.anishan.problem.domain.vo.ProblemListRelationVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -9,5 +13,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2024-10-16 22:40:59
 */
 public interface ProblemProblemListService extends IService<ProblemProblemListRelation> {
+
+    List<Long> getProblemIds(Long id);
+
+    List<ProblemListRelationVo> getListedProblem(Long listId);
+
+    void delByListIds(List<Long> ids);
 
 }

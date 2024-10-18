@@ -1,32 +1,27 @@
 package com.anishan.problem.domain.entity;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.anishan.problem.domain.vo.ProblemListRelationVo;
+import com.anishan.problem.domain.vo.ProblemVo;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.math.BigDecimal;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 题单 题目关系表
  * @TableName problem_problem_list
  */
-@TableName(value ="problem_problem_list")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProblemProblemListRelation implements Serializable {
-    /**
-     * 单子id
-     */
-    private Long listId;
+public class ProblemListRelation implements Serializable {
 
-    /**
-     * 题目id
-     */
-    private Long problemId;
+    private Problem problem;
 
     /**
      * 题目顺序
@@ -40,6 +35,13 @@ public class ProblemProblemListRelation implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    public ProblemListRelationVo toVo() {
+
+        ProblemVo problemVo = BeanUtil.copyProperties(this.problem, ProblemVo.class);
+        return new ProblemListRelationVo(problemVo, this.problemOrder, this.score);
+    }
+
 
 
 }

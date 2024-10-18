@@ -1,7 +1,11 @@
 package com.anishan.problem.mapper;
 
+import com.anishan.problem.domain.entity.ProblemListRelation;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.lettuce.core.dynamic.annotation.Param;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -10,7 +14,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.anishan.problem.entity.ProblemProblemListRelation
 */
 public interface ProblemProblemListMapper extends BaseMapper<ProblemProblemListRelation> {
-
+    List<ProblemListRelation> getByListId(Long listId);
 }
 
 

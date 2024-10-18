@@ -15,6 +15,11 @@ import org.springframework.stereotype.Service;
 public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     implements RecordsService{
 
+
+    @Override
+    public void addRecord(Records records) {
+        // todo
+    }
 }
 
 
