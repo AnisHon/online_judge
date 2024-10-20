@@ -26,7 +26,7 @@
 
 <!--    List<SysUser> selectByTeacherIdLimit(Long teacherId,  Long currentPage, Long pageSize);-->
 
-    <select id="selectByTeacherIdLimit" resultType="com.anishan.api.domain.domainSysUser">
+    <select id="selectByTeacherIdLimit" resultType="com.anishan.api.domain.SysUser">
         select distinct
             user_id,
             user_name,
