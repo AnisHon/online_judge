@@ -1,6 +1,6 @@
 package com.anishan.user.mapper;
 
-import com.anishan.user.domain.entity.SysUser;
+import com.anishan.api.domain.SysUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

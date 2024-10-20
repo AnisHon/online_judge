@@ -1,4 +1,4 @@
-package com.anishan.user.domain.entity;
+package com.anishan.api.domain;
 
 import com.anishan.commons.e.UserState;
 import com.baomidou.mybatisplus.annotation.*;

@@ -1,6 +1,6 @@
 package com.anishan.user.service.impl;
 
-import com.anishan.user.domain.entity.SysRole;
+import com.anishan.api.domain.SysRole;
 import com.anishan.user.service.SysRoleService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

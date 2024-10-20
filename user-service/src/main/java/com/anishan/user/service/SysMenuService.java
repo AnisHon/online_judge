@@ -5,7 +5,7 @@ import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
 import com.anishan.user.domain.entity.SysMenu;
-import com.anishan.user.domain.entity.SysRole;
+import com.anishan.api.domain.SysRole;
 import com.anishan.user.domain.vo.MenuVo;
 import com.anishan.user.domain.vo.TreedMenuVo;
 import com.baomidou.mybatisplus.extension.service.IService;

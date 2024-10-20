@@ -5,9 +5,9 @@ import com.anishan.commons.entity.dto.UserDto;
 import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
-import com.anishan.user.domain.entity.SysUser;
+import com.anishan.api.domain.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.anishan.api.domain.UserVo;
+import com.anishan.user.domain.vo.UserVo;
 
 import java.util.List;
 

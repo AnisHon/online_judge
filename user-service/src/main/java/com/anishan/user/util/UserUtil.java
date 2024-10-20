@@ -1,6 +1,6 @@
 package com.anishan.user.util;
 
-import com.anishan.user.domain.LoginUser;
+import com.anishan.api.domain.LoginUser;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class UserUtil {

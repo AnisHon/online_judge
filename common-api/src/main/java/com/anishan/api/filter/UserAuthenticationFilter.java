@@ -1,7 +1,7 @@
 package com.anishan.api.filter;
 
 import cn.hutool.core.util.StrUtil;
-import com.anishan.api.domain.LoginUserVo;
+import com.anishan.api.domain.LoginUser;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.api.exception.IllegalTokenException;
 import com.anishan.api.util.JwtUtil;
@@ -45,7 +45,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             throw new IllegalTokenException("令牌过期");
         }
 
-        LoginUserVo loginUser = AuthUtil.getLoginUser(redisTemplate, userId);
+        LoginUser loginUser = AuthUtil.getLoginUser(redisTemplate, userId);
 
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                 new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());

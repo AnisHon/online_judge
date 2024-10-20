@@ -1,6 +1,6 @@
 package com.anishan.user.service;
 
-import com.anishan.user.domain.entity.SysUser;
+import com.anishan.api.domain.SysUser;
 import com.anishan.user.util.EmailSender;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.junit.jupiter.api.Test;

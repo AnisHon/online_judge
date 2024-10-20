@@ -1,6 +1,6 @@
 package com.anishan.user.service;
 
-import com.anishan.user.domain.entity.SysRole;
+import com.anishan.api.domain.SysRole;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.baomidou.mybatisplus.extension.service.IService;
 

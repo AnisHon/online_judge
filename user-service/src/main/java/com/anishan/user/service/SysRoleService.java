@@ -4,8 +4,8 @@ import com.anishan.commons.entity.dto.PagedQuery;
 import com.anishan.commons.entity.vo.PagedResult;
 import com.anishan.user.domain.dto.RoleDto;
 import com.anishan.user.domain.dto.RolePagedQuery;
-import com.anishan.user.domain.entity.SysRole;
-import com.anishan.api.domain.RoleVo;
+import com.anishan.api.domain.SysRole;
+import com.anishan.user.domain.vo.RoleVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.validation.constraints.NotNull;

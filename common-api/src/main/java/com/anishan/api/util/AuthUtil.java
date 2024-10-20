@@ -1,7 +1,7 @@
 package com.anishan.api.util;
 
 import cn.hutool.captcha.AbstractCaptcha;
-import com.anishan.api.domain.LoginUserVo;
+import com.anishan.api.domain.LoginUser;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -78,15 +78,15 @@ public class AuthUtil {
         redisTemplate.opsForValue().set(captchaCodeKey, code, CODE_TIME_OUT_SECOND, TimeUnit.SECONDS);
     }
 
-    public static void cacheLoginUser(@NotNull RedisTemplate<String, Object> redisTemplate, @NotNull LoginUserVo user) {
+    public static void cacheLoginUser(@NotNull RedisTemplate<String, Object> redisTemplate, @NotNull LoginUser user) {
         String loginKey = getLoginKey(user.getUser().getUserId());
         redisTemplate.opsForValue().set(loginKey, user, JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
     }
 
-    public static LoginUserVo getLoginUser(@NotNull RedisTemplate<String, Object> redisTemplate, Long userId) {
+    public static LoginUser getLoginUser(@NotNull RedisTemplate<String, Object> redisTemplate, Long userId) {
         String loginKey = getLoginKey(userId);
         Object o = redisTemplate.opsForValue().get(loginKey);
-        return (LoginUserVo) o;
+        return (LoginUser) o;
     }
 
     public static boolean isUserExisted(@NotNull RedisTemplate<String, Object> redisTemplate, Long userId) {

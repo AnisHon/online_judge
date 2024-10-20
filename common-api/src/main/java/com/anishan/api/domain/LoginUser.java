@@ -1,7 +1,5 @@
-package com.anishan.user.domain;
+package com.anishan.api.domain;
 
-import com.anishan.user.domain.entity.SysRole;
-import com.anishan.user.domain.entity.SysUser;
 import com.anishan.commons.e.UserState;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

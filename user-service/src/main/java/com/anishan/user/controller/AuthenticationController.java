@@ -1,9 +1,9 @@
 package com.anishan.user.controller;
 
 
-import com.anishan.user.domain.entity.SysUser;
+import com.anishan.api.domain.SysUser;
 import com.anishan.commons.entity.R;
-import com.anishan.user.domain.LoginUser;
+import com.anishan.api.domain.LoginUser;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
 import com.anishan.user.domain.vo.AuthResultVo;
