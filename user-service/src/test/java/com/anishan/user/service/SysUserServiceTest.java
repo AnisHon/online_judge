@@ -1,9 +1,6 @@
 package com.anishan.user.service;
 
-import com.anishan.api.entity.SysUser;
-import com.anishan.commons.entity.dto.UserDto;
-import com.anishan.commons.util.MysqlMappingUtils;
-import com.anishan.user.domain.dto.UserPagedQuery;
+import com.anishan.user.domain.entity.SysUser;
 import com.anishan.user.util.EmailSender;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.junit.jupiter.api.Test;
@@ -11,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.annotation.Resource;
-import java.util.Map;
 
 @SpringBootTest
 public class SysUserServiceTest {

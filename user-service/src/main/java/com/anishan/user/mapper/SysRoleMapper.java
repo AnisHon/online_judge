@@ -1,6 +1,6 @@
 package com.anishan.user.mapper;
 
-import com.anishan.api.entity.SysRole;
+import com.anishan.user.domain.entity.SysRole;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

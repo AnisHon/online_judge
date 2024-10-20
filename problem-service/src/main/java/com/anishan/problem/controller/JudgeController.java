@@ -1,6 +1,5 @@
 package com.anishan.problem.controller;
 
-import com.anishan.api.entity.LoginUser;
 import com.anishan.commons.entity.R;
 import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.vo.ProblemJudgeResult;

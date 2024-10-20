@@ -1,8 +1,8 @@
 package com.anishan.user.service.impl;
 
-import com.anishan.api.entity.LoginUser;
-import com.anishan.api.entity.SysRole;
-import com.anishan.api.entity.SysUser;
+import com.anishan.user.domain.LoginUser;
+import com.anishan.user.domain.entity.SysRole;
+import com.anishan.user.domain.entity.SysUser;
 import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.service.SysUserService;

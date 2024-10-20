@@ -2,10 +2,10 @@ package com.anishan.user.service.impl;
 
 import cn.hutool.captcha.AbstractCaptcha;
 import cn.hutool.core.util.IdUtil;
-import com.anishan.api.entity.SysRole;
-import com.anishan.api.entity.SysUser;
+import com.anishan.user.domain.entity.SysRole;
+import com.anishan.user.domain.entity.SysUser;
 import com.anishan.commons.e.UserState;
-import com.anishan.api.entity.LoginUser;
+import com.anishan.user.domain.LoginUser;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
 import com.anishan.user.domain.vo.CaptchaCodeVo;

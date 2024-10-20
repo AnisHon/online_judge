@@ -4,7 +4,7 @@ import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
 import com.anishan.commons.entity.dto.SortedPagedQuery;
 import com.anishan.commons.util.MysqlMappingUtils;
-import com.anishan.api.entity.SysRole;
+import com.anishan.user.domain.entity.SysRole;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

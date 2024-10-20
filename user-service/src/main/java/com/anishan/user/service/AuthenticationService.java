@@ -1,6 +1,6 @@
 package com.anishan.user.service;
 
-import com.anishan.api.entity.LoginUser;
+import com.anishan.user.domain.LoginUser;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
 import com.anishan.user.domain.vo.CaptchaCodeVo;
