@@ -35,6 +35,21 @@ public class UserController {
     }
 
 
+    @GetMapping("/username/{username}")
+    @ApiOperation("查看用户名是否可用")
+    public R<Boolean> availableUsername(@PathVariable("username") String username) {
+        boolean b = sysUserService.existsUsername(username);
+        return R.success(!b);
+    }
+
+    @GetMapping("/email/{email}")
+    @ApiOperation("查看邮箱是否可用")
+    public R<Boolean> availableEmail(@PathVariable("email") String email) {
+        boolean b = sysUserService.existsEmail(email);
+        return R.success(!b);
+    }
+
+
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("通过id获取用户")
@@ -105,5 +120,6 @@ public class UserController {
 
     // change myself
     // todo
+
 
 }

@@ -1,11 +1,85 @@
-<script setup lang="ts">
-
-</script>
-
 <template>
+  <el-row style="height: 100vh">
+    <el-col :span="17" class="background">
+
+    </el-col>
+    <el-col :span="7" style="display: flex; align-self: center; justify-content: center; padding: 10px;">
+      <div style="min-width: 450px">
+
+        <router-view v-slot="{ Component }">
+          <transition mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+
+
+        <el-divider />
+        <el-row justify="space-between">
+
+          <el-col :span="12">
+            <router-link :to="routerTo.name">{{ routerTo.text }}</router-link>
+          </el-col>
+
+          <el-col :span="12" style="position: relative;" v-show="showForgetPass">
+                <router-link style="position: absolute; right: 0" :to="{name: 'forget-password'}">忘记密码</router-link>
+          </el-col>
+        </el-row>
+
+      </div>
+
+    </el-col>
+  </el-row>
 
 </template>
 
+
+<script setup lang="ts">
+import {computed, ref, toRef, watch} from "vue";
+import {useRoute} from "vue-router";
+
+  const route = useRoute()
+
+  const url = toRef("path", route)
+
+
+
+  const lastLocation = computed(() => {
+    const arr = url.value.split("/");
+    return arr[arr.length - 1];
+  })
+
+  const routerTo = computed<{name: string, text: string}>(() => {
+    if (lastLocation.value.includes("login")) {
+      return {name: "sign-up", text: "去注册"};
+    } else {
+      return {name: "login", text: "去登录"};
+    }
+  });
+
+  watch(() => route.path, (value) => {
+    url.value = value;
+  },{immediate: true});
+
+  const showForgetPass = computed(() => {
+    return lastLocation.value.includes("login");
+  })
+</script>
+
 <style scoped>
+.background {
+  background-image: url("/auth/auth_background.png");
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.2s ease-in-out;
+}
+.v-enter,
+.v-leave-to {
+  opacity: 0;
+}
+
+
+
 
 </style>

@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public class EmailSender {
 
 
+    //todo 美化消息样式
 
     private static final int SIZE = 6;
     private static final String RANDOM_BASE = "1234567890";
@@ -32,9 +33,6 @@ public class EmailSender {
         final String randomCode = getRandomCode();
         ThreadUtil.execAsync(() -> {
             MailUtil.send(email, SUBJECT, getContent(randomCode), false);
-            System.out.println("Test");
-            System.out.println(email);
-            System.out.println(randomCode);
         });
         return randomCode;
     }

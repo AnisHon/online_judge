@@ -1,13 +1,28 @@
 import {defineStore} from 'pinia'
+import {useUser} from '@/stores/useUserStore'
 
-import {ref} from "vue";
+
+
 
 export const useToken = defineStore('token', {
     state: () => {
         return {
-            token: null
+            token: ""
         }
     },
+    actions: {
+        setToken(token_: string) {
+            const user = useUser()
+            this.token = token_
+
+            user.loadUser()
+        },
+
+        clearToken(){
+            this.token = ''
+        }
+    },
+
     persist: true
 });
 

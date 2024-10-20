@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Index from "@/views/system/Index.vue";
 import Layout from "@/Layout.vue";
-import Forbidden from "@/views/system/Forbidden.vue";
-import NotFound from "@/views/system/NotFound.vue";
+import Forbidden from "@/views/system/error/Forbidden.vue";
+import NotFound from "@/views/system/error/NotFound.vue";
 
 // index不是home
 // index不是home
@@ -13,7 +13,7 @@ import NotFound from "@/views/system/NotFound.vue";
 export const constRoutes =  [
   {
     path: "/auth",
-    component: import('@/views/system/authentication/Auth.vue'),
+    component: () => import('@/views/system/authentication/Auth.vue'),
     redirect: "/auth/login",
     children: [
       {
@@ -25,14 +25,37 @@ export const constRoutes =  [
         path: "sign-up",
         name: "sign-up",
         component: () => import('@/views/system/authentication/SignUp.vue'),
+      },
+      {
+        path: "forget-password",
+        name: "forget-password",
+        component: () => import('@/views/system/authentication/ForgetPassword.vue'),
       }
     ]
   },
   {
-    path: "/index",
-    name: "index",
-    component: Index,
+    path: '',
+    component: Layout,
+    name: 'container',
+    redirect: "index",
+    children: [
+      {
+        path: "index",
+        name: "index",
+        component: Index,
+      },
+      {
+        path: "problems",
+        name: "problems",
+        component: () => import('@/views/system/ProblemSet.vue')
+      }
+    ],
+    mate: {
+      requireAuth: true,
+      name: "主页"
+    }
   },
+
   {
     path: '/403',
     component: Forbidden
@@ -40,7 +63,8 @@ export const constRoutes =  [
   {
     path: '/*',
     component: NotFound
-  }
+  },
+
 
 ]
 

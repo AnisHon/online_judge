@@ -3,13 +3,8 @@ package com.anishan.user.controller;
 
 import com.anishan.api.domain.SysUser;
 import com.anishan.commons.entity.R;
-import com.anishan.api.domain.LoginUser;
-import com.anishan.user.domain.dto.LoginForm;
-import com.anishan.user.domain.dto.RegistrationForm;
-import com.anishan.user.domain.vo.AuthResultVo;
-import com.anishan.user.domain.vo.CaptchaCodeVo;
-import com.anishan.user.domain.vo.LoginVo;
-import com.anishan.user.domain.vo.TreedMenuVo;
+import com.anishan.user.domain.dto.*;
+import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysUserService;
@@ -23,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
@@ -47,8 +41,8 @@ public class AuthenticationController {
 
     @GetMapping("/me")
     @ApiOperation("获取用户个人信息")
-    public R<LoginUser> me() {
-        LoginUser me = authenticationService.me();
+    public R<LoginUserVo> me() {
+        LoginUserVo me = authenticationService.me();
         return R.success(me);
     }
 
@@ -76,30 +70,28 @@ public class AuthenticationController {
 
     @PostMapping("/reset-pass")
     @ApiOperation("重制密码，重新设置密码")
-    public R<AuthResultVo> resetPass(
-            @RequestParam @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
-            @RequestParam @Length(min = 8, max = 16) @ApiParam(value = "新密码", required = true) String password
-    ) {
-        AuthResultVo authResultVo = authenticationService.resetPassword(code, password);
+    public R<AuthResultVo> resetPass(@RequestBody @Validated PasswordResetRequest passwordResetRequest) {
+        AuthResultVo authResultVo = authenticationService.resetPassword(
+                passwordResetRequest.getCode(),
+                passwordResetRequest.getPassword()
+        );
         return authResultVo.toR();
     }
 
     @PostMapping("/forget-pass")
     @ApiOperation("忘记密码，重设密码")
     public R<AuthResultVo> forgetPass(
-            @RequestParam @NotNull @ApiParam(value = "邮箱或者用户名", required = true) String username,
-            @RequestParam @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
-            @RequestParam @Length(min = 8, max = 16) @ApiParam(value = "新密码", required = true) String password
-    ) {
-        SysUser user = sysUserService.getUserByUsernameOrEmail(username);
+            @RequestBody @Validated PasswordForgetRequest passwordForgetRequest
+            ) {
+        SysUser user = sysUserService.getUserByUsernameOrEmail(passwordForgetRequest.getUsername());
         if (Objects.isNull(user)) {
             return AuthResultVo.fail("用户不存在").toR();
         }
         AuthResultVo authResultVo = authenticationService.resetPassword(
                 user.getUserId(),
                 user.getEmail(),
-                code,
-                password
+                passwordForgetRequest.getCode(),
+                passwordForgetRequest.getPassword()
         );
         return authResultVo.toR();
     }
@@ -107,24 +99,39 @@ public class AuthenticationController {
 
     @PostMapping("/reset-email")
     @ApiOperation("重制邮箱")
-    public R<AuthResultVo> resetEmail(
-            @RequestParam @NotNull @ApiParam(value = "邮箱验证码", required = true) String code,
-            @RequestParam @Email @ApiParam(value = "新邮箱", required = true) String newEmail
-    ) {
-        AuthResultVo authResultVo = authenticationService.resetEmail(code, newEmail);
+    public R<AuthResultVo> resetEmail(@RequestBody @Validated EmailResetRequest emailResetRequest) {
+        AuthResultVo authResultVo = authenticationService.resetEmail(
+                emailResetRequest.getCode(),
+                emailResetRequest.getNewEmail()
+        );
         return authResultVo.toR();
     }
 
     @PostMapping("/send-email-code")
     @ApiOperation("发送邮箱验证码")
 
-    public R<AuthResultVo> sendEmailCode(
-            @RequestParam @Email @ApiParam(value = "邮箱", required = true) String email,
-            @RequestParam @NotNull @ApiParam(value = "验证码token", required = true) String captchaToken,
-            @RequestParam @NotNull @ApiParam(value = "验证码code", required = true) String captchaCode) {
-        AuthResultVo authResultVo = authenticationService.sendEmailCode(email, captchaToken, captchaCode);
+    public R<AuthResultVo> sendEmailCode(@RequestBody @Validated EmailCodeRequest emailCodeRequest) {
+        AuthResultVo authResultVo = authenticationService.sendEmailCode(
+                emailCodeRequest.getEmail(),
+                emailCodeRequest.getCaptchaToken(),
+                emailCodeRequest.getCaptchaCode()
+        );
         return authResultVo.toR();
     }
+
+    @PostMapping("/send-forget-email-code")
+    @ApiOperation("发送验证码，用于忘记密码，只需要提供用户名")
+    public R<AuthResultVo> sendForgetEmailCode(@RequestBody @Validated ForgetEmailCodeRequest forgetEmailCodeRequest) {
+
+        String email = sysUserService.getUserByUsernameOrEmail(forgetEmailCodeRequest.getUsername()).getEmail();
+        AuthResultVo authResultVo = authenticationService.sendEmailCode(
+                email,
+                forgetEmailCodeRequest.getCaptchaToken(),
+                forgetEmailCodeRequest.getCaptchaCode()
+        );
+        return R.success(authResultVo);
+    }
+
 
     @GetMapping("/captcha-code")
     @ApiOperation("获取Captcha验证码")

@@ -3,11 +3,13 @@ package com.anishan.user.domain.vo;
 import com.anishan.commons.e.UserState;
 import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Data
 public class LoginUserVo {
     @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("用户ID")

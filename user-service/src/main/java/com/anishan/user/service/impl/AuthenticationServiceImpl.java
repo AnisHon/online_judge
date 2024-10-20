@@ -1,6 +1,7 @@
 package com.anishan.user.service.impl;
 
 import cn.hutool.captcha.AbstractCaptcha;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import com.anishan.api.domain.SysRole;
 import com.anishan.api.domain.SysUser;
@@ -8,9 +9,7 @@ import com.anishan.commons.e.UserState;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
-import com.anishan.user.domain.vo.CaptchaCodeVo;
-import com.anishan.user.domain.vo.LoginVo;
-import com.anishan.user.domain.vo.AuthResultVo;
+import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.*;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.user.util.EmailSender;
@@ -68,13 +67,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public LoginUser me() {
-        return (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public LoginUserVo me() {
+        LoginUser principal = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        LoginUserVo loginUserVo = BeanUtil.copyProperties(principal.getUser(), LoginUserVo.class);
+        loginUserVo.setAuths(principal.getAuths());
+        return loginUserVo;
     }
-
     @Override
     public Long myId() {
-        return me().getUser().getUserId();
+        return me().getUserId();
     }
 
     @Override
@@ -141,7 +142,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         LoginVo loginVo = new LoginVo();
         loginVo.setSuccess(false);
 
-        if (!doCheckEmailCode(registrationForm.getCode())) {
+        if (!doCheckEmailCode(registrationForm.getEmail(), registrationForm.getCode())) {
             loginVo.setMessage("邮箱验证码错误");
         } else if (sysUserService.existsUsername(registrationForm.getUserName())) {
             loginVo.setMessage("用户已存在");
@@ -150,10 +151,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else {
             loginVo.setSuccess(true);
             loginVo.setMessage("注册成功");
+            AuthUtil.removeEmailCode(stringRedisTemplate, registrationForm.getEmail());
         }
 
         // 校验 删除
-        AuthUtil.removeEmailCode(stringRedisTemplate, registrationForm.getEmail());
+
         return loginVo;
     }
 
@@ -205,7 +207,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private boolean doCheckEmailCode(String code) {
-        String email = me().getUser().getEmail();
+        String email = me().getEmail();
         return doCheckEmailCode(email, code);
     }
 
@@ -213,7 +215,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return AuthUtil.checkEmailCode(stringRedisTemplate, email, code);
     }
     private AuthResultVo checkEmailCode(String code) {
-        String email = me().getUser().getEmail();
+        String email = me().getEmail();
         return checkEmailCode(email, code);
     }
 
@@ -261,7 +263,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         sysUserService.update(new LambdaUpdateWrapper<SysUser>()
                 .set(SysUser::getPassword, newPassword)
-                .eq(SysUser::getUserId, email)
+                .eq(SysUser::getUserId, userId)
         );
 
         return authResultVo;
@@ -269,7 +271,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthResultVo resetPassword(String code, String newPassword) {
-        SysUser user = me().getUser();
+        LoginUserVo user = me();
 
         return resetPassword(user.getUserId(), user.getEmail(), code, newPassword);
     }
@@ -282,7 +284,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return authResultVo;
         }
 
-        Long userId = me().getUser().getUserId();
+        Long userId = me().getUserId();
 
         try{
             sysUserService.update(new LambdaUpdateWrapper<SysUser>()
@@ -380,7 +382,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public void logout() {
-        Long userId = me().getUser().getUserId();
+        Long userId = me().getUserId();
         logout(userId);
     }
 

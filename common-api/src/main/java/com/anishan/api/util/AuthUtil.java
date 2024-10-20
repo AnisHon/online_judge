@@ -14,7 +14,6 @@ public class AuthUtil {
 
     public static final int CODE_TIME_OUT_SECOND = 60 * 2;
 
-
     @NotNull
     @Contract(pure = true)
     private static String getLoginKey(@NotNull Long id) {
@@ -37,7 +36,7 @@ public class AuthUtil {
     @Contract(pure = true)
 
     public static AbstractCaptcha generateCaptchaCode() {
-        return cn.hutool.captcha.CaptchaUtil.createShearCaptcha(150, 75);
+        return cn.hutool.captcha.CaptchaUtil.createShearCaptcha(150, 75, 4, 2);
     }
     
 

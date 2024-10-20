@@ -23,10 +23,8 @@ public class SysUserServiceTest {
 
     @Test
     public void getUserByIdTest() {
-        sysUserService.update(new LambdaUpdateWrapper<SysUser>()
-                .set(SysUser::getPassword, passwordEncoder.encode("change-this-default-password"))
-                .eq(SysUser::getUserId, 3)
-        );
+        SysUser user = sysUserService.getUserByUsernameOrEmail("anishan");
+        System.out.println(user);
     }
 
     @Test

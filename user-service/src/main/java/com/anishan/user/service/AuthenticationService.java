@@ -4,12 +4,13 @@ import com.anishan.api.domain.LoginUser;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
 import com.anishan.user.domain.vo.CaptchaCodeVo;
+import com.anishan.user.domain.vo.LoginUserVo;
 import com.anishan.user.domain.vo.LoginVo;
 import com.anishan.user.domain.vo.AuthResultVo;
 
 public interface AuthenticationService {
 
-    LoginUser me();
+    LoginUserVo me();
 
     Long myId();
 
