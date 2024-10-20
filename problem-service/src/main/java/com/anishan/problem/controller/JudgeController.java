@@ -30,15 +30,11 @@ public class JudgeController {
     @ApiOperation("判题")
     public R<ProblemJudgeResult> judge(@RequestBody JudgeRequest judgeRequest) {
 
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         LoginUser user = (LoginUser) authentication.getPrincipal();
 
         ProblemJudgeResult judge = judgeService.judge(user.getUser().getUserId(), judgeRequest);
         return R.success(judge);
+
     }
-
-
-
-
 }

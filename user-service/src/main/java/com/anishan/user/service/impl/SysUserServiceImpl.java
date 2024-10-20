@@ -91,17 +91,23 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         return PagedResult.build(page, UserVo.class);
     }
 
+
+
     @Override
-    public boolean updateUser(UserDto userDto) {
+    public boolean updateUser(SysUser user) {
         LocalDateTime updateTime = MysqlMappingUtils.getUpdateTime(
                 this,
                 SysUser::getUserId,
-                userDto.getUserId(),
+                user.getUserId(),
                 SysUser::getUpdateTime);
+        user.setUpdateTime(updateTime);
+        return this.updateById(user);
+    }
 
+    @Override
+    public boolean updateUser(UserDto userDto) {
         SysUser sysUser = BeanUtil.copyProperties(userDto, SysUser.class);
-        sysUser.setUpdateTime(updateTime);
-        return this.updateById(sysUser);
+        return updateUser(sysUser);
     }
 
     @Override

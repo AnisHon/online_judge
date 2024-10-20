@@ -19,6 +19,9 @@ public class MenuDto {
     @ApiModelProperty("菜单名称")
     private String menuName;
 
+    @ApiModelProperty("路由排序")
+    private Integer orderNum;
+
     @ApiModelProperty("父菜单ID, 0表示没有父菜单")
     private Long parentId;
 

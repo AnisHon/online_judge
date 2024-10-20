@@ -347,11 +347,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public String ban(Long id) {
-        boolean update = sysUserService.update(
-                new LambdaUpdateWrapper<SysUser>()
-                        .set(SysUser::getStatus, UserState.BANNED)
-                        .eq(SysUser::getUserId, id)
-        );
+
+        SysUser user = new SysUser();
+        user.setUserId(id);
+        user.setStatus(UserState.BANNED);
+
+        boolean update = sysUserService.save(user);
 
         if (update) {
             logout(id);

@@ -26,6 +26,8 @@ public interface SysUserService extends IService<SysUser> {
 
     PagedResult<UserVo> queryUser(UserPagedQuery userPagedQuery);
 
+    boolean updateUser(SysUser user);
+
     boolean updateUser(UserDto userVo);
 
     void addUser(SysUserDto sysUserDto);

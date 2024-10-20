@@ -57,7 +57,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
         List<TreedMenuVo> children = menus
                 .stream()
                 .filter(menu -> Objects.equals(menu.getParentId(), treeNode.getMenuId()))
+                .sorted(Comparator.comparingInt(o -> o.getMenu().getOrderNum()))
                 .collect(Collectors.toList());
+
 
         // set children
         treeNode.setChildren(children);
@@ -140,8 +142,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
 
     @Override
     public MenuVo getMenuById(Long id) {
-        MenuVo menuById = this.getMenuById(id);
-        return BeanUtil.copyProperties(menuById, MenuVo.class);
+        SysMenu byId = this.getById(id);
+        return BeanUtil.copyProperties(byId, MenuVo.class);
     }
 
     @Override

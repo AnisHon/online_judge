@@ -95,6 +95,7 @@ drop table if exists sys_menu;
 create table sys_menu (
     menu_id           bigint(20)      not null auto_increment    comment '菜单ID',
     menu_name         varchar(50)     not null                   comment '菜单名称',
+    order_num         int(4)          not null                   comment '菜单顺序',
     parent_id         bigint(20)      default 0                  comment '父菜单ID',
     router            varchar(200)    default '#'                comment '路由路径',
     menu_type         char(1)         default ''                 comment '菜单类型（I菜单项item M菜单栏MenuBar B按钮）',
