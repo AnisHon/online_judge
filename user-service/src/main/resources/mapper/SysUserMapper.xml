@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anishan.user.mapper.SysUserMapper">
 
-    <resultMap id="BaseResultMap" type="com.anishan.api.domain.domainSysUser">
+    <resultMap id="BaseResultMap" type="com.anishan.api.domain.SysUser">
             <id property="userId" column="user_id" jdbcType="BIGINT"/>
             <result property="userName" column="user_name" jdbcType="VARCHAR"/>
             <result property="email" column="email" jdbcType="VARCHAR"/>
