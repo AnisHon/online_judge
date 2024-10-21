@@ -1,8 +1,8 @@
 package com.anishan.user.controller;
 
-import com.anishan.commons.entity.R;
-import com.anishan.commons.entity.dto.PagedQuery;
-import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.domain.R;
+import com.anishan.commons.domain.dto.PagedQuery;
+import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;

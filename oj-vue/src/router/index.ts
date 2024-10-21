@@ -48,6 +48,11 @@ export const constRoutes =  [
         path: "problems",
         name: "problems",
         component: () => import('@/views/system/ProblemSet.vue')
+      },
+      {
+        path: "problem/:id",
+        name: "problem",
+        component: () => import('@/views/system/problem/ProblemDetail.vue')
       }
     ],
     mate: {

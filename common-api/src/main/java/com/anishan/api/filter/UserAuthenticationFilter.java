@@ -5,7 +5,7 @@ import com.anishan.api.domain.LoginUser;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.api.exception.IllegalTokenException;
 import com.anishan.api.util.JwtUtil;
-import com.anishan.commons.entity.R;
+import com.anishan.commons.domain.R;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;

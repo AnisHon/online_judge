@@ -1,11 +1,12 @@
 package com.anishan.problem.controller;
 
-import com.anishan.commons.entity.R;
-import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.domain.R;
+import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.problem.domain.dto.PagedProblem;
 import com.anishan.problem.domain.dto.ProblemTagDto;
 import com.anishan.problem.domain.vo.DetailProblem;
 import com.anishan.problem.domain.vo.ProblemVo;
+import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.service.TagService;
 import io.swagger.annotations.Api;
@@ -30,9 +31,16 @@ public class ProblemController {
 
 
     @PostMapping("/list")
-    @ApiOperation("条件分页查询题目")
+    @ApiOperation("条件分页查询题目，这个接口不带标签，无法获取比赛题目")
     public R<PagedResult<ProblemVo>> getProblems(@RequestBody @Validated PagedProblem pagedProblem) {
         PagedResult<ProblemVo> problems = problemService.getProblems(pagedProblem);
+        return problems.toR();
+    }
+
+    @PostMapping("/tagged-list")
+    @ApiOperation("条件分页查询题目，这个接口带标签，题目页面用这个就好，无法获取比赛题目")
+    public R<PagedResult<TaggedProblemVo>> getTaggedProblems(@RequestBody @Validated PagedProblem pagedProblem) {
+        PagedResult<TaggedProblemVo> problems = problemService.listTaggerProblems(pagedProblem);
         return problems.toR();
     }
 

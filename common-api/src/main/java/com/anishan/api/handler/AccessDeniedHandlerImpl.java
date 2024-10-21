@@ -1,9 +1,8 @@
 package com.anishan.api.handler;
 
-import com.anishan.commons.entity.R;
+import com.anishan.commons.domain.R;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
-import org.apache.http.protocol.HTTP;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 

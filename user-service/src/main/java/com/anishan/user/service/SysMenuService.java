@@ -1,7 +1,7 @@
 package com.anishan.user.service;
 
-import com.anishan.commons.entity.dto.PagedQuery;
-import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.domain.dto.PagedQuery;
+import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
 import com.anishan.user.domain.entity.SysMenu;

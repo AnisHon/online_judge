@@ -3,14 +3,13 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.commons.e.ProblemAuth;
-import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.problem.domain.dto.PagedProblem;
 import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.service.ChoiceFillAnswersService;
 import com.anishan.problem.service.OjProblemService;
 import com.anishan.problem.service.TagService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.Problem;
@@ -66,11 +65,28 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     public PagedResult<ProblemVo> getProblems(PagedProblem pagedProblem) {
         List<Problem> problems = doGetProblems(pagedProblem);
         List<ProblemVo> problemVos = BeanUtil.copyToList(problems, ProblemVo.class);
-        return PagedResult.fromPage(pagedProblem.page(), problemVos);
+
+        Long l = problemMapper.selectAllCountByProblemIdAndTagId(
+                pagedProblem.getProblemId(),
+                pagedProblem.getTagIds()
+        );
+
+        return PagedResult.fromPage(pagedProblem.page(), problemVos, l);
     }
 
 
+    @Override
+    public PagedResult<TaggedProblemVo> listTaggerProblems(PagedProblem pagedProblem) {
+        Page<Problem> page = pagedProblem.page();
+        List<TaggedProblemVo> taggedProblemVos = problemMapper
+                .selectTaggedProblemByProblemIdAndTagId(page, pagedProblem.getProblemId(), pagedProblem.getTagIds());
+        Long l = problemMapper.selectAllCountByProblemIdAndTagId(
+                pagedProblem.getProblemId(),
+                pagedProblem.getTagIds()
+        );
 
+        return PagedResult.fromPage(page, taggedProblemVos, l);
+    }
 
 
     public DetailProblem doGetDetail(ProblemVo problem, Long ojId) {
@@ -105,6 +121,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         return doGetDetail(problemVo, problem.getOjId());
     }
 
+
+
     @Override
     public List<ProblemVo> getBatchByIds(List<Long> pIds) {
         if (CollectionUtil.isEmpty(pIds)) {
@@ -122,6 +140,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                         .eq(Problem::getProblemId, problemId)
         );
     }
+
+
 
 
 }

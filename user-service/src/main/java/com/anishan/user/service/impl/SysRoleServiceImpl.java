@@ -1,8 +1,8 @@
 package com.anishan.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.anishan.commons.entity.dto.PagedQuery;
-import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.domain.dto.PagedQuery;
+import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.domain.dto.RoleDto;
 import com.anishan.user.domain.dto.RolePagedQuery;

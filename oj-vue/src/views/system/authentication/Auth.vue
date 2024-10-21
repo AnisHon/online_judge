@@ -4,15 +4,15 @@
 
     </el-col>
     <el-col :span="8" style="display: flex; align-self: center; justify-content: center; padding: 10px;">
-      <div style="min-width: 360px">
+      <div style="min-width: 360px; max-width: 540px">
 
 
         <div class="header" style="width: 100%; display: flex; justify-content: center;">
           <el-image src="/auth/auth_logo.webp" style="width: 30%"/>
         </div>
 
-        <router-view v-slot="{ Component }">
-          <transition mode="out-in">
+        <router-view v-slot="{ Component }" style="box-sizing: content-box;">
+          <transition name="el-fade-in" mode="out-in">
             <component :is="Component" />
           </transition>
         </router-view>

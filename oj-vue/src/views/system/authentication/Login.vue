@@ -1,6 +1,7 @@
 <template>
   <el-form
       ref="formRef"
+      label-position="left"
       style="max-width: 600px"
       :model="loginForm"
       status-icon
@@ -47,7 +48,7 @@
         <el-image
             :src="imgData"
             style="width: 100px; position: absolute;
-              right: 0" src=""
+              right: 0"
             @click="refreshCaptchaCode"
         />
       </el-col>
@@ -154,11 +155,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.el-form-item {
-  margin: 25px 0;
-  label {
-    width: 90px;
-  }
-}
+
 
 </style>

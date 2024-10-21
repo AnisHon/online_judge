@@ -1,6 +1,7 @@
 <template>
   <el-form
       ref="formRef"
+      label-position="left"
       style="max-width: 600px"
       :model="signUpForm"
       status-icon
@@ -72,7 +73,7 @@
         <el-image
             :src="imgData"
             style="width: 100px; position: absolute;
-              right: 0" src=""
+              right: 0"
             @click="refreshCaptchaCode"
         />
       </el-col>
@@ -127,8 +128,7 @@ import {type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode'
 import getEmailCode from '@/api/auth/emailCode'
 import {signUp, checkAvailableUsername, checkAvailableEmail} from "@/api/auth/authentication"
-import {type SignUpForm} from "@/api/auth/authentication"
-import captchaCode from "@/api/auth/captchaCode";
+
 
 const emailRe = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
 

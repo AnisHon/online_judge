@@ -1,4 +1,4 @@
-package com.anishan.commons.entity.dto;
+package com.anishan.commons.domain.dto;
 
 import com.anishan.commons.e.UserState;
 import io.swagger.annotations.ApiModel;

@@ -3,6 +3,12 @@ import {useToken} from "@/stores/useToken";
 import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 
+export interface AjaxResult {
+    code: number;
+    message: string;
+    data: object;
+}
+
 const token = useToken()
 
 const error401 = () => {
@@ -44,6 +50,7 @@ service.interceptors.response.use(
         } else {
             ElMessage.error(response.data.code + ":" + response.data.message);
         }
+        return Promise.reject(new Error(response.data.message));
     },
     error => {
         // 处理错误
@@ -60,14 +67,23 @@ service.interceptors.response.use(
 );
 
 // 封装的 GET 和 POST 方法
-const get = (url, params) => {
+const get = (url: string, params: any): Promise<AjaxResult> => {
     if (params) {
         url = url + '/' + params.toString();
     }
     return service.get(url);
 };
 
-const post = (url, data) => {
+const getWithArray = (url: string, params: string[]): Promise<AjaxResult> => {
+
+    let param = "";
+    if (params && params.length > 0) {
+        param = params.join(",");
+    }
+    return service.get(url + "/" + params);
+}
+
+const post = (url: string, data: object) => {
     return service.post(url, data);
 };
 

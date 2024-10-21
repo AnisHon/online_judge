@@ -17,6 +17,24 @@
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
+    <resultMap id="TagProblemResultMap" type="com.anishan.problem.domain.vo.TaggedProblemVo">
+        <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="INTEGER"/>
+        <result property="source" column="source" jdbcType="VARCHAR"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <result property="hint" column="hint" jdbcType="VARCHAR"/>
+        <result property="auth" column="auth" jdbcType="INTEGER"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+
+        <collection property="tags" ofType="com.anishan.problem.domain.vo.TagVo">
+            <id property="tagId" column="tag_id" jdbcType="BIGINT"/>
+            <result property="tagName" column="tag_name" jdbcType="VARCHAR"/>
+            <result property="tagColor" column="tag_color" jdbcType="VARCHAR"/>
+            <result property="createTime" column="t_create_time" jdbcType="TIMESTAMP"/>
+        </collection>
+    </resultMap>
+
     <sql id="Base_Column_List">
         problem_id,title,type_id,
         source,description,hint,
@@ -44,4 +62,67 @@
 
 
     </select>
+
+    <select id="selectAllCountByProblemIdAndTagId" resultType="long">
+        select
+            count(distinct p.problem_id)
+        from problem p
+            left join problem_tag tag on tag.problem_id = p.problem_id
+        where p.auth = 1
+        <if test="problemId != null">
+            and p.problem_id = #{problemId}
+        </if>
+        <if test="tagIds != null and tagIds.size > 0 ">
+            and tag.tag_id in
+            <foreach collection="tagIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectTaggedProblemByProblemIdAndTagId" resultMap="TagProblemResultMap">
+        select
+            p.problem_id as problem_id,
+            oj_id, title, type, source, description, hint, auth,
+            p.problem_id as problem_id,
+            p.create_time as create_time,
+            t2.tag_id as tag_id,
+            t2.tag_name as tag_name,
+            t2.tag_color as tag_color,
+            t2.create_time as t_create_time
+        from problem p
+            left join problem_tag t on t.problem_id = p.problem_id
+            left join tag t2 on t2.tag_id = t.tag_id
+        where p.auth = 1
+
+        <if test="problemId != null">
+            and p.problem_id = #{problemId}
+        </if>
+        <if test="tagIds != null and tagIds.size > 0 ">
+            and t.tag_id in
+            <foreach collection="tagIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectTaggedProblemCountByProblemIdAndTagId" resultType="long">
+        select
+            count(distinct p.problem_id)
+        from problem p
+        left join problem_tag t on t.problem_id = p.problem_id
+        left join tag t2 on t2.tag_id = t.tag_id
+        where p.auth = 1
+
+        <if test="problemId != null">
+            and p.problem_id = #{problemId}
+        </if>
+        <if test="tagIds != null and tagIds.size > 0 ">
+            and t.tag_id in
+            <foreach collection="tagIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
 </mapper>

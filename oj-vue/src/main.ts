@@ -3,6 +3,7 @@ import 'normalize.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+
 import piniaPluginPersistedState from 'pinia-plugin-persistedstate' //引入持久化插件
 
 import App from '@/App.vue'

@@ -1,7 +1,6 @@
 package com.anishan.problem.domain.dto;
 
-import com.anishan.commons.e.Difficulty;
-import com.anishan.commons.entity.dto.PagedQuery;
+import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.problem.domain.entity.Problem;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

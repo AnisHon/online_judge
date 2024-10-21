@@ -1,14 +1,12 @@
 package com.anishan.problem.controller;
 
 import com.anishan.commons.e.ValidationGroup;
-import com.anishan.commons.entity.R;
+import com.anishan.commons.domain.R;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
-import com.anishan.problem.mapper.ProblemProblemListMapper;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.ProblemProblemListService;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

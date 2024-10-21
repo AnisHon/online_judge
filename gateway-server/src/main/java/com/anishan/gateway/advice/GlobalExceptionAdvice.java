@@ -1,10 +1,9 @@
 package com.anishan.gateway.advice;
 
 import cn.hutool.http.HttpStatus;
-import com.anishan.commons.entity.R;
+import com.anishan.commons.domain.R;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @ControllerAdvice

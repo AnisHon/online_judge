@@ -1,4 +1,4 @@
-package com.anishan.commons.entity.dto;
+package com.anishan.commons.domain.dto;
 
 import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.exception.UnknownKeyException;

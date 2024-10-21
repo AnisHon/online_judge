@@ -2,7 +2,7 @@ package com.anishan.user.domain.dto;
 
 import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
-import com.anishan.commons.entity.dto.SortedPagedQuery;
+import com.anishan.commons.domain.dto.SortedPagedQuery;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.domain.entity.SysClass;
 import io.swagger.annotations.ApiModel;

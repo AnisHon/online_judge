@@ -1,6 +1,6 @@
 package com.anishan.user.domain.vo;
 
-import com.anishan.commons.entity.R;
+import com.anishan.commons.domain.R;
 import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;

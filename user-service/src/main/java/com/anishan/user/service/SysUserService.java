@@ -1,8 +1,8 @@
 package com.anishan.user.service;
 
-import com.anishan.commons.entity.dto.PagedQuery;
-import com.anishan.commons.entity.dto.UserDto;
-import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.domain.dto.PagedQuery;
+import com.anishan.commons.domain.dto.UserDto;
+import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.api.domain.SysUser;

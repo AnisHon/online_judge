@@ -1,10 +1,11 @@
 package com.anishan.problem.service;
 
-import com.anishan.commons.entity.vo.PagedResult;
+import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.problem.domain.dto.PagedProblem;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.DetailProblem;
+import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -25,4 +26,6 @@ public interface ProblemService extends IService<Problem> {
     List<ProblemVo> getBatchByIds(List<Long> pIds);
 
     boolean isExisted(Long problemId);
+
+    PagedResult<TaggedProblemVo> listTaggerProblems(PagedProblem pagedProblem);
 }
