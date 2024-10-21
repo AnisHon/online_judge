@@ -21,11 +21,8 @@ declare module 'vue' {
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElRow: typeof import('element-plus/es')['ElRow']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
-    ElTable: typeof import('element-plus/es')['ElTable']
-    ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     Menu: typeof import('./src/components/menu/Menu.vue')['default']
     ProblemList: typeof import('./src/components/problemset/ProblemList.vue')['default']
-    ProblemListLine: typeof import('./src/components/problemset/ProblemListLine.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

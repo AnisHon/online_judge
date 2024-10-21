@@ -10,4 +10,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface ContestService extends IService<Contest> {
 
+    boolean isUserJoined(Long contestId, Long userId);
+
+    boolean isContestEnable(Long contestId);
+
 }

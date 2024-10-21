@@ -20,6 +20,9 @@ public class JudgeRequest {
     @ApiModelProperty("如果是比赛这个字段就有用")
     private Long contestId;
 
+    @ApiModelProperty("题单Id，如果是用题单这个字段就有用")
+    private Long listId;
+
 
 
 }

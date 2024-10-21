@@ -2,6 +2,7 @@ package com.anishan.problem.service.impl;
 
 import com.anishan.commons.e.ProblemType;
 import com.anishan.problem.domain.JudgeAnswer;
+import com.anishan.problem.domain.ScoreAndIsCorrected;
 import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.entity.ChoiceFillAnswers;
 import com.anishan.problem.domain.entity.Problem;
@@ -9,13 +10,14 @@ import com.anishan.problem.domain.entity.Records;
 import com.anishan.problem.domain.vo.ProblemJudgeResult;
 import com.anishan.problem.service.*;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +26,7 @@ public class JudgeServiceImpl implements JudgeService {
 
     private final ProblemService problemService;
     private final OjProblemService ojProblemService;
+    private final ProblemListService problemListService;
     private final RecordsService recordsService;
     private final ChoiceFillAnswersService choiceFillAnswersService;
 
@@ -39,28 +42,69 @@ public class JudgeServiceImpl implements JudgeService {
 
 
     private void judgeOj(Problem problem, JudgeRequest judgeRequest) {
+        //todo
+    }
 
+    /**
+     * 判断是否正确，正确给分，否则0分，用于填空题
+     * @param judgeAnswer 用户输入的答案
+     * @param blankAnswers 标准答案
+     * @return 是否正确
+     */
+    private ScoreAndIsCorrected judgeScore(
+            JudgeAnswer judgeAnswer,
+            Map<Integer, List<ChoiceFillAnswers>> blankAnswers
+    ) {
+        Integer index = judgeAnswer.getIndex();
+        if (!blankAnswers.containsKey(index)) {
+            return ScoreAndIsCorrected.wrong();
+        }
+
+        String userAnswers = judgeAnswer.getAnswer().trim();
+
+        List<ChoiceFillAnswers> choiceFillAnswers = blankAnswers.get(index);
+        for (ChoiceFillAnswers choiceFillAnswer : choiceFillAnswers) {
+            String answerText = choiceFillAnswer.getAnswerText();
+            if (Objects.equals(answerText, userAnswers)) {
+                return ScoreAndIsCorrected.corrected(choiceFillAnswer.getScore());
+            }
+        }
+        return ScoreAndIsCorrected.wrong();
     }
 
 
+    /**
+     * 填空题判断是否相等
+     * @param blankAnswers 填空标准答案数组
+     * @param inputAnswers 用户输入答案数组
+     * @return ProblemJudgeResult对象，表示分数，是否正确
+     */
+    private ProblemJudgeResult fillEquals(
+            Map<Integer, List<ChoiceFillAnswers>> blankAnswers,
+            List<JudgeAnswer> inputAnswers
+    ) {
+        ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
+        problemJudgeResult.setTotalScore(BigDecimal.ZERO);
+        problemJudgeResult.setCorrect(inputAnswers.size() == blankAnswers.size());
+        for (JudgeAnswer inputAnswer : inputAnswers) {
+            ScoreAndIsCorrected judgeResult = judgeScore(inputAnswer, blankAnswers);
+            if (judgeResult.isCorrected()) {
+                BigDecimal score = problemJudgeResult.getTotalScore().add(judgeResult.getScore());
+                problemJudgeResult.setTotalScore(score);
+            } else {
+                problemJudgeResult.setCorrect(false);
+            }
+        }
+        return problemJudgeResult;
+    }
+
     private ProblemJudgeResult doJudgeFill(List<ChoiceFillAnswers> answer, JudgeRequest judgeRequest) {
-        Set<JudgeAnswer> answers = answer
+
+        Map<Integer, List<ChoiceFillAnswers>> blankAnswers = answer
                 .stream()
-                .map(a -> new JudgeAnswer(a.getBlankIndex(), a.getAnswerText()))
-                .collect(Collectors.toSet());
+                .collect(Collectors.groupingBy(ChoiceFillAnswers::getBlankIndex));
 
-        Set<JudgeAnswer> inputAnswers = judgeRequest
-                .getAnswers()
-                .stream()
-                .peek(x -> x.setAnswer(x.getAnswer().strip()))
-                .collect(Collectors.toSet());
-
-        ProblemJudgeResult result = new ProblemJudgeResult();
-
-        result.setRight(answerEquals(answers, inputAnswers));
-
-        result.setAnswers(new ArrayList<>(answers));
-        return result;
+        return fillEquals(blankAnswers, judgeRequest.getAnswers());
     }
 
     private ProblemJudgeResult judgeFill(Problem problem, JudgeRequest judgeRequest) {
@@ -87,7 +131,7 @@ public class JudgeServiceImpl implements JudgeService {
                 .collect(Collectors.toSet());
         ProblemJudgeResult result = new ProblemJudgeResult();
 
-        result.setRight(answerEquals(answers, inputAnswers));
+        result.setCorrect(answerEquals(answers, inputAnswers));
 
         result.setAnswers(new ArrayList<>(answers));
         return result;
@@ -101,8 +145,6 @@ public class JudgeServiceImpl implements JudgeService {
         );
 
         return doJudgeChoice(blankAnswers, judgeRequest);
-
-
     }
 
 
@@ -125,6 +167,7 @@ public class JudgeServiceImpl implements JudgeService {
         return judgeResult;
     }
 
+
     @Override
     public ProblemJudgeResult judge(Long userId, JudgeRequest judgeRequest) {
         Long problemId = judgeRequest.getProblemId();
@@ -134,16 +177,24 @@ public class JudgeServiceImpl implements JudgeService {
         ProblemJudgeResult judge = judge(problem, judgeRequest);
 
 
+        // 添加做题记录
+
+        ObjectMapper json = new ObjectMapper();
+
         Records records = new Records();
 
-
         records.setContestId(judgeRequest.getContestId());
-        records.setAnswer(judgeRequest.getAnswers().toString());
         records.setProblemId(problemId);
         records.setUserId(userId);
+        records.setScore(judge.getTotalScore());
+        records.setStatus(judge.isCorrect() ? 1 : 0);
+        try {
+            records.setAnswer(json.writeValueAsString(judgeRequest.getAnswers()));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         recordsService.addRecord(records);
-
 
         return judge;
     }

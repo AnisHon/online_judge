@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +20,16 @@ public class AuthUtil {
     private static String getLoginKey(@NotNull Long id) {
         return "user-service:userId:" + id;
     }
+
+    private static LoginUser getLoginUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof LoginUser) {
+            return (LoginUser) principal;
+        } else {
+            throw new RuntimeException("用户未登录");
+        }
+    }
+
 
     @NotNull
     @Contract(pure = true)

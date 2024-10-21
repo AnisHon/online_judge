@@ -3,6 +3,7 @@ package com.anishan.problem.domain.entity;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -38,6 +39,11 @@ public class ChoiceFillAnswers implements Serializable {
      * 对于填空题，标识是第几个空格（填空题专用）
      */
     private Integer blankIndex;
+
+    /**
+     * 题目某个空的分数
+     */
+    private BigDecimal score;
 
     /**
      * 删除标记

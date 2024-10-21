@@ -11,5 +11,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface RecordsService extends IService<Records> {
 
 
+    Long existRecord(Records records);
+
     void addRecord(Records records);
 }

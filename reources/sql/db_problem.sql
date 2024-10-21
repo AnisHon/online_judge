@@ -80,14 +80,15 @@ create index oj_problem_case_problem_id_idx on oj_problem_case(problem_id);
 -- ----------------------------
 drop table if exists choice_fill_answers;
 CREATE TABLE choice_fill_answers (
-    answer_id   bigint(20)  not null auto_increment comment '主键id',
-    problem_id bigint(20)   not null                comment '题目id',
-    answer_text text        not null                comment '选项或填空答案',
-    is_correct  bool        default false           comment '是否为正确答案（选择题专用）默认false',
-    blank_index int         null                    comment '填空题空格索引, 选择题ABCD索引 1表示A',
-    del_flag    boolean     default 0 not null      comment '删除标记',
-    create_time datetime    default now() not null ,
-    update_time datetime    default now() on update now() not null ,
+    answer_id   bigint(20)      not null auto_increment comment '主键id',
+    problem_id bigint(20)       not null                comment '题目id',
+    answer_text text            not null                comment '选项或填空答案',
+    is_correct  bool            default false           comment '是否为正确答案（选择题专用）默认false',
+    score       decimal(2, 2)   default 0 not null      comment '分数',
+    blank_index int             null                    comment '填空题空格索引, 选择题ABCD索引 1表示A',
+    del_flag    boolean         default 0 not null      comment '删除标记',
+    create_time datetime        default now() not null ,
+    update_time datetime        default now() on update now() not null ,
     PRIMARY KEY (answer_id)
 )ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '填空选择题答案表';
 create index choice_fill_answers_problem_id_idx on choice_fill_answers(problem_id);
@@ -212,6 +213,7 @@ create table records(
     contest_id  bigint(20)      null                     comment '比赛ID，非比赛可不填',
     user_id     bigint(20)      not null                 comment '用户ID',
     problem_id  bigint(20)      not null                 comment '题目id',
+    status      boolean         not null                 comment '是否正确',
     score       DECIMAL(3, 2)   null                     comment '最终得分',
     answer      json            null                     comment '答案',
     primary key (record_id)
@@ -219,6 +221,21 @@ create table records(
 create index records_contest_id_idx on records(contest_id);
 create index records_user_id_idx on records(user_id);
 create index records_problem_id_idx on records(problem_id);
+
+
+
+-- ----------------------------
+-- 13、比赛参加表
+-- ----------------------------
+drop table if exists user_contest;
+create table user_contest(
+    user_id bigint(20) not null comment '用户ID',
+    contest_id bigint(20) not null comment '比赛ID',
+    primary key (user_id, contest_id)
+) ENGINE=InnoDB default charset=utf8 comment '比赛参加表';
+create index user_contest_user_id_idx on user_contest(user_id);
+create index user_contest_contest_id_idx on user_contest(contest_id);
+
 
 
 

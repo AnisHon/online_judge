@@ -1,17 +1,21 @@
 <template>
   <el-row style="height: 100vh">
-    <el-col :span="17" class="background">
+    <el-col :span="16" class="background">
 
     </el-col>
-    <el-col :span="7" style="display: flex; align-self: center; justify-content: center; padding: 10px;">
-      <div style="min-width: 450px">
+    <el-col :span="8" style="display: flex; align-self: center; justify-content: center; padding: 10px;">
+      <div style="min-width: 360px">
+
+
+        <div class="header" style="width: 100%; display: flex; justify-content: center;">
+          <el-image src="/auth/auth_logo.webp" style="width: 30%"/>
+        </div>
 
         <router-view v-slot="{ Component }">
           <transition mode="out-in">
             <component :is="Component" />
           </transition>
         </router-view>
-
 
         <el-divider />
         <el-row justify="space-between">
@@ -39,7 +43,7 @@ import {useRoute} from "vue-router";
 
   const route = useRoute()
 
-  const url = toRef("path", route)
+  const url = ref()
 
 
 
@@ -78,8 +82,6 @@ import {useRoute} from "vue-router";
 .v-leave-to {
   opacity: 0;
 }
-
-
 
 
 </style>
