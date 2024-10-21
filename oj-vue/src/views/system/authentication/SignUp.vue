@@ -281,10 +281,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.el-form-item {
-  label {
-    width: 90px;
-  }
-}
+
 
 </style>

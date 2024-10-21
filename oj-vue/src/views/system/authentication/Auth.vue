@@ -38,7 +38,7 @@
 
 
 <script setup lang="ts">
-import {computed, ref, toRef, watch} from "vue";
+import {computed, ref, watch} from "vue";
 import {useRoute} from "vue-router";
 
   const route = useRoute()
@@ -74,14 +74,6 @@ import {useRoute} from "vue-router";
   background-image: url("/auth/auth_background.png");
 }
 
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 0.2s ease-in-out;
-}
-.v-enter,
-.v-leave-to {
-  opacity: 0;
-}
 
 
 </style>

@@ -110,7 +110,6 @@
 import {onMounted, reactive, ref} from 'vue'
 import {type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode'
-import getEmailCode from '@/api/auth/emailCode'
 import {forgetPassword} from "@/api/auth/authentication"
 import {sendForgetEmailCode} from "@/api/auth/emailCode";
 
@@ -235,10 +234,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.el-form-item {
-  label {
-    width: 90px;
-  }
-}
-
 </style>

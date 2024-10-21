@@ -39,13 +39,13 @@
 </template>
 
 <script setup lang="ts">
-  import ProblemList from "@/components/problemset/ProblemList.vue";
-  import {type ProblemParam} from "@/api/problem"
-  import {reactive, ref} from "vue";
-  import ProblemListForm from "@/components/problemset/ProblemListForm.vue";
+import ProblemList from "@/components/problemset/ProblemList.vue";
+import {type ProblemParam} from "@/api/problem"
+import {reactive} from "vue";
+import ProblemListForm from "@/components/problemset/ProblemListForm.vue";
 
 
-  const pageNav = reactive({
+const pageNav = reactive({
     totalRecords: 0,
     currentPage: 1,
     pageSize: 40,
@@ -80,8 +80,7 @@
 
   const handleLoadFinish = (currentPage, pageSize, totalRecords) => {
 
-    const page = Math.ceil(totalRecords / pageSize)
-    pageNav.pageCount = page
+    pageNav.pageCount = Math.ceil(totalRecords / pageSize)
     pageNav.totalRecords = totalRecords
     console.log(pageNav.pageCount)
   }

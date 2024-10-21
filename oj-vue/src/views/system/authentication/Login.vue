@@ -76,7 +76,6 @@ import {type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode'
 import {login} from "@/api/auth/authentication"
 import {type LoginForm} from "@/api/auth/authentication"
-import {useToken} from "@/stores/useToken";
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)

@@ -54,7 +54,7 @@ service.interceptors.response.use(
     },
     error => {
         // 处理错误
-        let message = '';
+        let message: string;
         if (error.response) {
             message = error.response.data.message || '请求失败';
         } else {
@@ -80,7 +80,7 @@ const getWithArray = (url: string, params: string[]): Promise<AjaxResult> => {
     if (params && params.length > 0) {
         param = params.join(",");
     }
-    return service.get(url + "/" + params);
+    return service.get(url + "/" + param);
 }
 
 const post = (url: string, data: object) => {
