@@ -24,7 +24,7 @@ public class ProblemVo {
     @ApiModelProperty("题目名称")
     private String title;
 
-    @ApiModelProperty("题目类型，(1 OJ, 2 OTHER)")
+    @ApiModelProperty("题目类型，(1 OJ, 2 FILL, 3 CHOICE)")
     private ProblemType type;
 
     @ApiModelProperty("题目来源")

@@ -1,5 +1,5 @@
 <template>
-  <div class="problem-set" >
+  <div class="problem-set common-max-width-page" >
     <ProblemListForm @query="doQuery"/>
     <ProblemList
         :current-page="currentPage.currentPage"
@@ -95,7 +95,7 @@ const pageNav = reactive({
   height: 48px;
 }
 .problem-set {
-  max-width: 1280px;
+  //max-width: 1280px;
   margin: auto
 }
 </style>

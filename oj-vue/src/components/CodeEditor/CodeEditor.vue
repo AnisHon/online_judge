@@ -16,7 +16,7 @@ import Codemirror from "codemirror-editor-vue3";
 // mode
 import "codemirror/mode/python/python.js"
 import "codemirror/mode/clike/clike.js"
-import "codemirror/mode/clike/clike.js"
+
 // theme
 import "codemirror/theme/dracula.css"
 

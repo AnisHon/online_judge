@@ -4,3 +4,15 @@ body {
 a {
     text-decoration: none;
 }
+:root {
+    --page-max-width: 1280px;
+    --color-tag-text: white;
+}
+
+.common-max-width-page {
+    max-width: var(--page-max-width);
+}
+
+.common-tag-text-color {
+    color: var(--color-tag-text);
+}

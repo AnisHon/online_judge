@@ -1,5 +1,5 @@
 <template>
-  <el-row style="height: 100vh">
+  <el-row style="height: 100vh;">
     <el-col :span="16" class="background">
 
     </el-col>

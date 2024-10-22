@@ -1,6 +1,12 @@
 import {get, post} from "@/utils/http"
 import {type TagView} from "./label"
 import {ElMessage} from "element-plus";
+// 1 OJ, 2 FILL, 3 CHOICE
+export enum ProblemType {
+    OJ = 1,
+    FILL,
+    CHOICE,
+}
 
 export interface ProblemView {
     auth: number,
@@ -10,7 +16,7 @@ export interface ProblemView {
     problemId: 0,
     source: string,
     title: string,
-    type: number
+    type: ProblemType
 }
 
 export interface TaggedProblemView {
@@ -21,9 +27,8 @@ export interface TaggedProblemView {
     problemId: 0;
     source: string;
     title: string;
-    type: number;
+    type: ProblemType;
     tags: TagView[];
-
 }
 
 export interface ProblemParam {
@@ -64,7 +69,7 @@ export interface ProblemDetailView {
 export interface PagedData {
     data: TaggedProblemView[];
     currentPage: number;
-    currentSize: number;
+    pageSize: number;
     totalRecords: number;
 }
 
@@ -90,8 +95,9 @@ async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
         } else if (typeof msg === "object") {
             ElMessage.error((<Error>msg).message);
         }
-
+        return Promise.reject(msg)
     }
+
 }
 
 async function getDetailProblem(id: number): Promise<ProblemDetailView> {
