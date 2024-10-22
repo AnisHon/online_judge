@@ -17,6 +17,15 @@ CREATE TABLE sys_language (
     PRIMARY KEY (language_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '编程语言表';
 
+insert into
+    sys_language(language_name, compile_command, seq)
+values
+    ('c++', '/usr/bin/g++', 1),
+    ('c', '/usr/bin/g++', 2),
+    ('java', '/usr/bin/javac', 3),
+    ('python', '/usr/bin/python', 4);
+
+
 -- ----------------------------
 -- 2、题目主表
 -- ----------------------------

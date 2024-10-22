@@ -3,11 +3,13 @@ import {useToken} from "@/stores/useToken";
 import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 
-export interface AjaxResult {
+export interface AjaxResult<T> {
     code: number;
     message: string;
-    data: object;
+    data: T;
 }
+
+type ResultPromise<T> = Promise<AjaxResult<T>>
 
 const token = useToken()
 
@@ -66,25 +68,40 @@ service.interceptors.response.use(
     }
 );
 
+const failHandler = <T>(result: ResultPromise<T>, handle: typeof defaultFail) => {
+    result
+        .then(result => {
+            if (result.code != 200) {
+                handle(result.message, result.code);
+            }
+        })
+}
+
 // 封装的 GET 和 POST 方法
-const get = (url: string, params: any): Promise<AjaxResult> => {
+const get = <R, T>(url: string, params: T | undefined = undefined): ResultPromise<R> => {
     if (params) {
         url = url + '/' + params.toString();
     }
-    return service.get(url);
+    return service.get<T, AjaxResult<R>>(url);
 };
 
-const getWithArray = (url: string, params: string[]): Promise<AjaxResult> => {
+const getWithArray = <R>(url: string, params: string[]): ResultPromise<R> => {
 
     let param = "";
     if (params && params.length > 0) {
         param = params.join(",");
     }
-    return service.get(url + "/" + param);
+    return <ResultPromise<R>>service.get<string, AjaxResult<R>>(url + "/" + param);
 }
 
-const post = (url: string, data: object) => {
-    return service.post(url, data);
+const defaultFail = (msg: string, code: number) => {
+    ElMessage.warning(msg);
+}
+
+const post = <T, R>(url: string, data: T, failCallback = defaultFail): ResultPromise<R> => {
+    const promise = service.post<T, AjaxResult<R>>(url, data);
+    failHandler(promise, failCallback);
+    return promise;
 };
 
 

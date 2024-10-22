@@ -1,34 +1,64 @@
 <template>
   <div >
-    <el-row justify="center" v-if="problem !== undefined">
+    <el-row justify="center" v-if="problem !== undefined" :gutter="20">
 
       <el-col class="problem-content common-max-width-page" :span="12">
         <div class="header">
           <h1>{{ problem.problemVo.title }}</h1>
-          <el-space v-if="problemType === ProblemType.OJ">
-            <el-tag type="danger">
-              {{ (problem.ojProblemVo as OjProblemView).difficulty }}
-            </el-tag>
-          </el-space>
-          <el-space>
-            <el-tag v-for="item of problem.tagVo" :key="item.tagId" :color="item.tagColor">
-              <span class="common-tag-text-color">
-                {{ item.tagName }}
-              </span>
-            </el-tag>
-          </el-space>
+          <div class="tags">
+            <el-space v-if="problemType === ProblemType.OJ">
+              <el-tag type="danger">
+                难度: {{ difficulty }}
+              </el-tag>
+              <el-tag type="info">
+                空间限制: {{ memoryLimit }}MiB
+              </el-tag>
+              <el-tag type="info">
+                时间限制: {{ timeLimit }}ms
+              </el-tag>
+              <el-tag type="info">
+                栈空间限制: {{ stackLimit }}MiB
+              </el-tag>
+            </el-space>
+          </div>
+          <div class="tags">
+            <el-space>
+              <el-tag>
+                {{ problem.problemVo.source }}
+              </el-tag>
+              <el-tag>
+                {{ stringProblemType }}
+              </el-tag>
+              <el-tag v-for="item of problem.tagVo" :key="item.tagId" :color="item.tagColor">
+                <span class="common-tag-text-color">
+                  {{ item.tagName }}
+                </span>
+              </el-tag>
+            </el-space>
+          </div>
+
         </div>
 
         <el-divider/>
         <div class="content">
+          <h2>题目描述</h2>
           <p class="description">
-            {{ problem.problemVo.description }}
+            <markdown-preview :text="description"></markdown-preview>
           </p>
 
           <div class="detail-problem">
-            <online-judge-problem v-if="problemType === ProblemType.OJ"/>
+            <online-judge-problem :problem="ojProblem" v-if="problemType === ProblemType.OJ"/>
             <fill-blank-problem v-if="problemType === ProblemType.FILL"/>
             <choice-choose-problem v-if="problemType === ProblemType.CHOICE"/>
+          </div>
+
+          <div class="hint">
+            <h2>提示</h2>
+            <div>
+              <markdown-preview :text="hint" />
+            </div>
+
+
           </div>
 
         </div>
@@ -37,7 +67,8 @@
       </el-col>
 
       <el-col class="codeEditor" :span="12" v-if="isShowCodeEditor">
-        <code-editor language="c++" :height="100"/>
+
+        <enhanced-code-editor />
       </el-col>
 
     </el-row>
@@ -52,18 +83,35 @@
 import {getDetailProblem, type ProblemDetailView, ProblemType, type OjProblemView} from "@/api/problem";
 import {useRoute} from "vue-router";
 import {computed, onMounted, ref} from "vue";
+import EnhancedCodeEditor from './EnhancedCodeEdior/index.vue'
 import CodeEditor from "@/components/CodeEditor/CodeEditor.vue";
 import OnlineJudgeProblem from "@/views/system/problem/OnlineJudgeProblem.vue";
 import FillBlankProblem from "@/views/system/problem/FillBlank.vue";
 import ChoiceChooseProblem from "@/views/system/problem/ChoiceChoose.vue";
+import {problemTypeToString} from "@/utils/problem";
+import MarkdownPreview from "@/components/MarkdownPreview.vue";
+
 
 const route = useRoute();
 
-let problem = ref<ProblemDetailView>();
+const problem = ref<ProblemDetailView>();
 
 const problemType = computed(() => {
   return problem.value?.problemVo.type;
 })
+
+const hint = computed(() => {
+  const hint = problem.value!.problemVo.hint;
+  if (hint === null || hint === undefined || hint === '' || hint.length === 0) {
+    return "无";
+  } else {
+    return hint;
+  }
+})
+
+const ojProblem = computed(():OjProblemView => {
+  return <OjProblemView>problem!.value!.ojProblemVo
+});
 
 const isShowCodeEditor = computed((): boolean => {
   if (problem.value === undefined) {
@@ -72,6 +120,38 @@ const isShowCodeEditor = computed((): boolean => {
   const type = problem.value?.problemVo.type;
   return type === ProblemType.OJ
 });
+
+const difficulty = computed(() => {
+  const array = ['不确定', '简单', '中等', '困难']
+  if (problem.value === undefined || problem.value.ojProblemVo === undefined) {
+    return "未知";
+  }
+  return array[problem.value.ojProblemVo.difficulty]
+});
+
+// mb
+const memoryLimit = computed(() => {
+  return Math.ceil(ojProblem.value.memoryLimit / 1024);
+});
+
+// ms
+const timeLimit = computed(() => {
+  return ojProblem.value.timeLimit
+});
+
+// mb
+const stackLimit = computed(() => {
+  return ojProblem.value.stackLimit;
+})
+
+const stringProblemType = computed(() => {
+  return problemTypeToString(<ProblemType>problemType.value);
+});
+
+const description = computed(() => {
+  return problem.value!.problemVo.description;
+})
+
 
 
 onMounted(() => {
@@ -82,12 +162,16 @@ onMounted(() => {
         problem.value = detailProblem;
       })
 
-})
+});
 
 
 </script>
 
 
 <style scoped>
+
+.tags {
+  margin: 5px 0;
+}
 
 </style>

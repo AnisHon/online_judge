@@ -11,11 +11,15 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
+    "@types/markdown-it": "^14.1.2",
     "@vue/language-server": "latest",
     "axios": "^1.7.7",
     "codemirror": "^5.65.18",
     "codemirror-editor-vue3": "^2.8.0",
     "element-plus": "^2.8.6",
+    "katex": "^0.16.11",
+    "markdown-it": "^14.1.0",
+    "markdown-it-katex": "^2.0.3",
     "normalize.css": "^8.0.1",
     "pinia": "^2.2.4",
     "pinia-plugin-persistedstate": "^4.1.1",
@@ -25,7 +29,8 @@
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
     "@types/codemirror": "^5.60.15",
-    "@types/node": "^20.16.11",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^22.7.8",
     "@vitejs/plugin-vue": "^5.1.4",
     "@vue/tsconfig": "^0.5.1",
     "npm-run-all2": "^6.2.3",

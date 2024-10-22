@@ -8,11 +8,19 @@ export enum ProblemType {
     CHOICE,
 }
 
+// 难度 (0 未分类, 1 简单, 2 中等, 3 困难),可用值:0,1,2,3
+export enum Difficulty {
+    UNKNOWN,
+    SIMPLE,
+    MEDIUM,
+    DIFFICULT
+}
+
 export interface ProblemView {
     auth: number,
     createTime: Date,
     description: string,
-    hint: string,
+    hint?: string | null,
     problemId: 0,
     source: string,
     title: string,
@@ -86,7 +94,7 @@ async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
         param.problemId = null;
     }
     try {
-        const {data: { data, currentPage, pageSize, totalRecords}} = await post("/problem-api/problem/tagged-list", problemParam);
+        const {data: { data, currentPage, pageSize, totalRecords}} = await post<ProblemParam, PagedData>("/problem-api/problem/tagged-list", problemParam);
         return {data, currentPage, pageSize, totalRecords};
     } catch (msg) {
 

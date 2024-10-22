@@ -11,9 +11,11 @@ import router from './router'
 
 const app = createApp(App)
 
+
 const pinia = createPinia();
 app.use(pinia)
 pinia.use(piniaPluginPersistedState)
+
 
 app.use(router)
 

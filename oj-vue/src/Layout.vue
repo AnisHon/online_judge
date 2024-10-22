@@ -2,7 +2,7 @@
 
 <template>
   <div class="layout">
-    <el-container>
+    <el-container style="height: 100%">
       <el-header style="padding: 0">
         <MenuBar/>
       </el-header>
@@ -26,6 +26,8 @@ import MenuBar from "@/components/menu/Menu.vue";
 </script>
 
 <style scoped>
-
+.layout {
+  height: 100%;
+}
 
 </style>

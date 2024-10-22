@@ -1,7 +1,10 @@
 package com.anishan.problem.service;
 
 import com.anishan.problem.domain.entity.SysLanguage;
+import com.anishan.problem.domain.vo.SysLanguageVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -10,4 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface SysLanguageService extends IService<SysLanguage> {
 
+    List<SysLanguageVo> listAll();
 }
