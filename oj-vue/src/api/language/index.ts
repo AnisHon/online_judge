@@ -10,7 +10,7 @@ interface LanguageView {
 
 async function getLanguages(): Promise<LanguageView[]> {
     const {data} = await get<LanguageView[], undefined>("/problem-api/language/list");
-    return <LanguageView[]>data
+    return data
 }
 
 export {

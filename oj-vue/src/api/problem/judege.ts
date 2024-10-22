@@ -2,7 +2,7 @@ import {post} from "@/utils/http";
 
 interface Answer {
     index: number;
-    answer: string;
+    answer: string ;
 }
 
 
