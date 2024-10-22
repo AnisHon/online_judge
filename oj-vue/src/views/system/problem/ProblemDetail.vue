@@ -6,8 +6,8 @@
         <div class="header">
           <h1>{{ problem.problemVo.title }}</h1>
           <el-space v-if="problemType === ProblemType.OJ">
-            <el-tag>
-              {{  }}
+            <el-tag type="danger">
+              {{ (problem.ojProblemVo as OjProblemView).difficulty }}
             </el-tag>
           </el-space>
           <el-space>
@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import {getDetailProblem, type ProblemDetailView, ProblemType} from "@/api/problem";
+import {getDetailProblem, type ProblemDetailView, ProblemType, type OjProblemView} from "@/api/problem";
 import {useRoute} from "vue-router";
 import {computed, onMounted, ref} from "vue";
 import CodeEditor from "@/components/CodeEditor/CodeEditor.vue";
