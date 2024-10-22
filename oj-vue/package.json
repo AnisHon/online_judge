@@ -11,6 +11,7 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
     "@types/markdown-it": "^14.1.2",
     "@vue/language-server": "latest",
     "axios": "^1.7.7",
@@ -27,6 +28,7 @@
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
+    "@iconify-json/ep": "^1.2.1",
     "@tsconfig/node20": "^20.1.4",
     "@types/codemirror": "^5.60.15",
     "@types/markdown-it": "^14.1.2",

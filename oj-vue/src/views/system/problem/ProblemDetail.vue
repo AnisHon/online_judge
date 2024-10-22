@@ -2,7 +2,7 @@
   <div >
     <el-row justify="center" v-if="problem !== undefined" :gutter="20">
 
-      <el-col class="problem-content common-max-width-page" :span="12">
+      <el-col class="problem-content common-max-width-page" :span="12" v-show="!isFullScreen">
         <div class="header">
           <h1>{{ problem.problemVo.title }}</h1>
           <div class="tags">
@@ -66,9 +66,11 @@
 
       </el-col>
 
-      <el-col class="codeEditor" :span="12" v-if="isShowCodeEditor">
+      <el-col  :span="codeSpan" v-if="isShowCodeEditor">
 
-        <enhanced-code-editor />
+        <enhanced-code-editor :height="height" @submit="onHandleSubmit" @full-screen="onHandleFullScreen"/>
+
+
       </el-col>
 
     </el-row>
@@ -82,19 +84,21 @@
 <script setup lang="ts">
 import {getDetailProblem, type ProblemDetailView, ProblemType, type OjProblemView} from "@/api/problem";
 import {useRoute} from "vue-router";
-import {computed, onMounted, ref} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import EnhancedCodeEditor from './EnhancedCodeEdior/index.vue'
-import CodeEditor from "@/components/CodeEditor/CodeEditor.vue";
 import OnlineJudgeProblem from "@/views/system/problem/OnlineJudgeProblem.vue";
 import FillBlankProblem from "@/views/system/problem/FillBlank.vue";
 import ChoiceChooseProblem from "@/views/system/problem/ChoiceChoose.vue";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
+import type {JudgeForm} from "@/api/problem/judege";
 
 
 const route = useRoute();
 
 const problem = ref<ProblemDetailView>();
+
+const isFullScreen = ref(false)
 
 const problemType = computed(() => {
   return problem.value?.problemVo.type;
@@ -152,7 +156,27 @@ const description = computed(() => {
   return problem.value!.problemVo.description;
 })
 
+const codeSpan = computed(() => {
+  return isFullScreen.value ? 16 : 12
+})
 
+const onHandleSubmit = (codeForm: JudgeForm) => {
+  // todo
+}
+
+const onHandleFullScreen = () => {
+  isFullScreen.value = !isFullScreen.value;
+}
+
+const height = computed(() => {
+  const rootStyles = getComputedStyle(document.documentElement);
+  const menuHeight = parseFloat(rootStyles.getPropertyValue('--menu-height')); // 访问 CSS 变量
+  return  window.innerHeight - menuHeight;
+})
+
+watch(height, () => {
+  console.log(height.value);
+}, {immediate: true});
 
 onMounted(() => {
   const problemId: number = parseInt(<string>route.params.id)
@@ -164,11 +188,26 @@ onMounted(() => {
 
 });
 
+onMounted(() => {
 
+  window.onresize = function() {
+    console.log(height.value)
+  };
+})
 </script>
 
 
 <style scoped>
+
+.problem-content {
+
+  height: var(--content-height);
+  overflow: auto;
+}
+
+.codeEditor {
+  height: var(--content-height);
+}
 
 .tags {
   margin: 5px 0;

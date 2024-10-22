@@ -1,5 +1,6 @@
 import '@/assets/common.css'
 import 'normalize.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

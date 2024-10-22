@@ -3,7 +3,7 @@
 <template>
   <div class="layout">
     <el-container style="height: 100%">
-      <el-header style="padding: 0">
+      <el-header style="padding: 0; height: var(--menu-height);">
         <MenuBar/>
       </el-header>
       <el-main>

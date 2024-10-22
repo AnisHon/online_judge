@@ -28,18 +28,14 @@ import "codemirror/mode/clike/clike.js"
 import "codemirror/theme/dracula.css"
 import 'codemirror/theme/blackboard.css';
 import 'codemirror/theme/cobalt.css';
+import 'codemirror/theme/eclipse.css';
+import 'codemirror/theme/material-darker.css';
 
 import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/mode/css/css.js';
-import 'codemirror/mode/xml/xml.js';
 import 'codemirror/mode/clike/clike.js';
-import 'codemirror/mode/markdown/markdown.js';
 import 'codemirror/mode/python/python.js';
-import 'codemirror/mode/r/r.js';
-import 'codemirror/mode/shell/shell.js';
-import 'codemirror/mode/sql/sql.js';
-import 'codemirror/mode/swift/swift.js';
-import 'codemirror/mode/vue/vue.js';
+
 
 // 引入代码自动提示插件
 import 'codemirror/addon/hint/show-hint.css';
@@ -49,11 +45,16 @@ import 'codemirror/addon/hint/javascript-hint'
 import 'codemirror/addon/hint/xml-hint'
 import 'codemirror/addon/hint/anyword-hint'
 
+import 'codemirror/addon/edit/matchbrackets'
+import 'codemirror/addon/edit/closebrackets'
+
+
 const code = ref("");
 
-const {language, height} = defineProps<{
+const {language, height, theme} = defineProps<{
   language: 'java' | 'c' | 'c++' | 'python' | string,
   height: number,
+  theme: string
 }>()
 
 const modeMap = {
@@ -72,11 +73,12 @@ const mode = computed((): string => {
 
 const cmOptions: EditorConfiguration = reactive({
 
-  mode: mode,
-  theme: "dracula",
+  mode: mode.value,
+  theme: "eclipse",
   readOnly: false,
   tabSize: 4,
-  line: true,
+  indentUnit: 4,
+  indentWithTabs: true,
   lineNumbers: true,
   lineWiseCopyCut: true,
   gutters: ["CodeMirror-lint-markers"],
@@ -85,7 +87,6 @@ const cmOptions: EditorConfiguration = reactive({
   autoCloseBrackets: true,
   autoCloseTags: true,
   matchBrackets: true,
-  indentWithTabs: true,
   extraKeys: { // 触发按键
     'Ctrl': 'autocomplete'
   },
@@ -113,7 +114,11 @@ const onReady = (cm: Editor) => {
 
 watch(mode, () => {
   cminstance.value?.setOption('mode', mode.value);
-  console.log(language)
+
+})
+
+watch(() => theme, () => {
+  cminstance.value?.setOption('theme', theme);
 })
 
 defineExpose({code})
