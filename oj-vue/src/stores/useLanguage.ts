@@ -1,4 +1,4 @@
-import {getLanguages, type LanguageView} from "@/api/language";
+import {type LanguageView} from "@/api/language";
 import {defineStore} from "pinia";
 import {ref} from "vue";
 
@@ -17,7 +17,8 @@ defineStore("languages", () => {
 
 
     return {
-        languages
+        languages,
+        getLanguages
     }
 
 })
