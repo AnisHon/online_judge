@@ -210,10 +210,6 @@ onUnmounted(() => {
   overflow: auto;
 }
 
-.codeEditor {
-  height: var(--in-main-content-height);
-}
-
 .tags {
   margin: 5px 0;
 }

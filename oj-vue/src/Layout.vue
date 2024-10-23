@@ -32,7 +32,4 @@ import MenuBar from "@/components/menu/Menu.vue";
 </style>
 
 <style>
-.el-main {
-  height: var(--main-padding);
-}
 </style>
