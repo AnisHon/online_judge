@@ -7,6 +7,7 @@ public enum ProblemType implements IEnum<Integer>, Enumerator<Integer> {
     OJ(1),
     FILL(2),
     CHOICE(3),
+    MULTI_CHOICE(4),
     ;
 
 

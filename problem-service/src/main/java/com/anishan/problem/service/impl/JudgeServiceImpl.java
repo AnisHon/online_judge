@@ -160,6 +160,7 @@ public class JudgeServiceImpl implements JudgeService {
                 judgeResult = judgeFill(problem, judgeRequest);
                 break;
             case CHOICE:
+            case MULTI_CHOICE:
                 judgeResult = judgeChoice(problem, judgeRequest);
                 break;
         }

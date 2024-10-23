@@ -6,12 +6,10 @@
       <el-header style="padding: 0; height: var(--menu-height);">
         <MenuBar/>
       </el-header>
-      <el-main style="box-sizing: border-box">
+      <el-main style="box-sizing: border-box; height: var(--content-height);">
         <div>
-          <router-view v-slot="{ Component }">
-            <transition name="el-fade-in">
-              <component :is="Component" />
-            </transition>
+          <router-view>
+
           </router-view>
         </div>
 

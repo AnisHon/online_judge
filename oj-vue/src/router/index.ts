@@ -3,7 +3,6 @@ import Index from "@/views/system/Index.vue";
 import Layout from "@/Layout.vue";
 import Forbidden from "@/views/system/error/Forbidden.vue";
 import NotFound from "@/views/system/error/NotFound.vue";
-
 // index不是home
 // index不是home
 // index不是home
@@ -47,7 +46,10 @@ export const constRoutes =  [
       {
         path: "problems",
         name: "problems",
-        component: () => import('@/views/system/ProblemSet.vue')
+        component: () => import('@/views/system/ProblemSet.vue'),
+        meta: {
+          keepAlive: true,
+        }
       },
       {
         path: "problem/:id",

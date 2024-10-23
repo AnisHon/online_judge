@@ -34,7 +34,7 @@ CREATE TABLE problem (
     problem_id      bigint(20)     not null auto_increment comment '主键',
     oj_id           bigint(20)     null                    comment 'oj题目ID',
     title           varchar(255)   not null                comment '题目名称',
-    type            int(11)        default 1               comment '题目类型，(1 OJ, 2 FILL, 3 CHOICE)',
+    type            int(11)        default 1               comment '题目类型，(1 OJ, 2 FILL, 3 CHOICE, 4 MULTI_CHOICE)',
     source          varchar(255)   default '公有题库'       comment '题目来源',
     description     longtext       not null                comment '题目描述，图片放在这里吧',
     hint            longtext       default null            comment '备注,提醒',
@@ -43,7 +43,7 @@ CREATE TABLE problem (
     create_time     datetime       default now()           comment '创建时间',
     update_time     datetime       default now()           comment '更新时间，用于乐观锁',
     PRIMARY KEY (problem_id)
-) ENGINE=InnoDB auto_increment=1000 default charset=utf8 comment '题目主表，OJ题目有分表，非OJ不需要继续分表';
+) ENGINE=InnoDB auto_increment=1000 default charset=utf8 comment '题目主表，OJ题目有分表，非OJ不需要继续分表';;
 
 -- ----------------------------
 -- 3、OJ题目分表

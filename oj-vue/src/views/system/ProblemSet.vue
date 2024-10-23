@@ -1,11 +1,8 @@
 <template>
   <div class="problem-set common-max-width-page" >
     <ProblemListForm @query="doQuery"/>
-    <ProblemList
-        :current-page="currentPage.currentPage"
-        :page-size="currentPage.pageSize"
-        :problem-id="currentPage.problemId"
-        :tag-ids="currentPage.tagIds"
+    <ProblemList :param="currentPage"
+
         @load-finish="handleLoadFinish"
     />
     <div>
@@ -40,7 +37,7 @@
 
 <script setup lang="ts">
 import ProblemList from "@/components/problemset/ProblemList.vue";
-import {type ProblemParam} from "@/api/problem"
+import {type ProblemParam, ProblemType} from "@/api/problem"
 import {reactive} from "vue";
 import ProblemListForm from "@/components/problemset/ProblemListForm.vue";
 
@@ -56,6 +53,8 @@ const pageNav = reactive({
     currentPage: 1,
     pageSize: pageNav.pageSize,
     problemId: null,
+    title: "",
+    type: undefined,
     tagIds: []
   });
 
@@ -69,9 +68,11 @@ const pageNav = reactive({
   }
 
 
-  const doQuery = (value: {id: string, tagIds: number[]}) => {
+  const doQuery = (value: {id: string, tagIds: number[], title: string, type: ProblemType}) => {
     currentPage.problemId = value.id;
     currentPage.tagIds = value.tagIds.slice();
+    currentPage.title = value.title
+    currentPage.type = value.type
   }
 
   const handlePageChange = (value: number) => {
@@ -82,7 +83,6 @@ const pageNav = reactive({
 
     pageNav.pageCount = Math.ceil(totalRecords / pageSize)
     pageNav.totalRecords = totalRecords
-    console.log(pageNav.pageCount)
   }
 
 
@@ -95,6 +95,7 @@ const pageNav = reactive({
   height: 48px;
 }
 .problem-set {
-  margin: auto
+  margin: auto;
+
 }
 </style>

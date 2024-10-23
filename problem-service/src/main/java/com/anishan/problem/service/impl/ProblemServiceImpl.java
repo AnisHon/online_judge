@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
 * @author happy
@@ -78,11 +79,23 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     @Override
     public PagedResult<TaggedProblemVo> listTaggerProblems(PagedProblem pagedProblem) {
         Page<Problem> page = pagedProblem.page();
+        Integer type = null;
+        if (pagedProblem.getType() != null) {
+            type = pagedProblem.getType().getValue();
+        }
         List<TaggedProblemVo> taggedProblemVos = problemMapper
-                .selectTaggedProblemByProblemIdAndTagId(page, pagedProblem.getProblemId(), pagedProblem.getTagIds());
-        Long l = problemMapper.selectAllCountByProblemIdAndTagId(
+                .selectTaggedProblemByProblemIdAndTagId(
+                        page,
+                        pagedProblem.getProblemId(),
+                        pagedProblem.getTagIds(),
+                        pagedProblem.getTitle(),
+                        type
+                );
+        Long l = problemMapper.selectTaggedProblemCountByProblemIdAndTagId(
                 pagedProblem.getProblemId(),
-                pagedProblem.getTagIds()
+                pagedProblem.getTagIds(),
+                pagedProblem.getTitle(),
+                type
         );
 
         return PagedResult.fromPage(page, taggedProblemVos, l);
@@ -104,6 +117,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                 break;
             case FILL:
                 break;
+            case MULTI_CHOICE:
             case CHOICE:
                 List<ProblemChoice> choices = choiceFillAnswersService.getChoice(problem.getProblemId());
                 detailProblem.setChoices(choices);

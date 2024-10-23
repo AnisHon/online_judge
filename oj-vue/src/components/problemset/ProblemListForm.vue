@@ -2,17 +2,37 @@
 
   <div>
     <el-form :inline="true" :model="queryForm" style="display: flex; justify-content: center; margin: 20px">
-      <el-form-item label="搜索ID" style="width: 20%">
-        <el-input v-model="queryForm.id" placeholder="搜索ID" clearable />
+      <el-form-item label="搜索ID">
+        <el-select style="width: 100px" :default-first-option="true" v-model="select" @change="onSelectChange">
+          <el-option value="1" label="标题" />
+          <el-option value="2" label="ID" />
+        </el-select>
       </el-form-item>
-
+      <el-form-item style="width: 20%">
+        <el-input v-model="input" placeholder="搜索" clearable  @keyup.enter="handleQuery"/>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleQuery" >查询</el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="danger" @click="onResetHandler" >重置</el-button>
       </el-form-item>
 
     </el-form>
 
+
+
+
     <el-row justify="space-between" style="margin: 20px">
+      <div>
+        <span>题目类型： </span>
+        <el-radio-group v-model="queryForm.type">
+          <el-radio :value="1">OJ</el-radio>
+          <el-radio :value="2">填空</el-radio>
+          <el-radio :value="3">选择</el-radio>
+          <el-radio :value="4">多选</el-radio>
+        </el-radio-group>
+      </div>
       <el-col :span="18">
         <span>选中标签：</span>
         <el-space wrap>
@@ -49,29 +69,61 @@
 <script setup lang="ts">
 
 
-import {onMounted, reactive, ref} from "vue";
+import {computed, onMounted, reactive, ref} from "vue";
 import {getAllTags} from "@/api/problem/label";
 import {type TagView} from "@/api/problem/label"
+import type {ProblemType} from "@/api/problem";
 
 
 
 const tagsMap = new Map<number, TagView>();
 
-const queryForm = reactive<{id: string, tagIds: number[]}>({
+const queryForm = reactive<{id: string, tagIds: number[], title: string, type?: ProblemType}>({
   id: "",
-  tagIds: []
+  tagIds: [],
+  title: "",
+  type: undefined
 });
+
+const select = ref("1");
 
 const tagDialogVisible = ref(false);
 
 const emit = defineEmits(['query'])
 
+const input = computed({
+  get: () => {
+    return select.value === '1' ? queryForm.title : queryForm.id;
+  },
+  set: (value) => {
+    if (select.value === '1') {
+      queryForm.title = value
+    } else {
+      queryForm.id = value
+    }
+  }
+})
+
 const getTag = (id: number): TagView => {
   return <TagView>tagsMap.get(id)
 };
 
+const onSelectChange = () => {
+
+    queryForm.id = "";
+    queryForm.title = "";
+
+}
+
 const handleChooseTag = () => {
   tagDialogVisible.value = true;
+}
+
+const onResetHandler = () => {
+  queryForm.id = "";
+  queryForm.title = "";
+  queryForm.tagIds = [];
+  queryForm.type = undefined;
 }
 
 const handleCheckTag = (id: number) => {

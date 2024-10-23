@@ -9,6 +9,10 @@ export interface AjaxResult<T> {
     data: T;
 }
 
+type successCallback<T> =  (value: T) => void
+type successPromiseCallback<T> =  (value: Promise<T>) => void
+type failCallback = (msg: string, code: number) => void
+
 type ResultPromise<T> = Promise<AjaxResult<T>>
 
 const token = useToken()
@@ -109,4 +113,7 @@ const post = <T, R>(url: string, data: T, failCallback = defaultFail): ResultPro
 export {
     get,
     post,
+    type successCallback,
+    type failCallback,
+    type successPromiseCallback
 };

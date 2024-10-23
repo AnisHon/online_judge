@@ -70,6 +70,7 @@ const {heightProp} = defineProps<{heightProp: number}>()
 const emit = defineEmits<{
   (e: 'submit', form: JudgeForm): void;
   (e: 'fullScreen'): void;
+  (e: 'onReady'): void;
 }>()
 
 const codeEditHeight = computed(() => {
@@ -100,6 +101,7 @@ onMounted(() => {
         languages.value = languageArray;
         codeForm.languageId = languageArray[0].languageId;
       })
+  emit('onReady')
 })
 
 

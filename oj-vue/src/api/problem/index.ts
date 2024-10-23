@@ -1,12 +1,19 @@
 import {get, post} from "@/utils/http"
 import {type TagView} from "./label"
 import {ElMessage} from "element-plus";
+
+
 // 1 OJ, 2 FILL, 3 CHOICE
 export enum ProblemType {
     OJ = 1,
     FILL,
     CHOICE,
+    MULTI_CHOICE,
 }
+
+
+
+
 
 // 难度 (0 未分类, 1 简单, 2 中等, 3 困难),可用值:0,1,2,3
 export enum Difficulty {
@@ -44,6 +51,8 @@ export interface ProblemParam {
     pageSize: number;
     problemId?: string | null;
     tagIds?: number[] | null;
+    title?: string;
+    type?: ProblemType;
 }
 
 export interface ChoiceProblemView {
@@ -53,7 +62,7 @@ export interface ChoiceProblemView {
 
 export interface OjProblemView {
     problemId: number,
-    difficulty: number,
+    difficulty: Difficulty,
     memoryLimit: number,
     stackLimit: number,
     timeLimit: number,
@@ -87,25 +96,20 @@ async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
     const param: ProblemParam = {currentPage: 0, pageSize: 0}
     Object.assign(param, problemParam);
 
-    if (param.problemId === "") {
-        param.problemId = null;
-    } else if (
-        problemParam.problemId != null &&
-        isNaN(parseFloat(problemParam.problemId))
-    ){
-        param.problemId = null;
-    }
+
     try {
-        const {data: { data, currentPage, pageSize, totalRecords}} = await post<ProblemParam, PagedData>("/problem-api/problem/tagged-list", problemParam);
+        const {data: { data, currentPage, pageSize, totalRecords}}
+            = await post<ProblemParam, PagedData>(
+                "/problem-api/problem/tagged-list", problemParam,
+            (msg, code) => {
+                    if (code === 400) {
+                        ElMessage.error("ID只能是数字");
+                    }
+            }
+            );
         return {data, currentPage, pageSize, totalRecords};
     } catch (msg) {
-
-        if (typeof msg === "string") {
-            ElMessage.warning(msg);
-        } else if (typeof msg === "object") {
-            ElMessage.error((<Error>msg).message);
-        }
-        return Promise.reject(msg)
+        return Promise.reject(msg);
     }
 
 }

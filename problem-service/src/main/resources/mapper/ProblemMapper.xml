@@ -94,9 +94,15 @@
             left join problem_tag t on t.problem_id = p.problem_id
             left join tag t2 on t2.tag_id = t.tag_id
         where p.auth = 1
-
         <if test="problemId != null">
             and p.problem_id = #{problemId}
+        </if>
+        <if test="title != null and title.length() > 0">
+            and p.title like concat('%', #{title}, '%')
+        </if>
+
+        <if test="type != null">
+            and p.type = #{type}
         </if>
         <if test="tagIds != null and tagIds.size > 0 ">
             and t.tag_id in
@@ -116,6 +122,13 @@
 
         <if test="problemId != null">
             and p.problem_id = #{problemId}
+        </if>
+        <if test="title != null and title.length() > 0">
+            and p.title like concat('%', #{title}, '%')
+        </if>
+
+        <if test="type != null">
+            and p.type = #{type}
         </if>
         <if test="tagIds != null and tagIds.size > 0 ">
             and t.tag_id in

@@ -18,8 +18,19 @@ public interface ProblemMapper extends BaseMapper<Problem> {
 //    List<Problem> s()
     List<Problem> selectAllByProblemIdAndTagId(Page<Problem> page, @Param("problemId") Long problemId, @Param("tagIds") List<Long> tagIds);
     Long selectAllCountByProblemIdAndTagId(@Param("problemId") Long problemId, @Param("tagIds") List<Long> tagIds);
-    List<TaggedProblemVo> selectTaggedProblemByProblemIdAndTagId(Page<Problem> page, @Param("problemId") Long problemId, @Param("tagIds") List<Long> tagIds);
-    Long selectTaggedProblemCountByProblemIdAndTagId(@Param("problemId") Long problemId, @Param("tagIds") List<Long> tagIds);
+    List<TaggedProblemVo> selectTaggedProblemByProblemIdAndTagId(
+            Page<Problem> page,
+            @Param("problemId") Long problemId,
+            @Param("tagIds") List<Long> tagIds,
+            @Param("title") String title,
+            @Param("type") Integer type
+    );
+    Long selectTaggedProblemCountByProblemIdAndTagId(
+            @Param("problemId") Long problemId,
+            @Param("tagIds") List<Long> tagIds,
+            @Param("title") String title,
+            @Param("type") Integer type
+    );
 }
 
 
