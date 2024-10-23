@@ -13,7 +13,10 @@ a {
     --page-max-width: 1280px;
     --color-tag-text: white;
     --menu-height: 60px;
+    --main-padding: 20px;
     --content-height: calc(100vh - var(--menu-height));
+    --in-main-content-height: calc(var(--content-height) - 2 * var(--main-padding));
+
 }
 
 .common-max-width-page {

@@ -57,7 +57,7 @@ import {type TagView} from "@/api/problem/label"
 
 const tagsMap = new Map<number, TagView>();
 
-const queryForm = reactive({
+const queryForm = reactive<{id: string, tagIds: number[]}>({
   id: "",
   tagIds: []
 });

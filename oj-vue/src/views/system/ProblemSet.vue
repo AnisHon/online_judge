@@ -69,16 +69,16 @@ const pageNav = reactive({
   }
 
 
-  const doQuery = (value) => {
+  const doQuery = (value: {id: string, tagIds: number[]}) => {
     currentPage.problemId = value.id;
     currentPage.tagIds = value.tagIds.slice();
   }
 
-  const handlePageChange = (value) => {
+  const handlePageChange = (value: number) => {
     currentPage.currentPage = value
   }
 
-  const handleLoadFinish = (currentPage, pageSize, totalRecords) => {
+  const handleLoadFinish = (currentPage: number, pageSize: number, totalRecords: number) => {
 
     pageNav.pageCount = Math.ceil(totalRecords / pageSize)
     pageNav.totalRecords = totalRecords
@@ -95,7 +95,6 @@ const pageNav = reactive({
   height: 48px;
 }
 .problem-set {
-  //max-width: 1280px;
   margin: auto
 }
 </style>

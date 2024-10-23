@@ -18,12 +18,22 @@ export interface SignUpForm {
     email: string;
 }
 
-export interface ForgotPasswordForm {
+export interface ForgetPasswordForm {
     username: string;
     password: string;
     code: string;
 }
 
+export interface LoginResponse {
+    message: string;
+    success: boolean;
+    token: string;
+}
+
+export interface ForgetPasswordResponse {
+    message: string;
+    success: boolean;
+}
 
 
 async function checkAvailableEmail(email: string) {
@@ -36,42 +46,42 @@ async function checkAvailableUsername(username: string) {
     return data;
 }
 
-async function getMe(): LoginUser {
-    const {data} = await get("/user-api/auth/me");
+async function getMe(): Promise<LoginUser> {
+    const {data} = await get<LoginUser, any>("/user-api/auth/me");
     return data;
 }
 
 async function login(data: LoginForm) {
-    const {data: {message, success, token}} = await post('/user-api/auth/login', data);
+    const {data: {message, success, token}} = await post<LoginForm, LoginResponse>('/user-api/auth/login', data);
     const tokenStore = useToken();
     if (success) {
         tokenStore.setToken(token);
     } else {
-        return await Promise.reject(message);
+        throw message;
     }
 }
 
 async function signUp(data: SignUpForm) {
-    const {data: {message, success, token}} = await post('/user-api/auth/registration', data);
+    const {data: {message, success, token}} = await post<SignUpForm, LoginResponse>('/user-api/auth/registration', data);
     const tokenStore = useToken();
     if (success) {
         tokenStore.setToken(token);
     } else {
-        return await Promise.reject(message);
+        throw message;
     }
 }
 
-async function forgetPassword(data: ForgotPasswordForm) {
-    const {data: {success, message}} = await post('/user-api/auth/forget-pass', data);
+async function forgetPassword(data: ForgetPasswordForm) {
+    const {data: {success, message}} = await post<ForgetPasswordForm, ForgetPasswordResponse>('/user-api/auth/forget-pass', data);
     if (success) {
         return  message
     } else {
-        return await Promise.reject(message);
+        throw message;
     }
 }
 
 async function logout() {
-    //to do
+    // todo
 }
 
 export {

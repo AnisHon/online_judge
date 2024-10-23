@@ -6,7 +6,7 @@
       <el-header style="padding: 0; height: var(--menu-height);">
         <MenuBar/>
       </el-header>
-      <el-main>
+      <el-main style="box-sizing: border-box">
         <div>
           <router-view v-slot="{ Component }">
             <transition name="el-fade-in">
@@ -29,5 +29,10 @@ import MenuBar from "@/components/menu/Menu.vue";
 .layout {
   height: 100%;
 }
+</style>
 
+<style>
+.el-main {
+  height: var(--main-padding);
+}
 </style>
