@@ -12,7 +12,6 @@
 </template>
 <script setup lang="ts">
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
-import type {Answer} from "@/api/problem/judge";
 
 const {option, content} = withDefaults(defineProps<{
   option?: string,

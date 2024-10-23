@@ -17,7 +17,7 @@
 
 import type {ChoiceProblemView} from "@/api/problem";
 import ProblemRadio from "@/views/system/problem/ProblemRadio/ProblemRadio.vue";
-import {onMounted, reactive} from "vue";
+import {reactive} from "vue";
 
 const selected = reactive<Map<string, boolean>>(new Map<string, boolean>())
 
