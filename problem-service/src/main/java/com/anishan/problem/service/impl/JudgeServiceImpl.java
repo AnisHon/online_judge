@@ -49,7 +49,7 @@ public class JudgeServiceImpl implements JudgeService {
      * 判断是否正确，正确给分，否则0分，用于填空题
      * @param judgeAnswer 用户输入的答案
      * @param blankAnswers 标准答案
-     * @return 是否正确
+     * @return 分数和是否正确
      */
     private ScoreAndIsCorrected judgeScore(
             JudgeAnswer judgeAnswer,
@@ -70,6 +70,29 @@ public class JudgeServiceImpl implements JudgeService {
             }
         }
         return ScoreAndIsCorrected.wrong();
+    }
+
+    /**
+     * 判断是否正确，正确给分，否则0分，用于填空题
+     * @param judgeAnswer 用户输入的答案
+     * @param choiceFillAnswers 标准答案
+     * @return 分数和是否正确
+     */
+    private ScoreAndIsCorrected judgeScore(
+            JudgeAnswer judgeAnswer,
+            List<ChoiceFillAnswers> choiceFillAnswers
+    ) {
+        Integer index = judgeAnswer.getIndex();
+        ScoreAndIsCorrected scoreAndIsCorrected = new ScoreAndIsCorrected();
+        scoreAndIsCorrected.setScore(BigDecimal.ZERO);
+        scoreAndIsCorrected.setCorrected(false);
+        for (ChoiceFillAnswers choiceFillAnswer : choiceFillAnswers) {
+            if (Objects.equals(choiceFillAnswer.getBlankIndex(), index)) {
+                scoreAndIsCorrected.setCorrected(true);
+                scoreAndIsCorrected.setScore(choiceFillAnswer.getScore());
+            }
+        }
+        return  scoreAndIsCorrected;
     }
 
 
@@ -119,22 +142,23 @@ public class JudgeServiceImpl implements JudgeService {
 
 
     private ProblemJudgeResult doJudgeChoice(List<ChoiceFillAnswers> answer, JudgeRequest judgeRequest) {
-        Set<JudgeAnswer> answers = answer
-                .stream()
-                .map(a -> new JudgeAnswer(a.getBlankIndex(), null)).collect(Collectors.toSet());
 
+        ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
+        problemJudgeResult.setTotalScore(BigDecimal.ZERO);
+        for (JudgeAnswer judgeRequestAnswer : judgeRequest.getAnswers()) {
+            ScoreAndIsCorrected scoreAndIsCorrected = judgeScore(judgeRequestAnswer, answer);
+            if (scoreAndIsCorrected.isCorrected()) {
+                problemJudgeResult.add(scoreAndIsCorrected.getScore());
+            } else {
+                problemJudgeResult.setCorrect(false);
+                problemJudgeResult.setTotalScore(BigDecimal.ZERO);
+                return problemJudgeResult;
+            }
+        }
 
-        Set<JudgeAnswer> inputAnswers = judgeRequest
-                .getAnswers()
-                .stream()
-                .peek(x -> x.setAnswer(null))
-                .collect(Collectors.toSet());
-        ProblemJudgeResult result = new ProblemJudgeResult();
+        problemJudgeResult.setCorrect(judgeRequest.getAnswers().size() == answer.size());
 
-        result.setCorrect(answerEquals(answers, inputAnswers));
-
-        result.setAnswers(new ArrayList<>(answers));
-        return result;
+        return problemJudgeResult;
     }
 
     private ProblemJudgeResult judgeChoice(Problem problem, JudgeRequest judgeRequest) {
@@ -144,7 +168,13 @@ public class JudgeServiceImpl implements JudgeService {
                         .eq(ChoiceFillAnswers::getIsCorrect, true)
         );
 
-        return doJudgeChoice(blankAnswers, judgeRequest);
+        List<JudgeAnswer> answers = blankAnswers
+                .stream()
+                .map((x) -> new JudgeAnswer(x.getBlankIndex(), x.getAnswerText()))
+                .collect(Collectors.toList());
+        ProblemJudgeResult problemJudgeResult = doJudgeChoice(blankAnswers, judgeRequest);
+        problemJudgeResult.setAnswers(answers);
+        return problemJudgeResult;
     }
 
 
@@ -177,6 +207,10 @@ public class JudgeServiceImpl implements JudgeService {
 
         ProblemJudgeResult judge = judge(problem, judgeRequest);
 
+        if (judgeRequest.getContestId() != null) {
+            judge.setAnswers(null);
+        }
+
 
         // 添加做题记录
 
@@ -196,6 +230,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
 
         recordsService.addRecord(records);
+
 
         return judge;
     }

@@ -20,14 +20,10 @@ import ProblemRadio from "@/views/system/problem/ProblemRadio/ProblemRadio.vue";
 import {reactive} from "vue";
 
 const selected = reactive<Map<string, boolean>>(new Map<string, boolean>())
-
-const {isMulti, choices} = withDefaults(defineProps<{
+const {isMulti = false, choices = []} = defineProps<{
   isMulti?: boolean,
-  choices: ChoiceProblemView[]
-}>(), {
-  isMulti: false,
-})
-
+  choices?: ChoiceProblemView[]
+}>();
 
 choices.forEach(choice => {selected.set(choice.order, false)})
 

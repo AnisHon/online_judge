@@ -9,21 +9,21 @@ export interface AjaxResult<T> {
     data: T;
 }
 
-type successCallback<T> =  (value: T) => void
-type successPromiseCallback<T> =  (value: Promise<T>) => void
-type failCallback = (msg: string, code: number) => void
+type successCallback<T> =  (value: T) => void;
+type successPromiseCallback<T> =  (value: Promise<T>) => void;
+type failCallback = (msg: string, code: number) => void;
+type finallyCallback = () => void;
+type ResultPromise<T> = Promise<AjaxResult<T>>;
 
-type ResultPromise<T> = Promise<AjaxResult<T>>
-
-const token = useToken()
+const token = useToken();
 
 const error401 = () => {
     const router = useRouter()
-    token.clearToken()
-    ElMessage.warning("令牌过期，请重新登录")
-    router.replace('/auth/login')
+    token.clearToken();
+    ElMessage.warning("令牌过期，请重新登录");
+    router.replace('/auth/login');
 
-}
+};
 
 const service = axios.create({
     baseURL: "http://localhost:5173/api", // 设置基础 URL
@@ -115,5 +115,6 @@ export {
     post,
     type successCallback,
     type failCallback,
-    type successPromiseCallback
+    type successPromiseCallback,
+    type finallyCallback,
 };

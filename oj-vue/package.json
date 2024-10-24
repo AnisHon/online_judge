@@ -21,6 +21,7 @@
     "katex": "^0.16.11",
     "markdown-it": "^14.1.0",
     "markdown-it-katex": "^2.0.3",
+    "mitt": "^3.0.1",
     "normalize.css": "^8.0.1",
     "pinia": "^2.2.4",
     "pinia-plugin-persistedstate": "^4.1.1",

@@ -42,12 +42,7 @@ declare module 'vue' {
     Menu: typeof import('./src/components/menu/Menu.vue')['default']
     ProblemList: typeof import('./src/components/problemset/ProblemList.vue')['default']
     ProblemListForm: typeof import('./src/components/problemset/ProblemListForm.vue')['default']
-    ProblemRadio: typeof import('./src/views/system/problem/ProblemRadio/ProblemRadio.vue')['default']
-    ProblemRadioGroup: typeof import('./src/views/system/problem/ProblemRadio/ProblemRadioGroup.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-  }
-  export interface ComponentCustomProperties {
-    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }

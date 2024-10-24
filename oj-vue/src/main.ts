@@ -1,4 +1,5 @@
 import '@/assets/common.css'
+import '@/assets/variables.scss'
 import 'normalize.css'
 import 'element-plus/dist/index.css'
 
@@ -12,9 +13,9 @@ import piniaPluginPersistedState from 'pinia-plugin-persistedstate' //引入持�
 
 import App from '@/App.vue'
 import router from './router'
+import mitt from "mitt";
 
 const app = createApp(App)
-
 
 const pinia = createPinia();
 app.use(router)

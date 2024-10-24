@@ -21,4 +21,8 @@ public class ProblemJudgeResult {
     @ApiModelProperty("总分")
     private BigDecimal totalScore;
 
+    public void add(BigDecimal num) {
+        this.totalScore = this.totalScore.add(num);
+    }
+
 }

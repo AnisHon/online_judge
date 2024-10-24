@@ -13,15 +13,11 @@
 <script setup lang="ts">
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 
-const {option, content} = withDefaults(defineProps<{
+const {option = "", content = "", choose = false} = defineProps<{
   option?: string,
   content?: string,
   choose?: boolean
-}>(), {
-  option: "",
-  content: "",
-  choose: false
-});
+}>();
 
 
 

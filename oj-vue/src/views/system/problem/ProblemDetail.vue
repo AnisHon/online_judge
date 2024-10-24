@@ -48,9 +48,25 @@
 
             <div class="detail-problem">
               <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
-              <fill-blank-problem v-if="isFillProblem"/>
-              <choice-choose-problem :problem-view="problem" v-if="isChoiceProblem"/>
+              <fill-blank-problem v-if="isFillProblem" :judgeForm="judgeForm"/>
+              <choice-choose-problem :problem-view="problem" :judgeForm="judgeForm" v-if="isChoiceProblem" />
             </div>
+
+
+            <div>
+
+            </div>
+            <div v-if="!isOjProblem">
+              <div class="submit">
+                <el-button type="success" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
+              </div>
+
+              <div class="result" v-show="showAnswers">
+                <ProblemResult :type="problemType" :result="judgeResult"/>
+              </div>
+
+            </div>
+
 
             <div class="hint">
               <h2>提示</h2>
@@ -81,15 +97,18 @@
 <script setup lang="ts">
 import {getDetailProblem, type OjProblemView, type ProblemDetailView, ProblemType,} from "@/api/problem";
 import {useRoute} from "vue-router";
-import {computed, onMounted, onUnmounted, ref} from "vue";
+import {computed, onMounted, onUnmounted, reactive, ref} from "vue";
 import EnhancedCodeEditor from './EnhancedCodeEdior/index.vue'
 import OnlineJudgeProblem from "@/views/system/problem/OnlineJudgeProblem.vue";
 import FillBlankProblem from "@/views/system/problem/FillBlank.vue";
 import ChoiceChooseProblem from "@/views/system/problem/ChoiceChoose.vue";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
-import type {JudgeForm} from "@/api/problem/judge";
+import {getDebouncedJudge, judge, type JudgeForm, type JudgeResponse} from "@/api/problem/judge";
 import {debounce} from "@/utils/debounce";
+import ProblemResult from "@/views/system/problem/ProblemResult/ProblemResult.vue";
+import useLoading from "@/hooks/useLoading";
+import {useMitt} from "@/stores/useMitt";
 
 
 const route = useRoute();
@@ -100,8 +119,36 @@ const isFullScreen = ref(false)
 
 const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 
+const {loading, finish, isLoading} = useLoading()
+
+const problemId = computed(() => {
+  return  parseInt(<string>route.params.id)
+})
+
+const judgeForm = reactive<JudgeForm>({
+  contestId: undefined,
+  problemId: problemId.value,
+  answers: [],
+});
+
+const judgeResult = ref<JudgeResponse>();
+
+const emitter = useMitt().get();
 
 
+const doJudge = getDebouncedJudge(judgeForm,
+    (data: JudgeResponse) => {
+      showAnswers.value = data.answers !== undefined && data.answers.length > 0;
+      judgeResult.value = data;
+      judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
+    },
+    undefined,
+    finish
+)
+
+
+
+const showAnswers = ref(false);
 
 // 各种信息的计算属性
 
@@ -183,12 +230,19 @@ const codeSpan = computed(() => {
 
 
 
-
-
 // 三个事件
 
 const onHandleSubmit = (codeForm: JudgeForm) => {
   // todo
+  loading()
+  if (problemType.value === ProblemType.OJ) {
+    judgeForm.answers = codeForm.answers;
+  } else {
+    emitter.emit('judge');
+  }
+
+  doJudge();
+
 }
 
 const onHandleFullScreen = () => {
@@ -203,16 +257,13 @@ const height = ref(0)
 
 const getHeight = () => {
   height.value = contentRef.value?.$el.offsetHeight || 0;
-  console.log(height.value)
 }
 
 
 
 
 onMounted(() => {
-  const problemId: number = parseInt(<string>route.params.id)
-
-  getDetailProblem(problemId)
+  getDetailProblem(problemId.value)
       .then((detailProblem: ProblemDetailView) => {
         problem.value = detailProblem;
       })
@@ -239,6 +290,12 @@ onUnmounted(() => {
 
   height: var(--in-main-content-height);
   overflow: auto;
+}
+
+.submit {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
 }
 
 .tags {
