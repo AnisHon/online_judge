@@ -2,6 +2,8 @@ package com.anishan.problem.service.impl;
 
 import com.anishan.problem.domain.vo.ProblemChoice;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.ChoiceFillAnswers;
 import com.anishan.problem.service.ChoiceFillAnswersService;
@@ -26,6 +28,15 @@ public class ChoiceFillAnswersServiceImpl extends ServiceImpl<ChoiceFillAnswersM
                .eq(ChoiceFillAnswers::getProblemId, problemId)
                .orderByAsc(ChoiceFillAnswers::getBlankIndex)
         ).stream().map(x -> new ProblemChoice(x.indexToChoice(), x.getAnswerText())).collect(Collectors.toList());
+    }
+
+    @Override
+    public Long countAnswers(Long problemId) {
+        return this.count(new QueryWrapper<ChoiceFillAnswers>()
+                        .select("distinct blank_index")
+                        .lambda()
+                        .eq(ChoiceFillAnswers::getProblemId, problemId)
+        );
     }
 }
 

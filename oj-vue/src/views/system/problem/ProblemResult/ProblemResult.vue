@@ -13,7 +13,13 @@
     <h3>正确答案</h3>
     <div>
       <div class="answer">
-        <span v-for="item of answers"><markdown-preview :text="itemText(item)"/></span>
+        <span v-for="(value, key) of groupResult">
+          <markdown-preview :text="itemIndexText(parseInt(key))"/>
+            <span v-for="i of value" :key="i.index">
+              <markdown-preview :text="itemText(i)"/>
+            </span>
+
+        </span>
       </div>
     </div>
   </div>
@@ -27,6 +33,7 @@ import {computed} from "vue";
 import type {Answer, JudgeResponse} from "@/api/problem/judge";
 import {ProblemType} from "@/api/problem";
 import {numberToLetter} from "@/utils/stringUtils";
+import __ from "lodash";
 
 
 const {
@@ -42,6 +49,10 @@ const {
 
 const correct = computed(() => {
   return result.correct;
+})
+
+const groupResult = computed(() => {
+  return __.groupBy(result.answers, (x) => x.index);
 })
 
 const style = computed(() => {
@@ -64,10 +75,14 @@ const resultText = computed(() => {
   return correct.value ? '正确' : '错误';
 })
 
+const itemIndexText = (idx: number) => {
+  return `__第${idx + 1}空__`
+}
+
 const itemText = (item: Answer): string => {
 
   if (isFill.value) {
-    return `__${item.index}__ ${item.answer}`
+    return ` ${item.answer} `
   } else {
     return `__${numberToLetter(item.index)}__`
   }
@@ -75,14 +90,13 @@ const itemText = (item: Answer): string => {
 }
 </script>
 
-<style lang="scss" scoped>
-@import "@/assets/variables";
+<style scoped>
 .wrong {
-  color: $wrong-color;
+  color: #F56C6C;
 }
 
 .right {
-  color: $right-color
+  color: #67C23A;
 }
 
 </style>

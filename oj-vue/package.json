@@ -19,6 +19,7 @@
     "codemirror-editor-vue3": "^2.8.0",
     "element-plus": "^2.8.6",
     "katex": "^0.16.11",
+    "lodash": "^4.17.21",
     "markdown-it": "^14.1.0",
     "markdown-it-katex": "^2.0.3",
     "mitt": "^3.0.1",

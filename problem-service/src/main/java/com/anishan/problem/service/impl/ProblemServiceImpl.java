@@ -108,13 +108,15 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
         List<TagVo> tags = tagService.getTagByProblemId(problem.getProblemId());
 
-        DetailProblem detailProblem = new DetailProblem(problem, null, null, tags);
+        DetailProblem detailProblem = new DetailProblem(problem, null, null, tags, null);
         switch (problem.getType()) {
             case OJ:
                 OjProblemVo ojProblem = ojProblemService.getOjProblemById(ojId);
                 detailProblem.setOjProblemVo(ojProblem);
                 break;
             case FILL:
+                Long count = choiceFillAnswersService.countAnswers(problem.getProblemId());
+                detailProblem.setCount(count);
                 break;
             case MULTI_CHOICE:
             case CHOICE:
@@ -131,6 +133,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         Problem problem = doGetProblem(id);
         ProblemVo problemVo = toVo(problem);
 
+        if (problemVo == null) {
+            return null;
+        }
         return doGetDetail(problemVo, problem.getOjId());
     }
 

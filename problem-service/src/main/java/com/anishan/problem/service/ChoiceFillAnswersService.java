@@ -14,4 +14,6 @@ import java.util.List;
 public interface ChoiceFillAnswersService extends IService<ChoiceFillAnswers> {
 
     List<ProblemChoice> getChoice(Long problemId);
+
+    Long countAnswers(Long problemId);
 }

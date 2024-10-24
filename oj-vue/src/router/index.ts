@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Index from "@/views/system/Index.vue";
 import Layout from "@/Layout.vue";
-import Forbidden from "@/views/system/error/Forbidden.vue";
-import NotFound from "@/views/system/error/NotFound.vue";
+import Forbidden from "@/views/error/Forbidden.vue";
+import NotFound from "@/views/error/NotFound.vue";
 // index不是home
 // index不是home
 // index不是home

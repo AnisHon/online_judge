@@ -14,7 +14,6 @@ import {type ProblemDetailView, ProblemType} from "@/api/problem";
 import {computed, onUnmounted, ref, toRefs} from "vue";
 import {type JudgeForm} from "@/api/problem/judge";
 import ProblemRadioGroup from "@/views/system/problem/ProblemRadio/ProblemRadioGroup.vue";
-import mitt from "mitt";
 import {letterToNumber} from "@/utils/stringUtils";
 import {useMitt} from "@/stores/useMitt";
 
@@ -38,6 +37,7 @@ const isMulti = computed(() => {
 })
 
 const setValue = () => {
+  judgeForm_.answers.value = []
   problemRadioGroupRef.value?.selected.forEach((value, key) => {
     if (value) {
       const i = letterToNumber(key);

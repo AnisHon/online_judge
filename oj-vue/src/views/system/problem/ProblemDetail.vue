@@ -48,7 +48,7 @@
 
             <div class="detail-problem">
               <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
-              <fill-blank-problem v-if="isFillProblem" :judgeForm="judgeForm"/>
+              <fill-blank-problem v-if="isFillProblem" :count="count" :judgeForm="judgeForm"/>
               <choice-choose-problem :problem-view="problem" :judgeForm="judgeForm" v-if="isChoiceProblem" />
             </div>
 
@@ -125,6 +125,10 @@ const problemId = computed(() => {
   return  parseInt(<string>route.params.id)
 })
 
+const count = computed(() => {
+  return problem.value?.count || 0;
+})
+
 const judgeForm = reactive<JudgeForm>({
   contestId: undefined,
   problemId: problemId.value,
@@ -138,7 +142,7 @@ const emitter = useMitt().get();
 
 const doJudge = getDebouncedJudge(judgeForm,
     (data: JudgeResponse) => {
-      showAnswers.value = data.answers !== undefined && data.answers.length > 0;
+      showAnswers.value =  Array.isArray(data.answers) && data.answers.length > 0;
       judgeResult.value = data;
       judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
     },

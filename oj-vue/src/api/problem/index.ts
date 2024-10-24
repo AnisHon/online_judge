@@ -81,6 +81,7 @@ export interface ProblemDetailView {
     ojProblemVo?: OjProblemView;
     problemVo: ProblemView;
     tagVo: TagView[];
+    count?: number;
 }
 
 export interface PagedData {

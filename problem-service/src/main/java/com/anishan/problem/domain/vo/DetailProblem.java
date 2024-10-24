@@ -21,4 +21,6 @@ public class DetailProblem {
     private List<ProblemChoice> choices;
     @ApiModelProperty("对应的几个Tag")
     private List<TagVo> tagVo;
+    @ApiModelProperty("填空题有几个空")
+    private Long count;
 }

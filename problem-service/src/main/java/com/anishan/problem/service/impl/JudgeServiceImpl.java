@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -123,7 +124,8 @@ public class JudgeServiceImpl implements JudgeService {
 
     private ProblemJudgeResult doJudgeFill(List<ChoiceFillAnswers> answer, JudgeRequest judgeRequest) {
 
-        Map<Integer, List<ChoiceFillAnswers>> blankAnswers = answer
+
+            Map<Integer, List<ChoiceFillAnswers>> blankAnswers = answer
                 .stream()
                 .collect(Collectors.groupingBy(ChoiceFillAnswers::getBlankIndex));
 
@@ -137,7 +139,11 @@ public class JudgeServiceImpl implements JudgeService {
         );
 
 
-        return doJudgeFill(blankAnswers, judgeRequest);
+        ProblemJudgeResult judgeResult = doJudgeFill(blankAnswers, judgeRequest);
+
+        judgeResult.setAnswers(blankAnswers.stream().map(x -> new JudgeAnswer(x.getBlankIndex(), x.getAnswerText())).collect(Collectors.toList()));
+
+        return judgeResult;
     }
 
 
@@ -145,7 +151,20 @@ public class JudgeServiceImpl implements JudgeService {
 
         ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
         problemJudgeResult.setTotalScore(BigDecimal.ZERO);
-        for (JudgeAnswer judgeRequestAnswer : judgeRequest.getAnswers()) {
+        problemJudgeResult.setCorrect(false);
+
+        judgeRequest.getAnswers().forEach(x -> x.setAnswer(null));
+        List<JudgeAnswer> collect = judgeRequest
+                .getAnswers()
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (answer.size() < judgeRequest.getAnswers().size()) {
+            return problemJudgeResult;
+        }
+
+        for (JudgeAnswer judgeRequestAnswer : collect) {
             ScoreAndIsCorrected scoreAndIsCorrected = judgeScore(judgeRequestAnswer, answer);
             if (scoreAndIsCorrected.isCorrected()) {
                 problemJudgeResult.add(scoreAndIsCorrected.getScore());
@@ -197,7 +216,6 @@ public class JudgeServiceImpl implements JudgeService {
 
         return judgeResult;
     }
-
 
     @Override
     public ProblemJudgeResult judge(Long userId, JudgeRequest judgeRequest) {
