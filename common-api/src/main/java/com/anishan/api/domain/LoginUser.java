@@ -2,6 +2,7 @@ package com.anishan.api.domain;
 
 import com.anishan.commons.e.UserState;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,10 +21,13 @@ public class LoginUser implements UserDetails {
 
     @JsonIgnore
     private List<SysRole> roles;
-    @JsonIgnore
+
+
     private List<String> auths;
 
+    @JsonIgnore
     private List<SimpleGrantedAuthority> authorities;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (authorities == null) {

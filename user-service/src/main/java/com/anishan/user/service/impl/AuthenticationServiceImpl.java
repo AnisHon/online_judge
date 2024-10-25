@@ -53,7 +53,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public LoginUserVo me() {
-        LoginUser principal = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Object login = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(login instanceof LoginUser)) {
+            throw new RuntimeException("未登录");
+        }
+        LoginUser principal = (LoginUser) login;
         LoginUserVo loginUserVo = BeanUtil.copyProperties(principal.getUser(), LoginUserVo.class);
         loginUserVo.setAuths(principal.getAuths());
         return loginUserVo;
@@ -371,17 +375,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         logout(userId);
     }
 
-    @Override
-    public List<MenuVo> getAuths() {
-        Long userId = myId();
-        List<Long> roleIds = sysUserRoleService
+    private List<Long> getRoleIdsByUserId(Long userId) {
+        return sysUserRoleService
                 .getRolesByUserId(userId)
                 .stream()
                 .map(SysRole::getRoleId)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MenuVo> getAuths() {
+        Long userId = myId();
+        List<Long> roleIds = getRoleIdsByUserId(userId);
         List<SysMenu> authorityMenu = sysRoleMenuService.getAuthorityMenu(roleIds);
 
         return BeanUtil.copyToList(authorityMenu, MenuVo.class);
+    }
+
+    @Override
+    public List<TreedMenuVo> getTreedMenuByRole() {
+        Long userId = myId();
+        List<Long> roleIds = getRoleIdsByUserId(userId);
+        return sysMenuService.getTreedMenuByRole(roleIds);
     }
 
 

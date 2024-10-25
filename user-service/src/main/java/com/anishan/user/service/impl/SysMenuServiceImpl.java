@@ -60,7 +60,6 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
                 .sorted(Comparator.comparingInt(o -> o.getMenu().getOrderNum()))
                 .collect(Collectors.toList());
 
-
         // set children
         treeNode.setChildren(children);
 
@@ -82,6 +81,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
         List<TreedMenuVo> rootMenus = treedMenus
                 .stream()
                 .filter(TreedMenuVo::isRoot)
+                .sorted(Comparator.comparingInt(o -> o.getMenu().getOrderNum()))
                 .collect(Collectors.toList());
 
         rootMenus.forEach(treedMenus::remove);

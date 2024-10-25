@@ -3,6 +3,7 @@ package com.anishan.user.mapper;
 import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.awt.*;
 import java.util.List;
@@ -15,9 +16,9 @@ import java.util.List;
 */
 public interface SysRoleMenuMapper extends BaseMapper<SysRoleMenuRelation> {
 
-    List<SysMenu> getMIMenuByRole(List<Long> menuIds);
+    List<SysMenu> getMIMenuByRole(@Param("menuIds") List<Long> menuIds);
 
-    List<SysMenu> getBMenuByRole(List<Long> menuIds);
+    List<SysMenu> getBMenuByRole(@Param("menuIds") List<Long> menuIds);
 }
 
 

@@ -50,4 +50,6 @@ public interface AuthenticationService {
     void logout();
 
     List<MenuVo> getAuths();
+
+    List<TreedMenuVo> getTreedMenuByRole();
 }

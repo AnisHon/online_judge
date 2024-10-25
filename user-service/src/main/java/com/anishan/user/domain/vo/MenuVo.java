@@ -1,6 +1,7 @@
 package com.anishan.user.domain.vo;
 
 import com.anishan.commons.e.MenuType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -41,6 +42,7 @@ public class MenuVo {
     @ApiModelProperty("标记")
     private String remark;
 
+    @JsonIgnore
     public boolean isRoot() {
         return parentId == null || parentId == 0 ;
     }

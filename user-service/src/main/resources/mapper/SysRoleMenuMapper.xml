@@ -29,7 +29,7 @@
 
         select
             menu.menu_id as menu_id,
-            menu_name, parent_id,
+            menu_name, parent_id, order_num,
             router, menu_type, perms,
             icon, create_time, update_time,
             remark
@@ -51,7 +51,7 @@
     <select id="getBMenuByRole" resultType="com.anishan.user.domain.entity.SysMenu">
         select
         menu.menu_id as menu_id,
-        menu_name, parent_id,
+        menu_name, parent_id, order_num,
         router, menu_type, perms,
         icon, create_time, update_time,
         remark

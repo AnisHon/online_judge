@@ -27,10 +27,11 @@ create table sys_user (
 ) engine=innodb auto_increment=100
     comment '用户表' auto_increment = 100;
 
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (1, 'test_teacher', 'teacher@tset.com', '测试教师', '');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (2, 'test_student', 'student@tset.com', '测试学生', '');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (3, 'test_admin', 'admin@tset.com', '测试管理员', '');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (4, 'test_super_admin', 'super_admin@tset.com', '超级管理员', '');
+# www.github.com
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (1, 'test_teacher', 'teacher@tset.com', '测试教师', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (2, 'test_student', 'student@tset.com', '测试学生', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (3, 'test_admin', 'admin@tset.com', '测试管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (4, 'test_super_admin', 'super_admin@tset.com', '超级管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
 
 
 -- ----------------------------
@@ -113,7 +114,7 @@ create table sys_menu (
 # 一级菜单
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1, '题目模块', 1, 0, '#', 'M', '#', 'Files');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (2, '用户模块', 2, 0, '#', 'M', '#', 'UserFilled');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (3, '教师功能', 0, 0, 'teacher', 'I', '#', 'Notebook');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (3, '教师功能', 0, 0, '#', 'M', '#', 'Notebook');
 
 # 二集菜单
 # menu_id 1 题目模块
@@ -130,7 +131,10 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (23, '角色管理', 4, 2, 'role-manage', 'I', '#', 'WarningFilled');
 
 
-
+# 二级菜单
+# menu_id 2 教师功能 teacher
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (30, '我的班级', 1, 3, 'my-class', 'I', '#', 'School');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (31, '作业管理', 2, 3, 'homework-manage', 'I', '#', 'Histogram');
 
 
 # menu_id 10 题目编辑
@@ -181,10 +185,12 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (232, '列出角色', 3, 23, '#', 'B', 'user:role:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (233, '删除角色', 4, 23, '#', 'B', 'user:role:remove', '#');
 
-# 教师管理 menu_id 3
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (30, '创建班级', 0, 3, '#', 'B', 'user:teacher:create-class', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (31, '列出班级', 1, 3, '#', 'B', 'user:teacher:list-class', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (32, '删除班级', 2, 3, '#', 'B', 'user:teacher:remove-class', '#');
+# 我的班级 menu_id 30
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (300, '创建班级', 0, 3, '#', 'B', 'user:teacher:create-class', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (301, '列出班级', 1, 3, '#', 'B', 'user:teacher:list-class', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (302, '删除班级', 2, 3, '#', 'B', 'user:teacher:remove-class', '#');
+
+
 
 -- ----------------------------
 -- 7、用户和角色关联表  用户N-1角色
@@ -216,14 +222,15 @@ create table sys_role_menu (
 
 # 超级管理员
 insert into sys_role_menu(role_id, menu_id)
-    (select 4, menu_id from sys_menu where perms != '#');
+    (select 4, menu_id from sys_menu);
 
 # 教师
 insert into sys_role_menu(role_id, menu_id)
 values
     (2, 30),
     (2, 31),
-    (2, 32);
+    (2, 32),
+    (2, 3);
 
 # 管理员，没有权限相关操作，因为危险可能会毁坏网站
 insert into sys_role_menu(role_id, menu_id)

@@ -30,12 +30,6 @@ public class MenuController {
         this.sysMenuService = sysMenuService;
     }
 
-    @GetMapping("/menus")
-    @ApiOperation("获取所有菜单，以树状的形式返回")
-    public R<List<TreedMenuVo>> menus() {
-        return R.success(sysMenuService.getTreedMenuByRole(List.of()));
-    }
-
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:menu:list')")
     @ApiOperation("通过id获取菜单")
