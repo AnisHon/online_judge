@@ -9,7 +9,64 @@
             <id property="menuId" column="menu_id" jdbcType="BIGINT"/>
     </resultMap>
 
+    <resultMap id="MIMenuByRoleResultMap" type="com.anishan.user.domain.entity.SysMenu">
+        <id property="menuId" column="menu_id" jdbcType="BIGINT"/>
+        <result property="menuName" column="menu_name" jdbcType="VARCHAR"/>
+        <result property="parentId" column="parent_id" jdbcType="BIGINT"/>
+        <result property="router" column="router" jdbcType="VARCHAR"/>
+        <result property="menuType" column="menu_type" jdbcType="CHAR"/>
+        <result property="perms" column="perms" jdbcType="VARCHAR"/>
+        <result property="icon" column="icon" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
     <sql id="Base_Column_List">
         role_id,menu_id
     </sql>
+    <select id="getMIMenuByRole" resultMap="MIMenuByRoleResultMap">
+
+        select
+            menu.menu_id as menu_id,
+            menu_name, parent_id,
+            router, menu_type, perms,
+            icon, create_time, update_time,
+            remark
+        from (select
+             menu_id
+         from sys_role_menu
+         where role_id in
+         <foreach collection="menuIds" open="(" close=")" separator="," item="item">
+             #{item}
+         </foreach>
+         ) as menu_ids
+        left join sys_menu menu on menu.menu_id = menu_ids.menu_id
+        where
+            menu.menu_type != 'B'
+        and
+            menu.del_flag = 0
+
+    </select>
+    <select id="getBMenuByRole" resultType="com.anishan.user.domain.entity.SysMenu">
+        select
+        menu.menu_id as menu_id,
+        menu_name, parent_id,
+        router, menu_type, perms,
+        icon, create_time, update_time,
+        remark
+        from (select
+        menu_id
+        from sys_role_menu
+        where role_id in
+            <foreach collection="menuIds" open="(" close=")" separator="," item="item">
+                #{item}
+            </foreach>
+        ) as menu_ids
+        left join sys_menu menu on menu.menu_id = menu_ids.menu_id
+        where
+            menu.perms != '#'
+        and
+            menu.del_flag = 0
+    </select>
 </mapper>

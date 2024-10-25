@@ -51,7 +51,7 @@ public class ClassController {
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("分页获取class")
-    public R<PagedResult<ClassVo>> listClasses(@Validated PagedQuery<SysClass> pagedQuery) {
+    public R<PagedResult<ClassVo>> listClasses(@RequestBody @Validated PagedQuery<SysClass> pagedQuery) {
         PagedResult<ClassVo> classVoPagedResult = sysClassService.listClasses(pagedQuery);
         return classVoPagedResult.toR();
     }
@@ -59,7 +59,7 @@ public class ClassController {
     @GetMapping("/query")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("查询class")
-    public R<PagedResult<ClassVo>> queryUser(@NotNull ClassPagedQuery classPagedQuery) {
+    public R<PagedResult<ClassVo>> queryUser(@RequestBody @Validated ClassPagedQuery classPagedQuery) {
 
         PagedResult<ClassVo> result = sysClassService.queryClass(classPagedQuery);
 
@@ -94,7 +94,7 @@ public class ClassController {
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('user:class:add')")
     @ApiOperation("添加class")
-    public R<Boolean> addClass(@RequestBody ClassDto classDto) {
+    public R<Boolean> addClass(@RequestBody @Validated ClassDto classDto) {
 
         try {
             sysClassService.addClass(classDto);

@@ -3,10 +3,9 @@ package com.anishan.user.service;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
-import com.anishan.user.domain.vo.CaptchaCodeVo;
-import com.anishan.user.domain.vo.LoginUserVo;
-import com.anishan.user.domain.vo.LoginVo;
-import com.anishan.user.domain.vo.AuthResultVo;
+import com.anishan.user.domain.vo.*;
+
+import java.util.List;
 
 public interface AuthenticationService {
 
@@ -49,4 +48,6 @@ public interface AuthenticationService {
     void logout(Long id);
 
     void logout();
+
+    List<MenuVo> getAuths();
 }

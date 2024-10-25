@@ -103,8 +103,17 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     }
 
     @Override
+    public List<MenuVo> getMIMenusByRole(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<SysMenu> sysMenus = sysRoleMenuService.getMIMenuIdByRole(roleIds);
+        return BeanUtil.copyToList(sysMenus, MenuVo.class);
+    }
+
+    @Override
     public List<TreedMenuVo> getTreedMenuByRole(List<Long> roleIds) {
-        HashSet<MenuVo> menuVos = new HashSet<>(getMenusByRole(roleIds));
+        HashSet<MenuVo> menuVos = new HashSet<>(getMIMenusByRole(roleIds));
 
         return buildTreeMenu(menuVos);
     }

@@ -8,6 +8,7 @@ import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
 import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.vo.MenuVo;
+import com.anishan.user.domain.vo.TreedMenuVo;
 import com.anishan.user.service.SysMenuService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,11 @@ public class MenuController {
         this.sysMenuService = sysMenuService;
     }
 
+    @GetMapping("/menus")
+    @ApiOperation("获取所有菜单，以树状的形式返回")
+    public R<List<TreedMenuVo>> menus() {
+        return R.success(sysMenuService.getTreedMenuByRole(List.of()));
+    }
 
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:menu:list')")
@@ -49,7 +55,7 @@ public class MenuController {
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:menu:list')")
     @ApiOperation("分页获取menu")
-    public R<PagedResult<MenuVo>> listMenus(@Validated PagedQuery<SysMenu> pagedQuery) {
+    public R<PagedResult<MenuVo>> listMenus(@RequestBody @Validated PagedQuery<SysMenu> pagedQuery) {
         PagedResult<MenuVo> menuVoPagedResult = sysMenuService.listMenus(pagedQuery);
         return menuVoPagedResult.toR();
     }
@@ -57,7 +63,7 @@ public class MenuController {
     @GetMapping("/query")
     @PreAuthorize("hasAuthority('user:menu:list')")
     @ApiOperation("查询menu")
-    public R<PagedResult<MenuVo>> queryUser(MenuPagedQuery menuPagedQuery) {
+    public R<PagedResult<MenuVo>> queryMenu(@RequestBody MenuPagedQuery menuPagedQuery) {
         if (menuPagedQuery == null) {
             menuPagedQuery = new MenuPagedQuery();
         }

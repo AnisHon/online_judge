@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -37,14 +38,14 @@ public class UserController {
 
     @GetMapping("/username/{username}")
     @ApiOperation("查看用户名是否可用")
-    public R<Boolean> availableUsername(@PathVariable("username") String username) {
+    public R<Boolean> availableUsername(@PathVariable("username") @NotNull String username) {
         boolean b = sysUserService.existsUsername(username);
         return R.success(!b);
     }
 
     @GetMapping("/email/{email}")
     @ApiOperation("查看邮箱是否可用")
-    public R<Boolean> availableEmail(@PathVariable("email") String email) {
+    public R<Boolean> availableEmail(@PathVariable("email") @NotNull String email) {
         boolean b = sysUserService.existsEmail(email);
         return R.success(!b);
     }

@@ -6,7 +6,6 @@ import com.anishan.commons.domain.R;
 import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.AuthenticationService;
-import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -28,21 +27,21 @@ import java.util.Objects;
 public class AuthenticationController {
 
 
-    private final SysMenuService sysMenuService;
     private final AuthenticationService authenticationService;
     private final SysUserService sysUserService;
-
-    @GetMapping("/menus")
-    @ApiOperation("获取所有菜单，以树状的形式返回")
-    public R<List<TreedMenuVo>> menus() {
-        return R.success(sysMenuService.getTreedMenuByRole(List.of()));
-    }
 
     @GetMapping("/me")
     @ApiOperation("获取用户个人信息")
     public R<LoginUserVo> me() {
         LoginUserVo me = authenticationService.me();
         return R.success(me);
+    }
+
+    @GetMapping("/auths")
+    @ApiOperation("获取用户所有的权限")
+    public R<List<MenuVo>> getAuths() {
+        List<MenuVo> auths = authenticationService.getAuths();
+        return R.success(auths);
     }
 
     @GetMapping("/logout")

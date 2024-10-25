@@ -1,6 +1,7 @@
 package com.anishan.user.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.anishan.user.domain.entity.SysMenu;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.user.domain.entity.SysRoleMenuRelation;
@@ -9,7 +10,6 @@ import com.anishan.user.mapper.SysRoleMenuMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,7 +31,7 @@ public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuMapper, SysRo
     @Override
     public List<Long> getMenuIdByRole(List<Long> roleIds) {
         if (CollectionUtil.isEmpty(roleIds)) {
-            return new ArrayList<>();
+            return List.of();
         }
         return sysRoleMenuMapper.selectObjs(
                 new LambdaQueryWrapper<SysRoleMenuRelation>()
@@ -39,6 +39,16 @@ public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuMapper, SysRo
                         .in(SysRoleMenuRelation::getRoleId, roleIds)
         );
 
+    }
+
+    @Override
+    public List<SysMenu> getMIMenuIdByRole(List<Long> roleIds) {
+        return sysRoleMenuMapper.getMIMenuByRole(roleIds);
+    }
+
+    @Override
+    public List<SysMenu> getAuthorityMenu(List<Long> roleIds) {
+        return  sysRoleMenuMapper.getBMenuByRole(roleIds);
     }
 
 }

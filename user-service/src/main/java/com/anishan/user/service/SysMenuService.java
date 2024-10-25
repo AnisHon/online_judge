@@ -24,6 +24,8 @@ public interface SysMenuService extends IService<SysMenu> {
     // 用于获取权限列表
     List<MenuVo> getMenusByRole(List<Long> roleIds);
 
+    List<MenuVo> getMIMenusByRole(List<Long> roleIds);
+
     List<TreedMenuVo> getTreedMenuByRole(List<Long> roleIds);
 
     List<String> getAuthorities(List<Long> roleIds);

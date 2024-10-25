@@ -35,7 +35,7 @@ public class TeacherController {
     @GetMapping("/list-classes")
     @ApiOperation("列出用户加入的班级")
     @PreAuthorize("hasAuthority('user:teacher:list-class')")
-    public R<PagedResult<ClassVo>> listClasses(@Validated ClassPagedQuery classPagedQuery) {
+    public R<PagedResult<ClassVo>> listClasses(@RequestBody @Validated ClassPagedQuery classPagedQuery) {
         return sysClassService.listClassOfTeacher(classPagedQuery).toR();
     }
 
@@ -43,7 +43,7 @@ public class TeacherController {
 
     @PostMapping("/list")
     @ApiOperation("列出班级内所有的学生，如果classId为null就列出所有学生")
-    public R<PagedResult<UserVo>> listStudents(@RequestBody UserPagedQuery userPagedQuery) {
+    public R<PagedResult<UserVo>> listStudents(@RequestBody @Validated UserPagedQuery userPagedQuery) {
         PagedResult<UserVo> userVoPagedResult;
 
         userVoPagedResult = sysUserService.listStudentsOfTeacher(userPagedQuery);
@@ -56,7 +56,7 @@ public class TeacherController {
     @PostMapping("/create-class")
     @ApiOperation("创建班级，如果失败msg就是原因")
     @PreAuthorize("hasAuthority('user:teacher:create-class')")
-    public R<BinaryResultOv> createClass(@RequestBody ClassDto classDto) {
+    public R<BinaryResultOv> createClass(@RequestBody @Validated ClassDto classDto) {
         try {
             boolean b = sysClassService.createClass(classDto);
             return BinaryResultOv.ternary(b, "创建成功", "失败原因未知").tOvR();
@@ -70,7 +70,7 @@ public class TeacherController {
     @GetMapping("/rm-class/{classId}")
     @ApiOperation("删除班级，如果失败msg就是原因")
     @PreAuthorize("hasAuthority('user:teacher:remove-class')")
-    public R<BinaryResultOv> removeClass(@PathVariable("classId") Long classId) {
+    public R<BinaryResultOv> removeClass(@PathVariable("classId") @Validated Long classId) {
         boolean b = sysClassService.removeById(classId);
         return BinaryResultOv.ternary(b, "删除成功", "删除失败，班级不存在").tOvR();
     }

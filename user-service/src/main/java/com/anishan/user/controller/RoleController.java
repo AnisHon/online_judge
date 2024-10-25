@@ -49,7 +49,7 @@ public class RoleController {
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:role:list')")
     @ApiOperation("分页获取role")
-    public R<PagedResult<RoleVo>> listRoles(@Validated PagedQuery<SysRole> pagedQuery) {
+    public R<PagedResult<RoleVo>> listRoles(@RequestBody @Validated PagedQuery<SysRole> pagedQuery) {
         PagedResult<RoleVo> roleVoPagedResult = sysRoleService.listRolesByPage(pagedQuery);
         return roleVoPagedResult.toR();
     }
@@ -57,7 +57,7 @@ public class RoleController {
     @GetMapping("/query")
     @PreAuthorize("hasAuthority('user:role:list')")
     @ApiOperation("查询role")
-    public R<PagedResult<RoleVo>> queryUser(RolePagedQuery rolePagedQuery) {
+    public R<PagedResult<RoleVo>> queryUser(@RequestBody @Validated  RolePagedQuery rolePagedQuery) {
         if (rolePagedQuery == null) {
             rolePagedQuery = new RolePagedQuery();
         }

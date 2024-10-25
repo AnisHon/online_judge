@@ -9,10 +9,7 @@ import com.anishan.user.service.SysClassService;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/student")
@@ -47,7 +44,7 @@ public class StudentController {
     // my class
     @GetMapping("/list-classes")
     @ApiOperation("列出用户加入的班级")
-    public R<PagedResult<ClassVo>> listClasses(@Validated ClassPagedQuery classPagedQuery) {
+    public R<PagedResult<ClassVo>> listClasses(@RequestBody @Validated ClassPagedQuery classPagedQuery) {
         return classService.listClassOfUser(classPagedQuery).toR();
     }
 

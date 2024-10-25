@@ -9,11 +9,13 @@ import com.anishan.commons.e.UserState;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
+import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.*;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.user.util.EmailSender;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -28,10 +30,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 // todo
 @Slf4j
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final SysUserService sysUserService;
@@ -42,29 +46,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final SysRoleService sysRoleService;
+    private final SysRoleMenuService sysRoleMenuService;
     // 默认就是student
     private static final Long DEFAULT_ROLE_ID = 1L;
 
-    @Autowired
-    public AuthenticationServiceImpl(
-            SysUserService sysUserService,
-            SysUserRoleService sysUserRoleService,
-            SysMenuService sysMenuService,
-            RedisTemplate<String, Object> redisTemplate,
-            StringRedisTemplate stringRedisTemplate,
-            PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager,
-            SysRoleService sysRoleService
-    ) {
-        this.sysUserService = sysUserService;
-        this.sysUserRoleService = sysUserRoleService;
-        this.sysMenuService = sysMenuService;
-        this.redisTemplate = redisTemplate;
-        this.stringRedisTemplate = stringRedisTemplate;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.sysRoleService = sysRoleService;
-    }
 
     @Override
     public LoginUserVo me() {
@@ -384,6 +369,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void logout() {
         Long userId = me().getUserId();
         logout(userId);
+    }
+
+    @Override
+    public List<MenuVo> getAuths() {
+        Long userId = myId();
+        List<Long> roleIds = sysUserRoleService
+                .getRolesByUserId(userId)
+                .stream()
+                .map(SysRole::getRoleId)
+                .collect(Collectors.toList());
+        List<SysMenu> authorityMenu = sysRoleMenuService.getAuthorityMenu(roleIds);
+
+        return BeanUtil.copyToList(authorityMenu, MenuVo.class);
     }
 
 

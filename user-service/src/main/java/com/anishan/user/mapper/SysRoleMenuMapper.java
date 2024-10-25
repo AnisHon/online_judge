@@ -1,7 +1,11 @@
 package com.anishan.user.mapper;
 
+import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import java.awt.*;
+import java.util.List;
 
 /**
 * @author anishan
@@ -11,6 +15,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface SysRoleMenuMapper extends BaseMapper<SysRoleMenuRelation> {
 
+    List<SysMenu> getMIMenuByRole(List<Long> menuIds);
+
+    List<SysMenu> getBMenuByRole(List<Long> menuIds);
 }
 
 

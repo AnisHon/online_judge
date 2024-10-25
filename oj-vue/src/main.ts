@@ -1,5 +1,4 @@
 import '@/assets/common.css'
-import '@/assets/variables.scss'
 import 'normalize.css'
 import 'element-plus/dist/index.css'
 
