@@ -1,15 +1,14 @@
-import {createRouter, createWebHistory, type RouteLocationNormalizedGeneric} from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 import Index from "@/views/system/Index.vue";
 import Layout from "@/Layout.vue";
 import Forbidden from "@/views/error/Forbidden.vue";
 import NotFound from "@/views/error/NotFound.vue";
 import {useMenuStore} from "@/stores/useMenuStore";
-import {addDynamics, type RouterType} from "@/router/dynamic";
+import {addDynamics} from "@/router/dynamic";
 
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import {useToken} from "@/stores/useToken";
-import __ from  'lodash';
 
 // index不是home
 // index不是home

@@ -1,5 +1,5 @@
 import {MenuType, type MenuView, type TreedMenu} from "@/api/auth/menu";
-import {dynamicConst, type RouterType} from "@/router/dynamic";
+import {type RouterType} from "@/router/dynamic";
 import __ from 'lodash';
 
 const flattenMenuTree = (treedMenu: TreedMenu[]): MenuView[] => {
