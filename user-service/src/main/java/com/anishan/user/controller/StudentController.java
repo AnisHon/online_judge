@@ -8,22 +8,18 @@ import com.anishan.user.domain.vo.ClassVo;
 import com.anishan.user.service.SysClassService;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.ApiOperation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @RestController
 @RequestMapping("/student")
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class StudentController {
 
-    private final SysUserService sysUserService;
     private final SysClassService classService;
-    public StudentController(
-            SysUserService sysUserService,
-            SysClassService classService
-    ) {
-        this.sysUserService = sysUserService;
-        this.classService = classService;
-    }
 
 
 

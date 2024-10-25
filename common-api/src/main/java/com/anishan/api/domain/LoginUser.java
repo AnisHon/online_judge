@@ -2,7 +2,6 @@ package com.anishan.api.domain;
 
 import com.anishan.commons.e.UserState;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
