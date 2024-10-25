@@ -48,14 +48,7 @@ service.interceptors.response.use(
         if (response.status === 200) {
             return response.data;
         }
-
-        if (response.data.code == 401) {
-            error401();
-        } else if (response.data.code == 400) {
-            ElMessage.error(response.data.message);
-        } else {
-            ElMessage.error(response.data.code + ":" + response.data.message);
-        }
+        ElMessage.error(response.data.code + ":" + response.data.message);
         return Promise.reject(new Error(response.data.message));
     },
     error => {
@@ -66,9 +59,13 @@ service.interceptors.response.use(
         } else {
             message = '网络错误，请稍后再试';
         }
-        // 可以在这里添加全局错误提示
-        console.error(message);
-        return Promise.reject(new Error(message));
+        const data = error.response.data;
+        if (data.code == 401) {
+            error401();
+        } else if (data.code == 400) {
+            ElMessage.error(error.message);
+        }
+        return Promise.reject(data);
     }
 );
 
@@ -82,7 +79,7 @@ const failHandler = <T>(result: ResultPromise<T>, handle: typeof defaultFail) =>
 }
 
 // 封装的 GET 和 POST 方法
-const get = <R, T>(url: string, params: T | undefined = undefined): ResultPromise<R> => {
+const get = <R, T = any>(url: string, params: T | undefined = undefined): ResultPromise<R> => {
     if (params) {
         url = url + '/' + params.toString();
     }
