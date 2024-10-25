@@ -112,9 +112,9 @@ create table sys_menu (
 ) engine=innodb auto_increment=2000 comment = '菜单权限表';
 
 # 一级菜单
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1, '题目模块', 1, 0, '#', 'M', '#', 'Files');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (2, '用户模块', 2, 0, '#', 'M', '#', 'UserFilled');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (3, '教师功能', 0, 0, '#', 'M', '#', 'Notebook');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1, '题目模块', 1, 0, 'problem-module', 'M', '#', 'Files');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (2, '用户模块', 2, 0, 'user-module', 'M', '#', 'UserFilled');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (3, '教师功能', 0, 0, 'teacher', 'M', '#', 'Notebook');
 
 # 二集菜单
 # menu_id 1 题目模块

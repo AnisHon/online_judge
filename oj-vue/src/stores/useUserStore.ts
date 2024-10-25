@@ -16,8 +16,8 @@ export interface LoginUser {
 export const useUser = defineStore('user', () => {
     const user =  ref<LoginUser | null>(null)
 
-    const loadUser = () => {
-         user.value = getMe()
+    const loadUser = async () => {
+        user.value = await getMe()
     }
     const getAuths = (): string[] => {
         if (!user) {
@@ -28,6 +28,7 @@ export const useUser = defineStore('user', () => {
 
     return {
         user,
-        loadUser
+        loadUser,
+        getAuths,
     }
 });

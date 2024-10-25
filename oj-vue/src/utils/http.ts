@@ -15,9 +15,10 @@ type failCallback = (msg: string, code: number) => void;
 type finallyCallback = () => void;
 type ResultPromise<T> = Promise<AjaxResult<T>>;
 
-const token = useToken();
+
 
 const error401 = () => {
+    const token = useToken();
     const router = useRouter()
     token.clearToken();
     ElMessage.warning("令牌过期，请重新登录");
@@ -33,6 +34,7 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
     config => {
+        const token = useToken();
         config.headers.set('token', token.token)
         return config;
     },

@@ -4,6 +4,10 @@
   </div>
 </template>
 <script setup lang="ts">
+import {useMenuStore} from "@/stores/useMenuStore";
+
+// const menu = useMenuStore();
+// menu.getDynamicRouters()
 </script>
 
 <style scoped>

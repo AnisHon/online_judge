@@ -1,8 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import {createRouter, createWebHistory, type RouteLocationNormalizedGeneric} from 'vue-router'
 import Index from "@/views/system/Index.vue";
 import Layout from "@/Layout.vue";
 import Forbidden from "@/views/error/Forbidden.vue";
 import NotFound from "@/views/error/NotFound.vue";
+import {useMenuStore} from "@/stores/useMenuStore";
+import {addDynamics, type RouterType} from "@/router/dynamic";
+
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+import {useToken} from "@/stores/useToken";
+import __ from  'lodash';
+
 // index不是home
 // index不是home
 // index不是home
@@ -57,7 +65,7 @@ export const constRoutes =  [
         component: () => import('@/views/system/problem/ProblemDetail.vue')
       }
     ],
-    mate: {
+    meta: {
       requireAuth: true,
       name: "主页"
     }
@@ -65,33 +73,65 @@ export const constRoutes =  [
 
   {
     path: '/403',
+    name: '403',
     component: Forbidden
   },
   {
     path: '/*',
+    name: '404',
     component: NotFound
   },
 
 
-]
+];
 
-// 动态路由
-export const dynamicRoute = [
-  {
-    path: '',
-    component: Layout,
-    name: 'container',
-    redirect: "/index",
-    mate: {
-      requireAuth: true,
-      name: "主页"
-    }
-  },
-]
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: constRoutes
-})
+});
 
-export default router
+
+router.beforeEach((to, from, next) => {
+
+  NProgress.start()
+
+  const needLogin = to.matched.some((v) => v.meta.requireAuth);
+
+  const menu = useMenuStore()
+  const token = useToken();
+  if (token.hasToken()) {
+    // 已经登陆
+    if (!menu.isDynamicReady()) {
+      menu.getDynamicRouters().then((data) => {
+        addDynamics(data, router)
+        next(to.path)
+      });
+    } else {
+
+
+      if (!needLogin) {
+
+        next({name: 'index'})
+      } else {
+        next();
+      }
+    }
+
+  } else {
+    if (needLogin) {
+    //   需要登录
+      router.replace({name: 'login'});
+    } else {
+      next();
+    }
+  }
+
+});
+
+router.afterEach(() => {
+  NProgress.done();
+});
+
+export default router;

@@ -276,7 +276,7 @@ onMounted(() => {
 
 onMounted(() => {
 
-  const debounceFunc = debounce(getHeight, 100);
+  const debounceFunc = debounce(getHeight, 100, false);
   window.onresize = () => {
     debounceFunc()
   }

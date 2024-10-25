@@ -6,10 +6,10 @@
       <el-header style="padding: 0; height: var(--menu-height);">
         <MenuBar/>
       </el-header>
-      <el-main style="box-sizing: border-box; height: var(--content-height);">
+      <el-main id="main-box" style="box-sizing: border-box; height: var(--content-height);">
         <div>
-          <router-view>
-
+          <router-view v-slot="{Component}">
+              <component :is="Component" />
           </router-view>
         </div>
 
