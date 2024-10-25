@@ -12,6 +12,7 @@
           alt="Element logo"
       />
     </el-menu-item>
+
     <el-menu-item index="home">
       <template #title><span>首页</span></template>
     </el-menu-item>
@@ -27,11 +28,13 @@
     <el-menu-item index="homework">
       <template #title><span>作业</span></template>
     </el-menu-item>
+
     <sub-form-item v-for="item of routers" :router="item"/>
-    <el-sub-menu index="">
-      <template #title><el-icon><Setting /></el-icon><span>用户</span></template>
-      <el-menu-item index="logout">
-        <template #title><el-icon><CloseBold /></el-icon><span>登出</span></template>
+
+    <el-sub-menu index="" class="user-options">
+      <template #title><el-icon><Setting/></el-icon>用户</template>
+      <el-menu-item index="$logout">
+        <template #title><el-icon><CloseBold/></el-icon>退出登录</template>
       </el-menu-item>
     </el-sub-menu>
 
@@ -41,13 +44,21 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import {useMenuStore} from "@/stores/useMenuStore";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import type {RouterType} from "@/router/dynamic";
 import SubFormItem from "@/components/menu/SubFormItem.vue";
+import {CloseBold, Setting} from "@element-plus/icons-vue";
+import {logout} from "@/api/auth/authentication";
+
 
 const router = useRouter();
-const activeIndex = ref('index')
+const route = useRoute();
+const activeIndex = ref(route.name)
 const handleSelect = (key: string) => {
+  if ('$logout' === key) {
+    logout()
+    return
+  }
   router.push({name: key});
 }
 
@@ -66,3 +77,18 @@ menu.getDynamicRouters()
 
 
 </script>
+
+<style>
+.el-menu--horizontal {
+  position: relative;
+  width: 100%;
+}
+.el-menu--horizontal > .user-options {
+  position: absolute;
+  right: 0;
+}
+.el-menu--horizontal > .el-menu-item {
+  padding: 0 30px;
+}
+
+</style>

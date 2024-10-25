@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory} from 'vue-router'
+import {createRouter, createWebHistory, type NavigationGuardNext} from 'vue-router'
 import Index from "@/views/system/Index.vue";
 import Layout from "@/Layout.vue";
 import Forbidden from "@/views/error/Forbidden.vue";
@@ -9,6 +9,8 @@ import {addDynamics} from "@/router/dynamic";
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import {useToken} from "@/stores/useToken";
+import Home from "@/views/Home.vue";
+import __ from "lodash";
 
 // index不是home
 // index不是home
@@ -43,12 +45,12 @@ export const constRoutes =  [
     path: '',
     component: Layout,
     name: 'container',
-    redirect: "index",
+    redirect: "home",
     children: [
       {
-        path: "index",
-        name: "index",
-        component: Index,
+        path: "home",
+        name: "home",
+        component: Home,
       },
       {
         path: "problems",
@@ -62,23 +64,52 @@ export const constRoutes =  [
         path: "problem/:id",
         name: "problem",
         component: () => import('@/views/system/problem/ProblemDetail.vue')
-      }
+      },
+      {
+        path: "contest",
+        name: "contest",
+        component: () => import('@/views/contest/Contest.vue'),
+      },
+      {
+        path: "list",
+        name: "list",
+        component: () => import('@/views/list/List.vue'),
+      },
+      {
+        path: "homework",
+        name: "homework",
+        component: () => import('@/views/homework/Homework.vue'),
+      },
     ],
     meta: {
       requireAuth: true,
       name: "主页"
     }
   },
+  {
+    path: "/index",
+    home: "index",
+    component: Index,
+    meta: {
+      isLoginAccess: true,
+    }
+  },
 
   {
     path: '/403',
     name: '403',
-    component: Forbidden
+    component: Forbidden,
+    meta: {
+      isLoginAccess: true,
+    }
   },
   {
-    path: '/*',
+    path: '/404',
     name: '404',
-    component: NotFound
+    component: NotFound,
+    meta: {
+      isLoginAccess: true,
+    }
   },
 
 
@@ -91,37 +122,41 @@ const router = createRouter({
   routes: constRoutes
 });
 
+const loginGuard = (isMatched: boolean, needLogin: boolean, isLoginAccess: boolean, next: NavigationGuardNext) => {
+  if (!isMatched) {
+    next({name: '404', replace: true})
+  } else if (!needLogin && !isLoginAccess) {
+    next({name: '403', replace: true})
+  } else {
+    next()
+  }
+}
 
 router.beforeEach((to, from, next) => {
 
   NProgress.start()
-
   const needLogin = to.matched.some((v) => v.meta.requireAuth);
+  const isLoginAccess = to.matched.some(v => v.meta.isLoginAccess);
+  const isMatched = !__.isEmpty(to.matched)
 
   const menu = useMenuStore()
   const token = useToken();
+
   if (token.hasToken()) {
     // 已经登陆
     if (!menu.isDynamicReady()) {
       menu.getDynamicRouters().then((data) => {
         addDynamics(data, router)
-        next(to.path)
+        next({ ...to, replace: true })
       });
     } else {
-
-
-      if (!needLogin) {
-
-        next({name: 'index'})
-      } else {
-        next();
-      }
+      loginGuard(isMatched, needLogin, isLoginAccess, next);
     }
 
   } else {
     if (needLogin) {
     //   需要登录
-      router.replace({name: 'login'});
+      next({name: 'login', replace: true});
     } else {
       next();
     }

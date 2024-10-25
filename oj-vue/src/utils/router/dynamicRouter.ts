@@ -14,8 +14,14 @@ const flattenMenuTree = (treedMenu: TreedMenu[]): MenuView[] => {
     return result;
 }
 
-const setDefault = () => {
-
+const setDefault = (constRouter: RouterType[]) => {
+    constRouter.forEach((v) => {
+        if (!__.isEmpty(v.children)) {
+            const array = (<RouterType[]>v.children);
+            v.redirect = {name: array[0].name};
+            setDefault(array);
+        }
+    })
 }
 
 
@@ -48,5 +54,6 @@ const getDynamicRecursion = (constRouter: RouterType[], flattenMenu: MenuView[])
 
 export {
     flattenMenuTree,
-    getDynamicRecursion
+    getDynamicRecursion,
+    setDefault
 }

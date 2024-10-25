@@ -45,7 +45,7 @@
         </el-space>
       </el-col>
       <el-col :span="6">
-        <el-link @click="handleChooseTag" >选择标签</el-link>
+        <el-link @click="handleChooseTag" type="primary">选择标签</el-link>
       </el-col>
     </el-row>
     <el-dialog v-model="tagDialogVisible" title="选择ID">

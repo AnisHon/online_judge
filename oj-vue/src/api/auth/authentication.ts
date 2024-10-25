@@ -1,7 +1,10 @@
 import {get, post} from '@/utils/http'
 import {type LoginUser} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
-
+import {useRoute, useRouter} from "vue-router";
+import router from '@/router'
+import {addDynamics} from "@/router/dynamic";
+import {useMenuStore} from "@/stores/useMenuStore";
 
 export interface LoginForm {
     captchaCode: string;
@@ -51,21 +54,34 @@ async function getMe(): Promise<LoginUser> {
     return data;
 }
 
+const toHome = () => {
+    const menu = useMenuStore();
+    menu.getDynamicRouters().then((data) => {
+        addDynamics(data, router)
+        router.replace({name: "home"});
+    });
+}
+
 async function login(data: LoginForm) {
     const {data: {message, success, token}} = await post<LoginForm, LoginResponse>('/user-api/auth/login', data);
     const tokenStore = useToken();
+
     if (success) {
         tokenStore.setToken(token);
+        toHome()
     } else {
         throw message;
     }
 }
+
+
 
 async function signUp(data: SignUpForm) {
     const {data: {message, success, token}} = await post<SignUpForm, LoginResponse>('/user-api/auth/registration', data);
     const tokenStore = useToken();
     if (success) {
         tokenStore.setToken(token);
+        toHome()
     } else {
         throw message;
     }
@@ -81,7 +97,13 @@ async function forgetPassword(data: ForgetPasswordForm) {
 }
 
 async function logout() {
-    // todo
+    get("/user-api/auth/logout");
+    // const router = useRouter();
+
+
+    useToken().clearToken();
+    useMenuStore().clear();
+    router.replace({name: "login"});
 }
 
 export {

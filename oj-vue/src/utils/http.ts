@@ -22,7 +22,7 @@ const error401 = () => {
     const router = useRouter()
     token.clearToken();
     ElMessage.warning("令牌过期，请重新登录");
-    router.replace('/auth/login');
+    router.replace({name: 'auth'});
 
 };
 

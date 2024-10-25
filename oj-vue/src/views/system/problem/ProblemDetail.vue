@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="problemIsLoading">
     <transition name="el-zoom-in-top">
       <el-row justify="center" v-if="problem !== undefined" :gutter="20">
         <el-col class="problem-content common-max-width-page" ref="contentRef" :span="12" v-show="!isFullScreen">
@@ -97,7 +97,7 @@
 <script setup lang="ts">
 import {getDetailProblem, type OjProblemView, type ProblemDetailView, ProblemType,} from "@/api/problem";
 import {useRoute} from "vue-router";
-import {computed, onMounted, onUnmounted, reactive, ref} from "vue";
+import {computed, onBeforeMount, onMounted, onUnmounted, reactive, ref} from "vue";
 import EnhancedCodeEditor from './EnhancedCodeEdior/index.vue'
 import OnlineJudgeProblem from "@/views/system/problem/OnlineJudgeProblem.vue";
 import FillBlankProblem from "@/views/system/problem/FillBlank.vue";
@@ -120,6 +120,8 @@ const isFullScreen = ref(false)
 const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 
 const {loading, finish, isLoading} = useLoading()
+
+const {loading: loadingProblem, finish: finishLoadingProblem, isLoading: problemIsLoading} = useLoading()
 
 const problemId = computed(() => {
   return  parseInt(<string>route.params.id)
@@ -266,11 +268,13 @@ const getHeight = () => {
 
 
 
-onMounted(() => {
+onBeforeMount(() => {
+  loadingProblem()
   getDetailProblem(problemId.value)
       .then((detailProblem: ProblemDetailView) => {
+
         problem.value = detailProblem;
-      })
+      }).finally(finishLoadingProblem);
 
 });
 

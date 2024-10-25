@@ -3,13 +3,13 @@ import {getTreedMenu, type MenuView, type TreedMenu} from "@/api/auth/menu";
 import {getAuth} from "@/api/auth/menu"
 import {ref} from "vue";
 import __ from "lodash";
-import {flattenMenuTree, getDynamicRecursion} from "@/utils/router/dynamicRouter";
+import {flattenMenuTree, getDynamicRecursion, setDefault} from "@/utils/router/dynamicRouter";
 import {dynamicConst, type RouterType} from "@/router/dynamic";
 
 export const useMenuStore = defineStore('menuStore', () => {
     const auths = ref<MenuView[]>();
     const menuTrees = ref<TreedMenu[]>();
-    const dynamicRouters = ref<RouterType[]>([])
+    const dynamicRouters = ref<RouterType[]>()
 
     const exist = (): boolean => {
         return __.has(auths, 'value');
@@ -37,7 +37,7 @@ export const useMenuStore = defineStore('menuStore', () => {
     }
 
     const isDynamicReady = () => {
-        return !__.isEmpty(dynamicRouters.value);
+        return !__.isUndefined(dynamicRouters.value);
     }
 
     const getDynamicRouters = async () => {
@@ -46,10 +46,17 @@ export const useMenuStore = defineStore('menuStore', () => {
 
         if (!isDynamicReady()) {
             const dynamicRecursion = getDynamicRecursion(<RouterType[]>routers, flatten);
-            dynamicRouters.value.push(...dynamicRecursion);
+            setDefault(dynamicRecursion);
+            dynamicRouters.value = dynamicRecursion;
         }
 
-        return dynamicRouters.value;
+        return <RouterType[]>dynamicRouters.value;
+    }
+
+    const clear = () => {
+        auths.value = undefined;
+        menuTrees.value = undefined;
+        dynamicRouters.value = undefined;
     }
 
     return  {
@@ -57,7 +64,8 @@ export const useMenuStore = defineStore('menuStore', () => {
         getTreedMenu,
         getFlatten,
         getDynamicRouters,
-        isDynamicReady
+        isDynamicReady,
+        clear
     }
 
 }, {persist: false})

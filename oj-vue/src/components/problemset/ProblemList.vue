@@ -43,7 +43,7 @@
         <el-table-column prop="id" label="题目ID" />
         <el-table-column prop="title" label="题目名称">
           <template #default="scope">
-            <router-link :to="{name: 'problem', params: {id: scope.row.id}}" class="router-link">{{ scope.row.title }}</router-link>
+            <router-link target="_blank" :to="{name: 'problem', params: {id: scope.row.id}}" class="router-link">{{ scope.row.title }}</router-link>
           </template>
         </el-table-column>
         <el-table-column prop="author" label="标签">

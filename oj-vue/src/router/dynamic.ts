@@ -28,7 +28,7 @@ interface RouterType {
     path: string;
     name: string;
     component: any;
-    redirect?: string;
+    redirect?: string | object;
     meta: MetaType;
     children?: RouterType[];
 }
