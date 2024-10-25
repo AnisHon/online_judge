@@ -6,64 +6,69 @@
       :model="signUpForm"
       status-icon
       :rules="rules"
-      label-width="auto"
       :aria-autocomplete="false"
   >
     <el-form-item>
       <h1 style="margin: 0; color: #303133; text-align: center; width: 100%;">注册</h1>
     </el-form-item>
 
-    <el-form-item label="用户名" prop="username">
+    <el-form-item prop="username">
       <el-input
           v-model="signUpForm.username"
           type="text"
           autocomplete="off"
           placeholder="请输入用户名"
+          prefix-icon="UserFilled"
       />
     </el-form-item>
 
-    <el-form-item label="昵称" prop="nikeName">
+    <el-form-item prop="nikeName">
       <el-input
           v-model="signUpForm.nikeName"
           type="text"
           autocomplete="off"
           placeholder="请输入昵称"
+          prefix-icon="User"
       />
     </el-form-item>
-    <el-form-item label="邮箱" prop="email">
+    <el-form-item prop="email">
       <el-input
           v-model="signUpForm.email"
           type="text"
           autocomplete="off"
           placeholder="请输入邮箱"
+          :prefix-icon="IconEmail"
       />
     </el-form-item>
-    <el-form-item label="密码" prop="password">
+    <el-form-item prop="password">
       <el-input
           v-model="signUpForm.password"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
+          prefix-icon="Lock"
       />
     </el-form-item>
 
-    <el-form-item label="确认密码" prop="repeatPassword">
+    <el-form-item prop="repeatPassword">
       <el-input
           v-model="signUpForm.repeatPassword"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
+          prefix-icon="Lock"
       />
     </el-form-item>
 
     <el-row justify="space-between" style="width: 100%;">
       <el-col :span="14" >
-        <el-form-item label="验证码" prop="captchaCode">
+        <el-form-item prop="captchaCode">
           <el-input
               v-model="signUpForm.captchaCode"
               type="text"
               autocomplete="off"
               placeholder="请输入验证码"
+              :prefix-icon="IconCaptcha"
           />
         </el-form-item>
       </el-col>
@@ -83,12 +88,13 @@
 
     <el-row justify="space-between" style="width: 100%;">
       <el-col :span="14" >
-        <el-form-item label="邮箱验证码" prop="emailCode">
+        <el-form-item prop="emailCode">
           <el-input
               v-model="signUpForm.emailCode"
               type="text"
               autocomplete="off"
-              placeholder="请输入验证码"
+              placeholder="请输入邮箱验证码"
+              :prefix-icon="IconCaptcha"
           />
         </el-form-item>
       </el-col>
@@ -128,6 +134,8 @@ import {type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode'
 import getEmailCode from '@/api/auth/emailCode'
 import {signUp, checkAvailableUsername, checkAvailableEmail} from "@/api/auth/authentication"
+import IconEmail from "@/assets/icons/IconEmail.vue";
+import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
 
 
 const emailRe = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/

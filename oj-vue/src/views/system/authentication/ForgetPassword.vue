@@ -6,7 +6,6 @@
       :model="forgetPasswordForm"
       status-icon
       :rules="rules"
-      label-width="auto"
       :aria-autocomplete="false"
   >
     <el-form-item>
@@ -19,6 +18,7 @@
           type="text"
           autocomplete="off"
           placeholder="请输入用户名或邮箱"
+          prefix-icon="UserFilled"
       />
     </el-form-item>
 
@@ -28,6 +28,7 @@
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
+          prefix-icon="Lock"
       />
     </el-form-item>
 
@@ -37,6 +38,7 @@
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
+          prefix-icon="Lock"
       />
     </el-form-item>
 
@@ -48,6 +50,7 @@
               type="text"
               autocomplete="off"
               placeholder="请输入验证码"
+              :prefix-icon="IconCaptcha"
           />
         </el-form-item>
       </el-col>
@@ -73,6 +76,7 @@
               type="text"
               autocomplete="off"
               placeholder="请输入验证码"
+              :prefix-icon="IconCaptcha"
           />
         </el-form-item>
       </el-col>
@@ -112,6 +116,7 @@ import {type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode'
 import {forgetPassword} from "@/api/auth/authentication"
 import {sendForgetEmailCode} from "@/api/auth/emailCode";
+import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
