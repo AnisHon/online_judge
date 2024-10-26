@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -67,6 +68,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     public UserVo getUserById(Long id) {
         SysUser sysUser = this.getById(id);
         return BeanUtil.copyProperties(sysUser, UserVo.class);
+    }
+
+    @Override
+    public boolean addPoint(Long userId, BigDecimal point) {
+        return sysUserMapper.addPoints(userId, point) > 0;
     }
 
     @Override

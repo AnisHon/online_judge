@@ -15,6 +15,7 @@ create table sys_user (
     nike_name   varchar(32)            not null                 comment '昵称,不唯一',
     password    varchar(255)           not null                 comment '用户密码-加密',
     status      boolean  default 0     not null                 comment '状态(1封禁, 0正常)',
+    points      Decimal(8, 2) default 0 not null                comment '用户积分',
     create_time datetime default now() not null                 comment '创建时间',
     update_time datetime default now() not null                 comment '最新更新时间用于乐观锁',
     del_flag    boolean  default 0     not null                 comment '删除标记(1删除, 0没删除)',
@@ -241,12 +242,22 @@ insert into sys_role_menu(role_id, menu_id)
             menu_id not in (select menu_id from sys_role_menu where role_id = 2)
           and
             menu_id not in (220, 221, 222, 223, 230, 231, 232, 233, 22, 23)
-    )
+    );
 
 
 
-
-
-
+-- ----------------------------
+-- 9、角色和菜单关联表  角色1-N菜单
+-- ----------------------------
+drop table if exists user_check_in;
+create table user_check_in (
+    id              bigint auto_increment comment '主键ID' primary key,
+    user_id         bigint                 not null comment '用户ID',
+    reward_point    decimal(8, 2)          not null comment '奖励积分个数',
+    sign_time       date                   not null,
+    `current_time`  datetime default now() not null comment '签到当时时间',
+    continuity_days int                    not null comment '连续签到天数',
+    unique (user_id, sign_time)
+) engine=innodb comment = '签到记录表';
 
 

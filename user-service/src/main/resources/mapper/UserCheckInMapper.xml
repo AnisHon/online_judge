@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.user.mapper.UserCheckInMapper">
+
+    <resultMap id="BaseResultMap" type="com.anishan.user.domain.entity.UserCheckIn">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="rewardPoint" column="reward_point" jdbcType="DECIMAL"/>
+            <result property="signTime" column="sign_time" jdbcType="DATE"/>
+            <result property="continuityDays" column="continuity_days" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,reward_point,
+        sign_time,continuity_days
+    </sql>
+</mapper>

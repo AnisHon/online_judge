@@ -7,9 +7,9 @@ import com.anishan.api.exception.IllegalTokenException;
 import com.anishan.api.util.JwtUtil;
 import com.anishan.commons.domain.R;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -22,15 +22,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor(onConstructor_ = {@Autowired})
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
 
-    RedisTemplate<String, Object> redisTemplate;
-
-    @Autowired
-    public void setRedisTemplate(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
+    private final AuthUtil authUtil;
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = request.getHeader("token");
@@ -41,11 +37,11 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         Long userId = JwtUtil.parseJwt(token);
 
-        if (!AuthUtil.isUserExisted(redisTemplate, userId)) {
+        if (!authUtil.isUserExisted(userId)) {
             throw new IllegalTokenException("令牌过期");
         }
 
-        LoginUser loginUser = AuthUtil.getLoginUser(redisTemplate, userId);
+        LoginUser loginUser = authUtil.getLoginUser(userId);
 
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                 new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());

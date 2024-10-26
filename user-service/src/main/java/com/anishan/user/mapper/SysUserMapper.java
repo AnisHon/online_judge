@@ -4,7 +4,9 @@ import com.anishan.api.domain.SysUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -20,6 +22,9 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
             @Param("teacherId") Long teacherId,
             @Param("currentPage") Long currentPage,
             @Param("pageSize") Long pageSize);
+
+    @Update("update sys_user set points = points + #{points} where user_id = #{userId}")
+    int addPoints(@Param("userId") Long userId, @Param("points") BigDecimal points);
 }
 
 

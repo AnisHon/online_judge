@@ -9,6 +9,7 @@ import com.anishan.api.domain.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.anishan.user.domain.vo.UserVo;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -19,6 +20,8 @@ import java.util.List;
 public interface SysUserService extends IService<SysUser> {
 
     UserVo getUserById(Long id);
+
+    boolean addPoint(Long userId, BigDecimal point);
 
     List<UserVo> listUserById(List<String> ids);
 
