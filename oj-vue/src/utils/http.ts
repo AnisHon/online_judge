@@ -2,7 +2,7 @@ import axios from 'axios';
 import {useToken} from "@/stores/useToken";
 import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
-
+import router from "@/router"
 export interface AjaxResult<T> {
     code: number;
     message: string;
@@ -19,10 +19,9 @@ type ResultPromise<T> = Promise<AjaxResult<T>>;
 
 const error401 = () => {
     const token = useToken();
-    const router = useRouter()
     token.clearToken();
     ElMessage.warning("令牌过期，请重新登录");
-    router.replace({name: 'auth'});
+    router.replace({name: 'login'});
 
 };
 

@@ -13,15 +13,26 @@ function debounce(func: Function, wait: number, loadingStatue: boolean = true) {
     let timeout: number = wait;
     return function() {
         if (loadingStatue) {
-            NProgress.start();
+            try {
+                NProgress.start();
+            } catch (e) {
+                console.log(e)
+            }
+
         }
 
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-            if (loadingStatue) {
-                NProgress.done();
-            }
             func();
+            if (loadingStatue) {
+                try {
+                    NProgress.done();
+                } catch (e) {
+                    console.log(e)
+                }
+
+            }
+
         }, wait)
     };
 }

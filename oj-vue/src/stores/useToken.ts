@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia';
-import {useUser} from '@/stores/useUserStore';
+import {useUserStore} from '@/stores/useUserStore';
 import __ from 'lodash';
 
 
@@ -12,7 +12,7 @@ export const useToken = defineStore('token', {
     },
     actions: {
         setToken(token_: string) {
-            const user = useUser();
+            const user = useUserStore();
             this.token = token_;
 
             user.loadUser();
