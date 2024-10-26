@@ -28,11 +28,14 @@
     <el-menu-item index="homework">
       <template #title><span>作业</span></template>
     </el-menu-item>
+    <el-menu-item index="check-in">
+      <template #title><span>每日签到</span></template>
+    </el-menu-item>
 
     <sub-form-item v-for="item of routers" :router="item"/>
 
     <el-sub-menu index="" class="user-options">
-      <template #title><el-icon><Setting/></el-icon>用户</template>
+      <template #title><el-icon><Setting/></el-icon>您好，<strong>{{ nikeName }}</strong></template>
       <el-menu-item index="$logout">
         <template #title><el-icon><CloseBold/></el-icon>退出登录</template>
       </el-menu-item>
@@ -49,11 +52,14 @@ import type {RouterType} from "@/router/dynamic";
 import SubFormItem from "@/components/menu/SubFormItem.vue";
 import {CloseBold, Setting} from "@element-plus/icons-vue";
 import {logout} from "@/api/auth/authentication";
+import {useUserStore} from "@/stores/useUserStore";
 
 
 const router = useRouter();
 const route = useRoute();
 const activeIndex = ref(route.name)
+const user = useUserStore()
+const nikeName = ref("");
 const handleSelect = (key: string) => {
   if ('$logout' === key) {
     logout()
@@ -73,7 +79,7 @@ menu.getDynamicRouters()
       })
     });
 
-
+user.getUser().then((data) => {nikeName.value = data.nikeName})
 
 
 </script>
