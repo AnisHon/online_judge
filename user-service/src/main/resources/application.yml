@@ -10,3 +10,9 @@ oj:
   knife4j:
     resource: com.anishan.user
 
+#config:
+#  check-in-award: 10
+#  default-role-id: 1
+#  check-max-award: 50
+#  ac-problem-award-rate: 0.5
+#  file-base-url: "E:/cach/temp"

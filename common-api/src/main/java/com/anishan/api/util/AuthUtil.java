@@ -1,19 +1,47 @@
 package com.anishan.api.util;
 
 import cn.hutool.captcha.AbstractCaptcha;
+import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.LoginUser;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+@Component
+@DependsOn("constConfig")
 public class AuthUtil {
 
-    public static final int CODE_TIME_OUT_SECOND = 60 * 2;
+
+
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+
+    public final Long CODE_TIME_OUT_SECOND;
+    public final Long CAPTCHA_TIME_OUT_SECOND;
+
+    public AuthUtil(
+            RedisTemplate<String, Object> redisTemplate,
+            StringRedisTemplate stringRedisTemplate,
+            ConstConfig config
+    ) {
+        this.redisTemplate = redisTemplate;
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.CODE_TIME_OUT_SECOND = config.getEmailCodeLifespan();
+        this.CAPTCHA_TIME_OUT_SECOND = config.getCaptchaCodeLifespan();
+    }
+
 
     @NotNull
     @Contract(pure = true)
@@ -52,65 +80,65 @@ public class AuthUtil {
     
 
 
-    public static boolean hasEmailKey(@NotNull StringRedisTemplate redisTemplate, String key) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(getEmailCodeKey(key)));
+    public boolean hasEmailKey(String key) {
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(getEmailCodeKey(key)));
     }
 
-    public static boolean hasCaptchaKey(@NotNull StringRedisTemplate redisTemplate, String key) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(getCaptchaCodeKey(key)));
+    public boolean hasCaptchaKey(String key) {
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(getCaptchaCodeKey(key)));
     }
 
-    public static String getEmailCode(@NotNull StringRedisTemplate redisTemplate, String email) {
+    public String getEmailCode(String email) {
         String emailCodeKey = getEmailCodeKey(email);
-        return redisTemplate.opsForValue().get(emailCodeKey);
+        return stringRedisTemplate.opsForValue().get(emailCodeKey);
     }
 
-    public static void removeEmailCode(@NotNull StringRedisTemplate redisTemplate, @NotNull String email) {
+    public void removeEmailCode(@NotNull String email) {
         String emailCodeKey = getEmailCodeKey(email);
-        redisTemplate.delete(emailCodeKey);
+        stringRedisTemplate.delete(emailCodeKey);
     }
 
-    public static String getAndRemoveCaptchaCode(@NotNull StringRedisTemplate redisTemplate, String captchaToken) {
+    public String getAndRemoveCaptchaCode(String captchaToken) {
         String captchaCodeKey = getCaptchaCodeKey(captchaToken);
-        String s = redisTemplate.opsForValue().get(captchaCodeKey);
-        redisTemplate.delete(captchaCodeKey);
+        String s = stringRedisTemplate.opsForValue().get(captchaCodeKey);
+        stringRedisTemplate.delete(captchaCodeKey);
         return s;
     }
 
 
-    public static void cacheEmailCode(@NotNull StringRedisTemplate redisTemplate, String email, String code) {
+    public void cacheEmailCode(String email, String code) {
         String emailCodeKey = getEmailCodeKey(email);
-        redisTemplate.opsForValue().set(emailCodeKey, code, CODE_TIME_OUT_SECOND, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(emailCodeKey, code, CODE_TIME_OUT_SECOND, TimeUnit.SECONDS);
     }
 
-    public static void cacheCaptchaCode(@NotNull StringRedisTemplate redisTemplate, String captchaToken, String code) {
+    public void cacheCaptchaCode(String captchaToken, String code) {
         String captchaCodeKey = getCaptchaCodeKey(captchaToken);
-        redisTemplate.opsForValue().set(captchaCodeKey, code, CODE_TIME_OUT_SECOND, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(captchaCodeKey, code, CAPTCHA_TIME_OUT_SECOND, TimeUnit.SECONDS);
     }
 
-    public static void cacheLoginUser(@NotNull RedisTemplate<String, Object> redisTemplate, @NotNull LoginUser user) {
+    public void cacheLoginUser(@NotNull LoginUser user) {
         String loginKey = getLoginKey(user.getUser().getUserId());
         redisTemplate.opsForValue().set(loginKey, user, JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
     }
 
-    public static LoginUser getLoginUser(@NotNull RedisTemplate<String, Object> redisTemplate, Long userId) {
+    public LoginUser getLoginUser(Long userId) {
         String loginKey = getLoginKey(userId);
         Object o = redisTemplate.opsForValue().get(loginKey);
         return (LoginUser) o;
     }
 
-    public static boolean isUserExisted(@NotNull RedisTemplate<String, Object> redisTemplate, Long userId) {
+    public boolean isUserExisted(@NotNull Long userId) {
         String loginKey = getLoginKey(userId);
         return Boolean.TRUE.equals(redisTemplate.opsForValue().getOperations().hasKey(loginKey));
     }
 
-    public static boolean checkEmailCode(@NotNull StringRedisTemplate redisTemplate, String email, String inputCode) {
-        String code = getEmailCode(redisTemplate, email);
+    public boolean checkEmailCode(String email, String inputCode) {
+        String code = getEmailCode(email);
         return Objects.equals(code, inputCode);
     }
 
-    public static boolean checkAndRemoveCaptchaCode(@NotNull StringRedisTemplate redisTemplate, String captchaToken, String inputCode) {
-        String code = getAndRemoveCaptchaCode(redisTemplate, captchaToken);
+    public boolean checkAndRemoveCaptchaCode(String captchaToken, String inputCode) {
+        String code = getAndRemoveCaptchaCode(captchaToken);
         return !Objects.equals(code, inputCode);
     }
 
@@ -119,7 +147,7 @@ public class AuthUtil {
     }
 
 
-    public static void removeUser(RedisTemplate<String, Object> redisTemplate, Long id) {
+    public void removeUser(Long id) {
         String loginKey = getLoginKey(id);
         redisTemplate.delete(loginKey);
     }

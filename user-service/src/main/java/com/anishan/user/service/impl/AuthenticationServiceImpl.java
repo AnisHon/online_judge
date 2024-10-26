@@ -3,10 +3,12 @@ package com.anishan.user.service.impl;
 import cn.hutool.captcha.AbstractCaptcha;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
+import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.SysRole;
 import com.anishan.api.domain.SysUser;
 import com.anishan.commons.e.UserState;
 import com.anishan.api.domain.LoginUser;
+import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
 import com.anishan.user.domain.entity.SysMenu;
@@ -19,8 +21,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,15 +41,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final SysUserService sysUserService;
     private final SysUserRoleService sysUserRoleService;
     private final SysMenuService sysMenuService;
-    private final StringRedisTemplate stringRedisTemplate;
-    private final RedisTemplate<String, Object> redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final SysRoleService sysRoleService;
     private final SysRoleMenuService sysRoleMenuService;
+    private final UserConfig config;
+    private final AuthUtil authUtil;
     // 默认就是student
-    private static final Long DEFAULT_ROLE_ID = 1L;
-
 
     @Override
     public LoginUserVo me() {
@@ -69,23 +67,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public LoginUser loadUserCache(Long userId) {
-        return AuthUtil.getLoginUser(redisTemplate, userId);
+        return authUtil.getLoginUser(userId);
     }
 
     @Override
     public void cacheUser(LoginUser loginUser) {
-        AuthUtil.cacheLoginUser(redisTemplate, loginUser);
+        authUtil.cacheLoginUser(loginUser);
     }
 
     private String createLoginTokenAndCache(LoginUser loginUser) {
-        AuthUtil.cacheLoginUser(redisTemplate, loginUser);
+        authUtil.cacheLoginUser(loginUser);
         return AuthUtil.createToken(loginUser.getUser().getUserId());
     }
 
 
     public Authentication doCheckLogin(LoginForm loginForm) {
 
-        if (AuthUtil.checkAndRemoveCaptchaCode(stringRedisTemplate, loginForm.getToken(), loginForm.getCaptchaCode())) {
+        if (authUtil.checkAndRemoveCaptchaCode(loginForm.getToken(), loginForm.getCaptchaCode())) {
             throw new RuntimeException("验证码错误");
         }
 
@@ -140,7 +138,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else {
             loginVo.setSuccess(true);
             loginVo.setMessage("注册成功");
-            AuthUtil.removeEmailCode(stringRedisTemplate, registrationForm.getEmail());
+            authUtil.removeEmailCode(registrationForm.getEmail());
         }
 
         // 校验 删除
@@ -149,6 +147,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private Long bindDefaultRole(SysUser sysUser) {
+        final Long DEFAULT_ROLE_ID = config.getDefaultRoleId();
         sysUserRoleService.addRoleForUser(sysUser.getUserId(), DEFAULT_ROLE_ID);
         return DEFAULT_ROLE_ID;
     }
@@ -201,7 +200,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private boolean doCheckEmailCode(String email, String code) {
-        return AuthUtil.checkEmailCode(stringRedisTemplate, email, code);
+        return authUtil.checkEmailCode(email, code);
     }
     private AuthResultVo checkEmailCode(String code) {
         String email = me().getEmail();
@@ -290,10 +289,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void doSendEmailCheck(String email, String captchaToken, String captchaCode) {
-        if (AuthUtil.hasEmailKey(stringRedisTemplate, email)){
+        if (authUtil.hasEmailKey(email)){
             throw new RuntimeException("已发送验证码请等待");
         }
-        if (AuthUtil.checkAndRemoveCaptchaCode(stringRedisTemplate, captchaToken, captchaCode)){
+        if (authUtil.checkAndRemoveCaptchaCode(captchaToken, captchaCode)){
             throw new RuntimeException("验证码错误");
         }
     }
@@ -314,7 +313,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String code = EmailSender.sendEmailCodeAsync(email);
 
-        AuthUtil.cacheEmailCode(stringRedisTemplate, email, code);
+        authUtil.cacheEmailCode(email, code);
 
         authResultVo.setSuccess(true);
         authResultVo.setMessage("发送成功");
@@ -327,7 +326,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public CaptchaCodeVo sendCaptchaCode() {
         AbstractCaptcha captcha = AuthUtil.generateCaptchaCode();
         String token = IdUtil.fastSimpleUUID();
-        AuthUtil.cacheCaptchaCode(stringRedisTemplate, token, captcha.getCode());
+        authUtil.cacheCaptchaCode(token, captcha.getCode());
 
         CaptchaCodeVo captchaCodeVo = new CaptchaCodeVo();
         captchaCodeVo.setToken(token);
@@ -366,7 +365,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public void logout(Long id) {
-        AuthUtil.removeUser(redisTemplate, id);
+        authUtil.removeUser(id);
     }
 
     @Override

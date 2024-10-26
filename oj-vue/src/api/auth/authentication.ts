@@ -1,7 +1,6 @@
 import {get, post} from '@/utils/http'
 import {type LoginUser} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
-import {useRoute, useRouter} from "vue-router";
 import router from '@/router'
 import {addDynamics} from "@/router/dynamic";
 import {useMenuStore} from "@/stores/useMenuStore";
