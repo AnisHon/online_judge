@@ -80,6 +80,11 @@ export const constRoutes =  [
         name: "homework",
         component: () => import('@/views/homework/Homework.vue'),
       },
+      {
+        path: "check-in",
+        name: "check-in",
+        component: () => import('@/views/check-in/CheckIn.vue'),
+      }
     ],
     meta: {
       requireAuth: true,
