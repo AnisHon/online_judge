@@ -45,7 +45,7 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
         LocalDate now = LocalDate.now();
         return this.list(
                 new LambdaUpdateWrapper<UserCheckIn>()
-                        .eq(UserCheckIn::getSignTime, now)
+                        .orderByDesc(UserCheckIn::getCurrentTime)
                         .last("limit 30")
         );
     }
@@ -105,6 +105,14 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
         }
 
         return UserCheckInInfo.successChecked(rewardPoint, newCheckIn);
+    }
+
+    @Override
+    public Long todayCount() {
+        LocalDate now = LocalDate.now();
+        return this.count(new LambdaQueryWrapper<UserCheckIn>()
+                .eq(UserCheckIn::getSignTime, now)
+        );
     }
 
 

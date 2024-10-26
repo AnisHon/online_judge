@@ -39,6 +39,7 @@ public class UserCheckIn implements Serializable {
      */
     private LocalDate signTime;
 
+    @TableField("current_time_")
     private LocalDateTime currentTime;
 
     /**

@@ -18,4 +18,6 @@ public interface UserCheckInService extends IService<UserCheckIn> {
     List<UserCheckIn> getUserCheckInList();
 
     UserCheckInInfo checkIn(Long userId);
+
+    Long todayCount();
 }

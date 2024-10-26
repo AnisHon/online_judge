@@ -255,7 +255,7 @@ create table user_check_in (
     user_id         bigint                 not null comment '用户ID',
     reward_point    decimal(8, 2)          not null comment '奖励积分个数',
     sign_time       date                   not null,
-    `current_time`  datetime default now() not null comment '签到当时时间',
+    current_time_   datetime default now() not null comment '签到当时时间',
     continuity_days int                    not null comment '连续签到天数',
     unique (user_id, sign_time)
 ) engine=innodb comment = '签到记录表';

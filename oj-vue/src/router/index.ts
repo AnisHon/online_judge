@@ -1,5 +1,5 @@
 import {createRouter, createWebHistory, type NavigationGuardNext} from 'vue-router'
-import Index from "@/views/system/Index.vue";
+import Index from "@/views/Index.vue";
 import Layout from "@/Layout.vue";
 import Forbidden from "@/views/error/Forbidden.vue";
 import NotFound from "@/views/error/NotFound.vue";

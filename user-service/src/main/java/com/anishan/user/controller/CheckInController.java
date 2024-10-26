@@ -32,16 +32,22 @@ public class CheckInController {
     }
 
     @GetMapping("/list")
-    @ApiModelProperty("列出最近签到列表")
+    @ApiOperation("列出最近签到列表")
     public R<List<UserCheckIn>> list() {
         return R.success(userCheckInService.getUserCheckInList());
     }
 
     @GetMapping("/already")
-    @ApiModelProperty("查询是否签到了")
+    @ApiOperation("查询是否签到了")
     public R<Boolean> already() {
         boolean checkedIn = userCheckInService.isCheckedIn(authenticationService.myId());
         return R.success(checkedIn);
+    }
+
+    @GetMapping("/today")
+    @ApiOperation("今天的签到人数")
+    public R<Long> today() {
+        return R.success(userCheckInService.todayCount());
     }
 
 

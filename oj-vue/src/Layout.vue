@@ -30,6 +30,7 @@ import MenuBar from "@/components/menu/Menu.vue";
   height: 100%;
 }
 
+
 .header {
   padding: 0;
   height: var(--menu-height);
