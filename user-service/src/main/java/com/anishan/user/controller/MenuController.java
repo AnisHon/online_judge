@@ -45,7 +45,7 @@ public class MenuController {
         return R.success(menus);
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @PreAuthorize("hasAuthority('user:menu:list')")
     @ApiOperation("分页获取menu")
     public R<PagedResult<MenuVo>> listMenus(@RequestBody @Validated PagedQuery<SysMenu> pagedQuery) {
@@ -53,7 +53,7 @@ public class MenuController {
         return menuVoPagedResult.toR();
     }
 
-    @GetMapping("/query")
+    @PostMapping("/query")
     @PreAuthorize("hasAuthority('user:menu:list')")
     @ApiOperation("查询menu")
     public R<PagedResult<MenuVo>> queryMenu(@RequestBody MenuPagedQuery menuPagedQuery) {

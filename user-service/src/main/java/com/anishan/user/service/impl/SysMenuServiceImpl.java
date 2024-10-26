@@ -168,6 +168,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
         return PagedResult.build(page, MenuVo.class);
     }
 
+
     @Override
     public PagedResult<MenuVo> queryMenu(MenuPagedQuery menuPagedQuery) {
         Page<SysMenu> page = menuPagedQuery.page();

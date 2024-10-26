@@ -38,7 +38,7 @@ public class StudentController {
     }
 
     // my class
-    @GetMapping("/list-classes")
+    @PostMapping("/list-classes")
     @ApiOperation("列出用户加入的班级")
     public R<PagedResult<ClassVo>> listClasses(@RequestBody @Validated ClassPagedQuery classPagedQuery) {
         return classService.listClassOfUser(classPagedQuery).toR();
