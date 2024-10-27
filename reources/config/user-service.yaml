@@ -5,3 +5,10 @@ oj:
     check-max-award: 50
     ac-problem-award-rate: 0.5
     file-base-url: "E:/cach/temp"
+    default-password: change-this-default-password
+
+common:
+  config:
+
+    captcha-code-lifespan: 120
+    email-code-lifespan: 120

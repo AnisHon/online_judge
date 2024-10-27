@@ -3,7 +3,9 @@ package com.anishan.commons.domain.dto;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.Min;
@@ -12,6 +14,8 @@ import javax.validation.constraints.NotNull;
 @Data
 @ApiModel("分页查询参数")
 @Validated
+@AllArgsConstructor
+@NoArgsConstructor
 public class PagedQuery<T> {
 
     @NotNull(message = "分页大小不合规")

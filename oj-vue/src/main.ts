@@ -12,7 +12,7 @@ import piniaPluginPersistedState from 'pinia-plugin-persistedstate' //引入持�
 
 import App from '@/App.vue'
 import router from './router'
-import has from "@/utils/hasAuth";
+import {has, hasAny} from "@/utils/hasAuth";
 
 
 const app = createApp(App)
@@ -29,6 +29,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 app.directive("has", has);
+app.directive('hasAny', hasAny)
 
 router.isReady().then(() => app.mount('#app'))
 // app.mount('#app')

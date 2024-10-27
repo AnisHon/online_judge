@@ -90,14 +90,14 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                         pagedProblem.getTitle(),
                         type
                 );
-        Long l = problemMapper.selectTaggedProblemCountByProblemIdAndTagId(
-                pagedProblem.getProblemId(),
-                pagedProblem.getTagIds(),
-                pagedProblem.getTitle(),
-                type
-        );
+//        Long l = problemMapper.selectTaggedProblemCountByProblemIdAndTagId(
+//                pagedProblem.getProblemId(),
+//                pagedProblem.getTagIds(),
+//                pagedProblem.getTitle(),
+//                type
+//        );
 
-        return PagedResult.fromPage(page, taggedProblemVos, l);
+        return PagedResult.fromPage(page, taggedProblemVos, page.getTotal());
     }
 
 

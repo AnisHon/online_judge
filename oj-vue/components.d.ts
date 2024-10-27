@@ -47,6 +47,7 @@ declare module 'vue' {
     ElTag: typeof import('element-plus/es')['ElTag']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTransfer: typeof import('element-plus/es')['ElTransfer']
+    ElTree: typeof import('element-plus/es')['ElTree']
     GeneralManageLayout: typeof import('./src/components/GeneralManageLayout/index.vue')['default']
     IconLoader: typeof import('./src/components/IconLoader/IconLoader.vue')['default']
     MarkdownPreview: typeof import('./src/components/MarkdownPreview.vue')['default']

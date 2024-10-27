@@ -179,12 +179,16 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (221, '编辑菜单', 2, 22, '#', 'B', 'user:menu:edit', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (222, '列出菜单', 3, 22, '#', 'B', 'user:menu:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (223, '删除菜单', 4, 22, '#', 'B', 'user:menu:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (224, '授予权限', 5, 22, '#', 'B', 'user:menu:grant', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (225, '撤销权限', 6, 22, '#', 'B', 'user:menu:revoke', '#');
 
 # menu_id 23 角色管理
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (230, '添加角色', 1, 23, '#', 'B', 'user:role:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (231, '编辑角色', 2, 23, '#', 'B', 'user:role:edit', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (232, '列出角色', 3, 23, '#', 'B', 'user:role:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (233, '删除角色', 4, 23, '#', 'B', 'user:role:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (234, '授予角色', 5, 23, '#', 'B', 'user:role:grant', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (235, '撤销角色', 6, 23, '#', 'B', 'user:role:revoke', '#');
 
 # 我的班级 menu_id 30
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (300, '创建班级', 0, 3, '#', 'B', 'user:teacher:create-class', '#');
@@ -222,10 +226,12 @@ create table sys_role_menu (
 ) engine=innodb comment = '角色和菜单关联表';
 
 # 超级管理员
+delete from sys_role_menu where role_id = 4;
 insert into sys_role_menu(role_id, menu_id)
     (select 4, menu_id from sys_menu);
 
 # 教师
+delete from sys_role_menu where role_id = 2;
 insert into sys_role_menu(role_id, menu_id)
 values
     (2, 30),
@@ -234,6 +240,7 @@ values
     (2, 3);
 
 # 管理员，没有权限相关操作，因为危险可能会毁坏网站
+delete from sys_role_menu where role_id = 3;
 insert into sys_role_menu(role_id, menu_id)
     (
         select 3, menu_id
@@ -241,7 +248,7 @@ insert into sys_role_menu(role_id, menu_id)
         where
             menu_id not in (select menu_id from sys_role_menu where role_id = 2)
           and
-            menu_id not in (220, 221, 222, 223, 230, 231, 232, 233, 22, 23)
+            menu_id not in (220, 221, 222, 223, 230, 231, 232, 233, 234, 235, 22, 23)
     );
 
 

@@ -8,6 +8,8 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.util.MysqlMappingUtils;
+import com.anishan.user.config.UserConfig;
+import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.api.domain.SysRole;
@@ -18,11 +20,13 @@ import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.util.UserUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.api.domain.SysUser;
 import com.anishan.user.service.SysUserService;
 import com.anishan.user.mapper.SysUserMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * @author anishan
@@ -38,6 +43,7 @@ import java.util.List;
 * @createDate 2024-10-02 23:14:28
 */
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     implements SysUserService{
 
@@ -49,18 +55,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     private final SysRoleService sysRoleService;
     private final SysUserRoleService sysUserRoleService;
     private final PasswordEncoder passwordEncoder;
-
-    @Autowired
-    public SysUserServiceImpl(SysUserMapper sysUserMapper,
-                              SysRoleService sysRoleService,
-                              SysUserRoleService sysUserRoleService,
-                              PasswordEncoder passwordEncoder
-    ) {
-        this.sysUserMapper = sysUserMapper;
-        this.sysRoleService = sysRoleService;
-        this.sysUserRoleService = sysUserRoleService;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final UserConfig config;
 
 
 
@@ -76,7 +71,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     }
 
     @Override
-    public List<UserVo> listUserById(List<String> ids) {
+    public List<UserVo> listUserById(List<Long> ids) {
         List<SysUser> sysUsers = sysUserMapper.selectBatchIds(ids);
         return BeanUtil.copyToList(sysUsers, UserVo.class);
     }
@@ -119,17 +114,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     @Override
     @Transactional
     public void addUser(SysUserDto sysUserDto) {
-        SysRole sysRole = sysRoleService.getOne(new LambdaQueryWrapper<SysRole>()
-                .eq(SysRole::getRoleName, sysUserDto.getRole()));
-        if (sysRole == null) {
-           throw new RuntimeException("unknown role");
+        boolean b = sysRoleService.existRole(sysUserDto.getRole());
+        if (!b) {
+           throw new RuntimeException("角色不存在");
         }
 
         // 自动填充字段，添加User，会抛出异常
         SysUser sysUser = doSaveUser(sysUserDto);
 
         // 添加关系
-        SysUserRoleRelation sysUserRoleRelation = new SysUserRoleRelation(sysUser.getUserId(), sysRole.getRoleId());
+        SysUserRoleRelation sysUserRoleRelation = new SysUserRoleRelation(sysUser.getUserId(), sysUserDto.getRole());
         sysUserRoleService.save(sysUserRoleRelation);
     }
 
@@ -194,6 +188,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         return result;
     }
 
+    /**
+     * 通过roleId分页查询user
+     * @param userQuery
+     * @return
+     */
+    @Override
+    public PagedResult<UserVo> getUserByRoleId(PagedUserRoleQuery userQuery) {
+        Page<SysUserRoleRelation> page = userQuery.page();
+
+        List<UserVo> userVos = sysUserMapper.selectUserByUserRoleQuery(page, userQuery);
+
+        return PagedResult.fromPage(page, userVos, page.getTotal());
+    }
+
     private SysUser doSaveUser(SysUserDto sysUserDto) {
         sysUserDto = doFillEmptyProperties(sysUserDto);
         SysUser sysUser = BeanUtil.copyProperties(sysUserDto, SysUser.class, "role");
@@ -212,6 +220,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         if (StrUtil.isBlank(sysUserDto.getEmail())) {
             sysUserDto.setEmail(sysUserDto.getUserName() + "@" + sysUserDto.getRole() + ".com");
         }
+        if (sysUserDto.getPassword() == null || sysUserDto.getPassword().length() < 8) {
+            sysUserDto.setPassword(config.getDefaultPassword());
+        }
+
         sysUserDto.setPassword(passwordEncoder.encode(sysUserDto.getPassword()));
         return sysUserDto;
     }

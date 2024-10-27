@@ -9,6 +9,7 @@ import {
 import {get, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
+import {add, fetch, remove, update} from "@/utils/simpleCRUD";
 
 interface QueryMenu extends SortedPagedType{
     menuId?: number;
@@ -37,32 +38,14 @@ const dict = {
 }
 
 const removeMenu = async (id: number | number[]) => {
-
-    let success;
-    if (id instanceof Array) {
-        const {data} = await get<boolean, number[]>("/user-api/menu/removeBatch", id);
-        success = data;
-    } else {
-        const {data} = await get<boolean, number>("/user-api/menu/remove", id);
-        success = data;
-    }
-    if (!success) {
-        ElMessage.warning("删除失败");
-    } else {
-        ElMessage.success("删除成功");
-    }
+    await remove(id, "/user-api/menu/removeBatch", "/user-api/menu/remove");
 }
 
 
 
 
 const addMenu = async (form: MenuForm) => {
-    const {data} = await post<MenuForm, boolean>("/user-api/menu/add", form);
-    if (!data) {
-        ElMessage.warning("添加失败");
-    } else {
-        ElMessage.success("删除成功");
-    }
+    await add(form, "/user-api/menu/add");
 }
 
 const debouncedAddMenu = (form: MenuForm, success: successCallback<void>) => {
@@ -78,12 +61,7 @@ const debouncedAddMenu = (form: MenuForm, success: successCallback<void>) => {
 
 
 const updateMenu = async (form: MenuForm) => {
-    const {data} = await post<MenuForm, boolean>("/user-api/menu/update", form);
-    if (!data) {
-        ElMessage.warning("更改失败");
-    } else {
-        ElMessage.success("更改成功");
-    }
+    await update(form, "/user-api/menu/update");
 }
 
 const debouncedUpdateMenu = (form: MenuForm, success: successCallback<void>) => {
@@ -96,13 +74,8 @@ const debouncedUpdateMenu = (form: MenuForm, success: successCallback<void>) => 
     return {loading, isLoading, update};
 }
 
-const getMenu = async (queryData: QueryMenu) => {
-    if (onlyPagedData(queryData)) {
-        const {data} = await post<PagedType, PagedResponse<MenuView>>("/user-api/menu/page", toPagedQueryData(queryData))
-        return data;
-    }
-    const {data} = await post<QueryMenu, PagedResponse<MenuView>>("/user-api/menu/query", queryData)
-    return data;
+const getMenu = async (queryData: QueryMenu): Promise<PagedResponse<MenuView>> => {
+    return await fetch(queryData, "/user-api/menu/page", "/user-api/menu/query");
 }
 
 const debouncedGetMenu = (queryData: QueryMenu, success: successCallback<PagedResponse<MenuView>>) => {

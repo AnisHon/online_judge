@@ -25,6 +25,13 @@
     <sql id="Base_Column_List">
         role_id,menu_id
     </sql>
+    <delete id="deleteBatch">
+        delete from sys_role_menu
+        where (role_id, menu_id) in
+        <foreach collection ="relations" item="item" separator="," open="(" close=")">
+            (#{item.roleId}, #{item.menuId})
+        </foreach>
+    </delete>
     <select id="getMIMenuByRole" resultMap="MIMenuByRoleResultMap">
 
         select

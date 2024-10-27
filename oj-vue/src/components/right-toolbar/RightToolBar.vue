@@ -13,7 +13,7 @@
         <el-dropdown trigger="click" :hide-on-click="false" style="padding-left: 12px" v-if="showColumnsType == 'checkbox'">
           <el-button size="small" circle icon="Menu" />
           <template #dropdown>
-            <el-dropdown-menu class="dropdown">
+            <el-dropdown-menu class="top-right-btn-dropdown">
               <template v-for="item in columns">
                 <el-dropdown-item>
                   <template :key="item.key" #default>
@@ -124,11 +124,14 @@ if (showColumnsType == 'transfer') {
 </style>
 
 <style>
-.dropdown {
+
+.top-right-btn-dropdown {
   .el-dropdown-menu__item {
     padding-bottom: 0;
     padding-top: 0;
   }
 }
+
+
 
 </style>

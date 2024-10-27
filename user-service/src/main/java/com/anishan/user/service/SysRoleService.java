@@ -5,6 +5,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.RoleDto;
 import com.anishan.user.domain.dto.RolePagedQuery;
 import com.anishan.api.domain.SysRole;
+import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.domain.vo.RoleVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -25,6 +26,10 @@ public interface SysRoleService extends IService<SysRole> {
     PagedResult<RoleVo> listRolesByPage(PagedQuery<SysRole> pagedQuery);
 
 //    List<RoleVo> listRoleById(List<Long> ids);
+
+    boolean existRole(Long id);
+
+    boolean isAllExist(List<Long> ids);
 
     RoleVo getRoleById(@NotNull(message = "id为Null") Long id);
 

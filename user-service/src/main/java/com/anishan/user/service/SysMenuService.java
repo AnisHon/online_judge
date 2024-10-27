@@ -4,6 +4,7 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
+import com.anishan.user.domain.dto.RoleMenuRelationDto;
 import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.api.domain.SysRole;
 import com.anishan.user.domain.vo.MenuVo;
@@ -20,6 +21,8 @@ import java.util.List;
 */
 public interface SysMenuService extends IService<SysMenu> {
 
+
+    boolean isAllExist(List<Long> ids);
 
     // 用于获取权限列表
     List<MenuVo> getMenusByRole(List<Long> roleIds);
@@ -46,4 +49,7 @@ public interface SysMenuService extends IService<SysMenu> {
 
     void addMenu(MenuDto menuDto);
 
+    boolean grant(List<RoleMenuRelationDto> relation);
+
+    List<MenuVo> listRoleMenu(@NotNull Long roleId);
 }

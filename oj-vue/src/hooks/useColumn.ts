@@ -16,10 +16,26 @@ const useColumn = (labels: string[]) => {
     return {columns}
 }
 
+const useStatuesColumn = (labels: string[], status: boolean[]) => {
+    const columns= reactive<ColumnType[]>([]);
+
+    for (let [index, item] of labels.entries()) {
+        columns.push({
+            key: index,
+            label: item,
+            visible: index < status.length ? status[index] : true
+        });
+    }
+
+    return {columns}
+}
+
 export {
-    useColumn
+    useColumn,
+    useStatuesColumn
 }
 
 export type {
-    ColumnType
+    ColumnType,
+
 }

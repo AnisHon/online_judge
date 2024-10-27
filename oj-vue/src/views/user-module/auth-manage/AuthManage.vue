@@ -1,5 +1,5 @@
 <template>
-  <div class="auth-container">
+  <div class="role-container">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="菜单名称" prop="menuName">
         <el-input
@@ -160,7 +160,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="显示排序" prop="orderNum">
-              <el-input-number v-model="form.orderNum" controls-position="right" :min="0" />
+              <el-input-number v-model="form.orderNum" controls-position="right" />
             </el-form-item>
           </el-col>
 
@@ -171,7 +171,12 @@
           </el-col>
           <el-col :span="12" v-if="form.menuType != MenuType.MENU">
             <el-form-item prop="perms" label="权限标识">
-              <el-input v-model="form.perms" placeholder="请输入权限标识" maxlength="100" />
+              <el-input v-model="form.perms" placeholder="请输入权限标识" maxlength="32" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item prop="perms" label="标记">
+              <el-input v-model="form.remark" type="textarea" placeholder="请输入标记" maxlength="450" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -382,7 +387,7 @@ getList()
 </style>
 
 <style>
-.auth-container {
+.role-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;

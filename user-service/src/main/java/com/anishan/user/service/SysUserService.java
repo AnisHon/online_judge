@@ -3,6 +3,7 @@ package com.anishan.user.service;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.api.domain.SysUser;
@@ -23,7 +24,7 @@ public interface SysUserService extends IService<SysUser> {
 
     boolean addPoint(Long userId, BigDecimal point);
 
-    List<UserVo> listUserById(List<String> ids);
+    List<UserVo> listUserById(List<Long> ids);
 
     PagedResult<UserVo> listUsers(PagedQuery<SysUser> pagedQuery);
 
@@ -46,4 +47,6 @@ public interface SysUserService extends IService<SysUser> {
     PagedResult<UserVo> listStudentsOfTeacher(PagedQuery<SysUser> userPagedQuery);
 
     PagedResult<UserVo> listStudentsOfTeacher(Long userId, PagedQuery<SysUser> userPagedQuery);
+
+    PagedResult<UserVo> getUserByRoleId(PagedUserRoleQuery userQuery);
 }

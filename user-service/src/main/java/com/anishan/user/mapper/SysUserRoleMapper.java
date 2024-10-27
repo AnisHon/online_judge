@@ -1,7 +1,11 @@
 package com.anishan.user.mapper;
 
+import com.anishan.user.domain.dto.UserRoleRelationDto;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author anishan
@@ -11,6 +15,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface SysUserRoleMapper extends BaseMapper<SysUserRoleRelation> {
 
+    int deleteBatch(@Param("relations") List<UserRoleRelationDto> relations);
 }
 
 

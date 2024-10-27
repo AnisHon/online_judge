@@ -101,6 +101,7 @@ const {isLoading, loading, sendCheckIn} = checkInFetcher((data) => {
   centerDialogVisible.value = true;
   dialogTitle.value = data.success ? "签到成功！" : "签到失败";
   dialogBodyText.value = data.success ?`${data.msg},得到${data.award}积分` : data.msg;
+  isCheckIn.value = true;
 });
 const handleClick = () => {
   loading();

@@ -8,6 +8,7 @@ import com.anishan.user.domain.dto.RoleDto;
 import com.anishan.user.domain.dto.RolePagedQuery;
 import com.anishan.user.domain.vo.RoleVo;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.api.domain.SysRole;
@@ -28,6 +29,21 @@ import java.util.List;
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole>
     implements SysRoleService{
     private final SysRoleMapper sysRoleMapper;
+
+    @Override
+    public boolean existRole(Long id) {
+        return this.exists(new LambdaQueryWrapper<SysRole>()
+                .eq(SysRole::getRoleId, id)
+        );
+    }
+
+    @Override
+    public boolean isAllExist(List<Long> ids) {
+        long count = this.count(new LambdaQueryWrapper<SysRole>()
+                .in(SysRole::getRoleId, ids)
+        );
+        return count >= ids.size();
+    }
 
     @Autowired
     public SysRoleServiceImpl(SysRoleMapper sysRoleMapper) {
@@ -74,6 +90,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole>
         sysRole.setUpdateTime(updateTime);
         return this.updateById(sysRole);
     }
+
 
 
 

@@ -7,9 +7,14 @@ import com.anishan.commons.e.ValidationGroup;
 import com.anishan.user.domain.dto.RoleDto;
 import com.anishan.user.domain.dto.RolePagedQuery;
 import com.anishan.api.domain.SysRole;
+import com.anishan.user.domain.dto.UserRoleRelationDto;
+import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.domain.vo.RoleVo;
 import com.anishan.user.service.SysRoleService;
+import com.anishan.user.service.SysUserRoleService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.ApiOperation;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -20,15 +25,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/role")
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class RoleController {
 
     private final SysRoleService sysRoleService;
-
-    @Autowired
-    public RoleController(SysRoleService sysRoleService) {
-        this.sysRoleService = sysRoleService;
-    }
-
+    private final SysUserRoleService sysUserRoleService;
 
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:role:list')")
@@ -105,4 +106,35 @@ public class RoleController {
         }
         return R.success(b);
     }
+
+    @PostMapping("/revoke")
+    @PreAuthorize("hasAuthority('user:role:revoke')")
+    @ApiOperation("撤销授予的角色")
+    public R<Boolean> revoke(@RequestBody @Validated(ValidationGroup.Delete.class)UserRoleRelationDto relation) {
+        boolean remove = sysUserRoleService.remove(new LambdaQueryWrapper<SysUserRoleRelation>()
+                .eq(SysUserRoleRelation::getRoleId, relation.getRoleId())
+                .eq(SysUserRoleRelation::getUserId, relation.getUserId())
+        );
+        return R.success(remove);
+    }
+
+    @PostMapping("/batchRevoke")
+    @PreAuthorize("hasAuthority('user:role:revoke')")
+    @ApiOperation("批量撤销授予的角色")
+    public R<Boolean> batchRevoke(
+            @RequestBody @Validated(ValidationGroup.Delete.class)List<UserRoleRelationDto> relations) {
+        boolean remove = sysUserRoleService.removeBatch(relations);
+        return R.success(remove);
+    }
+
+    @PostMapping("/grant")
+    @PreAuthorize("hasAuthority('user:role:grant')")
+    @ApiOperation("授予角色")
+    public R<Boolean> grant(@RequestBody @Validated(ValidationGroup.Insert.class) UserRoleRelationDto relation) {
+        SysUserRoleRelation sysUserRoleRelation = new SysUserRoleRelation(relation);
+        boolean b = sysUserRoleService.grant(sysUserRoleRelation);
+
+        return R.success(b);
+    }
+
 }

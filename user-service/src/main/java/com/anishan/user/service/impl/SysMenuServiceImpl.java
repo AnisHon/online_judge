@@ -9,9 +9,12 @@ import com.anishan.commons.e.MenuType;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
 import com.anishan.api.domain.SysRole;
+import com.anishan.user.domain.dto.RoleMenuRelationDto;
+import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.anishan.user.domain.vo.MenuVo;
 import com.anishan.user.domain.vo.TreedMenuVo;
 import com.anishan.user.service.SysRoleMenuService;
+import com.anishan.user.service.SysRoleService;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -19,6 +22,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.service.SysMenuService;
 import com.anishan.user.mapper.SysMenuMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,19 +36,21 @@ import java.util.stream.Collectors;
 * @createDate 2024-10-03 01:02:49
 */
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     implements SysMenuService{
 
     private final SysMenuMapper sysMenuMapper;
     private final SysRoleMenuService sysRoleMenuService;
+    private final SysRoleService sysRoleService;
 
-    @Autowired
-    public SysMenuServiceImpl(SysMenuMapper sysMenuMapper, SysRoleMenuService sysRoleMenuService) {
-        this.sysMenuMapper = sysMenuMapper;
-        this.sysRoleMenuService = sysRoleMenuService;
+    @Override
+    public boolean isAllExist(List<Long> ids) {
+        long count = this.count(new LambdaQueryWrapper<SysMenu>()
+                .in(SysMenu::getMenuId, ids)
+        );
+        return count >= ids.size();
     }
-
-
 
     // dfs
     private void buildTreeMenuRecursion(Set<TreedMenuVo> menus, TreedMenuVo treeNode) {
@@ -193,6 +199,33 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     public void addMenu(MenuDto menuDto) {
         SysMenu sysMenu = BeanUtil.copyProperties(menuDto, SysMenu.class, "menuId");
         sysMenuMapper.insert(sysMenu);
+    }
+
+    @Override
+    public boolean grant(List<RoleMenuRelationDto> relation) {
+        List<SysRoleMenuRelation> collect = relation.stream().map(SysRoleMenuRelation::new).collect(Collectors.toList());
+
+
+        List<Long> menuIds = collect.stream().map(SysRoleMenuRelation::getMenuId).collect(Collectors.toList());
+        boolean menuExist = isAllExist(menuIds);
+
+        if (!menuExist) {
+            throw new RuntimeException("menu id 不存在");
+        }
+
+
+        List<Long> roleIds = collect.stream().map(SysRoleMenuRelation::getRoleId).collect(Collectors.toList());
+        boolean roleExist = sysRoleService.isAllExist(roleIds);
+        if (!roleExist) {
+            throw new RuntimeException("role id 不存在");
+        }
+
+        return sysRoleMenuService.saveBatch(collect);
+    }
+
+    @Override
+    public List<MenuVo> listRoleMenu(Long roleId) {
+        return getMenusByRole(List.of(roleId));
     }
 }
 

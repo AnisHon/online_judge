@@ -1,9 +1,12 @@
 package com.anishan.user.service;
 
+import com.anishan.user.domain.dto.RoleMenuRelationDto;
 import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.entity.SysRoleMenuRelation;
+import com.anishan.user.domain.vo.MenuVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -17,4 +20,8 @@ public interface SysRoleMenuService extends IService<SysRoleMenuRelation> {
     List<SysMenu> getMIMenuIdByRole(List<Long> roleIds);
 
     List<SysMenu> getAuthorityMenu(List<Long> roleIds);
+
+    boolean removeBatch(List<RoleMenuRelationDto> relations);
+
+
 }

@@ -6,10 +6,17 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
+import com.anishan.user.domain.dto.RoleMenuRelationDto;
 import com.anishan.user.domain.entity.SysMenu;
+import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.anishan.user.domain.vo.MenuVo;
 import com.anishan.user.service.SysMenuService;
+import com.anishan.user.service.SysRoleMenuService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -20,14 +27,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/menu")
+@Api("权限 菜单相关接口")
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class MenuController {
 
 
     private final SysMenuService sysMenuService;
-    @Autowired
-    public MenuController(SysMenuService sysMenuService) {
-        this.sysMenuService = sysMenuService;
-    }
+    private final SysRoleMenuService sysRoleMenuService;
 
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:menu:list')")
@@ -104,6 +110,45 @@ public class MenuController {
         return R.success(true);
     }
 
+    @PostMapping("/revoke")
+    @PreAuthorize("hasAuthority('user:menu:revoke')")
+    @ApiOperation("添加menu")
+    public R<Boolean> revoke(@RequestBody @Validated(ValidationGroup.Insert.class) RoleMenuRelationDto relation) {
+
+        boolean b = sysRoleMenuService.remove(new LambdaQueryWrapper<SysRoleMenuRelation>()
+                .eq(SysRoleMenuRelation::getMenuId, relation.getMenuId())
+                .eq(SysRoleMenuRelation::getRoleId, relation.getRoleId())
+        );
+        return R.success(true);
+    }
+
+    @PostMapping("/batchRevoke")
+    @PreAuthorize("hasAuthority('user:menu:revoke')")
+    @ApiOperation("撤销权限")
+    public R<Boolean> revoke(@RequestBody @Validated(ValidationGroup.Insert.class) List<RoleMenuRelationDto> relations) {
+
+      sysRoleMenuService.removeBatch(relations);
+        return R.success(true);
+    }
+
+    @PostMapping("/grant")
+    @PreAuthorize("hasAuthority('user:menu:revoke')")
+    @ApiOperation("授予权限")
+    public R<Boolean> grant(@RequestBody @Validated List<RoleMenuRelationDto> relation) {
+
+        boolean b = sysMenuService.grant(relation);
+
+
+        return R.success(b);
+    }
+
+    @GetMapping("/listRoleMenu/{roleId}")
+    @PreAuthorize("hasAuthority('user:menu:list')")
+    @ApiOperation("列出角色权限")
+    public R<List<MenuVo>> listRoleMenu(@PathVariable @NotNull Long roleId) {
+        List<MenuVo> menus = sysMenuService.listRoleMenu(roleId);
+        return R.success(menus);
+    }
 
 
 }

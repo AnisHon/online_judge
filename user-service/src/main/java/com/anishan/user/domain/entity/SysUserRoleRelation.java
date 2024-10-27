@@ -1,5 +1,6 @@
 package com.anishan.user.domain.entity;
 
+import com.anishan.user.domain.dto.UserRoleRelationDto;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.AllArgsConstructor;
@@ -15,6 +16,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SysUserRoleRelation {
+
+    public SysUserRoleRelation(UserRoleRelationDto relation) {
+        this.userId = relation.getUserId();
+        this.roleId = relation.getRoleId();
+    }
+
     /**
      * 用户ID
      */

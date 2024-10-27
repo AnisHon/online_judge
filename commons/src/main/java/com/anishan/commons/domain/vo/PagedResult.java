@@ -25,7 +25,17 @@ public class PagedResult<T> {
     @ApiModelProperty("最终查询数据")
     private List<T> data;
 
-    public static <T, K> PagedResult<T> fromPage(Page<K> page, Long total) {
+    public static <T> PagedResult<T> fromPage(Page<T> page) {
+
+        PagedResult<T> tPagedResult = new PagedResult<>();
+        tPagedResult.setCurrentPage(page.getCurrent());
+        tPagedResult.setPageSize(page.getSize());
+        tPagedResult.setTotalRecords(page.getTotal());
+        tPagedResult.setData(page.getRecords());
+        return tPagedResult;
+    }
+
+    private static <T, K> PagedResult<T> fromPage(Page<K> page, Long total) {
 
         PagedResult<T> tPagedResult = new PagedResult<>();
         tPagedResult.setCurrentPage(page.getCurrent());

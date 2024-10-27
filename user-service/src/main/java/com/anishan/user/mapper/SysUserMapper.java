@@ -1,7 +1,11 @@
 package com.anishan.user.mapper;
 
 import com.anishan.api.domain.SysUser;
+import com.anishan.user.domain.dto.PagedUserRoleQuery;
+import com.anishan.user.domain.entity.SysUserRoleRelation;
+import com.anishan.user.domain.vo.UserVo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -25,6 +29,8 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 
     @Update("update sys_user set points = points + #{points} where user_id = #{userId}")
     int addPoints(@Param("userId") Long userId, @Param("points") BigDecimal points);
+
+    List<UserVo> selectUserByUserRoleQuery(Page<SysUserRoleRelation> page, @Param("userQuery") PagedUserRoleQuery userQuery);
 }
 
 

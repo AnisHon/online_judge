@@ -4,7 +4,7 @@ import Layout from "@/Layout.vue";
 import Forbidden from "@/views/error/Forbidden.vue";
 import NotFound from "@/views/error/NotFound.vue";
 import {useMenuStore} from "@/stores/useMenuStore";
-import {addDynamics} from "@/router/dynamic";
+import {addAdditional, addDynamics} from "@/router/dynamic";
 
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
@@ -151,7 +151,8 @@ router.beforeEach((to, from, next) => {
     // 已经登陆
     if (!menu.isDynamicReady()) {
       menu.getDynamicRouters().then((data) => {
-        addDynamics(data, router)
+        addDynamics(data, router);
+        addAdditional(router);
         next({ ...to, replace: true })
       });
     } else {
@@ -159,7 +160,7 @@ router.beforeEach((to, from, next) => {
     }
 
   } else {
-    if (needLogin) {
+    if (needLogin || !isMatched) {
     //   需要登录
       next({name: 'login', replace: true});
     } else {

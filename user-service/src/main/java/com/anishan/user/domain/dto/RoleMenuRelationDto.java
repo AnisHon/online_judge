@@ -1,13 +1,12 @@
-package com.anishan.user.domain.entity;
+package com.anishan.user.domain.dto;
 
-import com.anishan.user.domain.dto.RoleMenuRelationDto;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 /**
  * 角色和菜单关联表
@@ -15,15 +14,9 @@ import lombok.NoArgsConstructor;
  */
 @TableName(value ="sys_role_menu")
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class SysRoleMenuRelation implements Serializable {
-
-    public SysRoleMenuRelation(RoleMenuRelationDto relation) {
-        this.roleId = relation.getRoleId();
-        this.menuId = relation.getMenuId();
-    }
-
+@NoArgsConstructor
+public class RoleMenuRelationDto implements Serializable {
     /**
      * 角色ID
      */

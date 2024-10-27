@@ -1,7 +1,3 @@
-config:
-  captcha-code-lifespan: 120
-  email-code-lifespan: 120
-
 
 
 

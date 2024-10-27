@@ -5,6 +5,7 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
+import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.api.domain.SysUser;
@@ -53,15 +54,24 @@ public class UserController {
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("通过id获取用户")
-    public R<UserVo> getUserById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
+    public R<UserVo> getUserById(@PathVariable("id") @NotNull(message = "id不能为Null") Long id) {
         UserVo user = sysUserService.getUserById(id);
         return R.success(user);
     }
 
+    @PostMapping("/getByRole")
+    @PreAuthorize("hasAnyAuthority('user:user:list', 'user:role:list')")
+    @ApiOperation("通过role获取用户")
+    public R<PagedResult<UserVo>> getUserByRole(@RequestBody @Validated PagedUserRoleQuery pagedQuery) {
+        PagedResult<UserVo> userVoPagedResult = sysUserService.getUserByRoleId(pagedQuery);
+        return userVoPagedResult.toR();
+    }
+
+
     @GetMapping("/list/{ids}")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("通过多个id获取用户，id之间用','隔开")
-    public R<List<UserVo>> listUser(@PathVariable("ids") List<String> ids) {
+    public R<List<UserVo>> listUser(@PathVariable("ids") List<Long> ids) {
         List<UserVo> users = sysUserService.listUserById(ids);
         return R.success(users);
     }
@@ -69,7 +79,7 @@ public class UserController {
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("分页获取User")
-    public R<PagedResult<UserVo>> listUsers(@Validated @NotNull PagedQuery<SysUser> pagedQuery) {
+    public R<PagedResult<UserVo>> listUsers(@Validated @RequestBody @NotNull PagedQuery<SysUser> pagedQuery) {
         PagedResult<UserVo> userVoPagedResult = sysUserService.listUsers(pagedQuery);
         return userVoPagedResult.toR();
     }
@@ -109,7 +119,7 @@ public class UserController {
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('user:user:add')")
     @ApiOperation("添加用户")
-    public R<String> addUser(@RequestBody SysUserDto sysUserDto) {
+    public R<String> addUser(@RequestBody @Validated(ValidationGroup.Insert.class) SysUserDto sysUserDto) {
         try {
             sysUserService.addUser(sysUserDto);
         } catch (RuntimeException e) {

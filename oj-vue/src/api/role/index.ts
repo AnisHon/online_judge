@@ -1,72 +1,69 @@
-import type {MenuForm, MenuType, MenuView} from '@/api/auth/menu'
-import {
-    onlyPagedData,
-    type PagedResponse,
-    type PagedType,
-    type SortedPagedType,
-    toPagedQueryData
-} from "@/api/pagedType";
-import {get, post, type successCallback} from "@/utils/http";
+import type {PagedResponse, SortedPagedType,} from "@/api/pagedType";
+import {type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
+import {add, fetch, postedRemove, remove, update} from "@/utils/simpleCRUD";
 
-interface roleState
+enum RoleStatus {
+    NORMAL,
+    SUSPEND
+}
 
-interface QueryRole extends SortedPagedType{
+interface UserRoleRelation{
+    userId: number;
+    roleId: number;
+}
+
+interface RoleForm {
+    roleId?: number;
+    roleName?: string;
+    status?: RoleStatus;
+    remark?: string;
+}
+
+interface RoleView {
     roleId: number;
     roleName: string;
-    status: number;
+    status: RoleStatus;
+    createTime: Date;
     remark: string;
 }
 
+interface QueryRole extends SortedPagedType{
+    roleId?: number;
+    roleName?: string;
+    status?: RoleStatus;
+    remark?: string;
+}
+
 const dict = {
-    menuType: [
+    roleStatus: [
         {
-            value: "M",
-            label: "菜单栏"
-        }, {
-            value: "I",
-            label: "菜单项"
-        }, {
-            value: "B",
-            label: "按钮"
+            value: 0,
+            label: "正常"
+        },
+        {
+            value: 1,
+            label: "停用"
         }
     ],
-}
+};
 
-const removeMenu = async (id: number | number[]) => {
-
-    let success = false;
-    if (id instanceof Array) {
-        const {data} = await get<boolean, number[]>("/user-api/menu/removeBatch", id);
-        success = data;
-    } else {
-        const {data} = await get<boolean, number>("/user-api/menu/remove", id);
-        success = data;
-    }
-    if (!success) {
-        ElMessage.warning("删除失败");
-    } else {
-        ElMessage.success("删除成功");
-    }
+const removeRole = async (id: number | number[]) => {
+    await remove(id, "/user-api/role/removeBatch", "/user-api/role/remove");
 }
 
 
 
 
-const addMenu = async (form: MenuForm) => {
-    const {data} = await post<MenuForm, boolean>("/user-api/menu/add", form);
-    if (!data) {
-        ElMessage.warning("添加失败");
-    } else {
-        ElMessage.success("删除成功");
-    }
+const addRole = async (form: RoleForm) => {
+    await add(form, "/user-api/role/add");
 }
 
-const debouncedAddMenu = (form: MenuForm, success: successCallback<void>) => {
+const debouncedAddRole = (form: RoleForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
     const add = debounce(() => {
-        addMenu(form)
+        addRole(form)
             .then(success)
             .finally(finish);
     }, 1000);
@@ -75,56 +72,70 @@ const debouncedAddMenu = (form: MenuForm, success: successCallback<void>) => {
 
 
 
-const updateMenu = async (form: MenuForm) => {
-    const {data} = await post<MenuForm, boolean>("/user-api/menu/update", form);
-    if (!data) {
-        ElMessage.warning("更改失败");
-    } else {
-        ElMessage.success("更改成功");
-    }
+const updateRole = async (form: RoleForm) => {
+    await update(form, "/user-api/role/update");
 }
 
-const debouncedUpdateMenu = (form: MenuForm, success: successCallback<void>) => {
+const debouncedUpdateRole = (form: RoleForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
     const update = debounce(() => {
-        updateMenu(form)
+        updateRole(form)
             .then(success)
             .finally(finish);
     }, 1000);
     return {loading, isLoading, update};
 }
 
-const getMenu = async (queryData: QueryMenu) => {
-    if (onlyPagedData(queryData)) {
-        const {data} = await post<PagedType, PagedResponse<MenuView>>("/user-api/menu/page", toPagedQueryData(queryData))
-        return data;
-    }
-    const {data} = await post<QueryMenu, PagedResponse<MenuView>>("/user-api/menu/query", queryData)
-    return data;
+const getRole = async (queryData: QueryRole): Promise<PagedResponse<RoleView>> => {
+    return await fetch(queryData, "/user-api/role/page", "/user-api/role/query")
 }
 
-const debouncedGetMenu = (queryData: QueryMenu, success: successCallback<PagedResponse<MenuView>>) => {
+const debouncedGetRole = (queryData: QueryRole, success: successCallback<PagedResponse<RoleView>>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce(() => {
-        getMenu(queryData)
+        getRole(queryData)
             .then(success)
             .finally(finish);
     }, 1000);
     return {loading, isLoading, get};
 }
 
+const revoke = async (form: UserRoleRelation) => {
+    await postedRemove(form, "/user-api/role/batchRevoke", "/user-api/role/revoke");
+}
+
+const grant = async (form: UserRoleRelation[]) => {
+    await add(form, "/user-api/role/grant");
+}
+
+const debouncedGrant = (form: UserRoleRelation[], success: successCallback<void>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const add = debounce(() => {
+        grant(form)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, add};
+}
+
+
 export type {
-    QueryMenu,
+    QueryRole,
+    RoleForm,
+    RoleView,
+    UserRoleRelation
 }
 
 export {
-    getMenu,
-    debouncedGetMenu,
-    removeMenu,
-    addMenu,
-    debouncedAddMenu,
-    updateMenu,
-    debouncedUpdateMenu,
+    getRole,
+    debouncedGetRole,
+    removeRole,
+    addRole,
+    debouncedAddRole,
+    updateRole,
+    debouncedUpdateRole,
+    debouncedGrant,
+    RoleStatus,
     dict
 }
 

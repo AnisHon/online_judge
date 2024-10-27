@@ -1,4 +1,4 @@
-import type {MenuType} from "@/api/auth/menu";
+import type {MenuType, MenuView} from "@/api/auth/menu";
 import {type Router} from "vue-router";
 
 const Layout = () => import("@/Layout.vue")
@@ -18,11 +18,14 @@ const ListEdit = () => import("@/views/problem-module/list-edit/ListEdit.vue");
 const ProblemEdit = () => import("@/views/problem-module/problem-edit/ProblemEdit.vue");
 const TagEdit = () => import("@/views/problem-module/tag-edit/TagEdit.vue");
 
+const RoleAuth = () => import("@/views/user-module/role-manage/RoleAuth.vue")
+
 interface MetaType {
     name: string;
     icon?: string;
     requireAuth?: boolean;
     type?: MenuType;
+    parent?: string;
 
 }
 
@@ -159,7 +162,17 @@ const dynamicConst: RouterType = {
     ]
 };
 
-
+const additional: RouterType[] = [
+    {
+        path: 'role-auth/:id',
+        name: 'role-auth',
+        component: RoleAuth,
+        meta: {
+            name: "用户角色",
+            parent: 'role-manage',
+        }
+    }
+]
 
 const addDynamics = (dynamicRouters: RouterType[], router: Router) => {
     dynamicRouters.forEach((dynamicRouter: RouterType) => {
@@ -168,9 +181,21 @@ const addDynamics = (dynamicRouters: RouterType[], router: Router) => {
     })
 }
 
+const addAdditional =  (router: Router) => {
+    additional.forEach((v) => {
+        // @ts-ignore
+        if (router.hasRoute(v.meta.parent)) {
+            // @ts-ignore
+            router.addRoute(v.meta.parent, v)
+
+        }
+    })
+}
+
 export {
     type RouterType,
     dynamicConst,
-    addDynamics
+    addDynamics,
+    addAdditional
 }
 

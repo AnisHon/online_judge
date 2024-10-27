@@ -1,5 +1,6 @@
 package com.anishan.user.mapper;
 
+import com.anishan.user.domain.dto.RoleMenuRelationDto;
 import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -18,6 +19,8 @@ public interface SysRoleMenuMapper extends BaseMapper<SysRoleMenuRelation> {
     List<SysMenu> getMIMenuByRole(@Param("menuIds") List<Long> menuIds);
 
     List<SysMenu> getBMenuByRole(@Param("menuIds") List<Long> menuIds);
+
+    int deleteBatch(@Param("relations") List<RoleMenuRelationDto> relations);
 }
 
 

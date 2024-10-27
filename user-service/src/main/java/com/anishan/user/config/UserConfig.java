@@ -15,5 +15,6 @@ public class UserConfig {
     private Long defaultRoleId;
 
     private String fileBaseUrl;
+    private String defaultPassword;
 
 }

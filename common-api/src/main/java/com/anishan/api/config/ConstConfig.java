@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "config")
+@ConfigurationProperties(prefix = "common.config")
 public class ConstConfig {
 
     private Long captchaCodeLifespan;
