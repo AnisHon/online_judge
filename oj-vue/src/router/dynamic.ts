@@ -1,5 +1,6 @@
 import type {MenuType} from "@/api/auth/menu";
 import {type Router} from "vue-router";
+
 const Layout = () => import("@/Layout.vue")
 const Teacher = () => import("@/views/teacher/Teacher.vue");
 const HomeworkManage = () => import("@/views/teacher/homework-manage/HomeworkManage.vue");
@@ -9,6 +10,7 @@ const UserModule = () => import("@/views/user-module/UserModule.vue");
 const ClassManage = () => import("@/views/user-module/class-manage/ClassManage.vue");
 const RoleManage = () => import("@/views/user-module/role-manage/RoleManage.vue");
 const UserManage = () => import("@/views/user-module/user-manage/UserManage.vue");
+const AuthManage = () => import("@/views/user-module/auth-manage/AuthManage.vue");
 
 const ProblemModule = () => import("@/views/problem-module/ProblemModule.vue");
 const FolderEdit = () => import("@/views/problem-module/folder-edit/FolderEdit.vue");
@@ -139,7 +141,7 @@ const dynamicConst: RouterType = {
                 {
                     path: 'auth-manage',
                     name: 'auth-manage',
-                    component: RoleManage,
+                    component: AuthManage,
                     meta: {
                         name: '权限管理'
                     }

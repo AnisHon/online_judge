@@ -12,6 +12,9 @@ import piniaPluginPersistedState from 'pinia-plugin-persistedstate' //引入持�
 
 import App from '@/App.vue'
 import router from './router'
+import has from "@/utils/hasAuth";
+
+
 const app = createApp(App)
 
 const pinia = createPinia();
@@ -24,6 +27,8 @@ app.component(<string>ElCollapseTransition.name, ElCollapseTransition)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
 }
+
+app.directive("has", has);
 
 router.isReady().then(() => app.mount('#app'))
 // app.mount('#app')

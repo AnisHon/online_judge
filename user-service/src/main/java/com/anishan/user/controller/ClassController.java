@@ -48,7 +48,7 @@ public class ClassController {
         return R.success(classes);
     }
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("分页获取class")
     public R<PagedResult<ClassVo>> listClasses(@RequestBody @Validated PagedQuery<SysClass> pagedQuery) {
@@ -56,7 +56,7 @@ public class ClassController {
         return classVoPagedResult.toR();
     }
 
-    @GetMapping("/query")
+    @PostMapping("/query")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("查询class")
     public R<PagedResult<ClassVo>> queryUser(@RequestBody @Validated ClassPagedQuery classPagedQuery) {

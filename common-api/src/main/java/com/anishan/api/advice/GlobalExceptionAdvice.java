@@ -82,7 +82,8 @@ public class GlobalExceptionAdvice {
     @ResponseBody
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public R<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, "JSON语法错误");
+        e.printStackTrace();
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, "JSON语法错误" + e.getMessage());
     }
 //
 //    @ResponseBody

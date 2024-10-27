@@ -70,7 +70,7 @@ public class MenuController {
     @PostMapping("/update")
     @PreAuthorize("hasAuthority('user:menu:edit')")
     @ApiOperation("更新Menu，不能更改menuId")
-    public R<Boolean> update(@RequestBody MenuDto menuDto) {
+    public R<Boolean> update(@RequestBody @Validated(ValidationGroup.Update.class) MenuDto menuDto) {
         boolean b = sysMenuService.updateMenu(menuDto);
         return R.success(b);
     }
@@ -94,7 +94,7 @@ public class MenuController {
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('user:menu:add')")
     @ApiOperation("添加menu")
-    public R<Boolean> addMenu(@RequestBody @Validated(ValidationGroup.Update.class) MenuDto menuDto) {
+    public R<Boolean> addMenu(@RequestBody @Validated(ValidationGroup.Insert.class) MenuDto menuDto) {
 
         try {
             sysMenuService.addMenu(menuDto);

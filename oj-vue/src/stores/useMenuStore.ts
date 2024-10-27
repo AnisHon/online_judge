@@ -15,14 +15,16 @@ export const useMenuStore = defineStore('menuStore', () => {
         return __.has(auths, 'value');
     }
 
-    const getAuths = async () => {
-        if (!exist()) {
-            auths.value = await getAuth();
-        }
-        return auths.value;
+    const loadAuths = async () => {
+        auths.value = await getAuth();
+    }
+
+    const getAuths = () => {
+        return auths.value || [];
     }
 
     const getMenuTrees = async () => {
+
         if (!exist()) {
             menuTrees.value = await getTreedMenu();
         }
@@ -49,7 +51,7 @@ export const useMenuStore = defineStore('menuStore', () => {
             setDefault(dynamicRecursion);
             dynamicRouters.value = dynamicRecursion;
         }
-
+        await loadAuths()
         return <RouterType[]>dynamicRouters.value;
     }
 
@@ -60,7 +62,7 @@ export const useMenuStore = defineStore('menuStore', () => {
     }
 
     return  {
-        getAuth,
+        getAuths,
         getTreedMenu,
         getFlatten,
         getDynamicRouters,

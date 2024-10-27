@@ -16,9 +16,11 @@ public class MenuDto {
     @ApiModelProperty("菜单ID，插入时不管用，不用设置")
     private Long menuId;
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("菜单名称")
     private String menuName;
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("路由排序")
     private Integer orderNum;
 
@@ -28,6 +30,7 @@ public class MenuDto {
     @ApiModelProperty("路由路径")
     private String router;
 
+    @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("菜单类型（I菜单项item M菜单栏MenuBar B按钮）")
     private MenuType menuType;
 

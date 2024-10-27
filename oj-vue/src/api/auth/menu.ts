@@ -7,15 +7,27 @@ enum MenuType {
 }
 interface MenuView {
     menuId: number;
-    parentId: number;
     menuName: string;
-    icon: string;
-    router: string;
     menuType: MenuType;
-    orderNum: number;
+    parentId: number;
+    icon: string;
     perms: string;
+    router: string;
+    orderNum: number;
     createTime: Date;
     remark: string;
+}
+
+interface MenuForm {
+    menuId?: number;
+    menuName?: string;
+    menuType?: MenuType;
+    parentId?: number;
+    icon?: string;
+    perms?: string;
+    router?: string;
+    orderNum?: number;
+    remark?: string;
 }
 
 interface TreedMenu {
@@ -36,7 +48,8 @@ async function getAuth() : Promise<MenuView[]> {
 export {
     type MenuView,
     type TreedMenu,
+    type MenuForm,
     MenuType,
     getTreedMenu,
-    getAuth
+    getAuth,
 }

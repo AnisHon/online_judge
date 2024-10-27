@@ -1,5 +1,3 @@
-
-
 <template>
   <div class="layout">
     <el-container style="height: 100%;">
@@ -8,7 +6,7 @@
         <MenuBar/>
 
       </el-header>
-      <el-main id="main-box" style="box-sizing: border-box; height: var(--content-height);">
+      <el-main ref="elMainRef" id="main-box" style="box-sizing: border-box; height: var(--content-height);">
         <div>
           <router-view v-slot="{Component}">
               <component :is="Component" />
@@ -23,6 +21,11 @@
 <script setup lang="ts">
 
 import MenuBar from "@/components/menu/Menu.vue";
+import {inject, onMounted, provide, readonly, ref} from "vue";
+import {type ElMain} from "element-plus"
+const elMainRef = ref<InstanceType<typeof ElMain>>();
+provide('elMain', {elMainRef: elMainRef});
+
 </script>
 
 <style scoped>
