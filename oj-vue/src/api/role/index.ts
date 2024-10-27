@@ -10,15 +10,13 @@ import {get, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 
-interface QueryMenu extends SortedPagedType{
-    menuId?: number;
-    menuName?: string;
-    menuType?: MenuType;
-    parentId?: number;
-    icon?: string;
-    perms?: string;
-    router?: string;
-    remark?: string;
+interface roleState
+
+interface QueryRole extends SortedPagedType{
+    roleId: number;
+    roleName: string;
+    status: number;
+    remark: string;
 }
 
 const dict = {
@@ -38,7 +36,7 @@ const dict = {
 
 const removeMenu = async (id: number | number[]) => {
 
-    let success;
+    let success = false;
     if (id instanceof Array) {
         const {data} = await get<boolean, number[]>("/user-api/menu/removeBatch", id);
         success = data;

@@ -21,7 +21,7 @@
 <script setup lang="ts">
 
 import MenuBar from "@/components/menu/Menu.vue";
-import {inject, onMounted, provide, readonly, ref} from "vue";
+import {provide, ref} from "vue";
 import {type ElMain} from "element-plus"
 const elMainRef = ref<InstanceType<typeof ElMain>>();
 provide('elMain', {elMainRef: elMainRef});

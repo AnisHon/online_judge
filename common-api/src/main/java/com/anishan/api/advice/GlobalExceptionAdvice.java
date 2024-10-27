@@ -28,6 +28,7 @@ public class GlobalExceptionAdvice {
             temp = temp.getCause();
         }
 
+        // todo
         e.printStackTrace();
 
         return R.error(HttpStatus.HTTP_INTERNAL_ERROR, builder.toString());
