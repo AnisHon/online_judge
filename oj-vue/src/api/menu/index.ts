@@ -1,9 +1,9 @@
-import type {MenuForm, MenuType, MenuView} from '@/api/auth/menu'
+import type {MenuForm, MenuType, MenuView, TreedMenu} from '@/api/auth/menu'
 import {
     type PagedResponse,
     type SortedPagedType,
 } from "@/api/pagedType";
-import {type successCallback} from "@/utils/http";
+import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, update} from "@/utils/simpleCRUD";
@@ -61,6 +61,11 @@ const updateMenu = async (form: MenuForm) => {
     await update(form, "/user-api/menu/update");
 }
 
+async function getAllTreedMenu(): Promise<TreedMenu[]> {
+    const {data} = await get<TreedMenu[]>("/user-api/menu/treeMenus");
+    return data;
+}
+
 const debouncedUpdateMenu = (form: MenuForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
     const update = debounce(() => {
@@ -97,6 +102,7 @@ export {
     debouncedAddMenu,
     updateMenu,
     debouncedUpdateMenu,
+    getAllTreedMenu,
     dict
 }
 

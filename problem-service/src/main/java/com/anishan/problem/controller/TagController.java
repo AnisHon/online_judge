@@ -27,9 +27,15 @@ public class TagController {
     @GetMapping("/getAll")
     @ApiOperation("获取所有标签")
     public R<List<TagVo>> getAll() {
-
         List<TagVo> list = tagService.getAll();
         return R.success(list);
+    }
+
+    @GetMapping("/problem/{id}")
+    @ApiOperation("通过题目ID获取所有的标签")
+    public R<List<TagVo>> getByProblemId(@PathVariable Long id) {
+        List<TagVo> tagByProblemId = tagService.getTagByProblemId(id);
+        return R.success(tagByProblemId);
     }
 
 
@@ -41,8 +47,6 @@ public class TagController {
         return R.success(b);
     }
 
-
-
     @PostMapping("/update")
     @PreAuthorize("hasAuthority('problem:tag:update')")
     @ApiOperation("更改标签")
@@ -51,13 +55,19 @@ public class TagController {
         return R.success(b);
     }
 
-    @PostMapping("/delete/{id}")
+    @GetMapping("/delete/{id}")
     @PreAuthorize("hasAuthority('problem:tag:delete')")
     @ApiOperation("删除标签")
     public R<Boolean> delete(@PathVariable @NotNull Long id) {
         boolean b = tagService.deleteTag(id);
         return R.success(b);
     }
-
+    @GetMapping("/deleteBatch/{ids}")
+    @PreAuthorize("hasAuthority('problem:tag:delete')")
+    @ApiOperation("批量删除标签")
+    public R<Boolean> deleteBatch(@PathVariable @NotNull List<Long> ids) {
+        boolean b = tagService.removeBatchByIds(ids);
+        return R.success(b);
+    }
 
 }

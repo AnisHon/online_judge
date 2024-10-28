@@ -1,5 +1,5 @@
 <template>
-  <div class="role-container">
+  <div class="tag-container">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="用户名称" prop="username">
         <el-input
@@ -285,7 +285,7 @@ form.roleId = queryParams.roleId;
 </style>
 
 <style>
-.role-container {
+.tag-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;

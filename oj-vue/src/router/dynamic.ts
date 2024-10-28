@@ -17,6 +17,7 @@ const FolderEdit = () => import("@/views/problem-module/folder-edit/FolderEdit.v
 const ListEdit = () => import("@/views/problem-module/list-edit/ListEdit.vue");
 const ProblemEdit = () => import("@/views/problem-module/problem-edit/ProblemEdit.vue");
 const TagEdit = () => import("@/views/problem-module/tag-edit/TagEdit.vue");
+const ProblemEditView = () => import("@/views/problem-module/problem-edit/ProblemEditView.vue")
 
 const RoleAuth = () => import("@/views/user-module/role-manage/RoleAuth.vue")
 
@@ -170,6 +171,15 @@ const additional: RouterType[] = [
         meta: {
             name: "用户角色",
             parent: 'role-manage',
+        }
+    },
+    {
+        path: 'edit-problem/:id',
+        name: 'edit-problem',
+        component: RoleAuth,
+        meta: {
+            name: "编辑题目",
+            parent: 'problem-edit',
         }
     }
 ]

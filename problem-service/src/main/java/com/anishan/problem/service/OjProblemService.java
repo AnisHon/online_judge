@@ -1,8 +1,11 @@
 package com.anishan.problem.service;
 
+import com.anishan.problem.domain.dto.OjProblemDto;
 import com.anishan.problem.domain.entity.OjProblem;
 import com.anishan.problem.domain.vo.OjProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.time.LocalDateTime;
 
 /**
 * @author happy
@@ -10,6 +13,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2024-10-16 22:39:16
 */
 public interface OjProblemService extends IService<OjProblem> {
+
+    LocalDateTime getUpdateTime(Long id);
+
+    boolean updateById(OjProblemDto ojProblem);
 
     OjProblemVo getOjProblemById(Long id);
 }

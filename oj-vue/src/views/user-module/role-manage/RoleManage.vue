@@ -120,6 +120,7 @@
       </el-table-column>
     </el-table>
 
+
     <pagination
         v-show="total>0"
         :total="total"
@@ -158,29 +159,51 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
-    <el-tree
-        class="tree-border"
 
-        show-checkbox
-        default-expand-all
-        ref="dept"
-        node-key="id"
-        empty-text="加载中，请稍候"
-    ></el-tree>
+    <!--    权限分配对话框    -->
+    <el-dialog :title="title" v-model="openDataScope" width="500px" append-to-body>
+      <el-form :model="form" label-width="80px" v-loading="loadingRole">
+        <el-form-item label="角色名称">
+          <el-input v-model="form.roleName" :disabled="true" />
+        </el-form-item>
+        <el-form-item label="数据权限">
+          <el-tree
+              class="tree"
+              :data="menuTree"
+              ref="treeRef"
+              show-checkbox
+              accordion
+              node-key="id"
+              empty-text="加载中，请稍候"
+              :props="treeConfig"
+          ></el-tree>
+        </el-form-item>
+      </el-form>
+      <template #footer class="dialog-footer">
+        <el-button type="primary" @click="submitMenu" :loading="isRevokeLoading || isGrantLoading">确 定</el-button>
+        <el-button @click="cancelMenu">取 消</el-button>
+      </template>
+    </el-dialog>
+
   </div>
 
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, reactive, ref} from "vue";
+import {computed, reactive, ref} from "vue";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElMessageBox} from "element-plus";
+import {ElDialog, ElMessageBox, ElTree} from "element-plus";
 import __ from "lodash";
 import {type QueryRole, removeRole, type RoleForm, RoleStatus, type RoleView} from "@/api/role";
 import {debouncedAddRole, debouncedGetRole, debouncedUpdateRole, dict} from "@/api/role";
 import {useRoute, useRouter} from "vue-router";
+import {debouncedGrant, debouncedRevoke, listRoleMenu, type MenuRoleRelation, type TreedMenu} from "@/api/auth/menu";
+import {getAllTreedMenu} from "@/api/menu";
+import {setTreeId} from "@/utils/menu";
+import type {TreeOptionProps} from "element-plus/es/components/tree/src/tree.type";
+import type {TreeNodeData} from "element-plus/lib/components/tree/src/tree.type";
 // 查询需要的表单数据
 
 const route = useRoute();
@@ -319,6 +342,9 @@ const handleUpdate = (data: RoleView) => {
 
 const submitForm = () => {
 
+
+
+
   if (dialogState.value === 1) {
     addLoading();
     // 添加
@@ -335,10 +361,7 @@ const cancel = () => {
   resetForm()
 };
 
-// 查看更改角色menu
-const handleDataScope = (row: RoleView) => {
-  console.log(row)
-};
+
 
 // 查看更改用户角色menu
 const handleAuthUser = (row: RoleView) => {
@@ -348,7 +371,7 @@ const handleAuthUser = (row: RoleView) => {
 const handleCommand = (command: string, row: RoleView) => {
   switch (command) {
     case "handleDataScope":
-      handleDataScope(row);
+      handleMenu(row);
       break;
     case "handleAuthUser":
       handleAuthUser(row);
@@ -359,8 +382,85 @@ const handleCommand = (command: string, row: RoleView) => {
 };
 
 
+const treeConfig = reactive<TreeOptionProps>({
+  children: 'children',
+  // @ts-ignore
+  label: (data: TreeNodeData, node: Node): string => {return <string>data.menu.menuName}
+})
+
+const menuTree = reactive<TreedMenu[]>([])
+const openDataScope = ref(false);
+const treeRef = ref<InstanceType<typeof ElTree>>();
+
+const original = ref<Number[]>([]);
+const current = ref<Number[]>([])
+const delArray = ref<MenuRoleRelation[]>([])
+const addArray = ref<MenuRoleRelation[]>([])
+
+const reset = () => {
+  openDataScope.value = false;
+  delArray.value.length = 0;
+  addArray.value.length = 0;
+  for (let key in treeRef.value?.getCheckedKeys()) {
+    treeRef.value?.setChecked(key, false, true);
+  }
+}
+
+const {isLoading: isGrantLoading, loading: grantLoading, add: grant} = debouncedGrant(delArray.value, reset)
+const {isLoading: isRevokeLoading, loading: revokeLoading, add: revoke} = debouncedRevoke(addArray.value, reset)
 
 
+
+const submitMenu = () => {
+  delArray.value.length = 0;
+  addArray.value.length = 0;
+
+
+  current.value = <number[]>treeRef.value?.getCheckedKeys();
+  delArray.value.push(...__.difference(original.value, current.value).map(
+      (x, value) => {return {roleId: form.roleId, menuId: value}}
+  ));
+  addArray.value.push(...__.difference(current.value, original.value).map(
+      (x, value) => {return {roleId: form.roleId, menuId: value}}
+  ));
+
+  if (delArray.value.length > 0) {
+    grantLoading();
+    grant();
+  }
+  if (addArray.value.length > 0) {
+    revokeLoading();
+    revoke()
+  }
+}
+
+const cancelMenu = () => {
+  reset();
+}
+
+const loadingRole = ref(false);
+// 查看更改角色menu
+const handleMenu = (row: RoleView) => {
+  openDataScope.value = true;
+  form.roleId = row.roleId;
+  if (__.isEmpty(menuTree)) {
+    getAllTreedMenu()
+        .then((data) => {
+          setTreeId(data);
+          menuTree.push(...data)
+        });
+  }
+  loadingRole.value = true;
+  listRoleMenu(row.roleId).then((data) => {
+    original.value = data.map(x => x.menuId);
+    loadingRole.value = false;
+    original.value.forEach(x => {
+      treeRef.value?.setChecked(x, true, true);
+    })
+
+  })
+
+};
 // created -> 获取列表
 getList()
 
@@ -387,6 +487,9 @@ getList()
 
   .el-table__row .el-dropdown {
     height: 23px;
+  }
+  .tree {
+    min-width: 250px;
   }
 
 }

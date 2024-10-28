@@ -1,6 +1,10 @@
-import {get, post} from "@/utils/http"
+import {get, post, type successCallback} from "@/utils/http"
 import {type TagView} from "./label"
 import {ElMessage} from "element-plus";
+import type {PagedResponse, PagedType} from "@/api/pagedType";
+import useLoading from "@/hooks/useLoading";
+import {debounce} from "lodash";
+import {add, remove, update} from "@/utils/simpleCRUD";
 
 
 // 1 OJ, 2 FILL, 3 CHOICE
@@ -9,6 +13,11 @@ export enum ProblemType {
     FILL,
     CHOICE,
     MULTI_CHOICE,
+}
+
+enum ProblemAuth {
+    PUBLIC = 1,
+    CONTEST
 }
 
 
@@ -24,14 +33,23 @@ export enum Difficulty {
 }
 
 export interface ProblemView {
-    auth: number,
-    createTime: Date,
-    description: string,
-    hint?: string | null,
-    problemId: 0,
-    source: string,
+    problemId: number,
     title: string,
+    description: string,
+    source: string,
     type: ProblemType
+    auth: ProblemAuth,
+    createTime: Date,
+    hint?: string | null,
+}
+
+const dict = {
+    problemType:[
+        {label: "OJ题", value: ProblemType.OJ},
+        {label: "填空题", value: ProblemType.FILL},
+        {label: "选择题", value: ProblemType.CHOICE},
+        {label: "多选题", value: ProblemType.MULTI_CHOICE},
+    ]
 }
 
 export interface TaggedProblemView {
@@ -91,6 +109,84 @@ export interface PagedData {
     totalRecords: number;
 }
 
+interface AdminQueryProblem extends PagedType{
+    problemId?: number;
+    title?: string;
+    type?: ProblemType;
+}
+
+
+
+interface Answer {
+    answerId?: number;
+    answerText?: string;
+    isCorrect?: 0 | 1;
+    blankIndex?: number;
+    score?: number;
+}
+
+interface OjCase {
+    caseId?: number;
+    input?: string;
+    output?: string;
+    score?: number;
+}
+
+interface ProblemForm {
+    problem: ProblemView;
+    ojProblem?: OjProblemView;
+    choices?: ChoiceProblemView[];
+    cases?: OjCase[];
+}
+
+
+async function getProblemsAdmin(queryProblem: AdminQueryProblem): Promise<PagedResponse<ProblemView>> {
+    const {data} =
+        await post<AdminQueryProblem, PagedResponse<ProblemView>>("/problem-api/problem/listAll", queryProblem);
+    return data;
+}
+
+const debouncedGetProblem = (queryData: AdminQueryProblem, success: successCallback<PagedResponse<ProblemView>>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        getProblemsAdmin(queryData)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
+
+async function removeProblems(ids: number | number[]) {
+    await remove(ids, "/problem-api/problem/batchRemove", "/problem-api/problem/remove");
+}
+
+async function addProblems(form: ProblemForm) {
+    await add(form, "/problem-api/problem/addProblem");
+}
+
+const debouncedAddProblem = (form: ProblemForm, success: successCallback<void>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        addProblems(form)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
+
+async function updateProblems(form: ProblemForm) {
+    await update(form, "/problem-api/problem/update");
+}
+
+const debouncedUpdateProblem = (form: ProblemForm, success: successCallback<void>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        updateProblems(form)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
 
 
 async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
@@ -125,7 +221,17 @@ async function getDetailProblem(id: number): Promise<ProblemDetailView> {
 }
 
 
+export type {
+    AdminQueryProblem,
+    ProblemForm
+}
+
 export {
     getProblems,
-    getDetailProblem
+    getDetailProblem,
+    debouncedGetProblem,
+    removeProblems,
+    ProblemAuth,
+    dict
+
 }

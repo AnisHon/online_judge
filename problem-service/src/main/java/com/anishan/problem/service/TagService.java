@@ -32,4 +32,11 @@ public interface TagService extends IService<Tag> {
     List<Long> getProblemTagIds(Long problem_id);
 
     List<TagVo> getTagByProblemId(Long problemId);
+
+    boolean batchAddTagsForProblem(List<ProblemTagDto> relations);
+
+    boolean batchRemoveTagsForProblem(List<ProblemTagDto> relations);
+
+
 }
+

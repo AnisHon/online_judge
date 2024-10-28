@@ -56,7 +56,25 @@ const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: strin
  */
 const add = async <T> (form: T, url: string) => {
     const {data} = await post<T, boolean>(url, form);
+
     if (!data) {
+        ElMessage.warning("添加失败");
+    } else {
+        ElMessage.success("添加成功");
+    }
+};
+
+
+const batchAdd = async <T> (form: T| T[], batchUrl: string, singleUrl: string) => {
+    let success = false;
+    if (form instanceof Array) {
+        const {data} = await post<T[], boolean>(batchUrl, form);
+        success = data;
+    } else {
+        const {data} = await post <T, boolean>(singleUrl, form);
+        success = data;
+    }
+    if (!success) {
         ElMessage.warning("添加失败");
     } else {
         ElMessage.success("添加成功");
@@ -68,14 +86,16 @@ const add = async <T> (form: T, url: string) => {
  * @param form 更新的表单
  * @param url 更新的URL
  */
-const update = async (form: MenuForm, url: string) => {
-    const {data} = await post<MenuForm, boolean>(url, form);
+const update = async <T> (form: T, url: string) => {
+    const {data} = await post<T, boolean>(url, form);
     if (!data) {
         ElMessage.warning("更改失败");
     } else {
         ElMessage.success("更改成功");
     }
 };
+
+
 
 /**
  * 批量获取
@@ -93,6 +113,8 @@ const fetch =  async <T extends SortedPagedType, R> (queryData: T, simpleUrl: st
 }
 
 
+
+
 const simpleGet = async <T> (data: T, url: string, successMsg = "成功", fail = "失败") => {
     const {data: success} = await get<boolean, T>(url, data);
     if (success) {
@@ -105,6 +127,7 @@ const simpleGet = async <T> (data: T, url: string, successMsg = "成功", fail =
 
 export {
     add,
+    batchAdd,
     remove,
     update,
     fetch,

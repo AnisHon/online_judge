@@ -95,7 +95,7 @@ const input = computed({
   get: () => {
     return select.value === '1' ? queryForm.title : queryForm.id;
   },
-  set: (value) => {
+  set: (value: string) => {
     if (select.value === '1') {
       queryForm.title = value
     } else {

@@ -53,6 +53,7 @@ public class AuthenticationController {
         return R.success(auths);
     }
 
+
     @GetMapping("/menus")
     @ApiOperation("获取所有菜单，以树状的形式返回")
     public R<List<TreedMenuVo>> menus() {

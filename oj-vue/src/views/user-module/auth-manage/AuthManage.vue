@@ -1,5 +1,5 @@
 <template>
-  <div class="role-container">
+  <div class="tag-container">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="菜单名称" prop="menuName">
         <el-input
@@ -387,7 +387,7 @@ getList()
 </style>
 
 <style>
-.role-container {
+.tag-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;

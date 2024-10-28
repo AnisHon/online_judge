@@ -1,13 +1,16 @@
 package com.anishan.problem.service;
 
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.problem.domain.dto.DetailProblemDto;
 import com.anishan.problem.domain.dto.PagedProblem;
 import com.anishan.problem.domain.entity.Problem;
+import com.anishan.problem.domain.vo.AdminDetailProblem;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.DetailProblem;
 import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -27,5 +30,13 @@ public interface ProblemService extends IService<Problem> {
 
     boolean isExisted(Long problemId);
 
+    PagedResult<ProblemVo> getPagedAll(PagedProblem pagedProblem);
+
     PagedResult<TaggedProblemVo> listTaggerProblems(PagedProblem pagedProblem);
+
+    boolean addProblem(DetailProblemDto problem);
+
+    boolean updateProblem(DetailProblemDto problem);
+
+    AdminDetailProblem getAdminDetail(@NotNull Long id);
 }

@@ -39,6 +39,7 @@ public class RoleController {
         return R.success(clazz);
     }
 
+
     @GetMapping("/list/{ids}")
     @PreAuthorize("hasAuthority('user:role:list')")
     @ApiOperation("通过多个id获取role，id之间用','隔开")

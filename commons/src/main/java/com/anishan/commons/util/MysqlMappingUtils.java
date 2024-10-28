@@ -1,5 +1,6 @@
 package com.anishan.commons.util;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
@@ -12,8 +13,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MysqlMappingUtils {
     /**
@@ -86,6 +89,19 @@ public class MysqlMappingUtils {
     }
 
 
+    private static boolean isEmpty(Object obj) {
+        if (obj == null) {
+            return true;
+        }
+        if (obj instanceof String) {
+            return StrUtil.isEmpty((String) obj);
+        } else if (obj instanceof Collection) {
+            return CollectionUtil.isEmpty((Collection<?>) obj);
+        } else {
+            return false;
+        }
+
+    }
     private static <T> void loadByAnnotation(ConditionColumn annotation, Field declaredField, Object obj, QueryWrapper<T> queryWrapper) {
         String value = annotation.value();
         try {
@@ -100,9 +116,9 @@ public class MysqlMappingUtils {
 
             // 判断用like还是其他的
             if ("like".equals(value)) {
-                queryWrapper.like(val != null, column, val);
+                queryWrapper.like(!isEmpty(val), column, val);
             } else {
-                queryWrapper.eq(val != null, column, val);
+                queryWrapper.eq(!isEmpty(val), column, val);
             }
 
         } catch (IllegalAccessException e) {

@@ -141,7 +141,10 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 # menu_id 10 题目编辑
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (101, '添加标签', 1, 10, '#', 'B', 'problem:problem:add-tag', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (102, '删除标签', 2, 10, '#', 'B', 'problem:problem:del-tag', '#');
-#  todo
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (103, '列出题目', 3, 10, '#', 'B', 'problem:problem:list', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (104, '添加题目', 4, 10, '#', 'B', 'problem:problem:add', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (105, '删除题目', 5, 10, '#', 'B', 'problem:problem:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (106, '更改题目', 6, 10, '#', 'B', 'problem:problem:update', '#');
 
 # menu_id 11 标签编辑
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (110, '添加标签', 1, 11, '#', 'B', 'problem:tag:add', '#');
@@ -191,9 +194,9 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (235, '撤销角色', 6, 23, '#', 'B', 'user:role:revoke', '#');
 
 # 我的班级 menu_id 30
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (300, '创建班级', 0, 3, '#', 'B', 'user:teacher:create-class', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (301, '列出班级', 1, 3, '#', 'B', 'user:teacher:list-class', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (302, '删除班级', 2, 3, '#', 'B', 'user:teacher:remove-class', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (300, '创建班级', 0, 30, '#', 'B', 'user:teacher:create-class', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (301, '列出班级', 1, 30, '#', 'B', 'user:teacher:list-class', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (302, '删除班级', 2, 30, '#', 'B', 'user:teacher:remove-class', '#');
 
 
 
@@ -239,7 +242,7 @@ values
     (2, 32),
     (2, 3);
 
-# 管理员，没有权限相关操作，因为危险可能会毁坏网站
+# 管理员，没有权限相关操作，权限操作危险，可能会毁坏网站
 delete from sys_role_menu where role_id = 3;
 insert into sys_role_menu(role_id, menu_id)
     (

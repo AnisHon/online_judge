@@ -1,5 +1,5 @@
 <template>
-  <div class="role-container" v-loading="addLoading">
+  <div class="tag-container" v-loading="addLoading">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
 
       <el-form-item label="用户名称" prop="username">
@@ -201,7 +201,7 @@ getRole({currentPage: 1, pageSize: 200, asc: true}).then((data) => {
 </style>
 
 <style>
-.role-container {
+.tag-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;

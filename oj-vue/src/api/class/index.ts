@@ -15,9 +15,9 @@ interface ClassView {
 }
 
 interface ClassForm {
-    classId: number;
-    className: string;
-    remark: string;
+    classId?: number;
+    className?: string;
+    remark?: string;
 }
 
 interface QueryClass extends SortedPagedType{
@@ -75,6 +75,8 @@ const debouncedGetClass = (queryData: QueryClass, success: successCallback<Paged
 
 export type {
     QueryClass,
+    ClassForm,
+    ClassView
 }
 
 export {
@@ -85,7 +87,6 @@ export {
     debouncedAddClass,
     updateClass,
     debouncedUpdateClass,
-    dict
 }
 
 

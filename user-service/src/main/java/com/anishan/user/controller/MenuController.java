@@ -10,6 +10,7 @@ import com.anishan.user.domain.dto.RoleMenuRelationDto;
 import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.anishan.user.domain.vo.MenuVo;
+import com.anishan.user.domain.vo.TreedMenuVo;
 import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysRoleMenuService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -71,6 +72,13 @@ public class MenuController {
 
         return result.toR();
     }
+
+    @GetMapping("/treeMenus")
+    @ApiOperation("获取所有菜单，以树状的形式返回")
+    public R<List<TreedMenuVo>> menus() {
+        return R.success(sysMenuService.getAllTreedMenu());
+    }
+
 
 
     @PostMapping("/update")
@@ -142,6 +150,7 @@ public class MenuController {
         return R.success(b);
     }
 
+
     @GetMapping("/listRoleMenu/{roleId}")
     @PreAuthorize("hasAuthority('user:menu:list')")
     @ApiOperation("列出角色权限")
@@ -149,6 +158,5 @@ public class MenuController {
         List<MenuVo> menus = sysMenuService.listRoleMenu(roleId);
         return R.success(menus);
     }
-
 
 }

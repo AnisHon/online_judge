@@ -2,22 +2,25 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.e.ProblemAuth;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.problem.domain.dto.PagedProblem;
+import com.anishan.commons.util.ThrowUtil;
+import com.anishan.problem.domain.dto.*;
+import com.anishan.problem.domain.entity.ChoiceFillAnswers;
+import com.anishan.problem.domain.entity.OjProblem;
+import com.anishan.problem.domain.entity.OjProblemCase;
 import com.anishan.problem.domain.vo.*;
-import com.anishan.problem.service.ChoiceFillAnswersService;
-import com.anishan.problem.service.OjProblemService;
-import com.anishan.problem.service.TagService;
+import com.anishan.problem.service.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.Problem;
-import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.mapper.ProblemMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -35,6 +38,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final ProblemMapper problemMapper;
     private final ChoiceFillAnswersService choiceFillAnswersService;
     private final TagService tagService;
+    private final OjProblemCaseService ojProblemCaseService;
+
 
     public Problem doGetProblem(Long id) {
         return this.getOne(new LambdaQueryWrapper<Problem>()
@@ -55,25 +60,33 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         return toVo(problem);
     }
 
-    public List<Problem> doGetProblems(PagedProblem pagedProblem) {
-        Page<Problem> page = pagedProblem.page();
+    public List<Problem> doGetProblems(PagedProblem pagedProblem, Page<Problem> page) {
+
         return problemMapper
                 .selectAllByProblemIdAndTagId(page, pagedProblem.getProblemId(), pagedProblem.getTagIds());
     }
 
     @Override
     public PagedResult<ProblemVo> getProblems(PagedProblem pagedProblem) {
-        List<Problem> problems = doGetProblems(pagedProblem);
+        Page<Problem> page = pagedProblem.page();
+        List<Problem> problems = doGetProblems(pagedProblem, page);
         List<ProblemVo> problemVos = BeanUtil.copyToList(problems, ProblemVo.class);
 
-        Long l = problemMapper.selectAllCountByProblemIdAndTagId(
-                pagedProblem.getProblemId(),
-                pagedProblem.getTagIds()
-        );
-
-        return PagedResult.fromPage(pagedProblem.page(), problemVos, l);
+        return PagedResult.fromPage(pagedProblem.page(), problemVos, page.getTotal());
     }
 
+    @Override
+    public PagedResult<ProblemVo> getPagedAll(PagedProblem pagedProblem) {
+        Page<Problem> page = pagedProblem.page();
+        page = this.page(page, new LambdaQueryWrapper<Problem>()
+                .eq(pagedProblem.getProblemId() != null, Problem::getProblemId, pagedProblem.getProblemId())
+                .like(!StrUtil.isEmpty(pagedProblem.getTitle()), Problem::getTitle, pagedProblem.getTitle())
+                .eq(pagedProblem.getType() != null, Problem::getType, pagedProblem.getType())
+
+        );
+
+        return PagedResult.build(page, ProblemVo.class);
+    }
 
     @Override
     public PagedResult<TaggedProblemVo> listTaggerProblems(PagedProblem pagedProblem) {
@@ -98,6 +111,203 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 //        );
 
         return PagedResult.fromPage(page, taggedProblemVos, page.getTotal());
+    }
+
+    // 返回OJ ID
+    private Long doAddOjProblem(DetailProblemDto problem) {
+        // 问题主表的ID
+        final Long problemId = problem.getProblem().getProblemId();
+
+        OjProblem ojEntity =
+                BeanUtil.copyProperties(problem.getOjProblem(), OjProblem.class);
+
+        boolean save = ojProblemService.save(ojEntity);
+
+        ThrowUtil.runtime(!save, "OJ题目添加失败");
+
+        if (!CollectionUtil.isEmpty(problem.getCases())) {
+            List<OjProblemCase> entityCase =
+                    BeanUtil.copyToList(problem.getCases(), OjProblemCase.class);
+
+            entityCase.forEach(x -> x.setProblemId(problemId));
+
+            boolean b = ojProblemCaseService.saveBatch(entityCase);
+            ThrowUtil.runtime(!b, "OJ题目测试用例添加失败");
+        }
+
+        return ojEntity.getProblemId();
+
+
+    }
+
+
+    private boolean doAddChoiceFillAnswers(List<ChoiceFillAnswersDto> dtoAnswers, Long problemId) {
+        List<ChoiceFillAnswers> answers =
+                BeanUtil.copyToList(dtoAnswers, ChoiceFillAnswers.class);
+        answers.forEach(x -> x.setProblemId(problemId));
+        return choiceFillAnswersService.saveBatch(answers);
+    }
+
+    private boolean doAddFillProblem(DetailProblemDto problem, Long problemId) {
+        List<ChoiceFillAnswersDto> choices = problem.getChoices();
+        boolean b = doAddChoiceFillAnswers(choices, problemId);
+        ThrowUtil.runtime(!b, "填空答案添加失败");
+
+        return true;
+    }
+
+    private boolean doAddChoiceProblem(DetailProblemDto problem, Long problemId) {
+        List<ChoiceFillAnswersDto> choices = problem.getChoices();
+        boolean b = doAddChoiceFillAnswers(choices, problemId);
+        ThrowUtil.runtime(!b, "单选题答案添加失败");
+
+        return true;
+    }
+
+    private boolean doAddMultiChoiceProblem(DetailProblemDto problem, Long problemId) {
+        List<ChoiceFillAnswersDto> choices = problem.getChoices();
+        boolean b = doAddChoiceFillAnswers(choices, problemId);
+        ThrowUtil.runtime(!b, "多选题答案添加失败");
+
+        return true;
+    }
+    private boolean doAddProblem(Problem problem) {
+
+        boolean save = this.save(problem);
+        if (!save) {
+            throw new RuntimeException("添加失败");
+        }
+        return true;
+    }
+
+
+    private boolean decidedAddProblem(DetailProblemDto problem) {
+        boolean result = false;
+
+        Problem entity = BeanUtil.copyProperties(problem.getProblem(), Problem.class);
+
+        switch (problem.getProblem().getType()) {
+            case OJ:
+                Long ojId = doAddOjProblem(problem);
+                entity.setOjId(ojId);
+                result = doAddProblem(entity);
+                break;
+            case FILL:
+                doAddProblem(entity);
+                result = doAddFillProblem(problem, entity.getProblemId());
+                break;
+            case CHOICE:
+                doAddProblem(entity);
+                result = doAddChoiceProblem(problem, entity.getProblemId());
+                break;
+            case MULTI_CHOICE:
+                doAddProblem(entity);
+                result = doAddMultiChoiceProblem(problem, entity.getProblemId());
+                break;
+        }
+
+        return result;
+    }
+
+
+    /**
+     * 添加problem，开启了事务
+     * @param problem 需要添加的problem，需要题目，测试用例，选项，答案
+     * @return 返回是否添加成功
+     */
+    @Override
+    @Transactional
+    public boolean addProblem(DetailProblemDto problem) {
+        return decidedAddProblem(problem);
+    }
+
+    private boolean decidedUpdateProblem(DetailProblemDto problem, Problem entity) {
+        boolean result = false;
+
+
+
+        switch (entity.getType()) {
+            case OJ:
+                result = doUpdateOjProblem(problem);
+                break;
+            case FILL:
+            case CHOICE:
+            case MULTI_CHOICE:
+                result = doUpdateFillAnswers(problem.getChoices());
+                break;
+
+        }
+
+        return result;
+    }
+
+    private boolean doUpdateFillAnswers(List<ChoiceFillAnswersDto> choices) {
+        List<ChoiceFillAnswers> answers = BeanUtil.copyToList(choices, ChoiceFillAnswers.class);
+        return choiceFillAnswersService.saveOrUpdateBatch(answers);
+    }
+
+    private boolean doUpdateOjProblem(DetailProblemDto problem) {
+        boolean caseUpdate = doUpdateOjCases(problem.getCases());
+        boolean b = ojProblemService.updateById(problem.getOjProblem());
+        return caseUpdate || b;
+
+    }
+
+    private boolean doUpdateOjCases(List<OjProblemCase> cases) {
+        if (CollectionUtil.isEmpty(cases)) {
+            return true;
+        }
+        return ojProblemCaseService.saveOrUpdateBatch(cases);
+    }
+
+    @Override
+    @Transactional
+    public boolean updateProblem(DetailProblemDto problem) {
+        Problem entity = this.getById(problem.getProblem().getProblemId());
+        ThrowUtil.runtime(entity == null, "题目不存在");
+
+        return decidedUpdateProblem(problem, entity);
+    }
+
+
+    public AdminDetailProblem decidedGetProblem(Problem problem) {
+
+        AdminDetailProblem detailProblem = new AdminDetailProblem();
+
+        ProblemVo problemVo = BeanUtil.copyProperties(problem, ProblemVo.class);
+
+        detailProblem.setProblem(problemVo);
+
+        switch (problem.getType()) {
+            case OJ:
+                OjProblemVo ojProblemVo =
+                        ojProblemService.getOjProblemById(problem.getOjId());
+                List<OjProblemCaseVo> cases =
+                        ojProblemCaseService.getByProblemId(problem.getProblemId());
+
+                detailProblem.setOjProblem(ojProblemVo);
+                detailProblem.setCases(cases);
+                break;
+            case FILL:
+            case CHOICE:
+            case MULTI_CHOICE:
+                List<ChoiceFillAnswersVo> answers =
+                        choiceFillAnswersService.getChoiceVo(problem.getProblemId());
+                detailProblem.setChoices(answers);
+                break;
+        }
+
+        return detailProblem;
+
+    }
+
+
+    @Override
+    public AdminDetailProblem getAdminDetail(Long id) {
+        boolean existed = this.isExisted(id);
+        ThrowUtil.runtime(!existed, "题目不存在");
+        Problem problem = this.getById(id);
+        return decidedGetProblem(problem);
     }
 
 
@@ -127,6 +337,10 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
         return detailProblem;
     }
+
+
+
+
 
     @Override
     public DetailProblem getDetailProblem(Long id) {

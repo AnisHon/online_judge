@@ -55,7 +55,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     // dfs
     private void buildTreeMenuRecursion(Set<TreedMenuVo> menus, TreedMenuVo treeNode) {
         // If not MenuBar, exits
-        if (treeNode == null || !MenuType.MenuBar.equals(treeNode.getType())) {
+        if (treeNode == null || MenuType.Button.equals(treeNode.getType())) {
             return;
         }
 
@@ -104,6 +104,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
             return new ArrayList<>();
         }
         List<Long> menuIds = sysRoleMenuService.getMenuIdByRole(roleIds);
+        if (CollectionUtil.isEmpty(menuIds)) {
+            return List.of();
+        }
         List<SysMenu> sysMenus = this.listByIds(menuIds);
         return BeanUtil.copyToList(sysMenus, MenuVo.class);
     }
@@ -226,6 +229,14 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     @Override
     public List<MenuVo> listRoleMenu(Long roleId) {
         return getMenusByRole(List.of(roleId));
+    }
+
+    @Override
+    public List<TreedMenuVo> getAllTreedMenu() {
+        List<MenuVo> vo = BeanUtil.copyToList(this.list(), MenuVo.class);
+        HashSet<MenuVo> menuVos = new HashSet<>(vo);
+
+        return buildTreeMenu(menuVos);
     }
 }
 

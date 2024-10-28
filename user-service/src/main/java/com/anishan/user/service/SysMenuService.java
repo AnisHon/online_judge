@@ -52,4 +52,6 @@ public interface SysMenuService extends IService<SysMenu> {
     boolean grant(List<RoleMenuRelationDto> relation);
 
     List<MenuVo> listRoleMenu(@NotNull Long roleId);
+
+    List<TreedMenuVo> getAllTreedMenu();
 }

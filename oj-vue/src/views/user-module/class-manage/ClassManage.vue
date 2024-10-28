@@ -1,40 +1,17 @@
 <template>
-  <div class="role-container">
+  <div class="tag-container">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="菜单名称" prop="className">
+      <el-form-item label="班级名称" prop="className">
         <el-input
             v-model="queryParams.className"
-            placeholder="请输入菜单名称"
+            placeholder="请输入班级名称"
 
             @keyup.enter.native="handleQuery"
             clearable
         />
       </el-form-item>
-      <el-form-item label="权限标识" prop="perms">
-        <el-input
-            v-model="queryParams.perms"
-            placeholder="请输入权限标识"
-            clearable
-            @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="菜单类型" prop="classType">
-        <el-select
-            v-model="queryParams.classType"
-            placeholder="菜单类型"
-            clearable
-            style="width: 120px"
-        >
-          <el-option
-              v-for="item in dict.classType"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="父菜单ID" prop="parentId">
-        <el-input-number v-model="queryParams.parentId" :controls="false"/>
+      <el-form-item label="班级ID" prop="parentId">
+        <el-input-number v-model="queryParams.classId" :controls="false"/>
       </el-form-item>
 
       <el-form-item>
@@ -79,29 +56,12 @@
       <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
     </el-row>
 
-    <!--    ['菜单ID', '菜单名称', '菜单类型', '父菜单ID', '菜单图标', '权限标识', '路由路径', '顺序', '创建时间', '标注']-->
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="菜单ID" align="center" prop="classId" v-if="columns[0].visible" />
-      <el-table-column label="菜单名称" align="center" prop="className" v-if="columns[1].visible" />
-      <el-table-column label="菜单类型" align="center" prop="classType" v-if="columns[2].visible" />
-      <el-table-column label="父菜单ID" align="center" prop="parentId" v-if="columns[3].visible" />
-      <el-table-column label="菜单图标" align="center" prop="icon" v-if="columns[4].visible">
-        <template v-slot="scope">
-          <div v-if="scope.row.icon !== '#'">
-            <icon-loader :icon="scope.row.icon" />
-          </div>
-          <div v-else>
-            {{ scope.row.icon }}
-          </div>
-
-        </template>
-      </el-table-column>
-      <el-table-column label="权限标识" align="center" prop="perms" v-if="columns[5].visible" />
-      <el-table-column label="路由路径" align="center" prop="router" v-if="columns[6].visible" />
-      <el-table-column label="顺序" width="60" align="center" prop="orderNum" v-if="columns[7].visible" />
-      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[8].visible" />
-      <el-table-column label="标注" align="center" prop="remark" v-if="columns[9].visible" />
+      <el-table-column label="班级ID" align="center" prop="classId" v-if="columns[0].visible" />
+      <el-table-column label="班级名称" align="center" prop="className" v-if="columns[1].visible" />
+      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[2].visible" />
+      <el-table-column label="标注" align="center" prop="remark" v-if="columns[3].visible" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
@@ -135,43 +95,8 @@
       <el-form :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="24">
-            <el-form-item label="上级菜单ID" prop="parentId">
-              <el-input-number v-model="form.parentId" :controls="false" placeholder="请输入上级菜单ID"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="菜单类型" prop="classType">
-              <el-radio-group v-model="form.classType">
-                <el-radio :label="ClassType.MENU" :value="ClassType.MENU">菜单</el-radio>
-                <el-radio :label="ClassType.MENU_ITEM" :value="ClassType.MENU_ITEM">菜单项</el-radio>
-                <el-radio :label="ClassType.BUTTON" :value="ClassType.BUTTON">按钮</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24" v-if="form.icon != ClassType.BUTTON">
-            <el-form-item label="菜单图标" prop="icon">
-              <el-input v-model="form.icon" placeholder="请输入icon"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="菜单名称" prop="className">
-              <el-input v-model="form.className" placeholder="请输入菜单名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="显示排序" prop="orderNum">
-              <el-input-number v-model="form.orderNum" controls-position="right" />
-            </el-form-item>
-          </el-col>
-
-          <el-col :span="12" v-if="form.classType != ClassType.BUTTON">
-            <el-form-item prop="router" label="路由地址">
-              <el-input v-model="form.router" placeholder="请输入路由地址" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12" v-if="form.classType != ClassType.MENU">
-            <el-form-item prop="perms" label="权限标识">
-              <el-input v-model="form.perms" placeholder="请输入权限标识" maxlength="32" />
+            <el-form-item label="班级名称" prop="icon">
+              <el-input v-model="form.className" placeholder="请输入班级名称"/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -191,7 +116,14 @@
 
 <script setup lang="ts">
 import {computed, reactive, ref} from "vue";
-import {debouncedAddClass, debouncedGetClass, debouncedUpdateClass, dict, type QueryClass, removeClass} from "@/api/class";
+import {
+  type ClassForm, type ClassView,
+  debouncedAddClass,
+  debouncedGetClass,
+  debouncedUpdateClass,
+  type QueryClass,
+  removeClass
+} from "@/api/class";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
@@ -207,23 +139,11 @@ const queryParams = reactive<QueryClass>({
   pageSize: 20,
   classId: undefined,
   className: undefined,
-  classType: undefined,
-  parentId: undefined,
-  icon: undefined,
-  perms: undefined,
-  router: undefined,
-  remark: undefined
 });
 
 const form = reactive<ClassForm>({
   classId: undefined,
   className: '',
-  classType: ClassType.MENU,
-  parentId: undefined,
-  icon: '#',
-  perms: '',
-  router: '',
-  orderNum: 0,
   remark: ''
 });
 
@@ -232,18 +152,13 @@ const rules = ref();
 
 const open = ref(false);
 
-const {columns} = useColumn(['菜单ID', '菜单名称', '菜单类型', '父菜单ID', '菜单图标', '权限标识', '路由路径', '顺序', '创建时间', '标注']);
+const {columns} = useColumn(['班级ID', '班级名称', '创建时间', '标注']);
 
 
 // 重制列表
 const resetQuery = () => {
-  queryParams.classType = undefined;
   queryParams.className = undefined;
-  queryParams.parentId = undefined;
-  queryParams.icon = undefined;
-  queryParams.perms = undefined;
-  queryParams.router = undefined;
-  queryParams.remark = undefined;
+  queryParams.classId = undefined;
   queryParams.sortColumn = undefined;
 
   getList();
@@ -253,13 +168,6 @@ const resetQuery = () => {
 const resetForm = () => {
   form.classId = undefined;
   form.className = '';
-  form.classType = ClassType.MENU;
-  form.parentId = undefined;
-  form.icon = '#';
-  form.perms = '';
-  form.router = '';
-  form.orderNum = 0;
-  form.remark = '';
 }
 
 const showSearch = ref(true);
@@ -386,7 +294,7 @@ getList()
 </style>
 
 <style>
-.role-container {
+.tag-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;

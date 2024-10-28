@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
 
     public boolean doCheckIdExists(Long id) {
        return this.exists(new LambdaQueryWrapper<Tag>()
-                .eq(Tag::getTagName, id)
+                .eq(Tag::getTagId, id)
         );
     }
 
@@ -96,17 +97,17 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
 
     @Override
     public boolean updateTag(TagDto tagDto) {
-        doCheckBeforeUpdate(tagDto);
+//        doCheckBeforeUpdate(tagDto);
         Tag tag = BeanUtil.copyProperties(tagDto, Tag.class);
         return doUpdate(tag);
     }
 
     @Override
     public boolean deleteTag(Long id) {
-        boolean b = doCheckIdExists(id);
-        if (!b) {
-            throw new RuntimeException("删除标签不存在");
-        }
+//        boolean b = doCheckIdExists(id);
+//        if (!b) {
+//            throw new RuntimeException("删除标签不存在");
+//        }
         return this.removeById(id);
     }
 
@@ -120,15 +121,16 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
     @Override
     public boolean addTagForProblem(ProblemTagDto problemTagDto) {
         doCheckIdExists(problemTagDto.getTagId());
-        doCheckIdExists(problemTagDto.getTagId());
         ProblemTagRelation problemTagRelation = BeanUtil.copyProperties(problemTagDto, ProblemTagRelation.class);
         return problemTagService.save(problemTagRelation);
     }
 
     @Override
     public boolean removeTagForProblem(ProblemTagDto problemTagDto) {
-        ProblemTagRelation problemTagRelation = BeanUtil.copyProperties(problemTagDto, ProblemTagRelation.class);
-        return problemTagService.removeById(problemTagRelation);
+        return problemTagService.remove(new LambdaQueryWrapper<ProblemTagRelation>()
+                .eq(ProblemTagRelation::getProblemId, problemTagDto.getProblemId())
+                .eq(ProblemTagRelation::getTagId, problemTagDto.getTagId())
+        );
     }
 
 
@@ -155,6 +157,25 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
     public List<TagVo> getTagByProblemId(Long problemId) {
         List<Long> problemTagIds = getProblemTagIds(problemId);
         return getBatchById(problemTagIds);
+    }
+
+    @Override
+    @Transactional
+    public boolean batchAddTagsForProblem(List<ProblemTagDto> relations) {
+        boolean result = !CollectionUtil.isEmpty(relations);
+        for (ProblemTagDto relation : relations) {
+            result &= addTagForProblem(relation);
+        }
+        return result;
+    }
+
+    @Override
+    public boolean batchRemoveTagsForProblem(List<ProblemTagDto> relations) {
+        boolean result = !CollectionUtil.isEmpty(relations);
+        for (ProblemTagDto relation : relations) {
+            result &= removeTagForProblem(relation);
+        }
+        return result;
     }
 
 
