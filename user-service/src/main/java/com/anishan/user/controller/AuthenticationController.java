@@ -30,6 +30,15 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final SysUserService sysUserService;
 
+
+    @GetMapping("/reset-to-default/{id}")
+    @ApiOperation("重制用户密码")
+    @PreAuthorize("hasAuthority('user:user:edit')")
+    public R<Boolean> reset(@PathVariable @NotNull Long id) {
+        boolean b = authenticationService.resetDefault(id);
+        return R.success(b);
+    }
+
     @GetMapping("/me")
     @ApiOperation("获取用户个人信息")
     public R<LoginUserVo> me() {

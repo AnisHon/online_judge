@@ -102,24 +102,27 @@ const {isLoading, loading, sendCheckIn} = checkInFetcher((data) => {
   dialogTitle.value = data.success ? "签到成功！" : "签到失败";
   dialogBodyText.value = data.success ?`${data.msg},得到${data.award}积分` : data.msg;
   isCheckIn.value = true;
+
+  refresh();
 });
 const handleClick = () => {
   loading();
   sendCheckIn();
 }
 
+const refresh = () => {
+  isCheckedIn().then((data) => {
+    isCheckIn.value = data;
+  });
 
-isCheckedIn().then((data) => {
-  isCheckIn.value = data;
-});
-
-todayCount().then((data) => {todayCheckInCount.value = data;});
-
-onMounted(() => {
+  todayCount().then((data) => {todayCheckInCount.value = data;});
   checkInList().then(data => {
     checkInRecords.value = data;
   });
-});
+}
+
+
+refresh();
 
 
 </script>

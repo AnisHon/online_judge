@@ -137,4 +137,12 @@ public class RoleController {
         return R.success(b);
     }
 
+    @PostMapping("/batchGrant")
+    @PreAuthorize("hasAuthority('user:role:grant')")
+    @ApiOperation("批量授予角色")
+    public R<Boolean> batchGrant(@RequestBody @Validated(ValidationGroup.Insert.class) List<UserRoleRelationDto> relations) {
+        boolean b = sysUserRoleService.grantBatch(relations);
+        return R.success(b);
+    }
+
 }

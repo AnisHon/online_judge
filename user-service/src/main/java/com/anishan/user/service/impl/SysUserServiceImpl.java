@@ -12,7 +12,6 @@ import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
-import com.anishan.api.domain.SysRole;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.domain.vo.UserVo;
 import com.anishan.user.service.SysRoleService;
@@ -20,7 +19,6 @@ import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.util.UserUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.api.domain.SysUser;
@@ -35,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
 * @author anishan
@@ -152,6 +149,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         return count > 0;
     }
 
+    @Override
+    public boolean existsId(Long id) {
+        long count = this.count(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getUserId, id)
+        );
+        return count > 0;
+    }
+
     // 忽然意识到，这里自己写SQL要更方便，而且这样查效率低，内存占用大，还有BUG，回头再说，目前能跑就行
     @Override
     public PagedResult<UserVo> queryUserWithin(UserPagedQuery userPagedQuery, List<Long> studentIds) {
@@ -201,6 +206,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
         return PagedResult.fromPage(page, userVos, page.getTotal());
     }
+
+
 
     private SysUser doSaveUser(SysUserDto sysUserDto) {
         sysUserDto = doFillEmptyProperties(sysUserDto);

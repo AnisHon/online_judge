@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -39,10 +40,12 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole>
 
     @Override
     public boolean isAllExist(List<Long> ids) {
+        HashSet<Long> uniqueIds = new HashSet<>(ids);
         long count = this.count(new LambdaQueryWrapper<SysRole>()
-                .in(SysRole::getRoleId, ids)
+                .in(SysRole::getRoleId, uniqueIds)
         );
-        return count >= ids.size();
+
+        return count >= uniqueIds.size();
     }
 
     @Autowired

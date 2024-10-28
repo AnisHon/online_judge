@@ -398,5 +398,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return sysMenuService.getTreedMenuByRole(roleIds);
     }
 
+    @Override
+    public boolean resetDefault(Long id) {
+        String defaultPassword = config.getDefaultPassword();
+        String newPassword = passwordEncoder.encode(defaultPassword);
+        boolean exists = sysUserService.existsId(id);
+        if (!exists) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        return sysUserService.update(new LambdaUpdateWrapper<SysUser>()
+                .set(SysUser::getPassword, newPassword)
+                .eq(SysUser::getUserId, id)
+        );
+    }
+
 
 }

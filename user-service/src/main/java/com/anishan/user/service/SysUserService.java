@@ -42,6 +42,8 @@ public interface SysUserService extends IService<SysUser> {
 
     boolean existsEmail(String email);
 
+    boolean existsId(Long id);
+
     PagedResult<UserVo> queryUserWithin(UserPagedQuery userPagedQuery, List<Long> studentIds);
 
     PagedResult<UserVo> listStudentsOfTeacher(PagedQuery<SysUser> userPagedQuery);
@@ -49,4 +51,5 @@ public interface SysUserService extends IService<SysUser> {
     PagedResult<UserVo> listStudentsOfTeacher(Long userId, PagedQuery<SysUser> userPagedQuery);
 
     PagedResult<UserVo> getUserByRoleId(PagedUserRoleQuery userQuery);
+
 }

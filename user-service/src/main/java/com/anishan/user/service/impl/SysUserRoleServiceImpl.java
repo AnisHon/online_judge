@@ -8,6 +8,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.UserRoleRelationDto;
 import com.anishan.user.mapper.SysUserMapper;
 import com.anishan.user.service.SysRoleService;
+import com.anishan.user.service.SysUserService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * @author anishan
@@ -90,6 +92,47 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
 
 
         return this.save(sysUserRoleRelation);
+    }
+
+
+    private boolean allUserExists(List<Long> userIds) {
+        long count = sysUserMapper.selectCount(new LambdaQueryWrapper<SysUser>()
+                .in(SysUser::getUserId, userIds)
+        );
+
+        return count >= userIds.size();
+    }
+
+    @Override
+    @Transactional
+    public boolean grantBatch(List<UserRoleRelationDto> relations) {
+        List<SysUserRoleRelation> sysRelations = relations
+                .stream()
+                .map(SysUserRoleRelation::new)
+                .collect(Collectors.toList());
+        List<Long> roleIds = sysRelations
+                .stream()
+                .map(SysUserRoleRelation::getRoleId)
+                .collect(Collectors.toList());
+        boolean roleExists = sysRoleService.isAllExist(roleIds);
+        if (!roleExists) {
+            throw new RuntimeException("RoleId不存在");
+        }
+
+        List<Long> userIds = sysRelations
+                .stream()
+                .map(SysUserRoleRelation::getUserId)
+                .collect(Collectors.toList());
+
+
+        boolean userExist = allUserExists(userIds);
+
+        if (!userExist) {
+            throw new RuntimeException("UserId不存在");
+        }
+
+
+        return this.saveBatch(sysRelations);
     }
 }
 

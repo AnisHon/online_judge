@@ -7,8 +7,6 @@ import {
     type SortedPagedType,
     toPagedQueryData
 } from "@/api/pagedType";
-import useLoading from "@/hooks/useLoading";
-import {debounce} from "lodash";
 
 /**
  * 通用删除
@@ -95,10 +93,21 @@ const fetch =  async <T extends SortedPagedType, R> (queryData: T, simpleUrl: st
 }
 
 
+const simpleGet = async <T> (data: T, url: string, successMsg = "成功", fail = "失败") => {
+    const {data: success} = await get<boolean, T>(url, data);
+    if (success) {
+        ElMessage.success(successMsg);
+    } else {
+        ElMessage.warning(fail);
+    }
+
+}
+
 export {
     add,
     remove,
     update,
     fetch,
-    postedRemove
+    postedRemove,
+    simpleGet
 }

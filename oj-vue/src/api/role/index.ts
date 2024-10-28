@@ -100,12 +100,12 @@ const debouncedGetRole = (queryData: QueryRole, success: successCallback<PagedRe
     return {loading, isLoading, get};
 }
 
-const revoke = async (form: UserRoleRelation) => {
+const revoke = async (form: UserRoleRelation | UserRoleRelation[]) => {
     await postedRemove(form, "/user-api/role/batchRevoke", "/user-api/role/revoke");
 }
 
 const grant = async (form: UserRoleRelation[]) => {
-    await add(form, "/user-api/role/grant");
+    await add(form, "/user-api/role/batchGrant");
 }
 
 const debouncedGrant = (form: UserRoleRelation[], success: successCallback<void>) => {
@@ -136,6 +136,7 @@ export {
     debouncedUpdateRole,
     debouncedGrant,
     RoleStatus,
+    revoke,
     dict
 }
 

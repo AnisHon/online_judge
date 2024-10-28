@@ -5,6 +5,7 @@ import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
 import com.anishan.user.domain.vo.*;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public interface AuthenticationService {
@@ -52,4 +53,6 @@ public interface AuthenticationService {
     List<MenuVo> getAuths();
 
     List<TreedMenuVo> getTreedMenuByRole();
+
+    boolean resetDefault(@NotNull Long id);
 }

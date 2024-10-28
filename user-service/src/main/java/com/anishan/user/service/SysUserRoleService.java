@@ -28,4 +28,6 @@ public interface SysUserRoleService extends IService<SysUserRoleRelation> {
     boolean removeBatch(List<UserRoleRelationDto> relations);
 
     boolean grant(SysUserRoleRelation sysUserRoleRelation);
+
+    boolean grantBatch(List<UserRoleRelationDto> relations);
 }

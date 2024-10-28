@@ -1,12 +1,9 @@
 import type {MenuForm, MenuType, MenuView} from '@/api/auth/menu'
 import {
-    onlyPagedData,
     type PagedResponse,
-    type PagedType,
     type SortedPagedType,
-    toPagedQueryData
 } from "@/api/pagedType";
-import {get, post, type successCallback} from "@/utils/http";
+import {type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, update} from "@/utils/simpleCRUD";

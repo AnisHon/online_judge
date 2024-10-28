@@ -132,7 +132,7 @@ import Pagination from "@/components/pageination/Pagination.vue";
 import {ElMessageBox} from "element-plus";
 import {useRoute, useRouter} from "vue-router";
 import UserViwer from "@/views/user-module/role-manage/user-viewer/UserViwer.vue";
-import {debouncedGrant, type UserRoleRelation} from "@/api/role";
+import {debouncedGrant, revoke, type UserRoleRelation} from "@/api/role";
 
 const grantSelectedIds = reactive<number[]>([])
 
@@ -209,21 +209,25 @@ const handleSelectionChange = (selection: UserView[]) => {
 
 
 const handleDelete = (row: UserView | Event) => {
+
   if (row instanceof Event) {
-    ElMessageBox.confirm(`您是否要删除ID为${ids.value}的数据项？`, {
+    ElMessageBox.confirm(`您是否要撤销ID为${ids.value}的权限？`, {
       confirmButtonText: '确定',
       cancelButtonText: '取消'
     })
+
         .then(() => {
-          removeUser(ids.value).then(getList);
+          addForm.length = 0;
+          ids.value.forEach(v => {addForm.push({roleId: form.roleId, userId: v})})
+          revoke(addForm).then(getList);
         })
   } else {
-    ElMessageBox.confirm('是否确认删除名称为"' + row.userName + '"的数据项？', {
+    ElMessageBox.confirm('是否确认撤销用户名称为"' + row.userName + '"的权限？', {
       confirmButtonText: '确定',
       cancelButtonText: '取消'
     })
         .then(() => {
-          removeUser(row.userId).then(getList);
+          revoke({userId: row.userId, roleId: form.roleId}).then(getList);
         })
   }
 
@@ -247,14 +251,16 @@ const submit = () => {
   startAddLoading();
   addForm.length = 0;
   grantSelectedIds.forEach((v) => {
-    addForm.push({userId: form.userId, roleId: v});
+    addForm.push({userId: v, roleId: form.roleId});
   })
   add();
+
 }
 
 
 const {loading: startAddLoading, isLoading: addLoading, add} = debouncedGrant(addForm, () => {
   open.value = false;
+  getList();
 })
 
 const cancel = (id: number) => {

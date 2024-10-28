@@ -1,5 +1,5 @@
 <template>
-  <div class="role-container">
+  <div class="user-container">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="用户名称" prop="username">
         <el-input
@@ -119,6 +119,20 @@
               @click="handleDelete(scope.row)"
               v-has="'user:user:remove'"
           >删除</el-link>
+          <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
+                       v-has-any="['user:user:edit'] ">
+            <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <div v-has="['user:user:edit']" >
+                  <el-dropdown-item command="handleResetPass" icon="Lock"
+                  >重制密码</el-dropdown-item>
+                </div>
+
+              </el-dropdown-menu>
+            </template>
+
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
@@ -201,7 +215,7 @@
 import {computed, reactive, ref} from "vue";
 import {
   debouncedAddUser,
-  debouncedGetUser,
+  debouncedGetUser, debouncedReset,
   debouncedUpdateUser,
   dict,
   type QueryUser,
@@ -414,6 +428,15 @@ const cancel = () => {
 }
 
 
+const id = ref(0);
+
+const {add: reset} = debouncedReset(id, () => {})
+const handleCommand = (e: string, row: UserView) => {
+  if (e === 'handleResetPass') {
+    id.value = row.userId;
+    reset();
+  }
+}
 
 
 
@@ -433,7 +456,7 @@ getRole({currentPage: 1, pageSize: 200, asc: true}).then((data) => {
 </style>
 
 <style>
-.role-container {
+.user-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;
@@ -442,6 +465,9 @@ getRole({currentPage: 1, pageSize: 200, asc: true}).then((data) => {
     .el-select {
       --el-select-width: 220px;
     }
+  }
+  .el-table__row .el-dropdown {
+    height: 23px;
   }
 
 }

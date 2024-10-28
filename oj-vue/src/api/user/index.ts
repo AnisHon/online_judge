@@ -2,7 +2,8 @@ import type {PagedResponse, PagedType, SortedPagedType,} from "@/api/pagedType";
 import {post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, fetch, remove, update} from "@/utils/simpleCRUD";
+import {add, fetch, remove, simpleGet, update} from "@/utils/simpleCRUD";
+import type {Ref} from "vue";
 
 enum UserStatus {
     NORMAL,
@@ -72,6 +73,19 @@ const removeUser = async (id: number | number[]) => {
     await remove(id, "/user-api/user/removeBatch", "/user-api/user/remove");
 }
 
+const resetToDefault = async (id: number) => {
+    await simpleGet(id, "/user-api/auth/reset-to-default", "重制成功", "重制失败");
+}
+
+const debouncedReset = (id: Ref<number>, success: successCallback<void>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const add = debounce(() => {
+        resetToDefault(id.value)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, add};
+}
 
 
 
@@ -157,6 +171,7 @@ export {
     debouncedUpdateUser,
     getRoleUser,
     debouncedGetRoleUser,
+    debouncedReset,
     UserStatus,
     dict
 }
