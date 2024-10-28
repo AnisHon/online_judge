@@ -1,7 +1,7 @@
 import {get, type successCallback} from "@/utils/http";
 import {add, postedRemove} from "@/utils/simpleCRUD";
 import useLoading from "@/hooks/useLoading";
-import {debounce} from "lodash";;
+import {debounce} from "lodash";
 
 enum MenuType {
     MENU = 'M',
