@@ -120,7 +120,7 @@ public class MenuController {
 
     @PostMapping("/revoke")
     @PreAuthorize("hasAuthority('user:menu:revoke')")
-    @ApiOperation("添加menu")
+    @ApiOperation("撤销权限")
     public R<Boolean> revoke(@RequestBody @Validated(ValidationGroup.Insert.class) RoleMenuRelationDto relation) {
 
         boolean b = sysRoleMenuService.remove(new LambdaQueryWrapper<SysRoleMenuRelation>()
@@ -140,7 +140,7 @@ public class MenuController {
     }
 
     @PostMapping("/grant")
-    @PreAuthorize("hasAuthority('user:menu:revoke')")
+    @PreAuthorize("hasAuthority('user:menu:grant')")
     @ApiOperation("授予权限")
     public R<Boolean> grant(@RequestBody @Validated List<RoleMenuRelationDto> relation) {
 

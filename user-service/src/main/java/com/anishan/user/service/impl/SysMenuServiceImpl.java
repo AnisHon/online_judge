@@ -206,6 +206,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
 
     @Override
     public boolean grant(List<RoleMenuRelationDto> relation) {
+        if (CollectionUtil.isEmpty(relation)) {
+            return true;
+        }
         List<SysRoleMenuRelation> collect = relation.stream().map(SysRoleMenuRelation::new).collect(Collectors.toList());
 
 

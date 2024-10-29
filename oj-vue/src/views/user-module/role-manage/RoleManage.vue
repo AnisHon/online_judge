@@ -79,7 +79,11 @@
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="角色ID" align="center" prop="roleId" v-if="columns[0].visible" />
       <el-table-column label="角色名称" align="center" prop="roleName" v-if="columns[1].visible" />
-      <el-table-column label="状态" align="center" prop="status" v-if="columns[2].visible" />
+      <el-table-column label="状态" align="center" prop="status" v-if="columns[2].visible" >
+        <template v-slot="scope">
+          {{ roleStatusText(scope.row.status) }}
+        </template>
+      </el-table-column>
       <el-table-column label="标记" align="center" prop="mark" v-if="columns[3].visible" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
@@ -172,6 +176,7 @@
               :data="menuTree"
               ref="treeRef"
               show-checkbox
+              check-strictly
               accordion
               node-key="id"
               empty-text="加载中，请稍候"
@@ -232,6 +237,11 @@ const rules = ref();
 const open = ref(false);
 
 const {columns} = useColumn(['角色ID', '角色名称', '状态', '标记']);
+
+
+const roleStatusText = (status: RoleStatus) => {
+  return status === RoleStatus.NORMAL ? "正常" : "停用";
+}
 
 // 重制列表
 const resetQuery = () => {
@@ -388,6 +398,13 @@ const treeConfig = reactive<TreeOptionProps>({
   label: (data: TreeNodeData, node: Node): string => {return <string>data.menu.menuName}
 })
 
+
+
+
+
+
+
+
 const menuTree = reactive<TreedMenu[]>([])
 const openDataScope = ref(false);
 const treeRef = ref<InstanceType<typeof ElTree>>();
@@ -397,17 +414,35 @@ const current = ref<Number[]>([])
 const delArray = ref<MenuRoleRelation[]>([])
 const addArray = ref<MenuRoleRelation[]>([])
 
+const init = () => {
+  openDataScope.value = true;
+  loadingRole.value = true;
+
+  if (__.isEmpty(menuTree)) {
+    getAllTreedMenu()
+        .then((data) => {
+          setTreeId(data);
+          menuTree.push(...data)
+        });
+  }
+  for (let key in treeRef.value?.getCheckedKeys()) {
+    treeRef.value?.setChecked(key, false, true);
+  }
+
+}
+
 const reset = () => {
   openDataScope.value = false;
   delArray.value.length = 0;
   addArray.value.length = 0;
+  resetForm();
   for (let key in treeRef.value?.getCheckedKeys()) {
     treeRef.value?.setChecked(key, false, true);
   }
 }
 
-const {isLoading: isGrantLoading, loading: grantLoading, add: grant} = debouncedGrant(delArray.value, reset)
-const {isLoading: isRevokeLoading, loading: revokeLoading, add: revoke} = debouncedRevoke(addArray.value, reset)
+const {isLoading: isGrantLoading, loading: grantLoading, add: grant} = debouncedGrant(addArray.value, reset)
+const {isLoading: isRevokeLoading, loading: revokeLoading, add: revoke} = debouncedRevoke(delArray.value, reset)
 
 
 
@@ -417,21 +452,34 @@ const submitMenu = () => {
 
 
   current.value = <number[]>treeRef.value?.getCheckedKeys();
-  delArray.value.push(...__.difference(original.value, current.value).map(
-      (x, value) => {return {roleId: form.roleId, menuId: value}}
-  ));
-  addArray.value.push(...__.difference(current.value, original.value).map(
-      (x, value) => {return {roleId: form.roleId, menuId: value}}
-  ));
+
+  const delIdTemp = __.difference(original.value, current.value);
+  const addIdTemp = __.difference(current.value, original.value);
+
+  const delRelationTemp = __.map(delIdTemp,
+      (x: number) => {return {roleId: form.roleId, menuId: x}}
+  );
+  const addRelationTemp = __.map(addIdTemp,
+      (x: number) => {return {roleId: form.roleId, menuId: x}}
+  );
+
+  // lodash type errors ignore
+  //@ts-ignore
+  delArray.value.push(...delRelationTemp);
+  //@ts-ignore
+  addArray.value.push(...addRelationTemp);
+
+  console.log(addIdTemp);
 
   if (delArray.value.length > 0) {
-    grantLoading();
-    grant();
-  }
-  if (addArray.value.length > 0) {
     revokeLoading();
     revoke()
   }
+  if (addArray.value.length > 0) {
+    grantLoading();
+    grant();
+  }
+  reset();
 }
 
 const cancelMenu = () => {
@@ -441,16 +489,9 @@ const cancelMenu = () => {
 const loadingRole = ref(false);
 // 查看更改角色menu
 const handleMenu = (row: RoleView) => {
-  openDataScope.value = true;
+  init();
   form.roleId = row.roleId;
-  if (__.isEmpty(menuTree)) {
-    getAllTreedMenu()
-        .then((data) => {
-          setTreeId(data);
-          menuTree.push(...data)
-        });
-  }
-  loadingRole.value = true;
+  form.roleName = row.roleName;
   listRoleMenu(row.roleId).then((data) => {
     original.value = data.map(x => x.menuId);
     loadingRole.value = false;
@@ -459,7 +500,6 @@ const handleMenu = (row: RoleView) => {
     })
 
   })
-
 };
 // created -> 获取列表
 getList()

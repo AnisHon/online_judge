@@ -164,6 +164,7 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (132, '修改目录', 3, 13, '#', 'B', 'problem:folder:update', '#');
 
 # menu_id 20
+# 用户管理
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (200, '封禁用户', 1, 20, '#', 'B', 'user:auth:ban', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (201, '解封用户', 2, 20, '#', 'B', 'user:auth:unban', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (202, '添加用户', 3, 20, '#', 'B', 'user:user:add', '#');
@@ -172,10 +173,10 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (205, '删除用户', 6, 20, '#', 'B', 'user:user:remove', '#');
 
 # menu_id 21 班级管理
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (210, '删除用户', 1, 21, '#', 'B', 'user:class:add', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (211, '删除用户', 2, 21, '#', 'B', 'user:class:edit', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (212, '删除用户', 3, 21, '#', 'B', 'user:class:list', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (213, '删除用户', 3, 21, '#', 'B', 'user:class:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (210, '添加班级', 1, 21, '#', 'B', 'user:class:add', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (211, '编辑班级', 2, 21, '#', 'B', 'user:class:edit', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (212, '列出班级', 3, 21, '#', 'B', 'user:class:list', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (213, '删除班级', 3, 21, '#', 'B', 'user:class:remove', '#');
 
 # menu_id 22 权限管理
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (220, '添加菜单', 1, 22, '#', 'B', 'user:menu:add', '#');
