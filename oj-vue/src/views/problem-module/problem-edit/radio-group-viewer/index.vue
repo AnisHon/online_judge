@@ -1,0 +1,27 @@
+
+
+<template>
+<div>
+  <problem-radio
+      v-for="choice in choices"
+      :key="choice.answerId"
+      :option="numberToLetter(<number>choice.blankIndex)"
+      :content="choice.answerText"
+  />
+</div>
+</template>
+
+<script setup lang="ts">
+
+import ProblemRadio from "@/views/system/problem/ProblemRadio/ProblemRadio.vue";
+import type {Answer} from "@/api/problem";
+import {numberToLetter} from "@/utils/stringUtils";
+const {choices = []} = defineProps<{
+  choices?: Answer[]
+}>();
+
+
+</script>
+<style scoped>
+
+</style>

@@ -33,7 +33,7 @@ public class ChoiceFillAnswers implements Serializable {
     /**
      * 填空题空格索引, 选择题ABCD索引 1表示A
      */
-    private Integer isCorrect;
+    private Boolean isCorrect;
 
     /**
      * 对于填空题，标识是第几个空格（填空题专用）

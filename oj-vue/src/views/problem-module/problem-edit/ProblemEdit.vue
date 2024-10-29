@@ -1,5 +1,6 @@
 <template>
-  <div class="tag-container">
+  <router-view v-if="!isProblemEdit"/>
+  <div class="tag-container" v-if="isProblemEdit">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="题目" prop="problemName">
         <el-input
@@ -160,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import {reactive, ref} from "vue";
+import {computed, reactive, ref} from "vue";
 import {
   type AdminQueryProblem,
   debouncedGetProblem,
@@ -183,7 +184,14 @@ import {
   type TagView
 } from "@/api/problem/label";
 import __ from "lodash";
+import {useRoute, useRouter} from "vue-router";
 
+const route = useRoute();
+const router = useRouter();
+
+const isProblemEdit = computed(() => {
+  return route.name === 'problem-edit';
+})
 
 // 查询需要的表单数据
 const queryParams = reactive<AdminQueryProblem>({
@@ -257,8 +265,6 @@ const handleDelete = (row: ProblemView | Event) => {
           removeProblems(row.problemId).then(getList);
         })
   }
-
-
 }
 
 // 搜索按钮
@@ -269,9 +275,11 @@ const handleQuery = () => {
 }
 
 const handleAdd = () => {
+  router.push({name: "edit-problem"});
 }
 const handleUpdate = (data: ProblemView) => {
-
+  const userId = data?.problemId || ids.value[0];
+  router.push({name: "edit-problem", query: {id: userId}});
 }
 
 const getAuthText = (auth: ProblemAuth) => {

@@ -49,6 +49,12 @@ const dict = {
         {label: "填空题", value: ProblemType.FILL},
         {label: "选择题", value: ProblemType.CHOICE},
         {label: "多选题", value: ProblemType.MULTI_CHOICE},
+    ],
+    difficulty: [
+        {label: '不确定', value: Difficulty.UNKNOWN},
+        {label: '简单', value: Difficulty.SIMPLE},
+        {label: '中等', value: Difficulty.MEDIUM},
+        {label: '困难', value: Difficulty.DIFFICULT},
     ]
 }
 
@@ -120,7 +126,7 @@ interface AdminQueryProblem extends PagedType{
 interface Answer {
     answerId?: number;
     answerText?: string;
-    isCorrect?: 0 | 1;
+    isCorrect?: boolean;
     blankIndex?: number;
     score?: number;
 }
@@ -132,13 +138,40 @@ interface OjCase {
     score?: number;
 }
 
-interface ProblemForm {
-    problem: ProblemView;
-    ojProblem?: OjProblemView;
-    choices?: ChoiceProblemView[];
-    cases?: OjCase[];
+export interface MainProblemForm {
+    problemId?: number,
+    title?: string,
+    description?: string,
+    source?: string,
+    type?: ProblemType
+    auth?: ProblemAuth,
+    createTime?: Date,
+    hint?: string | null,
 }
 
+export interface OjProblemForm {
+    problemId?: number,
+    difficulty?: Difficulty,
+    memoryLimit?: number,
+    stackLimit?: number,
+    timeLimit?: number,
+
+    input?: string,
+    output?: string,
+
+    inputExample?: string,
+    outputExample?: string,
+
+    createTime?: Date,
+}
+
+
+interface ProblemForm {
+    problem: MainProblemForm;
+    ojProblem: OjProblemForm;
+    choices: Answer[];
+    cases: OjCase[];
+}
 
 async function getProblemsAdmin(queryProblem: AdminQueryProblem): Promise<PagedResponse<ProblemView>> {
     const {data} =
@@ -155,6 +188,25 @@ const debouncedGetProblem = (queryData: AdminQueryProblem, success: successCallb
     }, 1000);
     return {loading, isLoading, get};
 }
+
+async function getAdminDetailProblem(id: number | undefined): Promise<ProblemForm> {
+    const {code, data, message} = await get<ProblemForm, number>("/problem-api/problem/detail", id)
+    if (code !== 200) {
+        ElMessage.warning(message)
+    }
+    return data;
+}
+
+const debouncedAdminGetProblem = (id: number | undefined, success: successCallback<ProblemForm>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        getAdminDetailProblem(id)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
+
 
 async function removeProblems(ids: number | number[]) {
     await remove(ids, "/problem-api/problem/batchRemove", "/problem-api/problem/remove");
@@ -223,7 +275,8 @@ async function getDetailProblem(id: number): Promise<ProblemDetailView> {
 
 export type {
     AdminQueryProblem,
-    ProblemForm
+    ProblemForm,
+    Answer
 }
 
 export {
@@ -232,6 +285,7 @@ export {
     debouncedGetProblem,
     removeProblems,
     ProblemAuth,
+    debouncedAdminGetProblem,
     dict
 
 }

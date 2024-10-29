@@ -167,7 +167,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="角色ID" prop="role">
+            <el-form-item label="角色ID" prop="role" v-if="dialogState === 1">
               <el-select v-model="addForm.role" placeholder="请选择角色" :loading="roles.length === 0">
                 <el-option
                     v-for="item of roles"

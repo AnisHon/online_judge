@@ -25,7 +25,7 @@ const md = new MarkdownIt({
 md.use(mk)
 
 
-const {text} = defineProps<{text: string}>();
+const {text = ""} = defineProps<{text?: string}>();
 
 const getRenderText = computed(() => {
   return md.render(text);

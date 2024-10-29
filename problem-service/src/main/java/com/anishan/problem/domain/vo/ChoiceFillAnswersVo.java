@@ -36,9 +36,7 @@ public class ChoiceFillAnswersVo implements Serializable {
     /**
      * 填空题空格索引, 选择题ABCD索引 1表示A
      */
-    @Min(value = 0, groups = {ValidationGroup.Insert.class})
-    @Max(value = 1, groups = {ValidationGroup.Insert.class})
-    private Integer isCorrect;
+    private Boolean isCorrect;
 
     /**
      * 对于填空题，标识是第几个空格（填空题专用）

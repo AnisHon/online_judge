@@ -174,9 +174,9 @@ const additional: RouterType[] = [
         }
     },
     {
-        path: 'edit-problem/:id',
+        path: 'edit-problem',
         name: 'edit-problem',
-        component: RoleAuth,
+        component: ProblemEditView,
         meta: {
             name: "编辑题目",
             parent: 'problem-edit',

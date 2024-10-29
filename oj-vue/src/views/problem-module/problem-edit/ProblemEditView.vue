@@ -1,10 +1,246 @@
+<template>
+  <div v-loading="isGetLoading">
+    <el-row justify="center" :gutter="20" >
+      <el-col :span="12" >
+        <el-form :model="problem" label-width="100px">
+          <el-row>
+            <el-col :span="24">
+              <el-form-item label="题目名称" prop="problem.title">
+                <el-input v-model="problem.problem.title" placeholder="请输入标签名称"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="题目类型" prop="problem.type" >
+                <el-select v-model="problem.problem.type" placeholder="请选择类型" :disabled="!isAdd">
+                  <el-option v-for="item of dict.problemType" :label="item.label" :value="item.value"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" v-if="isOjProblem">
+              <el-form-item label="难度" prop="ojProblem.difficulty" >
+                <el-select v-model="problem.ojProblem.difficulty" placeholder="请选择难度">
+                  <el-option v-for="item of dict.difficulty" :label="item.label" :value="item.value"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12"  v-if="isOjProblem">
+              <el-form-item label="空间限制KiB" prop="ojProblem.memoryLimit" >
+                <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.memoryLimit" placeholder="空间限制"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12"  v-if="isOjProblem">
+              <el-form-item label="时间限制ms" prop="ojProblem.timeLimit" >
+                <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.timeLimit" placeholder="时间限制"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" v-if="isOjProblem">
+              <el-form-item label="栈限制MiB" prop="ojProblem.stackLimit"  >
+                <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.stackLimit" placeholder="栈空间限制"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="来源" prop="problem.source">
+                <el-input v-model="problem.problem.source" placeholder="请输入标签名称"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="题目描述" prop="problem.description">
+                <el-input type="textarea"  v-model="problem.problem.description" placeholder="题目描述"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24" v-if="isOjProblem">
+              <el-form-item label="输入描述" prop="ojProblem.input">
+                <el-input type="textarea"  v-model="problem.ojProblem.input" placeholder="题目描述"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24" v-if="isOjProblem">
+              <el-form-item label="输出描述" prop="ojProblem.output">
+                <el-input type="textarea"  v-model="problem.ojProblem.output" placeholder="题目描述"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24" v-if="isOjProblem">
+              <el-form-item label="输入用例" prop="ojProblem.inputExample">
+                <el-input type="textarea"  v-model="problem.ojProblem.inputExample" placeholder="题目描述"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24" v-if="isOjProblem">
+              <el-form-item label="输出用例" prop="ojProblem.outputExample">
+                <el-input type="textarea"  v-model="problem.ojProblem.outputExample" placeholder="题目描述"/>
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="24">
+              <el-form-item label="提示" prop="problem.hint">
+                <el-input type="textarea" v-model="problem.problem.hint" placeholder="题目描述"/>
+              </el-form-item>
+            </el-col>
+
+            <div v-if="isOjProblem">
+              <div v-for="item of problem.cases" >
+                <el-col :span="12">
+                  <el-form-item label="测试用例" prop="problem.hint">
+                    <el-input type="textarea" v-model="item.input" placeholder="输入用例"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="输出用例" prop="problem.hint">
+                    <el-input type="textarea" v-model="item.output" placeholder="输出用例"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="分数" prop="problem.hint">
+                    <el-input-number :min="0" v-model="item.score" placeholder="分数"/>
+                  </el-form-item>
+                </el-col>
+              </div>
+            </div>
+
+            <el-col :span="24" v-if="isChoiceProblem">
+              <div v-for="item of problem.choices" >
+                <el-row>
+
+                  <el-col :span="12">
+                    <el-form-item :label="numberToLetter(<number>item.blankIndex)" prop="problem.hint">
+                      <el-input type="textarea" v-model="item.answerText" placeholder="输入用例"/>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="分数" prop="problem.hint">
+                      <el-input-number :min="0" v-model="item.score" placeholder="分数"/>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item prop="item.isCorrec" >
+                      <el-checkbox  v-model="item.isCorrect" label="是否是正确答案"/>
+                    </el-form-item>
+                  </el-col>
+
+                </el-row>
+              </div>
+            </el-col>
+
+            <el-col :span="24">
+              <el-space>
+                <el-button type="primary" @click="back">返回</el-button>
+                <el-button type="success" @click="submit">提交</el-button>
+              </el-space>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-col>
+
+      <el-col :span="12">
+        <ProblemReviewer :problem="problem"/>
+      </el-col>
+
+    </el-row>
+  </div>
+</template>
+
 <script setup lang="ts">
+import {useRoute, useRouter} from "vue-router";
+import {computed, reactive, ref} from "vue";
+import __ from "lodash";
+import {
+  debouncedAdminGetProblem, dict,
+  type ProblemForm, ProblemType,
+} from "@/api/problem";
+import ProblemReviewer from "@/views/problem-module/problem-edit/problem-reviewer/ProblemReviewer.vue";
+import type {FormInstance} from "element-plus";
+import {numberToLetter} from "@/utils/stringUtils";
+const route = useRoute();
+
+const problemId = computed(() => {
+  if (route.query.id) {
+    return parseInt(<string>route.query.id)
+  } else {
+    return undefined;
+  }
+});
+
+const problem = reactive<ProblemForm>({
+  problem: {
+    problemId: undefined,
+    title: undefined,
+    description: undefined,
+    source: undefined,
+    type: undefined,
+    auth: undefined,
+    createTime: undefined,
+    hint: undefined,
+  },
+  ojProblem: {
+    problemId: undefined,
+    difficulty: undefined,
+    memoryLimit: undefined,
+    stackLimit: undefined,
+    timeLimit: undefined,
+    input: undefined,
+    output: undefined,
+    inputExample: undefined,
+    outputExample: undefined,
+    createTime: undefined,
+  },
+  choices: [],
+  cases: []
+});
+
+
+const isAdd = computed((): boolean => {
+  return __.isUndefined(problemId.value);
+})
+
+const problemType = computed(() => {
+  return problem.problem?.type;
+})
+
+const isChoiceProblem = computed(() => {
+  return problemType.value === ProblemType.CHOICE || problemType.value === ProblemType.MULTI_CHOICE;
+})
+
+const isOjProblem = computed(() => {
+  return problemType.value === ProblemType.OJ;
+})
+
+const isFillProblem = computed(() => {
+  return problemType.value === ProblemType.FILL;
+})
+
+
+
+const router = useRouter();
+const back = () => {
+  router.push({name: "problem-edit"});
+}
+const submit = () => {
+
+}
+
+
+const {isLoading: isGetLoading, loading: getLoading, get} = debouncedAdminGetProblem(problemId.value, (data) => {
+  __.assign(problem.problem, data.problem);
+  if (data.ojProblem) {
+    __.assign(problem.ojProblem, data.ojProblem);
+  }
+  if (data.cases) {
+    problem.cases?.push(...data.cases);
+  }
+  if (data.choices) {
+    problem.choices?.push(...data.choices);
+  }
+})
+
+// created
+if (!isAdd.value) {
+  getLoading();
+  get();
+}
+
+
+
 
 </script>
 
-<template>
-
-</template>
 
 <style scoped>
 
