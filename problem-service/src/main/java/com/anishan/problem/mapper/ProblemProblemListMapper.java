@@ -2,8 +2,7 @@ package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.ProblemListRelation;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import io.lettuce.core.dynamic.annotation.Param;
+import com.github.yulichang.base.MPJBaseMapper;
 
 import java.util.List;
 
@@ -13,7 +12,7 @@ import java.util.List;
 * @createDate 2024-10-16 22:40:59
 * @Entity com.anishan.problem.entity.ProblemProblemListRelation
 */
-public interface ProblemProblemListMapper extends BaseMapper<ProblemProblemListRelation> {
+public interface ProblemProblemListMapper extends MPJBaseMapper<ProblemProblemListRelation> {
     List<ProblemListRelation> getByListId(Long listId);
 }
 

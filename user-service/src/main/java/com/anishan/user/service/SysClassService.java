@@ -4,9 +4,11 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.ClassDto;
 import com.anishan.user.domain.dto.ClassPagedQuery;
+import com.anishan.user.domain.dto.UserClassQuery;
 import com.anishan.user.domain.entity.SysClass;
 import com.anishan.user.domain.vo.BinaryResultOv;
 import com.anishan.user.domain.vo.ClassVo;
+import com.anishan.user.domain.vo.UserVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.validation.constraints.NotNull;
@@ -49,4 +51,6 @@ public interface SysClassService extends IService<SysClass> {
     PagedResult<ClassVo> listClassOfTeacher(ClassPagedQuery classPagedQuery, Long userId);
 
     boolean createClass(ClassDto classDto);
+
+    PagedResult<UserVo> getStudents(UserClassQuery query);
 }

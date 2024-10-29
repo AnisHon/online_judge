@@ -4,6 +4,7 @@ import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.domain.vo.ProblemListVo;
+import com.anishan.problem.domain.vo.ProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.time.LocalDateTime;
@@ -29,4 +30,6 @@ public interface ProblemListService extends IService<ProblemList> {
     boolean addProblem(List<ProblemListRelationDto> relations);
 
     boolean delProblem(ProblemListRelationDto relation);
+
+    List<ProblemVo> getProblems(Long id);
 }

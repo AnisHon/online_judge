@@ -1,7 +1,7 @@
 package com.anishan.user.mapper;
 
 import com.anishan.api.domain.SysRole;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author anishan
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-03 01:03:09
 * @Entity com.anishan.api.entity.SysRole
 */
-public interface SysRoleMapper extends BaseMapper<SysRole> {
+public interface SysRoleMapper extends MPJBaseMapper<SysRole> {
 
 }
 

@@ -4,6 +4,7 @@ import com.anishan.commons.e.ValidationGroup;
 import com.anishan.commons.domain.R;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
+import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.ProblemProblemListService;
 import io.swagger.annotations.Api;
@@ -63,6 +64,14 @@ public class ListController {
     public R<Boolean> delProblem(@RequestBody @Validated(ValidationGroup.Delete.class) ProblemListRelationDto relations) {
         boolean b = problemListService.delProblem(relations);
         return R.success(b);
+    }
+
+    @PostMapping("/get-problems/{id}")
+    @PreAuthorize("hasAuthority('problem:problrm:list')")
+    @ApiOperation("根据题单获取题目")
+    public R<List<ProblemVo>> getProblems(@PathVariable("id") Long id) {
+        List<ProblemVo> problems = problemListService.getProblems(id);
+        return R.success(problems);
     }
 
 

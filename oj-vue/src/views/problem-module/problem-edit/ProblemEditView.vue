@@ -16,6 +16,13 @@
                 </el-select>
               </el-form-item>
             </el-col>
+            <el-col :span="12">
+              <el-form-item label="公开权限" prop="problem.type" >
+                <el-select v-model="problem.problem.auth" placeholder="请选择类型" >
+                  <el-option v-for="item of dict.problemAuth" :label="item.label" :value="item.value"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
             <el-col :span="12" v-if="isOjProblem">
               <el-form-item label="难度" prop="ojProblem.difficulty" >
                 <el-select v-model="problem.ojProblem.difficulty" placeholder="请选择难度">
@@ -77,24 +84,33 @@
 
             <el-col :span="24" v-if="isOjProblem">
               <el-col :span="24" v-for="item of problem.cases" >
-                <el-space>
-                  <el-form-item label="测试用例" prop="problem.hint">
-                    <el-input type="textarea" v-model="item.input" placeholder="输入用例"/>
-                  </el-form-item>
-                  <el-form-item label="输出用例" prop="problem.hint">
-                    <el-input type="textarea" v-model="item.output" placeholder="输出用例"/>
-                  </el-form-item>
-                </el-space>
+                <el-row>
+                  <el-col :span="12">
+                    <el-form-item label="测试用例" prop="problem.hint">
+                      <el-input type="textarea" v-model="item.input" placeholder="输入用例"/>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="输出用例" prop="problem.hint">
+                      <el-input type="textarea" v-model="item.output" placeholder="输出用例"/>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
 
-                <el-space>
+                <el-row>
+                  <el-col :span="12">
+                    <el-form-item label="分数" prop="problem.hint">
+                      <el-input-number :min="0" :precision="2" v-model="item.score" placeholder="分数"/>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12" style="display: flex; justify-content: center;">
+                    <el-button type="danger" @click="deleteCase(item)">删除</el-button>
 
-                  <el-form-item label="分数" prop="problem.hint">
-                    <el-input-number :min="0" :precision="2" v-model="item.score" placeholder="分数"/>
-                  </el-form-item>
+                  </el-col>
 
 
-                  <el-button type="danger" @click="deleteCase(item)">删除</el-button>
-                </el-space>
+
+                </el-row>
               </el-col>
             </el-col>
 
@@ -160,7 +176,7 @@
             <el-col :span="24">
               <el-space>
                 <el-button type="primary" @click="back">返回</el-button>
-                <el-button type="success" @click="submit">提交</el-button>
+                <el-button type="success" @click="submit" :loading="isUpdateLoading || isAddLoading">提交</el-button>
               </el-space>
             </el-col>
 
@@ -182,8 +198,8 @@ import {useRoute, useRouter} from "vue-router";
 import {computed, reactive, watch} from "vue";
 import __ from "lodash";
 import {
-  type Answer,
-  debouncedAdminGetProblem, dict, type OjCase,
+  type Answer, debouncedAddProblem,
+  debouncedAdminGetProblem, debouncedUpdateProblem, dict, type OjCase,
   type ProblemForm, ProblemType,
 } from "@/api/problem";
 import ProblemReviewer from "@/views/problem-module/problem-edit/problem-reviewer/ProblemReviewer.vue";
@@ -252,8 +268,18 @@ const router = useRouter();
 const back = () => {
   router.push({name: "problem-edit"});
 }
-const submit = () => {
 
+const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateProblem(problem, () => {})
+const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddProblem(problem, () => {})
+
+const submit = () => {
+  if (isAdd.value) {
+    addLoading();
+    add();
+  } else {
+    updateLoading();
+    update();
+  }
 }
 
 const deleteChoice = (item: Answer) => {
@@ -261,10 +287,9 @@ const deleteChoice = (item: Answer) => {
 
   if (isChoiceProblem.value) {
     if (idx != -1) {
-      console.log(idx)
       for (let i = idx + 1; i < problem.choices.length; i++) {
 
-        problem.choices[i].blankIndex = problem.choices[i].blankIndex || 2 - 1;
+        problem.choices[i].blankIndex = (problem.choices[i].blankIndex || 2) - 1;
       }
       problem.choices.splice(idx, 1);
     }
@@ -292,6 +317,7 @@ const addMore = () => {
     }
     problem.choices.push(newAnswer);
   } else if (isOjProblem.value) {
+
     const ojCase: OjCase = {
       input: "",
       output: "",
@@ -320,6 +346,7 @@ const {isLoading: isGetLoading, loading: getLoading, get} = debouncedAdminGetPro
   }
   if (data.cases) {
     problem.cases?.push(...data.cases);
+
   }
   if (data.choices) {
     problem.choices?.push(...data.choices);
@@ -333,10 +360,13 @@ if (!isAdd.value) {
   get();
 }
 
-watch(() => problem.problem.type, () => {
-  problem.cases.length = 0;
-  problem.choices.length = 0;
-})
+if (isAdd.value) {
+  watch(() => problem.problem.type, () => {
+    problem.cases.length = 0;
+    problem.choices.length = 0;
+  })
+}
+
 
 
 

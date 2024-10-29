@@ -55,6 +55,10 @@ const dict = {
         {label: '简单', value: Difficulty.SIMPLE},
         {label: '中等', value: Difficulty.MEDIUM},
         {label: '困难', value: Difficulty.DIFFICULT},
+    ],
+    problemAuth: [
+        {label: "公开题目", value: ProblemAuth.PUBLIC},
+        {label: "比赛题目", value: ProblemAuth.CONTEST},
     ]
 }
 
@@ -145,7 +149,6 @@ export interface MainProblemForm {
     source?: string,
     type?: ProblemType
     auth?: ProblemAuth,
-    createTime?: Date,
     hint?: string | null,
 }
 
@@ -218,12 +221,12 @@ async function addProblems(form: ProblemForm) {
 
 const debouncedAddProblem = (form: ProblemForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const get = debounce(() => {
+    const add = debounce(() => {
         addProblems(form)
             .then(success)
             .finally(finish);
     }, 1000);
-    return {loading, isLoading, get};
+    return {loading, isLoading, add};
 }
 
 async function updateProblems(form: ProblemForm) {
@@ -232,12 +235,12 @@ async function updateProblems(form: ProblemForm) {
 
 const debouncedUpdateProblem = (form: ProblemForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const get = debounce(() => {
+    const update = debounce(() => {
         updateProblems(form)
             .then(success)
             .finally(finish);
     }, 1000);
-    return {loading, isLoading, get};
+    return {loading, isLoading, update};
 }
 
 
@@ -287,6 +290,8 @@ export {
     removeProblems,
     ProblemAuth,
     debouncedAdminGetProblem,
+    debouncedUpdateProblem,
+    debouncedAddProblem,
     dict
 
 }

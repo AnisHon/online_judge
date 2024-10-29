@@ -4,8 +4,8 @@ import com.anishan.api.domain.SysUser;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.domain.vo.UserVo;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -20,7 +20,7 @@ import java.util.List;
 * @Entity com.anishan.api.entity.SysUser
 */
 @Mapper
-public interface SysUserMapper extends BaseMapper<SysUser> {
+public interface SysUserMapper extends MPJBaseMapper<SysUser> {
 
     List<SysUser> selectByTeacherIdLimit(
             @Param("teacherId") Long teacherId,

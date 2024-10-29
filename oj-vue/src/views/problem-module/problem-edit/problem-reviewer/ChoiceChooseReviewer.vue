@@ -3,7 +3,7 @@
 
   <div>
     <div class="choices">
-      <ProblemRadioGroup ref="problemRadioGroupRef" :choices="choices" :is-multi="isMulti" />
+      <ProblemRadioGroupViewer ref="problemRadioGroupRef" :choices="choices" :is-multi="isMulti" />
     </div>
   </div>
 
@@ -12,12 +12,12 @@
 <script setup lang="ts">
 import {type ProblemForm, ProblemType} from "@/api/problem";
 import {computed, ref} from "vue";
-import ProblemRadioGroup from "@/views/problem-module/problem-edit/radio-group-viewer/index.vue";
+import ProblemRadioGroupViewer from "@/views/problem-module/problem-edit/radio-group-viewer/RadioGroupViewer.vue";
 
 const {problemView} = defineProps<{
   problemView: ProblemForm,
 }>();
-const problemRadioGroupRef = ref<InstanceType<typeof ProblemRadioGroup> | null>(null);
+const problemRadioGroupRef = ref<InstanceType<typeof ProblemRadioGroupViewer> | null>(null);
 
 const choices = computed(() => {
   return problemView?.choices || []

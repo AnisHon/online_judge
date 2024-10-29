@@ -14,6 +14,8 @@ public class JudgeRequest {
     @ApiModelProperty("题目ID")
     private Long problemId;
 
+    private Long languageId;
+
     @ApiModelProperty("答案")
     private List<JudgeAnswer> answers;
 

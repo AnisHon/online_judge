@@ -6,8 +6,10 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
 import com.anishan.user.domain.dto.ClassDto;
 import com.anishan.user.domain.dto.ClassPagedQuery;
+import com.anishan.user.domain.dto.UserClassQuery;
 import com.anishan.user.domain.entity.SysClass;
 import com.anishan.user.domain.vo.ClassVo;
+import com.anishan.user.domain.vo.UserVo;
 import com.anishan.user.service.SysClassService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
@@ -102,6 +104,14 @@ public class ClassController {
             return R.success(false);
         }
         return R.success(true);
+    }
+
+    @PostMapping("/student")
+    @PreAuthorize("hasAuthority('user:user:list')")
+    @ApiOperation("根据班级列出学生，管理员专用")
+    public R<PagedResult<UserVo>> listStudent(@RequestBody @Validated UserClassQuery query) {
+        PagedResult<UserVo> result = sysClassService.getStudents(query);
+        return result.toR();
     }
 
 }

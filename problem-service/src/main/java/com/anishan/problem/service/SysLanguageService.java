@@ -14,4 +14,5 @@ import java.util.List;
 public interface SysLanguageService extends IService<SysLanguage> {
 
     List<SysLanguageVo> listAll();
+
 }

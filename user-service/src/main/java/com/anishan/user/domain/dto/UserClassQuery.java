@@ -1,0 +1,26 @@
+package com.anishan.user.domain.dto;
+
+import com.anishan.commons.domain.dto.PagedQuery;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+
+@EqualsAndHashCode(callSuper = true)
+@Data
+@ApiModel("班级用户查询")
+public class UserClassQuery extends PagedQuery<UserClassQuery> {
+
+    @ApiModelProperty("班级ID用于通过角色查找用户")
+    private Long classId;
+    @ApiModelProperty("用户ID用于通过用户查找角色")
+    private String userId;
+    @ApiModelProperty("用户名")
+    private String username;
+    @ApiModelProperty("邮箱")
+    private String email;
+    @ApiModelProperty("昵称")
+    private String nikeName;
+
+}

@@ -115,31 +115,32 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
     // 返回OJ ID
     private Long doAddOjProblem(DetailProblemDto problem) {
-        // 问题主表的ID
-        final Long problemId = problem.getProblem().getProblemId();
 
         OjProblem ojEntity =
                 BeanUtil.copyProperties(problem.getOjProblem(), OjProblem.class);
 
         boolean save = ojProblemService.save(ojEntity);
-
         ThrowUtil.runtime(!save, "OJ题目添加失败");
-
-        if (!CollectionUtil.isEmpty(problem.getCases())) {
-            List<OjProblemCase> entityCase =
-                    BeanUtil.copyToList(problem.getCases(), OjProblemCase.class);
-
-            entityCase.forEach(x -> x.setProblemId(problemId));
-
-            boolean b = ojProblemCaseService.saveBatch(entityCase);
-            ThrowUtil.runtime(!b, "OJ题目测试用例添加失败");
-        }
 
         return ojEntity.getProblemId();
 
 
     }
 
+    private boolean doAddOjCases(DetailProblemDto problem, Long problemId) {
+        if (!CollectionUtil.isEmpty(problem.getCases())) {
+            return true;
+        }
+        List<OjProblemCase> entityCase =
+                BeanUtil.copyToList(problem.getCases(), OjProblemCase.class);
+
+        entityCase.forEach(x -> x.setProblemId(problemId));
+
+        boolean b = ojProblemCaseService.saveBatch(entityCase);
+        ThrowUtil.runtime(!b, "OJ题目测试用例添加失败");
+        return b;
+
+    }
 
     private boolean doAddChoiceFillAnswers(List<ChoiceFillAnswersDto> dtoAnswers, Long problemId) {
         List<ChoiceFillAnswers> answers =
@@ -191,6 +192,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                 Long ojId = doAddOjProblem(problem);
                 entity.setOjId(ojId);
                 result = doAddProblem(entity);
+                result &= doAddOjCases(problem, entity.getProblemId());
                 break;
             case FILL:
                 doAddProblem(entity);
@@ -247,6 +249,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     private boolean doUpdateOjProblem(DetailProblemDto problem) {
+        problem.getCases().forEach(x -> x.setProblemId(problem.getProblem().getProblemId()));
         boolean caseUpdate = doUpdateOjCases(problem.getCases());
         boolean b = ojProblemService.updateById(problem.getOjProblem());
         return caseUpdate || b;
@@ -263,10 +266,13 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     @Override
     @Transactional
     public boolean updateProblem(DetailProblemDto problem) {
-        Problem entity = this.getById(problem.getProblem().getProblemId());
+        ProblemDto dto = problem.getProblem();
+        Problem entity = BeanUtil.copyProperties(dto, Problem.class);
         ThrowUtil.runtime(entity == null, "题目不存在");
 
-        return decidedUpdateProblem(problem, entity);
+        boolean b = this.updateById(entity);
+
+        return b && decidedUpdateProblem(problem, entity);
     }
 
 

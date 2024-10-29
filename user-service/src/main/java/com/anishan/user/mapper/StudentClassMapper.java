@@ -1,7 +1,7 @@
 package com.anishan.user.mapper;
 
 import com.anishan.user.domain.entity.StudentClassRelation;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author anishan
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-06 00:41:19
 * @Entity com.anishan.user.entity.po.StudentClassRelation
 */
-public interface StudentClassMapper extends BaseMapper<StudentClassRelation> {
+public interface StudentClassMapper extends MPJBaseMapper<StudentClassRelation> {
 
 }
 

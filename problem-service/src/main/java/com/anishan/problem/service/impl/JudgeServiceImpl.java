@@ -1,12 +1,14 @@
 package com.anishan.problem.service.impl;
 
 import com.anishan.commons.e.ProblemType;
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.JudgeAnswer;
 import com.anishan.problem.domain.ScoreAndIsCorrected;
 import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.entity.ChoiceFillAnswers;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.Records;
+import com.anishan.problem.domain.entity.SysLanguage;
 import com.anishan.problem.domain.vo.ProblemJudgeResult;
 import com.anishan.problem.service.*;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -19,7 +21,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -30,6 +31,7 @@ public class JudgeServiceImpl implements JudgeService {
     private final ProblemListService problemListService;
     private final RecordsService recordsService;
     private final ChoiceFillAnswersService choiceFillAnswersService;
+    private final SysLanguageService sysLanguageService;
 
     public static boolean answerEquals(Set<?> set1, Set<?> set2){
         if(set1 == null || set2 ==null){
@@ -43,6 +45,11 @@ public class JudgeServiceImpl implements JudgeService {
 
 
     private void judgeOj(Problem problem, JudgeRequest judgeRequest) {
+        SysLanguage language = sysLanguageService.getById(judgeRequest.getLanguageId());
+        ThrowUtil.runtime(language == null, "不支持的语言");
+
+
+
         //todo
     }
 

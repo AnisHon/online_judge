@@ -2,13 +2,18 @@ package com.anishan.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
+import com.anishan.api.domain.SysUser;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.domain.dto.ClassDto;
 import com.anishan.user.domain.dto.ClassPagedQuery;
+import com.anishan.user.domain.dto.UserClassQuery;
+import com.anishan.user.domain.entity.StudentClassRelation;
 import com.anishan.user.domain.vo.BinaryResultOv;
 import com.anishan.user.domain.vo.ClassVo;
+import com.anishan.user.domain.vo.UserVo;
 import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.StudentClassService;
 import com.anishan.user.service.TeacherClassService;
@@ -20,6 +25,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.user.domain.entity.SysClass;
 import com.anishan.user.service.SysClassService;
 import com.anishan.user.mapper.SysClassMapper;
+import com.github.yulichang.interfaces.MPJBaseJoin;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -214,6 +221,25 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
         Long userId = UserUtil.getUserId();
         teacherClassService.addTeacherForClass(userId, sysClass.getClassId());
         return b > 0;
+    }
+
+    @Override
+    public PagedResult<UserVo> getStudents(UserClassQuery query) {
+        Page<SysUser> page = query.customPage();
+
+
+        MPJLambdaWrapper<SysUser> wrapper = new MPJLambdaWrapper<SysUser>()
+                .selectAll(SysUser.class)
+                .leftJoin(StudentClassRelation.class, StudentClassRelation::getStudentId, SysUser::getUserId)
+                .leftJoin(SysClass.class, SysClass::getClassId, StudentClassRelation::getClassId)
+                .likeRight(!StrUtil.isEmpty(query.getEmail()), SysUser::getEmail, query.getEmail())
+                .likeRight(!StrUtil.isEmpty(query.getUsername()), SysUser::getUserName, query.getUsername())
+                .likeRight(!StrUtil.isEmpty(query.getNikeName()), SysUser::getEmail, query.getNikeName())
+                .eq(query.getUserId() != null, SysUser::getUserId, query.getUserId());
+
+        page = wrapper.page(page);
+
+        return PagedResult.build(page, UserVo.class);
     }
 
 

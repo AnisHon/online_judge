@@ -5,7 +5,6 @@ import com.anishan.commons.domain.R;
 import com.anishan.api.exception.IllegalTokenException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import javax.swing.*;
 import org.springframework.security.access.AccessDeniedException;
 import java.util.Objects;
 
@@ -94,7 +92,7 @@ public class GlobalExceptionAdvice {
     @ResponseBody
     @ExceptionHandler(AccessDeniedException.class)
     public R<String> handleAccessDeniedException(AccessDeniedException e) {
-        System.out.println(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+//        System.out.println(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return R.forbidden();
     }
 //

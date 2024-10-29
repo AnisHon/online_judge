@@ -4,18 +4,21 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
+import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.anishan.problem.domain.vo.ProblemListRelationVo;
 import com.anishan.problem.domain.vo.ProblemListVo;
+import com.anishan.problem.domain.vo.ProblemVo;
+import com.anishan.problem.mapper.ProblemMapper;
 import com.anishan.problem.service.ProblemProblemListService;
 import com.anishan.problem.service.ProblemService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.mapper.ProblemListMapper;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +40,8 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
 
     private final ProblemProblemListService problemProblemListService;
     private final ProblemService problemService;
+    private final ProblemMapper problemMapper;
+    private final ProblemListMapper problemListMapper;
 
     public boolean isExistId(Long id) {
         return this.exists(new LambdaQueryWrapper<ProblemList>()
@@ -125,12 +130,21 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
 
     @Override
     public boolean delProblem(ProblemListRelationDto relation) {
-
         return problemProblemListService.remove(
                 new LambdaUpdateWrapper<ProblemProblemListRelation>()
                         .eq(ProblemProblemListRelation::getListId, relation.getListId())
                         .eq(ProblemProblemListRelation::getProblemId, relation.getProblemId())
         );
+    }
+
+    @Override
+    public List<ProblemVo> getProblems(Long id) {
+        MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
+                .selectAll(Problem.class)
+                .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
+                .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
+                .eq(ProblemList::getListId, id);
+        return problemListMapper.selectJoinList(ProblemVo.class, wrapper);
     }
 
 

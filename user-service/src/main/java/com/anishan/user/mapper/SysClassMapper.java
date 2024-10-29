@@ -1,7 +1,7 @@
 package com.anishan.user.mapper;
 
 import com.anishan.user.domain.entity.SysClass;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author anishan
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-03 01:02:36
 * @Entity com.anishan.user.entity.po.SysClass
 */
-public interface SysClassMapper extends BaseMapper<SysClass> {
+public interface SysClassMapper extends MPJBaseMapper<SysClass> {
 
 }
 

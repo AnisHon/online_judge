@@ -1,7 +1,7 @@
 package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.ProblemList;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author happy
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-16 22:39:16
 * @Entity com.anishan.problem.entity.ProblemList
 */
-public interface ProblemListMapper extends BaseMapper<ProblemList> {
+public interface ProblemListMapper extends MPJBaseMapper<ProblemList> {
 
 
 }
