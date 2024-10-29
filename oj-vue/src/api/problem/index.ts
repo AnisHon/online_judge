@@ -276,7 +276,8 @@ async function getDetailProblem(id: number): Promise<ProblemDetailView> {
 export type {
     AdminQueryProblem,
     ProblemForm,
-    Answer
+    Answer,
+    OjCase
 }
 
 export {

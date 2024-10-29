@@ -75,25 +75,28 @@
               </el-form-item>
             </el-col>
 
-            <div v-if="isOjProblem">
-              <div v-for="item of problem.cases" >
-                <el-col :span="12">
+            <el-col :span="24" v-if="isOjProblem">
+              <el-col :span="24" v-for="item of problem.cases" >
+                <el-space>
                   <el-form-item label="测试用例" prop="problem.hint">
                     <el-input type="textarea" v-model="item.input" placeholder="输入用例"/>
                   </el-form-item>
-                </el-col>
-                <el-col :span="12">
                   <el-form-item label="输出用例" prop="problem.hint">
                     <el-input type="textarea" v-model="item.output" placeholder="输出用例"/>
                   </el-form-item>
-                </el-col>
-                <el-col :span="12">
+                </el-space>
+
+                <el-space>
+
                   <el-form-item label="分数" prop="problem.hint">
-                    <el-input-number :min="0" v-model="item.score" placeholder="分数"/>
+                    <el-input-number :min="0" :precision="2" v-model="item.score" placeholder="分数"/>
                   </el-form-item>
-                </el-col>
-              </div>
-            </div>
+
+
+                  <el-button type="danger" @click="deleteCase(item)">删除</el-button>
+                </el-space>
+              </el-col>
+            </el-col>
 
             <el-col :span="24" v-if="isChoiceProblem">
               <div v-for="item of problem.choices" >
@@ -106,17 +109,52 @@
                   </el-col>
                   <el-col :span="12">
                     <el-form-item label="分数" prop="problem.hint">
-                      <el-input-number :min="0" v-model="item.score" placeholder="分数"/>
+                      <el-input-number :min="0" :precision="2" v-model="item.score" placeholder="分数"/>
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item prop="item.isCorrec" >
+                    <el-form-item prop="item.isCorrect" >
                       <el-checkbox  v-model="item.isCorrect" label="是否是正确答案"/>
                     </el-form-item>
+                  </el-col>
+                  <el-col :span="12" style="display: flex; justify-content: center;">
+                    <el-button type="danger" @click="deleteChoice(item)">删除</el-button>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-col>
+
+            <el-col :span="24" v-if="isFillProblem">
+              <div v-for="item of problem.choices" >
+                <el-row>
+
+                  <el-col :span="12">
+                    <el-form-item label="填空索引" prop="problem.hint">
+                      <el-input-number  v-model="item.blankIndex" :controls="false" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="答案" prop="problem.hint">
+                      <el-input type="textarea" v-model="item.answerText" placeholder="输入用例"/>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="分数" prop="problem.hint">
+                      <el-input-number :min="0" v-model="item.score" :precision="2" placeholder="分数"/>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12" style="display: flex; justify-content: center;">
+                    <el-button type="danger" @click="deleteChoice(item)">删除</el-button>
                   </el-col>
 
                 </el-row>
               </div>
+            </el-col>
+
+            <el-col :span="24" style="display: flex; justify-content: center;">
+              <el-button type="success" @click="addMore">
+                添加新数据
+              </el-button>
             </el-col>
 
             <el-col :span="24">
@@ -125,6 +163,8 @@
                 <el-button type="success" @click="submit">提交</el-button>
               </el-space>
             </el-col>
+
+
           </el-row>
         </el-form>
       </el-col>
@@ -139,14 +179,14 @@
 
 <script setup lang="ts">
 import {useRoute, useRouter} from "vue-router";
-import {computed, reactive, ref} from "vue";
+import {computed, reactive, watch} from "vue";
 import __ from "lodash";
 import {
-  debouncedAdminGetProblem, dict,
+  type Answer,
+  debouncedAdminGetProblem, dict, type OjCase,
   type ProblemForm, ProblemType,
 } from "@/api/problem";
 import ProblemReviewer from "@/views/problem-module/problem-edit/problem-reviewer/ProblemReviewer.vue";
-import type {FormInstance} from "element-plus";
 import {numberToLetter} from "@/utils/stringUtils";
 const route = useRoute();
 
@@ -216,6 +256,62 @@ const submit = () => {
 
 }
 
+const deleteChoice = (item: Answer) => {
+  const idx = problem.choices.indexOf(item);
+
+  if (isChoiceProblem.value) {
+    if (idx != -1) {
+      console.log(idx)
+      for (let i = idx + 1; i < problem.choices.length; i++) {
+
+        problem.choices[i].blankIndex = problem.choices[i].blankIndex || 2 - 1;
+      }
+      problem.choices.splice(idx, 1);
+    }
+  } else if (isFillProblem.value) {
+    if (idx != -1) {
+      problem.choices.splice(idx, 1);
+    }
+  }
+
+}
+
+const deleteCase = (item: OjCase) => {
+  const idx = problem.cases.indexOf(item);
+  if (idx != -1) {
+    problem.cases.splice(idx, 1);
+  }
+}
+
+const addMore = () => {
+  if (isFillProblem.value) {
+    const newAnswer: Answer = {
+      answerText: "",
+      blankIndex: undefined,
+      score: 1
+    }
+    problem.choices.push(newAnswer);
+  } else if (isOjProblem.value) {
+    const ojCase: OjCase = {
+      input: "",
+      output: "",
+      score: 1
+    }
+    problem.cases.push(ojCase);
+  } else if (isChoiceProblem.value) {
+    const max = __.maxBy(problem.choices, (x) => x.blankIndex );
+    const newAnswer: Answer = {
+      answerText: "",
+      blankIndex: 1,
+      isCorrect: false,
+      score: 1
+    }
+    if (max) {
+      newAnswer.blankIndex = (max.blankIndex || 1) + 1;
+    }
+    problem.choices.push(newAnswer);
+  }
+}
 
 const {isLoading: isGetLoading, loading: getLoading, get} = debouncedAdminGetProblem(problemId.value, (data) => {
   __.assign(problem.problem, data.problem);
@@ -228,6 +324,7 @@ const {isLoading: isGetLoading, loading: getLoading, get} = debouncedAdminGetPro
   if (data.choices) {
     problem.choices?.push(...data.choices);
   }
+
 })
 
 // created
@@ -235,6 +332,11 @@ if (!isAdd.value) {
   getLoading();
   get();
 }
+
+watch(() => problem.problem.type, () => {
+  problem.cases.length = 0;
+  problem.choices.length = 0;
+})
 
 
 
