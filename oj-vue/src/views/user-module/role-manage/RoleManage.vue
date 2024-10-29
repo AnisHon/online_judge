@@ -456,20 +456,18 @@ const submitMenu = () => {
   const delIdTemp = __.difference(original.value, current.value);
   const addIdTemp = __.difference(current.value, original.value);
 
-  const delRelationTemp = __.map(delIdTemp,
-      (x: number) => {return {roleId: form.roleId, menuId: x}}
-  );
-  const addRelationTemp = __.map(addIdTemp,
-      (x: number) => {return {roleId: form.roleId, menuId: x}}
-  );
 
-  // lodash type errors ignore
-  //@ts-ignore
-  delArray.value.push(...delRelationTemp);
-  //@ts-ignore
-  addArray.value.push(...addRelationTemp);
+  delIdTemp.forEach(x => delArray.value.push({
+    roleId: form.roleId,
+    // @ts-ignore
+    menuId: x
+  }))
 
-  console.log(addIdTemp);
+  addIdTemp.forEach(x => addArray.value.push({
+    roleId: form.roleId,
+    // @ts-ignore
+    menuId: x
+  }))
 
   if (delArray.value.length > 0) {
     revokeLoading();
@@ -479,7 +477,6 @@ const submitMenu = () => {
     grantLoading();
     grant();
   }
-  reset();
 }
 
 const cancelMenu = () => {
