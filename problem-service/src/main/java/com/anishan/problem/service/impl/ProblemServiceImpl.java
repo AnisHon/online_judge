@@ -3,20 +3,23 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import com.anishan.commons.e.ProblemAuth;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.e.ProblemAuth;
 import com.anishan.commons.util.ThrowUtil;
-import com.anishan.problem.domain.dto.*;
-import com.anishan.problem.domain.entity.ChoiceFillAnswers;
-import com.anishan.problem.domain.entity.OjProblem;
-import com.anishan.problem.domain.entity.OjProblemCase;
+import com.anishan.problem.domain.dto.ChoiceFillAnswersDto;
+import com.anishan.problem.domain.dto.DetailProblemDto;
+import com.anishan.problem.domain.dto.PagedProblem;
+import com.anishan.problem.domain.dto.ProblemDto;
+import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.*;
+import com.anishan.problem.mapper.ProblemListMapper;
+import com.anishan.problem.mapper.ProblemMapper;
+import com.anishan.problem.mapper.ProblemProblemListMapper;
 import com.anishan.problem.service.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.problem.domain.entity.Problem;
-import com.anishan.problem.mapper.ProblemMapper;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +42,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final ChoiceFillAnswersService choiceFillAnswersService;
     private final TagService tagService;
     private final OjProblemCaseService ojProblemCaseService;
+    private final ProblemListMapper problemListMapper;
+    private final ProblemProblemListMapper problemProblemListMapper;
 
 
     public Problem doGetProblem(Long id) {
@@ -380,6 +385,33 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
 
+    @Override
+    public PagedResult<ProblemVo> listProblemNotInList(Long listId, PagedProblem query) {
+
+        List<Long> ids = problemProblemListMapper.selectObjs(
+                new LambdaQueryWrapper<ProblemProblemListRelation>()
+                        .select(ProblemProblemListRelation::getProblemId)
+                        .eq(ProblemProblemListRelation::getListId, listId)
+        );
+
+        MPJLambdaWrapper<Problem> wrapper = new MPJLambdaWrapper<Problem>()
+                .distinct()
+                .selectAll(Problem.class)
+                .notIn(!CollectionUtil.isEmpty(ids), Problem::getProblemId, ids)
+                .leftJoin(
+                        ProblemTagRelation.class,
+                        ProblemTagRelation::getProblemId,
+                        Problem::getProblemId
+                )
+                .like(!StrUtil.isEmpty(query.getTitle()), Problem::getTitle, query.getTitle())
+                .eq(query.getType() != null, Problem::getType, query.getType())
+                .eq(query.getProblemId() != null, Problem::getProblemId, query.getProblemId())
+                .in(!CollectionUtil.isEmpty(query.getTagIds()), ProblemTagRelation::getTagId, query.getTagIds());
+
+        Page<ProblemVo> page = query.customPage();
+        page = problemMapper.selectJoinPage(page, ProblemVo.class, wrapper);
+        return PagedResult.build(page);
+    }
 
 
 }

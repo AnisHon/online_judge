@@ -1,8 +1,8 @@
 import axios from 'axios';
 import {useToken} from "@/stores/useToken";
-import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import router from "@/router"
+
 export interface AjaxResult<T> {
     code: number;
     message: string;
@@ -54,16 +54,15 @@ service.interceptors.response.use(
     },
     error => {
         // 处理错误
-        let message: string;
-        if (error.response) {
-            message = error.response.data.message || '请求失败';
-        } else {
-            message = '网络错误，请稍后再试';
-        }
+        console.log(error)
         const data = error.response.data;
-        if (data.code == 401) {
+        if (error.status == 401) {
             error401();
-        } else if (data.code == 400) {
+        } else if (error.status == 400) {
+            ElMessage.error(error.message);
+        } else if (error.status == 404) {
+            ElMessage.error("接口404 : " + error.config.url)
+        } else {
             ElMessage.error(error.message);
         }
         return Promise.reject(data);

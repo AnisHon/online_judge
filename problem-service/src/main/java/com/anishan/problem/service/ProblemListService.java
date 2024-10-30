@@ -19,7 +19,7 @@ import java.util.List;
 */
 public interface ProblemListService extends IService<ProblemList> {
 
-    ProblemListVo getProblemListByListId(Long Id);
+    List<ProblemVo> getProblemListByListId(Long Id);
 
     boolean addProblemList(ProblemListDto pl);
 

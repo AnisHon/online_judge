@@ -3,25 +3,24 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.e.ProblemAuth;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.Problem;
+import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
-import com.anishan.problem.domain.vo.ProblemListRelationVo;
 import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.domain.vo.ProblemVo;
-import com.anishan.problem.mapper.ProblemMapper;
+import com.anishan.problem.mapper.ProblemListMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
+import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.ProblemProblemListService;
 import com.anishan.problem.service.ProblemService;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.problem.domain.entity.ProblemList;
-import com.anishan.problem.service.ProblemListService;
-import com.anishan.problem.mapper.ProblemListMapper;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +42,6 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
 
 
     private final ProblemProblemListService problemProblemListService;
-    private final ProblemService problemService;
-    private final ProblemMapper problemMapper;
     private final ProblemListMapper problemListMapper;
     private final ProblemProblemListMapper problemProblemListMapper;
 
@@ -55,20 +52,18 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
 
-    private ProblemListVo buildProblemListVo(ProblemList pl) {
-        ProblemListVo problemListVo = BeanUtil.copyProperties(pl, ProblemListVo.class);
 
-        List<ProblemListRelationVo> listedProblem = problemProblemListService.getListedProblem(problemListVo.getListId());
-        problemListVo.setProblems(listedProblem);
-
-        return problemListVo;
-    }
 
     @Override
-    public ProblemListVo getProblemListByListId(Long id) {
-        ProblemList pl = this.getById(id);
+    public List<ProblemVo> getProblemListByListId(Long id) {
+        MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
+                .selectAll(ProblemVo.class)
+                .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
+                .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
+                .eq(Problem::getAuth, ProblemAuth.Public)
+                .eq(ProblemList::getListId, id);
 
-        return buildProblemListVo(pl);
+        return problemListMapper.selectJoinList(ProblemVo.class, wrapper);
     }
 
     @Override
@@ -109,23 +104,8 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
 
-    private void doCheckBeforeAddProblem(ProblemListRelationDto plr) {
-        if (!problemService.isExisted(plr.getProblemId())) {
-            throw new RuntimeException("不存在题目ID:" + plr.getProblemId());
-        } else if (isExistId(plr.getListId())) {
-            throw new RuntimeException("不存在列表ID:" + plr.getListId());
-        }
-    }
-    private void checkBeforeAddProblem(List<ProblemListRelationDto> relations) {
-        for (ProblemListRelationDto relation : relations) {
-            doCheckBeforeAddProblem(relation);
-        }
-    }
     @Override
     public boolean addProblem(List<ProblemListRelationDto> relations) {
-
-        checkBeforeAddProblem(relations);
-
         List<ProblemProblemListRelation> list = BeanUtil.copyToList(relations, ProblemProblemListRelation.class);
 
         return problemProblemListService.saveBatch(list);

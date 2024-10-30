@@ -1,11 +1,12 @@
 import {
-    type PagedResponse,
+    type PagedResponse, type PagedType,
     type SortedPagedType,
 } from "@/api/pagedType";
-import {type successCallback} from "@/utils/http";
+import {get, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, fetch, remove, update} from "@/utils/simpleCRUD";
+import {add, postedRemove, remove, update} from "@/utils/simpleCRUD";
+import {ProblemType, type ProblemView} from "@/api/problem";
 
 interface ListView {
     listId: number;
@@ -16,7 +17,72 @@ interface ListView {
 interface ListForm {
     listId?: number;
     listName?: string;
-    remark?: string;
+    description?: string;
+}
+
+interface ListProblemQuery extends PagedType{
+    listId: number,
+    problemId?: string | null;
+    tagIds?: number[] | null;
+    title?: string;
+    type?: ProblemType;
+}
+
+interface ProblemListRelation {
+    listId: number,
+    problemId?: number,
+    problemOrder?: number,
+    score?: number
+}
+
+const delProblemFromList = async (relations: ProblemListRelation[]) => {
+    await postedRemove(relations, '/problem-api/list/del-problem', '/problem-api/list/del-problem');
+}
+
+const addProblemToList = async (relations: ProblemListRelation[]) => {
+    await add(relations, "/problem-api/list/add-problem");
+}
+
+const debouncedAddProblemToList = (relations: ProblemListRelation[], success: successCallback<void>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const add = debounce(() => {
+        addProblemToList(relations)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, add};
+}
+
+async function fetchProblemsNotInList(problemParam: ListProblemQuery) {
+    const {data} = await post<ListProblemQuery, PagedResponse<ProblemView>>(
+        "/problem-api/problem/list-new-problems/" + problemParam.listId, problemParam);
+    return data;
+}
+
+const debouncedFetchProblemsNotInList = (problemParam: ListProblemQuery, success: successCallback<PagedResponse<ProblemView>>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        fetchProblemsNotInList(problemParam)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
+
+async function getProblemsAdmin(listId: number) {
+    const {data} =
+        await get<ProblemView[], number>("/problem-api/list/get-problems", listId);
+    return data;
+}
+
+const debouncedGetProblem = (listId: number, success: successCallback<ProblemView[]>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        getProblemsAdmin(listId)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
 }
 
 interface QueryList extends SortedPagedType{
@@ -25,11 +91,11 @@ interface QueryList extends SortedPagedType{
 }
 
 const removeList = async (id: number | number[]) => {
-    await remove(id, "/user-api/list/del", "/user-api/list/del");
+    await remove(id, "/problem-api/list/del", "/problem-api/list/del");
 }
 
 const addList = async (form: ListForm) => {
-    await add(form, "/user-api/list/add");
+    await add(form, "/problem-api/list/add");
 }
 
 const debouncedAddList = (form: ListForm, success: successCallback<void>) => {
@@ -45,7 +111,7 @@ const debouncedAddList = (form: ListForm, success: successCallback<void>) => {
 
 
 const updateList = async (form: ListForm) => {
-    await update(form, "/user-api/list/update");
+    await update(form, "/problem-api/list/update");
 }
 
 const debouncedUpdateList = (form: ListForm, success: successCallback<void>) => {
@@ -59,7 +125,8 @@ const debouncedUpdateList = (form: ListForm, success: successCallback<void>) => 
 }
 
 const getList = async (queryData: QueryList): Promise<PagedResponse<ListView>> => {
-    return await fetch(queryData, "/user-api/list/page", "/user-api/list/query");
+    const {data} = await post<QueryList, PagedResponse<ListView>>("/problem-api/list/list", queryData);
+    return data;
 }
 
 const debouncedGetList = (queryData: QueryList, success: successCallback<PagedResponse<ListView>>) => {
@@ -75,7 +142,9 @@ const debouncedGetList = (queryData: QueryList, success: successCallback<PagedRe
 export type {
     QueryList,
     ListForm,
-    ListView
+    ListView,
+    ListProblemQuery,
+    ProblemListRelation
 }
 
 export {
@@ -86,6 +155,10 @@ export {
     debouncedAddList,
     updateList,
     debouncedUpdateList,
+    debouncedGetProblem,
+    debouncedFetchProblemsNotInList,
+    debouncedAddProblemToList,
+    delProblemFromList
 }
 
 

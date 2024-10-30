@@ -523,7 +523,7 @@ getList()
   }
 
   .el-table__row .el-dropdown {
-    height: 23px;
+     height: 23px;
   }
   .tree {
     min-width: 250px;

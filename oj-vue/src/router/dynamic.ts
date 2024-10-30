@@ -1,4 +1,4 @@
-import type {MenuType, MenuView} from "@/api/auth/menu";
+import type {MenuType} from "@/api/auth/menu";
 import {type Router} from "vue-router";
 
 const Layout = () => import("@/Layout.vue")
@@ -15,6 +15,7 @@ const AuthManage = () => import("@/views/user-module/auth-manage/AuthManage.vue"
 const ProblemModule = () => import("@/views/problem-module/ProblemModule.vue");
 const FolderEdit = () => import("@/views/problem-module/folder-edit/FolderEdit.vue");
 const ListEdit = () => import("@/views/problem-module/list-edit/ListEdit.vue");
+const ListProblem = () => import("@/views/problem-module/list-edit/ListProblem.vue");
 const ProblemEdit = () => import("@/views/problem-module/problem-edit/ProblemEdit.vue");
 const TagEdit = () => import("@/views/problem-module/tag-edit/TagEdit.vue");
 const ProblemEditView = () => import("@/views/problem-module/problem-edit/ProblemEditView.vue")
@@ -181,9 +182,18 @@ const additional: RouterType[] = [
             name: "编辑题目",
             parent: 'problem-edit',
         }
+    },
+    {
+        path: 'list-problem/:id',
+        name: 'list-problem',
+        component: ListProblem,
+        meta: {
+            name: "列表题目编辑",
+            parent: 'list-edit',
+        }
     }
 ]
-
+// list-problem
 const addDynamics = (dynamicRouters: RouterType[], router: Router) => {
     dynamicRouters.forEach((dynamicRouter: RouterType) => {
         // @ts-ignore

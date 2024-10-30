@@ -39,4 +39,6 @@ public interface ProblemService extends IService<Problem> {
     boolean updateProblem(DetailProblemDto problem);
 
     AdminDetailProblem getAdminDetail(@NotNull Long id);
+
+    PagedResult<ProblemVo> listProblemNotInList(@NotNull Long listId, PagedProblem query);
 }

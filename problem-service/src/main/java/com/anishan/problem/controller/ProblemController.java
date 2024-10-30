@@ -5,7 +5,6 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
 import com.anishan.problem.domain.dto.DetailProblemDto;
 import com.anishan.problem.domain.dto.PagedProblem;
-import com.anishan.problem.domain.dto.ProblemDto;
 import com.anishan.problem.domain.dto.ProblemTagDto;
 import com.anishan.problem.domain.vo.AdminDetailProblem;
 import com.anishan.problem.domain.vo.DetailProblem;
@@ -16,7 +15,6 @@ import com.anishan.problem.service.TagService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
-import net.bytebuddy.implementation.bind.annotation.Empty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -141,7 +139,15 @@ public class ProblemController {
         return R.success(b);
     }
 
-
+    @PostMapping("/list-new-problems/{listId}")
+    @ApiOperation("获取题单中没有的题目")
+    @PreAuthorize("'problem:list:list'")
+    public R<PagedResult<ProblemVo>> listNewProblems(
+            @PathVariable @NotNull Long listId,
+            @RequestBody @Validated PagedProblem query) {
+        PagedResult<ProblemVo> paged = problemService.listProblemNotInList(listId, query);
+        return paged.toR();
+    }
 
 
 

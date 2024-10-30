@@ -1,6 +1,6 @@
 <template>
   <router-view v-if="!isProblemEdit"/>
-  <div class="tag-container" v-if="isProblemEdit">
+  <div class="problem-container" v-if="isProblemEdit">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="题目" prop="problemName">
         <el-input
@@ -139,7 +139,7 @@
 
     <el-dialog title="管理题目标签" v-model="open" width="680px" append-to-body>
       <div >
-        <el-space v-loading="loadingCard">
+        <el-space v-loading="loadingCard" wrap>
           <el-check-tag
               v-for="item of allCards"
               :key="item.tagId"
@@ -382,7 +382,7 @@ getAllTags()
 </style>
 
 <style>
-.tag-container {
+.problem-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;

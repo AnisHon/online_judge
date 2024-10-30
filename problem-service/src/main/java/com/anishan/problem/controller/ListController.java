@@ -1,8 +1,8 @@
 package com.anishan.problem.controller;
 
+import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
-import com.anishan.commons.domain.R;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
@@ -69,9 +69,9 @@ public class ListController {
         return R.success(b);
     }
 
-    @PostMapping("/get-problems/{id}")
+    @GetMapping("/get-problems/{id}")
     @PreAuthorize("hasAuthority('problem:problem:list')")
-    @ApiOperation("根据题单获取题目")
+    @ApiOperation("管理员的根据题单获取题目")
     public R<List<ProblemVo>> getProblems(@PathVariable("id") Long id) {
         List<ProblemVo> problems = problemListService.getProblems(id);
         return R.success(problems);
@@ -91,6 +91,8 @@ public class ListController {
         PagedResult<ProblemListVo> paged = problemListService.listPage(query);
         return paged.toR();
     }
+
+
 
 
 }
