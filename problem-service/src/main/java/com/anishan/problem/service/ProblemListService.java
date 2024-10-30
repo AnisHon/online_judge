@@ -1,5 +1,7 @@
 package com.anishan.problem.service;
 
+import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.ProblemList;
@@ -32,4 +34,6 @@ public interface ProblemListService extends IService<ProblemList> {
     boolean delProblem(List<ProblemListRelationDto> relations);
 
     List<ProblemVo> getProblems(Long id);
+
+    PagedResult<ProblemListVo> listPage(PagedProblemList query);
 }

@@ -2,6 +2,8 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.Problem;
@@ -13,7 +15,9 @@ import com.anishan.problem.mapper.ProblemMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
 import com.anishan.problem.service.ProblemProblemListService;
 import com.anishan.problem.service.ProblemService;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.service.ProblemListService;
@@ -146,6 +150,16 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
                 .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
                 .eq(ProblemList::getListId, id);
         return problemListMapper.selectJoinList(ProblemVo.class, wrapper);
+    }
+
+    @Override
+    public PagedResult<ProblemListVo> listPage(PagedProblemList query) {
+        Page<ProblemList> page = query.page();
+        Wrapper<ProblemList> wrapper = query.wrapper();
+
+        page = this.page(page, wrapper);
+
+        return PagedResult.build(page, ProblemListVo.class);
     }
 
 

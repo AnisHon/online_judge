@@ -1,9 +1,12 @@
 package com.anishan.problem.controller;
 
+import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
 import com.anishan.commons.domain.R;
+import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
+import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.service.ProblemListService;
 import io.swagger.annotations.Api;
@@ -40,6 +43,8 @@ public class ListController {
         return R.success();
     }
 
+
+
     @PostMapping("/update")
     @PreAuthorize("hasAuthority('problem:list:update')")
     @ApiOperation("修改题单")
@@ -65,7 +70,7 @@ public class ListController {
     }
 
     @PostMapping("/get-problems/{id}")
-    @PreAuthorize("hasAuthority('problem:problrm:list')")
+    @PreAuthorize("hasAuthority('problem:problem:list')")
     @ApiOperation("根据题单获取题目")
     public R<List<ProblemVo>> getProblems(@PathVariable("id") Long id) {
         List<ProblemVo> problems = problemListService.getProblems(id);
@@ -77,6 +82,14 @@ public class ListController {
     public R<List<ProblemVo>> getListProblems(@PathVariable("id") Long id) {
         List<ProblemVo> problems = problemListService.getProblems(id);
         return R.success(problems);
+    }
+
+    @PostMapping("/list")
+    @ApiOperation("管理员获取题单")
+    @PreAuthorize("hasAuthority('problem:list:list')")
+    public R<PagedResult<ProblemListVo>> listProblems(@RequestBody @Validated PagedProblemList query) {
+        PagedResult<ProblemListVo> paged = problemListService.listPage(query);
+        return paged.toR();
     }
 
 

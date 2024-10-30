@@ -222,7 +222,6 @@ const problem = reactive<ProblemForm>({
     source: undefined,
     type: undefined,
     auth: undefined,
-    createTime: undefined,
     hint: undefined,
   },
   ojProblem: {
