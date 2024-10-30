@@ -25,7 +25,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.user.domain.entity.SysClass;
 import com.anishan.user.service.SysClassService;
 import com.anishan.user.mapper.SysClassMapper;
-import com.github.yulichang.interfaces.MPJBaseJoin;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -225,21 +224,22 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
 
     @Override
     public PagedResult<UserVo> getStudents(UserClassQuery query) {
-        Page<SysUser> page = query.customPage();
 
-
-        MPJLambdaWrapper<SysUser> wrapper = new MPJLambdaWrapper<SysUser>()
+        System.out.println(query);
+        MPJLambdaWrapper<SysClass> wrapper = new MPJLambdaWrapper<SysClass>()
                 .selectAll(SysUser.class)
-                .leftJoin(StudentClassRelation.class, StudentClassRelation::getStudentId, SysUser::getUserId)
-                .leftJoin(SysClass.class, SysClass::getClassId, StudentClassRelation::getClassId)
+                .leftJoin(StudentClassRelation.class, StudentClassRelation::getClassId, SysClass::getClassId)
+                .leftJoin(SysUser.class, SysUser::getUserId, StudentClassRelation::getStudentId)
                 .likeRight(!StrUtil.isEmpty(query.getEmail()), SysUser::getEmail, query.getEmail())
                 .likeRight(!StrUtil.isEmpty(query.getUsername()), SysUser::getUserName, query.getUsername())
                 .likeRight(!StrUtil.isEmpty(query.getNikeName()), SysUser::getEmail, query.getNikeName())
-                .eq(query.getUserId() != null, SysUser::getUserId, query.getUserId());
+                .eq(query.getUserId() != null, SysUser::getUserId, query.getUserId())
+                .eq(SysClass::getClassId, query.getClassId());
 
-        page = wrapper.page(page);
 
-        return PagedResult.build(page, UserVo.class);
+        Page<UserVo> userVoPage = sysClassMapper.selectJoinPage(query.customPage(), UserVo.class, wrapper);
+
+        return PagedResult.build(userVoPage);
     }
 
 

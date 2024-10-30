@@ -6,7 +6,6 @@ import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.service.ProblemListService;
-import com.anishan.problem.service.ProblemProblemListService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ import java.util.List;
 public class ListController {
 
     private final ProblemListService problemListService;
-    private final ProblemProblemListService problemProblemListService;
 
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('problem:list:add')")
@@ -61,7 +59,7 @@ public class ListController {
     @PostMapping("/del-problem")
     @PreAuthorize("hasAuthority('problem:list:del-problem')")
     @ApiOperation("为题单删除题目")
-    public R<Boolean> delProblem(@RequestBody @Validated(ValidationGroup.Delete.class) ProblemListRelationDto relations) {
+    public R<Boolean> delProblem(@RequestBody @Validated(ValidationGroup.Delete.class) List<ProblemListRelationDto> relations) {
         boolean b = problemListService.delProblem(relations);
         return R.success(b);
     }

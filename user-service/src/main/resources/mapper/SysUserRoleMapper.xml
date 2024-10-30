@@ -6,11 +6,11 @@
 <mapper namespace="com.anishan.user.mapper.SysUserRoleMapper">
 
 
-    <update id="deleteBatch">
+    <delete id="deleteBatch">
         delete from sys_user_role
         where (role_id, user_id) in
             <foreach collection ="relations" item="item" separator="," open="(" close=")">
                 (#{item.roleId}, #{item.userId})
             </foreach>
-    </update>
+    </delete>
 </mapper>

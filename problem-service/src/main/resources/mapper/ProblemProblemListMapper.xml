@@ -15,6 +15,13 @@
         list_id,problem_id,problem_order,
         score
     </sql>
+    <delete id="deleteBatch">
+        delete from problem_problem_list
+        where (problem_id, list_id) in
+        <foreach collection ="relations" item="item" separator="," open="(" close=")">
+            (#{item.problemId}, #{item.listId})
+        </foreach>
+    </delete>
 
     <resultMap id="ProblemListRelation" type="com.anishan.problem.domain.entity.ProblemListRelation">
         <id column="list_id"/>

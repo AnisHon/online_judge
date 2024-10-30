@@ -29,7 +29,7 @@ public interface ProblemListService extends IService<ProblemList> {
 
     boolean addProblem(List<ProblemListRelationDto> relations);
 
-    boolean delProblem(ProblemListRelationDto relation);
+    boolean delProblem(List<ProblemListRelationDto> relations);
 
     List<ProblemVo> getProblems(Long id);
 }

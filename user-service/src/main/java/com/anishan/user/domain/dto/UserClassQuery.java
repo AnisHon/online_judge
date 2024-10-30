@@ -15,7 +15,7 @@ public class UserClassQuery extends PagedQuery<UserClassQuery> {
     @ApiModelProperty("班级ID用于通过角色查找用户")
     private Long classId;
     @ApiModelProperty("用户ID用于通过用户查找角色")
-    private String userId;
+    private Long userId;
     @ApiModelProperty("用户名")
     private String username;
     @ApiModelProperty("邮箱")
