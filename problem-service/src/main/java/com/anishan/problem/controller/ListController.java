@@ -9,7 +9,6 @@ import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.ProblemListVo;
-import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.ProblemProblemListService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
