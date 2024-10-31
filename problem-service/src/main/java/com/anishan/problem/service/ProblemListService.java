@@ -5,6 +5,7 @@ import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.ProblemList;
+import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -33,7 +34,7 @@ public interface ProblemListService extends IService<ProblemList> {
 
     boolean delProblem(List<ProblemListRelationDto> relations);
 
-    List<ProblemVo> getProblems(Long id);
+    List<ProblemInListVo> getProblems(Long id);
 
     PagedResult<ProblemListVo> listPage(PagedProblemList query);
 }

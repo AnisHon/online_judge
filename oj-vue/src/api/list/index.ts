@@ -35,12 +35,23 @@ interface ProblemListRelation {
     score?: number
 }
 
+interface ProblemInListView extends ProblemView {
+    problemOrder?: number;
+    score?: number;
+    tempOrder?: number;
+    tempScore?: number;
+}
+
 const delProblemFromList = async (relations: ProblemListRelation[]) => {
     await postedRemove(relations, '/problem-api/list/del-problem', '/problem-api/list/del-problem');
 }
 
 const addProblemToList = async (relations: ProblemListRelation[]) => {
     await add(relations, "/problem-api/list/add-problem");
+}
+
+const updateProblemRelation = async (relation: ProblemListRelation) => {
+    await update(relation, "/problem-api/list/update-problem")
 }
 
 const debouncedAddProblemToList = (relations: ProblemListRelation[], success: successCallback<void>) => {
@@ -144,7 +155,8 @@ export type {
     ListForm,
     ListView,
     ListProblemQuery,
-    ProblemListRelation
+    ProblemListRelation,
+    ProblemInListView
 }
 
 export {
@@ -158,7 +170,8 @@ export {
     debouncedGetProblem,
     debouncedFetchProblemsNotInList,
     debouncedAddProblemToList,
-    delProblemFromList
+    delProblemFromList,
+    updateProblemRelation
 }
 
 

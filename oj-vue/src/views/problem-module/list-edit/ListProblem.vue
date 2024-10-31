@@ -4,6 +4,16 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
+            type="warning"
+            plain
+            icon="ArrowLeft"
+            size="small"
+            @click="back"
+            v-has="'problem:list:add-problem'"
+        >返回</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
             type="primary"
             plain
             icon="plus"
@@ -11,6 +21,16 @@
             @click="handleAdd"
             v-has="'problem:list:add-problem'"
         >添加题目</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+            type="success"
+            plain
+            icon="plus"
+            size="small"
+            @click="isEdit = !isEdit"
+            v-has="'problem:list:add-problem'"
+        >开启/关闭修改</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -27,7 +47,7 @@
     </el-row>
 
     <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
-    <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
+    <el-table v-loading="isLoading" :data="sortedTableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" />
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
@@ -49,6 +69,16 @@
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[6].visible" />
       <el-table-column label="提示" width="60" align="center" prop="hint" v-if="columns[7].visible" />
+      <el-table-column label="问题顺序" align="center" prop="problemOrder" v-if="columns[8].visible">
+        <template v-slot="scope">
+          <el-input-number v-model="scope.row.tempOrder" :disabled="!isEdit" :controls="false" @keyup.enter="$event.target.blur()" @blur="handleUpdate(scope.row)"/>
+        </template>
+      </el-table-column>
+      <el-table-column label="问题分数" align="center" prop="score" v-if="columns[9].visible" >
+        <template v-slot="scope">
+          <el-input-number v-model="scope.row.tempScore" :disabled="!isEdit" @keyup.enter="$event.target.blur()"  :controls="false" :precision="2" @blur="handleUpdate(scope.row)"/>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
@@ -89,26 +119,24 @@
 import {computed, reactive, ref} from "vue";
 import {
   ProblemAuth,
-  type ProblemView,
 } from "@/api/problem";
-import {useColumn} from "@/hooks/useColumn";
+import {useStatuesColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElMessageBox} from "element-plus";
+import {ElDialog, ElInputNumber, ElMessageBox, type InputInstance} from "element-plus";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
-import {useRoute} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import {
   debouncedAddProblemToList,
   debouncedGetProblem, delProblemFromList,
-  type ListProblemQuery,
-  type ProblemListRelation
+  type ListProblemQuery, type ProblemInListView,
+  type ProblemListRelation, updateProblemRelation
 } from "@/api/list";
 import ListProblemView from "@/views/problem-module/list-edit/list-problem-view/ListProblemView.vue";
 
-
 const route = useRoute();
-
+const router = useRouter();
 const listId = computed((): number => {
   return parseInt(<string>route.params.id);
 })
@@ -133,7 +161,10 @@ const form = reactive<ProblemListRelation>({
   problemOrder: 0
 })
 
-const {columns} = useColumn(['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']);
+const {columns} = useStatuesColumn(
+    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示', '问题顺序', '分数'],
+    [true, true, false, false, true, true, false, false, true, true]
+);
 
 // 弹窗是否打开
 const open = ref(false)
@@ -144,12 +175,20 @@ const {loading, isLoading, get: getProblem} = debouncedGetProblem(listId.value, 
   if (data) {
     tableList.length = 0;
     tableList.push(...data)
+    tableList.forEach(x => {
+      x.tempOrder = x.problemOrder
+      x.tempScore = x.score
+    })
   }
 
 });
 
 
-const tableList = reactive<ProblemView[]>([]);
+const tableList = reactive<ProblemInListView[]>([]);
+const sortedTableList = computed(() => {
+  tableList.sort((a, b) => <number>a.problemOrder - <number>b.problemOrder)
+  return tableList;
+})
 const total = ref<number>(0);
 
 // 获取列表
@@ -167,7 +206,19 @@ const ids = ref<number[]>([])
 
 const addProblemIds = ref<number[]>([])
 
-const handleSelectionChange = (selection: ProblemView[]) => {
+const isEdit = ref(false)
+
+interface SelectionCellProps {
+  value: string
+  intermediate?: boolean
+  onChange: (value: string) => void
+  onBlur: () => void
+  onKeydownEnter: () => void
+  forwardRef: (el: InputInstance) => void
+}
+
+
+const handleSelectionChange = (selection: ProblemInListView[]) => {
   ids.value = selection.map(item => item.problemId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
@@ -175,7 +226,7 @@ const handleSelectionChange = (selection: ProblemView[]) => {
 
 
 
-const handleDelete = (row: ProblemView | Event) => {
+const handleDelete = (row: ProblemInListView | Event) => {
   const relations = ids.value.map(x => {
     return {
       listId: listId.value,
@@ -204,8 +255,21 @@ const handleDelete = (row: ProblemView | Event) => {
 const handleAdd = () => {
   open.value = true;
 }
-const handleUpdate = (data: ProblemView) => {
-  open.value = true;
+const handleUpdate = (data: ProblemInListView) => {
+  if (data.tempOrder === null || data.tempScore === null) {
+    data.tempOrder = data.problemOrder;
+    data.tempScore = data.score;
+    return
+  } else if (data.tempScore === data.score && data.tempOrder === data.problemOrder) {
+    return;
+  }
+  data.problemOrder = data.tempOrder;
+  updateProblemRelation({
+    listId: listId.value,
+    problemId: data.problemId,
+    problemOrder: data.problemOrder,
+    score: data.score
+  })
 }
 
 const getAuthText = (auth: ProblemAuth) => {
@@ -252,6 +316,11 @@ const submit = () => {
   add();
 }
 
+
+// 返回
+const back = () => {
+  router.push({name: "list-edit"})
+}
 
 // created -> 获取列表
 getList();

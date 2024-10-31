@@ -8,9 +8,13 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     CodeEditor: typeof import('./src/components/CodeEditor/CodeEditor.vue')['default']
+    CustomCard: typeof import('./src/components/CustomCard/CustomCard.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
+    ElCard: typeof import('element-plus/es')['ElCard']
+    ElCarousel: typeof import('element-plus/es')['ElCarousel']
+    ElCarouselItem: typeof import('element-plus/es')['ElCarouselItem']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
     ElCheckTag: typeof import('element-plus/es')['ElCheckTag']
     ElCol: typeof import('element-plus/es')['ElCol']

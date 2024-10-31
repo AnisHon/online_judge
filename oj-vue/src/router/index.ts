@@ -93,7 +93,7 @@ export const constRoutes =  [
   },
   {
     path: "/index",
-    home: "index",
+    name: "index",
     component: Index,
     meta: {
       isLoginAccess: true,

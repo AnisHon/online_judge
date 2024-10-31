@@ -10,13 +10,13 @@ import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
+import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.mapper.ProblemListMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.ProblemProblemListService;
-import com.anishan.problem.service.ProblemService;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -123,13 +123,15 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
     @Override
-    public List<ProblemVo> getProblems(Long id) {
+    public List<ProblemInListVo> getProblems(Long id) {
         MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
                 .selectAll(Problem.class)
+                .select(ProblemProblemListRelation::getProblemOrder, ProblemProblemListRelation::getScore)
                 .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
                 .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
-                .eq(ProblemList::getListId, id);
-        return problemListMapper.selectJoinList(ProblemVo.class, wrapper);
+                .eq(ProblemList::getListId, id)
+                .isNotNull(Problem::getProblemId);
+        return problemListMapper.selectJoinList(ProblemInListVo.class, wrapper);
     }
 
     @Override

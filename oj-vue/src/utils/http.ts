@@ -54,8 +54,6 @@ service.interceptors.response.use(
     },
     error => {
         // 处理错误
-        console.log(error)
-        const data = error.response.data;
         if (error.status == 401) {
             error401();
         } else if (error.status == 400) {
@@ -65,7 +63,7 @@ service.interceptors.response.use(
         } else {
             ElMessage.error(error.message);
         }
-        return Promise.reject(data);
+        return error;
     }
 );
 

@@ -6,9 +6,13 @@ import com.anishan.commons.e.ValidationGroup;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
+import com.anishan.problem.domain.entity.ProblemProblemListRelation;
+import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.service.ProblemListService;
+import com.anishan.problem.service.ProblemProblemListService;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +30,7 @@ import java.util.List;
 public class ListController {
 
     private final ProblemListService problemListService;
+    private final ProblemProblemListService problemProblemListService;
 
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('problem:list:add')")
@@ -61,6 +66,27 @@ public class ListController {
         return R.success(b);
     }
 
+    @PostMapping("/update-problem")
+    @PreAuthorize("hasAuthority('problem:list:add-problem')")
+    @ApiOperation("修改题单题目顺序之类的")
+    public R<Boolean> updateProblem(@RequestBody ProblemProblemListRelation relation) {
+        boolean update = problemProblemListService.update(
+                new LambdaUpdateWrapper<ProblemProblemListRelation>()
+                        .set(
+                                relation.getScore() != null,
+                                ProblemProblemListRelation::getScore,
+                                relation.getScore()
+                        )
+                        .set(relation.getProblemOrder() != null,
+                                ProblemProblemListRelation::getProblemOrder,
+                                relation.getProblemOrder()
+                        )
+                        .eq(ProblemProblemListRelation::getProblemId, relation.getProblemId())
+                        .eq(ProblemProblemListRelation::getListId, relation.getListId())
+        );
+        return R.success(update);
+    }
+
     @PostMapping("/del-problem")
     @PreAuthorize("hasAuthority('problem:list:del-problem')")
     @ApiOperation("为题单删除题目")
@@ -72,15 +98,16 @@ public class ListController {
     @GetMapping("/get-problems/{id}")
     @PreAuthorize("hasAuthority('problem:problem:list')")
     @ApiOperation("管理员的根据题单获取题目")
-    public R<List<ProblemVo>> getProblems(@PathVariable("id") Long id) {
-        List<ProblemVo> problems = problemListService.getProblems(id);
+    public R<List<ProblemInListVo>> getProblems(@PathVariable("id") Long id) {
+        List<ProblemInListVo> problems = problemListService.getProblems(id);
         return R.success(problems);
     }
 
     @PostMapping("/problems/{id}}")
     @ApiOperation("用户题单获取，可能由于存在比赛题目题单返回空集合")
-    public R<List<ProblemVo>> getListProblems(@PathVariable("id") Long id) {
-        List<ProblemVo> problems = problemListService.getProblems(id);
+    public R<List<ProblemInListVo>> getListProblems(@PathVariable("id") Long id) {
+//        todo
+        List<ProblemInListVo> problems = problemListService.getProblems(id);
         return R.success(problems);
     }
 

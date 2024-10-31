@@ -1,0 +1,59 @@
+package com.anishan.problem.domain.vo;
+
+import com.anishan.commons.e.ProblemAuth;
+import com.anishan.commons.e.ProblemType;
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+/**
+ * 题目主表，OJ题目有分表，非OJ不需要继续分表
+ * @TableName problem
+ */
+@TableName(value ="problem")
+@Data
+@ApiModel("列表中获取的Problem，有顺序和分数属性")
+public class ProblemInListVo {
+
+    @ApiModelProperty("题目分数")
+    private BigDecimal score;
+
+    @ApiModelProperty("题目顺序")
+    private Integer problemOrder;
+
+    @TableId(type = IdType.AUTO)
+    @ApiModelProperty("主键")
+    private Long problemId;
+
+    @ApiModelProperty("题目名称")
+    private String title;
+
+
+
+    @ApiModelProperty("题目类型，(1 OJ, 2 FILL, 3 CHOICE 4 MUlTI_CHOICE)")
+    private ProblemType type;
+
+    @ApiModelProperty("题目来源")
+    private String source;
+
+    @ApiModelProperty("题目描述")
+    private String description;
+
+    @ApiModelProperty("备注,提醒")
+    private String hint;
+
+    @EnumValue
+    @ApiModelProperty("默认为1公开，2为比赛题目")
+    private ProblemAuth auth;
+
+    @ApiModelProperty("创建时间")
+    private LocalDateTime createTime;
+
+}
