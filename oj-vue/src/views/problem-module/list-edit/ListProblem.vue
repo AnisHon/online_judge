@@ -263,6 +263,7 @@ const handleUpdate = (data: ProblemInListView) => {
   } else if (data.tempScore === data.score && data.tempOrder === data.problemOrder) {
     return;
   }
+  data.score = data.tempScore;
   data.problemOrder = data.tempOrder;
   updateProblemRelation({
     listId: listId.value,

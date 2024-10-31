@@ -139,7 +139,9 @@ const loginGuard = (isMatched: boolean, needLogin: boolean, isLoginAccess: boole
 
 router.beforeEach((to, from, next) => {
 
-  NProgress.start()
+  try {
+    NProgress.start()
+  } catch (ignore) {}
   const needLogin = to.matched.some((v) => v.meta.requireAuth);
   const isLoginAccess = to.matched.some(v => v.meta.isLoginAccess);
   const isMatched = !__.isEmpty(to.matched)
@@ -171,7 +173,9 @@ router.beforeEach((to, from, next) => {
 });
 
 router.afterEach(() => {
-  NProgress.done();
+  try {
+    NProgress.done();
+  } catch (ignore) {}
 });
 
 export default router;
