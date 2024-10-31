@@ -102,7 +102,7 @@ public class ListController {
         return R.success(problems);
     }
 
-    @PostMapping("/problems/{id}}")
+    @GetMapping("/problems/{id}")
     @ApiOperation("用户题单获取，可能由于存在比赛题目题单返回空集合")
     public R<List<ProblemInListVo>> getListProblems(@PathVariable("id") Long id) {
 //        todo

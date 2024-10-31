@@ -7,6 +7,7 @@ import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, postedRemove, remove, update} from "@/utils/simpleCRUD";
 import {ProblemType, type ProblemView} from "@/api/problem";
+import type {FolderView} from "@/api/folder";
 
 interface ListView {
     listId: number;
@@ -41,6 +42,10 @@ interface ProblemInListView extends ProblemView {
     tempOrder?: number;
     tempScore?: number;
 }
+
+
+
+
 
 const delProblemFromList = async (relations: ProblemListRelation[]) => {
     await postedRemove(relations, '/problem-api/list/del-problem', '/problem-api/list/del-problem');
@@ -85,6 +90,27 @@ async function getProblemsAdmin(listId: number) {
         await get<ProblemView[], number>("/problem-api/list/get-problems", listId);
     return data;
 }
+
+/**
+ * 通过题单获取题目，用户专用
+ * @param listId 题单ID
+ */
+async function getProblems(listId: number) {
+    const {data} =
+        await get<ProblemInListView[], number>("/problem-api/list/problems", listId);
+    return data;
+}
+
+const debouncedUserGetProblem = (listId: number, success: successCallback<ProblemInListView[]>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        getProblems(listId)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
+
 
 const debouncedGetProblem = (listId: number, success: successCallback<ProblemView[]>) => {
     const {loading, isLoading, finish} = useLoading()
@@ -156,7 +182,8 @@ export type {
     ListView,
     ListProblemQuery,
     ProblemListRelation,
-    ProblemInListView
+    ProblemInListView,
+
 }
 
 export {
@@ -171,7 +198,9 @@ export {
     debouncedFetchProblemsNotInList,
     debouncedAddProblemToList,
     delProblemFromList,
-    updateProblemRelation
+    updateProblemRelation,
+    debouncedUserGetProblem,
+    getProblems
 }
 
 

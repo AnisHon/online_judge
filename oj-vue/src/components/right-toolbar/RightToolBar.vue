@@ -111,13 +111,13 @@ if (showColumnsType == 'transfer') {
 </script>
 
 <style scoped lang="scss">
-::v-deep .el-transfer__button {
+:deep(.el-transfer__button) {
   border-radius: 50%;
   padding: 12px;
   display: block;
   margin-left: 0;
 }
-::v-deep .el-transfer__button:first-child {
+:deep( .el-transfer__button:first-child) {
   margin-bottom: 10px;
 }
 

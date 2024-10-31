@@ -64,6 +64,14 @@ public class FolderController {
         return R.success(b);
     }
 
+    @GetMapping("/batchDel/{ids}")
+    @PreAuthorize("hasAuthority('problem:folder:del')")
+    @ApiOperation("删除folder")
+    public R<Boolean> batchDelFolder(@PathVariable List<Long> ids) {
+        boolean b = folderService.removeByIds(ids);
+        return R.success(b);
+    }
+
 
 
 
