@@ -27,15 +27,27 @@ interface FolderForm {
 }
 
 interface TreedFolderView {
+    id?: number;
     folder: FolderView;
     children: TreedFolderView[];
     file: boolean;
 }
 
-const getTreedListView = async () => {
+const getTreedFolderView = async () => {
     const {data} = await get<TreedFolderView[]>("/problem-api/folder/list-tree");
     return data;
 }
+
+const debouncedGetTreedFolder = (success: successCallback<TreedFolderView[]>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        getTreedFolderView()
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
+
 
 const dict = {
     folderType: [
@@ -111,7 +123,8 @@ export {
     debouncedAddFolder,
     updateFolder,
     debouncedUpdateFolder,
-    getTreedListView,
+    getTreedFolderView,
+    debouncedGetTreedFolder,
     dict,
     FolderType
 }

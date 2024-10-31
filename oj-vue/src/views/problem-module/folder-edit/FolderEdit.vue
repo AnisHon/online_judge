@@ -37,14 +37,20 @@
     </el-row>
 
     <!--    ['文件夹ID', '文件夹名称', '文件夹颜色', '文件夹颜色预览','创建时间']-->
-    <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
+    <el-table
+        v-loading="isLoading"
+        :data="tableList"
+        @selection-change="handleSelectionChange"
+        :tree-props="treeProps"
+        row-key="folder.folderId"
+    >
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="文件夹ID" align="center" prop="folderId" v-if="columns[0].visible" />
-      <el-table-column label="文件夹名称" align="center" prop="folderName" v-if="columns[1].visible" />
-      <el-table-column label="文件夹类型" align="center" prop="folderType" v-if="columns[1].visible" />
-      <el-table-column label="题单ID" align="center" prop="listId" v-if="columns[3].visible" />
-      <el-table-column label="父文件ID" align="center" prop="parentId" v-if="columns[4].visible" />
-      <el-table-column label="操作" align="center" folder-name="small-padding fixed-width">
+      <el-table-column label="文件夹ID" align="center" prop="folder.folderId" v-if="columns[0].visible" />
+      <el-table-column label="文件夹名称" align="center" prop="folder.folderName" v-if="columns[1].visible" />
+      <el-table-column label="文件夹类型" align="center" prop="folder.folderType" v-if="columns[1].visible" />
+      <el-table-column label="题单ID" align="center" prop="folder.listId" v-if="columns[3].visible" />
+      <el-table-column label="父文件ID" align="center" prop="folder.parentId" v-if="columns[4].visible" />
+      <el-table-column label="操作" align="center" folder-name="folder.small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
               size="small"
@@ -82,21 +88,29 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="题单ID" prop="icon">
-              <el-input-number v-model="form.listId" :controls="false" :disabled="form.folderType !== FolderType.FILE"  placeholder="请输入题单ID" />
+              <el-input-number
+                  v-model="form.listId"
+                  @click="openSelectList = true"
+                  :controls="false"
+                  :disabled="form.folderType !== FolderType.FILE"
+                  placeholder="请输入题单ID"
+              />
 
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="父ID" prop="icon">
-              <el-select v-model="form.parentId" placeholder="请选择类型" default-first-option>
-                <el-option label="无" :value="0"/>
-                <el-option
-                    v-for="item of tableList"
-                    :label="`${item.folderId}
-                    ${item.folderName}`"
-                    :value="item.folderId"
-                />
-              </el-select>
+              <el-tree
+                  ref="treeRef"
+                  node-key="id"
+                  :props="defaultProps"
+                  :data="tableList"
+                  show-checkbox
+                  :check-strictly="true"
+                  :filter-node-method="filterNode"
+                  @check="handleCheckChange"
+
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -108,6 +122,10 @@
         </div>
       </template>
     </el-dialog>
+
+    <el-dialog title="选择题单" v-model="openSelectList" append-to-body>
+      <ListView v-model="form.listId" v-model:isOpen="openSelectList"/>
+    </el-dialog>
   </div>
 </template>
 
@@ -115,18 +133,19 @@
 import {computed, reactive, ref} from "vue";
 import {
   debouncedAddFolder,
-  debouncedGetFolder,
   debouncedUpdateFolder,
+  debouncedGetTreedFolder,
   dict,
   type FolderForm,
   FolderType,
   type FolderView,
-  removeFolder
+  removeFolder, type TreedFolderView
 } from "@/api/folder";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
-import {ElDialog, ElMessageBox} from "element-plus";
+import {ElDialog, ElMessageBox, type ElTree} from "element-plus";
 import __ from "lodash";
+import ListView from "@/views/problem-module/folder-edit/ListView.vue";
 
 
 // 查询需要的表单数据
@@ -140,14 +159,25 @@ const form = reactive<FolderForm>({
   parentId: undefined,
 });
 
+const treeProps = reactive({
+  checkStrictly: false,
+  indent: 100
+})
+
+const defaultProps = {
+  children: (x: TreedFolderView) => x.children,
+  label: (x: TreedFolderView) => x.folder.folderName,
+}
+
+// 树形图的ref
+const treeRef = ref<InstanceType<typeof ElTree>>()
 
 const rules = ref();
 
 const open = ref(false);
+const openSelectList = ref(false);
 
 const {columns} = useColumn(['文件夹ID', '文件夹名称', '文件夹类型', "题单ID", '父文件夹ID']);
-
-
 
 
 // 重置表单
@@ -159,20 +189,44 @@ const resetForm = () => {
   form.folderType = undefined;
 }
 
+const setNodeKey = (node: TreedFolderView[]) => {
+  node.forEach(x => {
+    x.id = x.folder.folderId
+    if (!x.file) {
+      setNodeKey(x.children);
+    }
+  })
+}
+
 const showSearch = ref(true);
 
-const {loading, isLoading, get: getFolder} = debouncedGetFolder((data) => {
+const {loading, isLoading, get: getFolder} = debouncedGetTreedFolder((data) => {
   tableList.length = 0;
   tableList.push(...data)
+  setNodeKey(tableList)
 });
 
-const tableList = reactive<FolderView[]>([]);
+const tableList = reactive<TreedFolderView[]>([]);
 
 // 获取列表
 const getList = () => {
   loading();
   getFolder();
 
+}
+
+// 过滤
+const filterNode = (value: number | undefined, data: TreedFolderView) => {
+  let result = true;
+  if (value) {
+    result = (data.folder.folderId !== value)
+  }
+  return result && !data.file;
+}
+
+const handleCheckChange = (data: TreedFolderView, checked: boolean, indeterminate: boolean) => {
+  treeRef.value!.setCheckedKeys([], false);
+  treeRef.value?.setChecked(data.folder.folderId, checked, false);
 }
 
 // 多选或者单选
@@ -182,14 +236,10 @@ const multiple = ref(true)
 // 选择列的id数组
 const ids = ref<number[]>([])
 
-const handleSelectionChange = (selection: FolderView[]) => {
-  ids.value = selection.map(item => item.folderId);
+const handleSelectionChange = (selection: TreedFolderView[]) => {
+  ids.value = selection.map(item => item.folder.folderId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
-}
-
-const filterList = (id: number) => {
-  return tableList.filter(x => x.listId !== id && x.folderType !== FolderType.FILE)
 }
 
 
@@ -233,17 +283,25 @@ const title = computed(() => {
   return dialogState.value === 1 ? "添加" : "修改";
 })
 const handleAdd = () => {
+  treeRef.value?.filter(-1)
   dialogState.value = 1;
   open.value = true;
 }
-const handleUpdate = (data: FolderView) => {
+const handleUpdate = (data: TreedFolderView) => {
+  treeRef.value?.filter(data.folder.folderId)
   open.value = true;
   dialogState.value = 2;
-  __.assign(form, data)
+  __.assign(form, data.folder)
 }
 
 const submitForm = () => {
 
+  const keys = treeRef.value?.getCheckedKeys();
+  if (keys?.length) {
+    form.parentId = <number>keys[0]
+  } else {
+    form.parentId = undefined;
+  }
   if (dialogState.value === 1) {
     addLoading();
     // 添加
@@ -259,10 +317,6 @@ const cancel = () => {
   open.value = false;
   resetForm()
 }
-
-
-
-
 
 
 // created -> 获取列表

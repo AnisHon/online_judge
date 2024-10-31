@@ -46,7 +46,7 @@
 
 <script lang="ts" setup>
 import {computed, reactive, ref} from 'vue'
-import {getTreedListView, type TreedFolderView} from "@/api/folder";
+import {getTreedFolderView, type TreedFolderView} from "@/api/folder";
 import {getProblems, type ProblemInListView} from "@/api/list";
 import {useRouter} from "vue-router";
 import {problemTypeToString} from "@/utils/problem";
@@ -80,7 +80,7 @@ const handleNodeClick = (node: TreedFolderView) => {
 }
 
 // created
-getTreedListView()
+getTreedFolderView()
     .then((data) => treedViews.push(...data));
 
 
