@@ -3,8 +3,11 @@ package com.anishan.problem.service;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.problem.domain.dto.ContestDto;
+import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
+import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
+import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.validation.constraints.NotNull;
@@ -35,4 +38,8 @@ public interface ContestService extends IService<Contest> {
     boolean addContest(ContestDto contestDto);
 
     PagedResult<ContestVo> listContestsAdmin(PagedQuery<Contest> pagedQuery);
+
+    ContestJoinResponse joinContest(Long userId, ContestJoinRequest contestJoinRequest);
+
+    List<ProblemInListVo> listProblemInContest(Long userId, @NotNull Long contestId);
 }

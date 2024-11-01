@@ -71,6 +71,11 @@ export const constRoutes =  [
         component: () => import('@/views/contest/Contest.vue'),
       },
       {
+        path: "contest-problems/:id",
+        name: "contest-problems",
+        component: () => import('@/views/contest/ContestProblems.vue'),
+      },
+      {
         path: "list",
         name: "list",
         component: () => import('@/views/list/List.vue'),

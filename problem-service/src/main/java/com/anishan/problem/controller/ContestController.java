@@ -5,9 +5,15 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
 import com.anishan.problem.domain.dto.ContestDto;
+import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
+import com.anishan.problem.domain.entity.UserContestRelation;
+import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
+import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.service.ContestService;
+import com.anishan.problem.service.UserContestService;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +32,7 @@ import java.util.List;
 public class ContestController {
 
 
-
+    private final UserContestService userContestService;
     private final ContestService contestService;
 
     @GetMapping("/get/{id}")
@@ -93,6 +99,34 @@ public class ContestController {
         contestDto.setUserId(userId);
         boolean b = contestService.addContest(contestDto);
         return R.success(b);
+    }
+
+
+
+    @GetMapping("/is-joined/{id}")
+    @ApiOperation("判断用户是否加入比赛")
+    public R<Boolean> isJoined(@RequestHeader("user-id") Long userId, @NotNull @PathVariable Long id) {
+        boolean b = contestService.isUserJoined(id, userId);
+        return R.success(b);
+    }
+
+    @PostMapping("/join")
+    @ApiOperation("用户参加比赛接口")
+    public R<ContestJoinResponse> joinContest(
+            @RequestHeader("user-id") Long userId,
+            @RequestBody @Validated ContestJoinRequest contestJoinRequest) {
+        ContestJoinResponse resp = contestService.joinContest(userId, contestJoinRequest);
+        return R.success(resp);
+    }
+
+    @GetMapping("/problems/{id}")
+    @ApiOperation("用户获取比赛题目接口")
+    public R<List<ProblemInListVo>> getContestProblems(
+            @RequestHeader("user-id") Long userId,
+            @PathVariable @NotNull Long id
+    ) {
+        List<ProblemInListVo> problems = contestService.listProblemInContest(userId, id);
+        return R.success(problems);
     }
 
 }

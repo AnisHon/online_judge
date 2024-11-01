@@ -122,7 +122,4 @@ public class ListController {
         return paged.toR();
     }
 
-
-
-
 }

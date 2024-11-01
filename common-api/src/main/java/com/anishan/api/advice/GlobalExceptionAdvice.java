@@ -4,6 +4,7 @@ import cn.hutool.http.HttpStatus;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.exception.IllegalTokenException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -39,6 +40,12 @@ public class GlobalExceptionAdvice {
     @ResponseBody
     @ExceptionHandler(IllegalTokenException.class)
     public R<String> handleIllegalTokenException(IllegalTokenException e) {
+        return R.error(HttpStatus.HTTP_UNAUTHORIZED, e.getMessage());
+    }
+
+    @ResponseBody
+    @ExceptionHandler(PermissionDeniedDataAccessException.class)
+    public R<String> handlePermissionDeniedDataAccessException(PermissionDeniedDataAccessException e) {
         return R.error(HttpStatus.HTTP_UNAUTHORIZED, e.getMessage());
     }
 

@@ -8,7 +8,7 @@
             :props="defaultProps"
             @node-click="handleNodeClick"
         >
-          <template #default="{ node, data }" style="margin-top: 20px">
+          <template #default="{node, data}" style="margin-top: 20px">
 
             <span style="font-size: 20px;">
               <el-icon v-if="!data.file" size="large"><Folder /></el-icon>
@@ -50,6 +50,7 @@ import {getTreedFolderView, type TreedFolderView} from "@/api/folder";
 import {getProblems, type ProblemInListView} from "@/api/list";
 import {useRouter} from "vue-router";
 import {problemTypeToString} from "@/utils/problem";
+import {Document, Folder} from "@element-plus/icons-vue";
 
 const router = useRouter();
 const defaultProps = {

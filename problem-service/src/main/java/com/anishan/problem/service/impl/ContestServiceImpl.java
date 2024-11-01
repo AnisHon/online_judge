@@ -3,9 +3,14 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.ContestDto;
+import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.UserContestRelation;
+import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
+import com.anishan.problem.domain.vo.ProblemInListVo;
+import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -16,10 +21,13 @@ import com.anishan.problem.mapper.ContestMapper;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
 * @author happy
@@ -33,6 +41,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
 
     private final UserContestService userContestService;
     private final ContestMapper contestMapper;
+    private final ProblemListService problemListService;
 
     @Override
     public LocalDateTime getTime(long id) {
@@ -130,6 +139,74 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
         page = contestMapper.selectJoinPage(page, ContestVo.class, wrapper);
 
         return PagedResult.build(page);
+    }
+
+    private boolean isInContesting(LocalDateTime startTime, LocalDateTime endTime) {
+        LocalDateTime now = LocalDateTime.now();
+        return now.isAfter(startTime) && now.isBefore(endTime);
+    }
+
+    private ContestJoinResponse joinContestCheck(ContestJoinRequest req) {
+        Contest contest = this.getById(req.getContestId());
+        if (contest == null) {
+            return ContestJoinResponse.fail("比赛不存在");
+        } else if (!isInContesting(contest.getStartTime(), contest.getEndTime())) {
+            return ContestJoinResponse.fail("比赛目前不可加入");
+        }
+
+
+
+        ContestJoinResponse resp = null;
+
+        switch (contest.getAuth()) {
+            case PUBLIC:
+                resp = ContestJoinResponse.success();
+                break;
+            case PRIVATE:
+                boolean equals = Objects.equals(contest.getPwd(), req.getPassword());
+                resp = ContestJoinResponse.conditional(equals, "密码错误");
+                break;
+            case WhiteList:
+                resp = ContestJoinResponse.fail("无法加入");
+                break;
+        }
+
+        return resp;
+    }
+
+
+    @Override
+    public ContestJoinResponse joinContest(Long userId, ContestJoinRequest req) {
+
+        ContestJoinResponse response = joinContestCheck(req);
+        if (!response.isSuccess()) {
+            return response;
+        }
+
+        try {
+            userContestService.save(new UserContestRelation(userId, req.getContestId()));
+        } catch (DuplicateKeyException ignore) {
+            response.setSuccess(false);
+            response.setMessage("已经加入了");
+        }
+
+        return response;
+    }
+
+    @Override
+    public List<ProblemInListVo> listProblemInContest(Long userId, @NotNull Long contestId) {
+        boolean b = isUserJoined(contestId, userId);
+        ThrowUtil.permissionDeny(!b , "您无权访问");
+
+
+        Long listId = this.getObj(
+                new LambdaQueryWrapper<Contest>()
+                        .select(Contest::getListId)
+                        .eq(Contest::getContestId, contestId),
+                x -> (Long) x
+        );
+
+        return problemListService.getProblemsForUser(listId);
     }
 }
 

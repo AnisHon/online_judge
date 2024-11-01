@@ -1,7 +1,7 @@
 import {
     type PagedResponse, type PagedType,
 } from "@/api/pagedType";
-import {type successCallback} from "@/utils/http";
+import {get, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, pagedFetch, remove, update} from "@/utils/simpleCRUD";
@@ -36,6 +36,16 @@ interface ContestForm {
     description?: string;
 }
 
+interface JoinContestRequest {
+    contestId: number;
+    password?: string;
+}
+
+interface JoinContestResponse {
+    success: boolean;
+    message: string;
+}
+
 const dict = {
     contestAuth: [
         {
@@ -50,11 +60,42 @@ const dict = {
         }
     ],
 }
+const join = async (req: JoinContestRequest) => {
+    const {data} = await post<JoinContestRequest, JoinContestResponse>("/problem-api/contest/join", req);
+    return data;
+}
+
+const debouncedJoin = (req: JoinContestRequest, success: successCallback<JoinContestResponse>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const post = debounce(() => {
+        join(req)
+            .then(success)
+            .finally(finish);
+    }, 500);
+    return {loading, isLoading, post};
+}
+
+const isJoined = async (contestId: number) => {
+    const {data} = await get<boolean>("/problem-api/contest/is-joined", contestId);
+    return data;
+}
+
+
+
+const debouncedIsJoined = (success: successCallback<boolean>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce((x) => {
+        isJoined(x)
+            .then(success)
+            .finally(finish);
+    }, 500);
+    return {loading, isLoading, get};
+}
+
 
 const removeContest = async (id: number | number[]) => {
     await remove(id, "/problem-api/contest/removeBatch", "/problem-api/contest/remove");
 }
-
 
 
 
@@ -120,6 +161,7 @@ const debouncedGetContestAdmin = (page: PagedType, success: successCallback<Page
 export type {
     ContestForm,
     ContestView,
+    JoinContestRequest
 }
 
 export {
@@ -131,6 +173,8 @@ export {
     updateContest,
     debouncedUpdateContest,
     debouncedGetContestAdmin,
+    debouncedIsJoined,
+    debouncedJoin,
     dict,
     ContestAuth
 }

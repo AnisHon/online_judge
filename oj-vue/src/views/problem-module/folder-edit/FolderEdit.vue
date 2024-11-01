@@ -145,7 +145,8 @@ import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import {ElDialog, ElMessageBox, type ElTree} from "element-plus";
 import __ from "lodash";
-import ListView from "@/views/problem-module/folder-edit/ListView.vue";
+import ListView from "@/components/ListView/ListView.vue";
+
 
 
 // 查询需要的表单数据
