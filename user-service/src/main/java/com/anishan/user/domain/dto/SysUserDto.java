@@ -10,6 +10,7 @@ import org.hibernate.validator.constraints.Length;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.math.BigDecimal;
 
 @Data
 @ApiModel("用于添加用户，拥有几乎所有属性，有权限和密码，密码自动加密。不同于UserDto")
@@ -21,6 +22,10 @@ public class SysUserDto {
     @NotNull()
     @ApiModelProperty(value = "roleId", required = true)
     private Long role;
+
+    @ApiModelProperty("用户奖励分数")
+    @NotNull
+    private BigDecimal points;
 
     @Email(groups = ValidationGroup.Insert.class)
     @ApiModelProperty("用户邮箱，唯一，可用于登陆，可以留空，默认为username@role.com")

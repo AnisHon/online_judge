@@ -10,6 +10,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -49,6 +50,11 @@ public class SysUser implements Serializable {
      * 状态(1封禁, 0正常)
      */
     private UserState status;
+
+    /**
+     * 用户奖励分数
+     */
+    private BigDecimal points;
 
     /**
      * 创建时间

@@ -207,6 +207,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         return PagedResult.fromPage(page, userVos, page.getTotal());
     }
 
+    @Override
+    public List<UserVo> rank(Integer limit) {
+        Page<SysUser> page = Page.of(1, limit);
+        List<SysUser> users = this.list(
+                page,
+                new LambdaQueryWrapper<SysUser>()
+                        .select(SysUser::getNikeName, SysUser::getPoints)
+                        .orderByDesc(SysUser::getPoints)
+        );
+        return BeanUtil.copyToList(users, UserVo.class);
+    }
 
 
     private SysUser doSaveUser(SysUserDto sysUserDto) {

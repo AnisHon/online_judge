@@ -204,8 +204,8 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 # 我的班级 menu_id 32
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (320, '查询比赛', 0, 32, '#', 'B', 'problem:contest:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (321, '添加比赛', 1, 32, '#', 'B', 'problem:contest:add', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (322, '编辑班级', 2, 32, '#', 'B', 'problem:contest:edit', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (323, '删除班级', 3, 32, '#', 'B', 'problem:contest:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (322, '编辑比赛', 2, 32, '#', 'B', 'problem:contest:edit', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (323, '删除比赛', 3, 32, '#', 'B', 'problem:contest:remove', '#');
 
 
 -- ----------------------------

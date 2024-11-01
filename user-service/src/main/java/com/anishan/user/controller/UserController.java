@@ -13,6 +13,7 @@ import com.anishan.user.domain.vo.UserVo;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -35,6 +36,12 @@ public class UserController {
         this.sysUserService = sysUserService;
     }
 
+    @GetMapping("/rank/{limit}")
+    @ApiOperation("查看排名,最大200，高了没用")
+    public R<List<UserVo>> rank(@NotNull @PathVariable("limit") @ApiParam("前limit位") Integer limit) {
+        List<UserVo> list = sysUserService.rank(limit);
+        return R.success(list);
+    }
 
     @GetMapping("/username/{username}")
     @ApiOperation("查看用户名是否可用")

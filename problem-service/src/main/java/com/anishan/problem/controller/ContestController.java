@@ -46,7 +46,8 @@ public class ContestController {
 
     @PostMapping("/page")
     @ApiOperation("分页获取contest,没有详细信息")
-    public R<PagedResult<ContestVo>> listContests(@RequestBody @Validated PagedQuery<Contest> pagedQuery) {
+    public R<PagedResult<ContestVo>> listContests(
+            @RequestBody @Validated PagedQuery<Contest> pagedQuery) {
         PagedResult<ContestVo> contestVoPagedResult = contestService.listContests(pagedQuery);
         return contestVoPagedResult.toR();
     }
@@ -93,7 +94,5 @@ public class ContestController {
         boolean b = contestService.addContest(contestDto);
         return R.success(b);
     }
-    
-
 
 }

@@ -1,5 +1,5 @@
 import type {PagedResponse, PagedType, SortedPagedType,} from "@/api/pagedType";
-import {post, type successCallback} from "@/utils/http";
+import {get, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, simpleGet, update} from "@/utils/simpleCRUD";
@@ -34,6 +34,7 @@ interface UserView {
     userId: number;
     userName: string;
     email: string;
+    point: number;
     nikeName: string;
     status: UserStatus;
     createTime: Date;
@@ -68,6 +69,11 @@ const dict = {
         }
     ],
 };
+
+const rank = async (limit: number) => {
+    const {data} = await get<UserView[]>("/user-api/user/rank", limit);
+    return data;
+}
 
 const removeUser = async (id: number | number[]) => {
     await remove(id, "/user-api/user/removeBatch", "/user-api/user/remove");
@@ -173,6 +179,7 @@ export {
     debouncedGetRoleUser,
     debouncedReset,
     UserStatus,
+    rank,
     dict
 }
 

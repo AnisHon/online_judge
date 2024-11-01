@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -22,6 +23,9 @@ public class UserVo {
 
     @ApiModelProperty("用户邮箱，唯一，可用于登陆")
     private String email;
+
+    @ApiModelProperty("用户奖励分数")
+    private BigDecimal points;
 
     @ApiModelProperty("昵称")
     private String nikeName;

@@ -86,7 +86,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
                 .select(
                         Contest::getContestId,
                         Contest::getTitle,
-                        Contest::getCreateTime,
+                        Contest::getStartTime,
                         Contest::getEndTime,
                         Contest::getAuth
                 )

@@ -52,4 +52,5 @@ public interface SysUserService extends IService<SysUser> {
 
     PagedResult<UserVo> getUserByRoleId(PagedUserRoleQuery userQuery);
 
+    List<UserVo> rank(Integer limit);
 }

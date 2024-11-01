@@ -103,6 +103,7 @@
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[5].visible" />
       <el-table-column label="标记" align="center" prop="remark" v-if="columns[6].visible" />
+      <el-table-column label="奖励分" align="center" prop="points" v-if="columns[7].visible" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
@@ -280,7 +281,7 @@ const rules = {
 
 const open = ref(false);
 
-const {columns} = useColumn(['用户id', '用户名称', '邮箱地址', '用户昵称', '用户状态', '创建时间', '标记']);
+const {columns} = useColumn(['用户id', '用户名称', '邮箱地址', '用户昵称', '用户状态', '创建时间', '标记', '奖励分']);
 
 
 // 重制列表

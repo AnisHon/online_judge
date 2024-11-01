@@ -22,14 +22,15 @@
 
       </el-col>
       <el-col :span="8">
-        <custom-card icon="Notification" title="公告" style="height: 100%">
-          <p v-for="i in 4" :key="i">item {{i}}</p>
+        <custom-card icon="Histogram" title="排名" style="height: 100%">
+          <el-table :data="ranks">
+            <el-table-column type="index" label="#" />
+            <el-table-column label="分数" align="center" prop="points" />
+            <el-table-column label="用户名"  prop="nikeName" />
+          </el-table>
         </custom-card>
       </el-col>
     </el-row>
-
-
-
 
   </div>
 
@@ -37,6 +38,18 @@
 
 <script setup lang="ts">
 import CustomCard from "@/components/CustomCard/CustomCard.vue";
+import {rank, type UserView} from "@/api/user";
+import {ref} from "vue";
+
+const ranks = ref<UserView[]>([])
+
+
+// created
+rank(20)
+    .then((data) => {
+      ranks.value = data;
+    })
+
 </script>
 
 <style scoped>

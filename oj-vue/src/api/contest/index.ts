@@ -16,8 +16,8 @@ interface ContestView {
     contestId: number;
     title: string;
     auth: ContestAuth;
-    startTime: Date;
-    endTime: Date;
+    startTime: string;
+    endTime: string;
     joinedNumber?: number;
     problemId?: number;
     pwd?: string;

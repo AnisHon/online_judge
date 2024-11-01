@@ -58,7 +58,7 @@ public class MenuPagedQuery extends SortedPagedQuery<SysMenu> {
     @ApiModelProperty("路由路径")
     private String router;
 
-    @ConditionColumn
+    @ConditionColumn("eq")
     @SortedColumn
     @ApiModelProperty("菜单类型（I菜单项item M菜单栏MenuBar B按钮）")
     private MenuType menuType;
