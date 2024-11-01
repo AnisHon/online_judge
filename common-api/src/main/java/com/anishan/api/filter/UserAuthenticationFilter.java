@@ -1,10 +1,8 @@
 package com.anishan.api.filter;
 
-import cn.hutool.core.util.StrUtil;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.util.AuthUtil;
-import com.anishan.api.exception.IllegalTokenException;
-import com.anishan.api.util.JwtUtil;
+import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.domain.R;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,18 +27,16 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     private final AuthUtil authUtil;
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = request.getHeader("token");
-        if (StrUtil.isEmpty(token)) {
+        String header = request.getHeader("user-id");
+        if (header == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        Long userId = JwtUtil.parseJwt(token);
-
+        Long userId = Long.parseLong(header);
         if (!authUtil.isUserExisted(userId)) {
             throw new IllegalTokenException("令牌过期");
         }
-
         LoginUser loginUser = authUtil.getLoginUser(userId);
 
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =

@@ -4,6 +4,7 @@ import {type Router} from "vue-router";
 const Layout = () => import("@/Layout.vue")
 const Teacher = () => import("@/views/teacher/Teacher.vue");
 const HomeworkManage = () => import("@/views/teacher/homework-manage/HomeworkManage.vue");
+const ContestManage = () => import("@/views/teacher/contest-manage/ContestManage.vue");
 const MyClass = () => import("@/views/teacher/my-class/MyClass.vue");
 
 const UserModule = () => import("@/views/user-module/UserModule.vue");
@@ -72,6 +73,14 @@ const dynamicConst: RouterType = {
                     component: HomeworkManage,
                     meta: {
                         name: "作业管理"
+                    }
+                },
+                {
+                    path: 'contest-manage',
+                    name: 'contest-manage',
+                    component: ContestManage,
+                    meta: {
+                        name: "竞赛管理"
                     }
                 }
             ]

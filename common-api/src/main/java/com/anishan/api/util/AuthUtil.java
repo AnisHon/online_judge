@@ -3,19 +3,16 @@ package com.anishan.api.util;
 import cn.hutool.captcha.AbstractCaptcha;
 import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.LoginUser;
-import lombok.RequiredArgsConstructor;
+import com.anishan.commons.exception.IllegalTokenException;
+import com.anishan.commons.util.JwtUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -139,7 +136,7 @@ public class AuthUtil {
 
     public boolean checkAndRemoveCaptchaCode(String captchaToken, String inputCode) {
         String code = getAndRemoveCaptchaCode(captchaToken);
-        return !Objects.equals(code, inputCode);
+        return !Objects.equals(code.toLowerCase(), inputCode.toLowerCase());
     }
 
     public static String createToken(Long userId) {
@@ -150,5 +147,13 @@ public class AuthUtil {
     public void removeUser(Long id) {
         String loginKey = getLoginKey(id);
         redisTemplate.delete(loginKey);
+    }
+
+    public static LoginUser getContextUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof String) {
+            throw new IllegalTokenException("用户未登录");
+        }
+        return (LoginUser) principal;
     }
 }

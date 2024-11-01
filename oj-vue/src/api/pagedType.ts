@@ -31,6 +31,7 @@ const onlyPagedData = (data: SortedPagedType): boolean => {
     return true;
 }
 
+
 const toPagedQueryData = (data: PagedType): PagedType => {
     return {pageSize: data.pageSize, currentPage: data.currentPage};
 }

@@ -2,7 +2,7 @@ package com.anishan.api.advice;
 
 import cn.hutool.http.HttpStatus;
 import com.anishan.commons.domain.R;
-import com.anishan.api.exception.IllegalTokenException;
+import com.anishan.commons.exception.IllegalTokenException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;

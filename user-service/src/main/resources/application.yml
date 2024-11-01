@@ -10,6 +10,7 @@ oj:
   knife4j:
     resource: com.anishan.user
 
+
 #config:
 #  check-in-award: 10
 #  default-role-id: 1

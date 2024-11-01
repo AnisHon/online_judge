@@ -3,7 +3,6 @@ package com.anishan.user.service.impl;
 import cn.hutool.captcha.AbstractCaptcha;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
-import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.SysRole;
 import com.anishan.api.domain.SysUser;
 import com.anishan.commons.e.UserState;
@@ -51,11 +50,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public LoginUserVo me() {
-        Object login = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!(login instanceof LoginUser)) {
-            throw new RuntimeException("未登录");
-        }
-        LoginUser principal = (LoginUser) login;
+
+        LoginUser principal = AuthUtil.getContextUser();
         LoginUserVo loginUserVo = BeanUtil.copyProperties(principal.getUser(), LoginUserVo.class);
         loginUserVo.setAuths(principal.getAuths());
         return loginUserVo;

@@ -112,6 +112,12 @@ const fetch =  async <T extends SortedPagedType, R> (queryData: T, simpleUrl: st
     return data;
 }
 
+const pagedFetch =  async <T extends PagedType, R> (queryData: T, simpleUrl: string) => {
+
+    const {data} = await post<PagedType, PagedResponse<R>>(simpleUrl, toPagedQueryData(queryData));
+    return data;
+
+}
 
 
 
@@ -132,5 +138,6 @@ export {
     update,
     fetch,
     postedRemove,
-    simpleGet
+    simpleGet,
+    pagedFetch
 }

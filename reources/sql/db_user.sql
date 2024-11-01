@@ -133,9 +133,10 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 
 
 # 二级菜单
-# menu_id 2 教师功能 teacher
+# menu_id 3 教师功能 teacher
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (30, '我的班级', 1, 3, 'my-class', 'I', '#', 'School');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (31, '作业管理', 2, 3, 'homework-manage', 'I', '#', 'Histogram');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (32, '竞赛管理', 3, 3, 'contest-manage', 'I', '#', 'Flag');
 
 
 # menu_id 10 题目编辑
@@ -200,6 +201,12 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (302, '删除班级', 2, 30, '#', 'B', 'user:teacher:remove-class', '#');
 
 
+# 我的班级 menu_id 32
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (320, '查询比赛', 0, 32, '#', 'B', 'problem:contest:list', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (321, '添加比赛', 1, 32, '#', 'B', 'problem:contest:add', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (322, '编辑班级', 2, 32, '#', 'B', 'problem:contest:edit', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (323, '删除班级', 3, 32, '#', 'B', 'problem:contest:remove', '#');
+
 
 -- ----------------------------
 -- 7、用户和角色关联表  用户N-1角色
@@ -241,7 +248,10 @@ values
     (2, 30),
     (2, 31),
     (2, 32),
-    (2, 3);
+    (2, 320),
+    (2, 321),
+    (2, 322),
+    (2, 323);
 
 # 管理员，没有权限相关操作，权限操作危险，可能会毁坏网站
 delete from sys_role_menu where role_id = 3;

@@ -30,10 +30,11 @@
         <mysql-driver.version>8.2.0</mysql-driver.version>
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
         <lombok.version>1.18.32</lombok.version>
-        <hutool.version>5.8.11</hutool.version>
+        <hutool.version>5.8.25</hutool.version>
         <spring-cloud.version>2021.0.3</spring-cloud.version>
         <spring-cloud-alibaba.version>2021.0.4.0</spring-cloud-alibaba.version>
         <jakarta.mail-api>2.1.2</jakarta.mail-api>
+        <openfeign.okhttp.version>13.2.1</openfeign.okhttp.version>
     </properties>
 
 
@@ -101,8 +102,6 @@
                 <artifactId>mybatis-plus-boot-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
-
-
 
 
             <dependency>

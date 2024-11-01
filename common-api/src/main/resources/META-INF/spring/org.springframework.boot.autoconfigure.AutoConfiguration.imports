@@ -4,3 +4,4 @@ com.anishan.api.config.MvcConfig
 com.anishan.api.config.RedisConfig
 com.anishan.api.config.ConstConfig
 com.anishan.api.util.AuthUtil
+com.anishan.api.config.FeignConfig

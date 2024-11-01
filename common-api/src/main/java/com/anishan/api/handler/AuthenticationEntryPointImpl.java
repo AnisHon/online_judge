@@ -1,6 +1,6 @@
 package com.anishan.api.handler;
 
-import com.anishan.api.exception.IllegalTokenException;
+import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.domain.R;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.core.AuthenticationException;

@@ -1,4 +1,4 @@
-package com.anishan.api.util;
+package com.anishan.commons.util;
 
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
@@ -6,7 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTPayload;
 import cn.hutool.jwt.JWTUtil;
-import com.anishan.api.exception.IllegalTokenException;
+import com.anishan.commons.exception.IllegalTokenException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -15,6 +15,7 @@ import java.util.Map;
 public class JwtUtil {
 
     public static final String KEY_USER_ID = "user_id";
+//    todo
     private static final byte[] KEY_SIGN = "legacy-secret-redacted".getBytes();
     public static final int EXPIRE_HOUR = 7 * 24;
 

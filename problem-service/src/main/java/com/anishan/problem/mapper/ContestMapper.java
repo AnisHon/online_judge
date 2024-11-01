@@ -2,6 +2,7 @@ package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.Contest;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author happy
@@ -9,7 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-16 22:39:15
 * @Entity com.anishan.problem.entity.Contest
 */
-public interface ContestMapper extends BaseMapper<Contest> {
+public interface ContestMapper extends MPJBaseMapper<Contest> {
 
 }
 

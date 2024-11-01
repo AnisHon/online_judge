@@ -102,11 +102,15 @@ public class ListController {
         return R.success(problems);
     }
 
+
+    /**
+     * 这里有一个破绽，用户可以获取任意提单，接口只屏蔽了非PUBLIC的题目
+     */
     @GetMapping("/problems/{id}")
     @ApiOperation("用户题单获取，可能由于存在比赛题目题单返回空集合")
     public R<List<ProblemInListVo>> getListProblems(@PathVariable("id") Long id) {
 //        todo
-        List<ProblemInListVo> problems = problemListService.getProblems(id);
+        List<ProblemInListVo> problems = problemListService.getProblemsForUser(id);
         return R.success(problems);
     }
 

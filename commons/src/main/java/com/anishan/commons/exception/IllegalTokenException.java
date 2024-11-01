@@ -1,4 +1,4 @@
-package com.anishan.api.exception;
+package com.anishan.commons.exception;
 
 
 import org.springframework.security.core.AuthenticationException;

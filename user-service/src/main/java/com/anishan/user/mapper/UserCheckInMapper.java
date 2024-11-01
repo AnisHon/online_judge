@@ -2,6 +2,7 @@ package com.anishan.user.mapper;
 
 import com.anishan.user.domain.entity.UserCheckIn;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author happy
@@ -9,7 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-26 10:27:40
 * @Entity com.anishan.user.domain.entity.UserCheckIn
 */
-public interface UserCheckInMapper extends BaseMapper<UserCheckIn> {
+public interface UserCheckInMapper extends MPJBaseMapper<UserCheckIn> {
 
 }
 

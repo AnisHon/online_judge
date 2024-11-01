@@ -37,4 +37,6 @@ public interface ProblemListService extends IService<ProblemList> {
     List<ProblemInListVo> getProblems(Long id);
 
     PagedResult<ProblemListVo> listPage(PagedProblemList query);
+
+    List<ProblemInListVo> getProblemsForUser(Long id);
 }

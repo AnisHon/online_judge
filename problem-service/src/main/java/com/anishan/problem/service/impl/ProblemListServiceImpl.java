@@ -15,6 +15,7 @@ import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.mapper.ProblemListMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
+import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.ProblemProblemListService;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
@@ -39,7 +40,6 @@ import java.util.List;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, ProblemList>
     implements ProblemListService{
-
 
     private final ProblemProblemListService problemProblemListService;
     private final ProblemListMapper problemListMapper;
@@ -142,6 +142,21 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
         page = this.page(page, wrapper);
 
         return PagedResult.build(page, ProblemListVo.class);
+    }
+
+
+    @Override
+    public List<ProblemInListVo> getProblemsForUser(Long id) {
+        MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
+                .selectAll(Problem.class)
+                .select(ProblemProblemListRelation::getProblemOrder, ProblemProblemListRelation::getScore)
+                .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
+                .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
+                .eq(ProblemList::getListId, id)
+                .eq(Problem::getAuth, ProblemAuth.Public)
+                .isNotNull(Problem::getProblemId);
+        return problemListMapper.selectJoinList(ProblemInListVo.class, wrapper);
+
     }
 
 

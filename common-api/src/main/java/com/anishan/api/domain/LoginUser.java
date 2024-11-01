@@ -21,7 +21,6 @@ public class LoginUser implements UserDetails {
     @JsonIgnore
     private List<SysRole> roles;
 
-
     private List<String> auths;
 
     @JsonIgnore

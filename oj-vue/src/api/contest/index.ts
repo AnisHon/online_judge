@@ -1,0 +1,139 @@
+import {
+    type PagedResponse, type PagedType,
+} from "@/api/pagedType";
+import {type successCallback} from "@/utils/http";
+import {debounce} from "lodash";
+import useLoading from "@/hooks/useLoading";
+import {add, pagedFetch, remove, update} from "@/utils/simpleCRUD";
+
+enum ContestAuth {
+    PUBLIC,
+    PRIVATE,
+    WHITE_LIST
+}
+
+interface ContestView {
+    contestId: number;
+    title: string;
+    auth: ContestAuth;
+    startTime: Date;
+    endTime: Date;
+    joinedNumber?: number;
+    problemId?: number;
+    pwd?: string;
+    listId?: number;
+    description?: string;
+}
+
+interface ContestForm {
+    contestId?: number;
+    title?: string;
+    auth?: ContestAuth;
+    startTime?: Date;
+    endTime?: Date;
+    pwd?: string;
+    listId?: number;
+    description?: string;
+}
+
+const dict = {
+    contestAuth: [
+        {
+            value: ContestAuth.PUBLIC,
+            label: "公开赛"
+        }, {
+            value: ContestAuth.PRIVATE,
+            label: "私有赛"
+        }, {
+            value: ContestAuth.WHITE_LIST,
+            label: "白名单"
+        }
+    ],
+}
+
+const removeContest = async (id: number | number[]) => {
+    await remove(id, "/problem-api/contest/removeBatch", "/problem-api/contest/remove");
+}
+
+
+
+
+const addContest = async (form: ContestForm) => {
+    await add(form, "/problem-api/contest/add");
+}
+
+const debouncedAddContest = (form: ContestForm, success: successCallback<void>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const add = debounce(() => {
+        addContest(form)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, add};
+}
+
+
+
+const updateContest = async (form: ContestForm) => {
+    await update(form, "/problem-api/contest/update");
+}
+
+const debouncedUpdateContest = (form: ContestForm, success: successCallback<void>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const update = debounce(() => {
+        updateContest(form)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, update};
+}
+
+const getContest = async (page: PagedType): Promise<PagedResponse<ContestView>> => {
+    return await pagedFetch(page, "/problem-api/contest/page");
+}
+
+
+const debouncedGetContest = (page: PagedType, success: successCallback<PagedResponse<ContestView>>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        getContest(page)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
+
+const getContestAdmin = async (page: PagedType): Promise<PagedResponse<ContestView>> => {
+    return await pagedFetch(page, "/problem-api/contest/admin-page");
+}
+
+const debouncedGetContestAdmin = (page: PagedType, success: successCallback<PagedResponse<ContestView>>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce(() => {
+        getContestAdmin(page)
+            .then(success)
+            .finally(finish);
+    }, 1000);
+    return {loading, isLoading, get};
+}
+
+export type {
+    ContestForm,
+    ContestView,
+}
+
+export {
+    getContest,
+    debouncedGetContest,
+    removeContest,
+    addContest,
+    debouncedAddContest,
+    updateContest,
+    debouncedUpdateContest,
+    debouncedGetContestAdmin,
+    dict,
+    ContestAuth
+}
+
+
+

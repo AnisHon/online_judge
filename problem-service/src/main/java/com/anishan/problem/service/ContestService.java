@@ -1,7 +1,15 @@
 package com.anishan.problem.service;
 
+import com.anishan.commons.domain.dto.PagedQuery;
+import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.entity.Contest;
+import com.anishan.problem.domain.vo.ContestVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
 * @author happy
@@ -10,8 +18,21 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface ContestService extends IService<Contest> {
 
+    LocalDateTime getTime(long id);
+
     boolean isUserJoined(Long contestId, Long userId);
 
     boolean isContestEnable(Long contestId);
 
+    ContestVo getContestById(@NotNull(message = "id为Null") Long id);
+
+    List<ContestVo> listContestById(List<Long> ids);
+
+    PagedResult<ContestVo> listContests(PagedQuery<Contest> pagedQuery);
+
+    boolean updateContest(ContestDto contestDto);
+
+    boolean addContest(ContestDto contestDto);
+
+    PagedResult<ContestVo> listContestsAdmin(PagedQuery<Contest> pagedQuery);
 }
