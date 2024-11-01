@@ -15,7 +15,6 @@ import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.mapper.ProblemListMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
-import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.ProblemProblemListService;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;

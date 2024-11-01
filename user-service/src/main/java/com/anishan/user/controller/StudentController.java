@@ -6,13 +6,11 @@ import com.anishan.user.domain.dto.ClassPagedQuery;
 import com.anishan.user.domain.vo.BinaryResultOv;
 import com.anishan.user.domain.vo.ClassVo;
 import com.anishan.user.service.SysClassService;
-import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @RestController
 @RequestMapping("/student")

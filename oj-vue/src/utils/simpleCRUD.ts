@@ -1,5 +1,4 @@
-import {get, post, type successCallback} from "@/utils/http";
-import type {MenuForm, MenuView} from "@/api/auth/menu";
+import {get, post} from "@/utils/http";
 import {
     onlyPagedData,
     type PagedResponse,
@@ -17,7 +16,7 @@ import {
 
 const remove = async (id: number | number[], batchUrl: string, singleUrl: string) => {
 
-    let success = false;
+    let success;
     if (id instanceof Array) {
         const {data} = await get<boolean, number[]>(batchUrl, id);
         success = data;
@@ -34,7 +33,7 @@ const remove = async (id: number | number[], batchUrl: string, singleUrl: string
 
 const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: string) => {
 
-    let success = false;
+    let success;
     if (id instanceof Array) {
         const {data} = await post<T[], boolean>(batchUrl, id);
         success = data;
@@ -66,7 +65,7 @@ const add = async <T> (form: T, url: string) => {
 
 
 const batchAdd = async <T> (form: T| T[], batchUrl: string, singleUrl: string) => {
-    let success = false;
+    let success;
     if (form instanceof Array) {
         const {data} = await post<T[], boolean>(batchUrl, form);
         success = data;

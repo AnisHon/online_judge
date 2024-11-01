@@ -1,7 +1,6 @@
 package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.Contest;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.yulichang.base.MPJBaseMapper;
 
 /**

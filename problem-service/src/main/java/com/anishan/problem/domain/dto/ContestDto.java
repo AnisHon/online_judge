@@ -2,15 +2,11 @@ package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.e.ContestAuth;
 import com.anishan.commons.e.ValidationGroup;
-import com.baomidou.mybatisplus.annotation.*;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @ApiModel("比赛表")

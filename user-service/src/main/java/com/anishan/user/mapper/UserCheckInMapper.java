@@ -1,7 +1,6 @@
 package com.anishan.user.mapper;
 
 import com.anishan.user.domain.entity.UserCheckIn;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.yulichang.base.MPJBaseMapper;
 
 /**
