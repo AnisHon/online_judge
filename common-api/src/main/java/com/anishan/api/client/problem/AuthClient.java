@@ -5,8 +5,7 @@ import com.anishan.commons.domain.R;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@FeignClient("user-service")
-@RequestMapping("/auth")
+@FeignClient(value = "user-service")
 public interface AuthClient {
 
     @RequestMapping("/me")

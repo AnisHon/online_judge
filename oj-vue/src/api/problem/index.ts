@@ -5,6 +5,7 @@ import type {PagedResponse, PagedType} from "@/api/pagedType";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
 import {add, remove, update} from "@/utils/simpleCRUD";
+import {saveUserAnswer} from "@/api/problem/judge";
 
 
 // 1 OJ, 2 FILL, 3 CHOICE
@@ -85,7 +86,7 @@ export interface ProblemParam {
 
 export interface ChoiceProblemView {
     content: string,
-    order: string
+    order: string | number
 }
 
 export interface OjProblemView {
@@ -275,6 +276,16 @@ async function getDetailProblem(id: number): Promise<ProblemDetailView> {
     return <ProblemDetailView>data
 }
 
+const debouncedGetDetailProblem = (success: successCallback<ProblemDetailView>) => {
+    const {loading, isLoading, finish} = useLoading()
+    const get = debounce((x) => {
+        getDetailProblem(x)
+            .then(success)
+            .finally(finish)
+    }, 500);
+    return {get, isLoading, loading}
+}
+
 
 export type {
     AdminQueryProblem,
@@ -292,6 +303,7 @@ export {
     debouncedAdminGetProblem,
     debouncedUpdateProblem,
     debouncedAddProblem,
+    debouncedGetDetailProblem,
     dict
 
 }

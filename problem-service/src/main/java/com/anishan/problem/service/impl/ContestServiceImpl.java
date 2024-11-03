@@ -6,6 +6,8 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
+import com.anishan.problem.domain.entity.ProblemList;
+import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.anishan.problem.domain.entity.UserContestRelation;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
@@ -25,6 +27,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -207,6 +210,23 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
         );
 
         return problemListService.getProblemsForUser(listId);
+    }
+
+
+    @Override
+    public BigDecimal getScore(Long contestId, Long ProblemId) {
+        if (contestId == null || ProblemId == null) {
+            return BigDecimal.ZERO;
+        }
+
+        MPJLambdaWrapper<Contest> wrapper = new MPJLambdaWrapper<Contest>()
+                .selectAll(ProblemProblemListRelation.class)
+                .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, Contest::getListId)
+                .eq(Contest::getContestId, contestId)
+                .eq(ProblemProblemListRelation::getProblemId, ProblemId);
+
+        ProblemProblemListRelation relation = contestMapper.selectJoinOne(ProblemProblemListRelation.class, wrapper);
+        return relation.getScore();
     }
 }
 

@@ -3,6 +3,7 @@ package com.anishan.problem.domain.entity;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -37,7 +38,7 @@ public class OjProblemCase implements Serializable {
     /**
      * 答对的分数
      */
-    private Integer score;
+    private BigDecimal score;
 
     /**
      * 删除标记

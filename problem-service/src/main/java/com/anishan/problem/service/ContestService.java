@@ -11,6 +11,7 @@ import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -42,4 +43,6 @@ public interface ContestService extends IService<Contest> {
     ContestJoinResponse joinContest(Long userId, ContestJoinRequest contestJoinRequest);
 
     List<ProblemInListVo> listProblemInContest(Long userId, @NotNull Long contestId);
+
+    BigDecimal getScore(Long contestId, Long ProblemId);
 }

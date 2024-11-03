@@ -1,6 +1,5 @@
 package com.anishan.problem.controller;
 
-import com.anishan.api.domain.LoginUser;
 import com.anishan.commons.domain.R;
 import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.vo.ProblemJudgeResult;
@@ -10,12 +9,8 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/judge")
@@ -28,12 +23,21 @@ public class JudgeController {
 
     @PostMapping
     @ApiOperation("判题")
-    public R<ProblemJudgeResult> judge(@RequestBody JudgeRequest judgeRequest) {
+    public R<ProblemJudgeResult> judge(
+            @RequestHeader("user-id") Long userId,
+            @RequestBody @Validated JudgeRequest judgeRequest
+    ) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        LoginUser user = (LoginUser) authentication.getPrincipal();
+        ProblemJudgeResult judge = judgeService.judge(userId, judgeRequest);
+        return R.success(judge);
 
-        ProblemJudgeResult judge = judgeService.judge(user.getUser().getUserId(), judgeRequest);
+    }
+
+    @PostMapping("/test")
+    @ApiOperation("OJ代码测试运行")
+    public R<ProblemJudgeResult> test(@RequestBody JudgeRequest judgeRequest) {
+
+        ProblemJudgeResult judge = judgeService.codeTest(judgeRequest);
         return R.success(judge);
 
     }

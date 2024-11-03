@@ -7,4 +7,6 @@ public interface JudgeService {
 
 
     ProblemJudgeResult judge(Long userId, JudgeRequest judgeRequest);
+
+    ProblemJudgeResult codeTest(JudgeRequest judgeRequest);
 }

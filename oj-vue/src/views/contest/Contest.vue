@@ -113,6 +113,7 @@ const form = reactive<JoinContestRequest>({
 })
 
 const enter = (contestId: number) => {
+
   router.push({name: "contest-problems", params: {id: contestId}});
 }
 

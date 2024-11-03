@@ -48,11 +48,14 @@
         </el-table-column>
         <el-table-column prop="author" label="标签">
           <template #default="scope">
-            <el-tag  v-for="item of scope.row.tag" :color="item.tagColor" :key="item.tagId">
-          <span style="color: white">
-            {{ item.tagName}}
-          </span>
-            </el-tag>
+            <el-space wrap>
+              <el-tag  v-for="item of scope.row.tag" :color="item.tagColor" :key="item.tagId">
+                <span style="color: white">
+                  {{ item.tagName}}
+                </span>
+              </el-tag>
+            </el-space>
+
           </template>
         </el-table-column>
         <el-table-column prop="source" label="题目来源"/>

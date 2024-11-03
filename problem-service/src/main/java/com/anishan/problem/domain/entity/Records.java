@@ -1,19 +1,28 @@
 package com.anishan.problem.domain.entity;
 
+import com.alibaba.nacos.shaded.org.checkerframework.checker.units.qual.A;
+import com.anishan.problem.domain.JudgeAnswer;
+import com.anishan.problem.domain.vo.UserAnswer;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.math.BigDecimal;
+
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 题目完成表
  * @TableName records
  */
-@TableName(value ="records")
+@TableName(value ="records", autoResultMap = true)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Records implements Serializable {
     /**
      * 
@@ -44,12 +53,13 @@ public class Records implements Serializable {
     /**
      * 是否正确 0 1
      */
-    private Integer status;
+    private boolean status;
 
     /**
      * 答案
      */
-    private Object answer;
+    @TableField(typeHandler = JacksonTypeHandler.class, property = "answer", value = "answer")
+    private UserAnswer answer;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

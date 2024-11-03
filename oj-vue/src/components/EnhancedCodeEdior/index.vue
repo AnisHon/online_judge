@@ -3,10 +3,10 @@
     <el-form :inline="true" ref="formRef" :model="codeForm">
       <el-form-item>
         <el-button-group>
-          <el-button type="success" @click="onHandleSubmit" :icon="Promotion">
+          <el-button type="success" @click="emit('test')" :icon="IconBug">
             运行
           </el-button>
-          <el-button type="success" @click="onHandleSubmit" :icon="Upload">
+          <el-button type="success" @click="emit('submit')" :icon="Upload">
             提交
           </el-button>
         </el-button-group>
@@ -34,17 +34,18 @@
 
 
     </el-form>
-    <code-editor :language="currLang" :theme="theme" :height="codeEditHeight" ref="codeEditorRef" />
+    <code-editor v-model="codeForm.code" :language="currLang" :theme="theme" :height="codeEditHeight" ref="codeEditorRef" />
   </div>
 </template>
 
 <script setup lang="ts">
 import CodeEditor from "@/components/CodeEditor/CodeEditor.vue";
-import {computed, onMounted, reactive, ref, watch} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import type {JudgeForm} from "@/api/problem/judge";
 import useLanguage from "@/stores/useLanguage";
 import type {LanguageView} from "@/api/language";
-import {FullScreen, Promotion, Upload} from "@element-plus/icons-vue";
+import {FullScreen, Upload} from "@element-plus/icons-vue";
+import IconBug from "@/assets/icons/IconBug.vue";
 
 const languageStore = useLanguage();
 
@@ -52,12 +53,7 @@ const codeEditorRef = ref<InstanceType<typeof CodeEditor> | null>(null);
 
 const formRef = ref<InstanceType<any>>(null)
 
-const codeForm = reactive<JudgeForm>({
-  contestId: undefined,
-  languageId: -1,
-  problemId: 0,
-  answers: [{answer: codeEditorRef.value?.code || "", index: 1}]
-});
+const codeForm = defineModel<JudgeForm>({required: true})
 
 const theme = ref("eclipse");
 
@@ -68,7 +64,8 @@ const languages = ref<LanguageView[] | null>(null);
 const {heightProp} = defineProps<{heightProp: number}>()
 
 const emit = defineEmits<{
-  (e: 'submit', form: JudgeForm): void;
+  (e: 'submit'): void;
+  (e: 'test'): void;
   (e: 'fullScreen'): void;
   (e: 'onReady'): void;
 }>()
@@ -77,32 +74,36 @@ const codeEditHeight = computed(() => {
   return heightProp - formRef.value?.$el.offsetHeight - 10;
 })
 
-const onHandleSubmit = () => {
-  emit('submit', codeForm)
-};
 
 const onHandleFullScreen = () => {
   emit('fullScreen');
 };
 
+const initLanguages = () => {
+  languageStore.getLanguages()
+      .then((languageArray) => {
+        languages.value = languageArray;
+        codeForm.value.languageId = languageArray[0].languageId;
+      })
+}
 
-watch(() => codeForm.languageId, () => {
+watch(() => codeForm.value.languageId, () => {
   languages.value?.forEach((item) => {
-    if (item.languageId === codeForm.languageId) {
+    if (item.languageId === codeForm.value.languageId) {
       currLang.value = item.languageName;
     }
   })
 })
 
-
 onMounted(() => {
-  languageStore.getLanguages()
-      .then((languageArray) => {
-        languages.value = languageArray;
-        codeForm.languageId = languageArray[0].languageId;
-      })
-  emit('onReady')
+  emit("onReady")
 })
+
+
+
+// created
+initLanguages();
+
 
 
 

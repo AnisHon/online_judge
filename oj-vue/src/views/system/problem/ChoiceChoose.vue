@@ -13,9 +13,9 @@
 import {type ProblemDetailView, ProblemType} from "@/api/problem";
 import {computed, onUnmounted, ref, toRefs} from "vue";
 import {type JudgeForm} from "@/api/problem/judge";
-import ProblemRadioGroup from "@/views/system/problem/ProblemRadio/ProblemRadioGroup.vue";
 import {letterToNumber} from "@/utils/stringUtils";
 import {useMitt} from "@/stores/useMitt";
+import ProblemRadioGroup from "@/components/ProblemRadio/ProblemRadioGroup.vue";
 
 const {problemView, judgeForm} = defineProps<{
   problemView: ProblemDetailView,

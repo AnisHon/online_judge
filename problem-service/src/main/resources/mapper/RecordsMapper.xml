@@ -10,7 +10,7 @@
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
             <result property="problemId" column="problem_id" jdbcType="BIGINT"/>
             <result property="score" column="score" jdbcType="DECIMAL"/>
-            <result property="answer" column="answer" jdbcType="OTHER"/>
+
     </resultMap>
 
     <sql id="Base_Column_List">

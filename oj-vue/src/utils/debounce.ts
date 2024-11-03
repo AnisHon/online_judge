@@ -1,5 +1,6 @@
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
+import {numberToLetter} from "@/utils/stringUtils";
 
 NProgress.configure({
     parent: '#main-box'
@@ -10,7 +11,7 @@ function funcForwarding<T extends (...args: any[]) => any>(fn: T, ...args: Param
 }
 
 function debounce(func: Function, wait: number, loadingStatue: boolean = true) {
-    let timeout: number = wait;
+    let timeout: NodeJS.Timeout;
     return function() {
         if (loadingStatue) {
             try {

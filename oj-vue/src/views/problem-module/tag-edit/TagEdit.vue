@@ -80,8 +80,9 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="标签颜色名称" prop="icon">
-              <el-input v-model="form.tagColor" placeholder="请输入标签颜色名称"/>
+            <el-form-item label="标签颜色" prop="icon">
+              <el-color-picker v-model="form.tagColor" label="标签颜色"></el-color-picker>
+<!--              <el-input v-model="form.tagColor" placeholder="请输入标签颜色"/>-->
             </el-form-item>
           </el-col>
         </el-row>

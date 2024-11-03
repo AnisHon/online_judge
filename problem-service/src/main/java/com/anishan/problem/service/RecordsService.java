@@ -13,5 +13,5 @@ public interface RecordsService extends IService<Records> {
 
     Long existRecord(Records records);
 
-    void addRecord(Records records);
+    boolean addRecord(Records records);
 }

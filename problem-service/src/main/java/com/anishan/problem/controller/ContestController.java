@@ -7,13 +7,11 @@ import com.anishan.commons.e.ValidationGroup;
 import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
-import com.anishan.problem.domain.entity.UserContestRelation;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.service.ContestService;
-import com.anishan.problem.service.UserContestService;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.anishan.problem.service.RecordsService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +29,8 @@ import java.util.List;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ContestController {
 
-
-    private final UserContestService userContestService;
     private final ContestService contestService;
+    private final RecordsService recordsService;
 
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('problem:contest:list')")
@@ -128,5 +125,7 @@ public class ContestController {
         List<ProblemInListVo> problems = contestService.listProblemInContest(userId, id);
         return R.success(problems);
     }
+
+
 
 }

@@ -34,3 +34,7 @@ a {
     justify-content: center;
     align-items: center;
 }
+
+.el-dropdown-link:focus {
+    outline: none;
+}

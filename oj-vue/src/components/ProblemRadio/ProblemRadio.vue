@@ -2,7 +2,7 @@
 
 <template>
   <div class="radio" @click="handleClick">
-    <span class="circle" :class="{'active': choose}">
+    <span class="circle" :class="{'active': isSelected}">
       {{ option }}
     </span>
     <span>
@@ -12,21 +12,28 @@
 </template>
 <script setup lang="ts">
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
+import {letterToNumber} from "@/utils/stringUtils";
+import type {Answer} from "@/api/problem/judge";
+import {computed} from "vue";
 
-const {option = "", content = "", choose = false} = defineProps<{
+const {option = 'A', content = "", answers} = defineProps<{
   option?: string,
   content?: string,
-  choose?: boolean
+  answers: Answer[]
 }>();
 
+const isSelected = computed(() => {
+  const index = answers.findIndex(x => x.index === letterToNumber(option));
+  return index !== -1;
+});
 
 
 const emit = defineEmits<{
-  (e: 'click', index: string): void
+  (e: 'click', index: number, b: boolean): void
 }>();
 
 const handleClick = () => {
-  emit("click", option)
+  emit("click", letterToNumber(option), isSelected.value)
 }
 
 

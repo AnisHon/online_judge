@@ -3,6 +3,7 @@ package com.anishan.api.util;
 import cn.hutool.captcha.AbstractCaptcha;
 import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.LoginUser;
+import com.anishan.api.domain.SysUser;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.util.JwtUtil;
 import org.jetbrains.annotations.Contract;
@@ -10,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -150,7 +152,14 @@ public class AuthUtil {
     }
 
     public static LoginUser getContextUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//          todo
+        if (authentication == null) {
+            LoginUser loginUser = new LoginUser();
+            loginUser.setUser(new SysUser());
+            return loginUser;
+        }
+        Object principal = authentication.getPrincipal();
         if (principal instanceof String) {
             throw new IllegalTokenException("用户未登录");
         }

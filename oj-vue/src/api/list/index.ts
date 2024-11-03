@@ -7,7 +7,6 @@ import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, postedRemove, remove, update} from "@/utils/simpleCRUD";
 import {ProblemType, type ProblemView} from "@/api/problem";
-import type {FolderView} from "@/api/folder";
 
 interface ListView {
     listId: number;

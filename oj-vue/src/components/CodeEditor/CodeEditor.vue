@@ -14,9 +14,7 @@ import {ref, reactive, computed, watch} from "vue";
 import { type Editor, type EditorConfiguration } from "codemirror";
 import Codemirror from "codemirror-editor-vue3";
 
-
 import 'codemirror/lib/codemirror.css';
-
 
 
 // mode
@@ -48,13 +46,17 @@ import 'codemirror/addon/hint/anyword-hint'
 import 'codemirror/addon/edit/matchbrackets'
 import 'codemirror/addon/edit/closebrackets'
 
+import {useDark} from "@vueuse/core";
 
-const code = ref("");
+const isDark = useDark();
 
-const {language, height, theme} = defineProps<{
+const code = defineModel<string>({required: true})
+
+
+
+const {language, height} = defineProps<{
   language: 'java' | 'c' | 'c++' | 'python' | string,
   height: number,
-  theme: string
 }>()
 
 const modeMap = {
@@ -69,12 +71,16 @@ const mode = computed((): string => {
   return modeMap[language]
 })
 
+const theme = computed(() => {
+  return isDark.value ? "material-darker" : "eclipse";
+})
+
 
 
 const cmOptions: EditorConfiguration = reactive({
 
   mode: mode.value,
-  theme: "eclipse",
+  theme: theme.value,
   readOnly: false,
   tabSize: 4,
   indentUnit: 4,
@@ -110,15 +116,14 @@ const onReady = (cm: Editor) => {
   })
 };
 
-
-
 watch(mode, () => {
   cminstance.value?.setOption('mode', mode.value);
 
 })
 
-watch(() => theme, () => {
-  cminstance.value?.setOption('theme', theme);
+watch(theme, () => {
+  cminstance.value?.setOption('theme', theme.value);
+  cminstance.value?.refresh()
 })
 
 defineExpose({code})

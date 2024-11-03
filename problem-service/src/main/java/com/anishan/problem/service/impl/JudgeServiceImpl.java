@@ -1,25 +1,25 @@
 package com.anishan.problem.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.anishan.commons.e.ProblemType;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.JudgeAnswer;
 import com.anishan.problem.domain.ScoreAndIsCorrected;
 import com.anishan.problem.domain.dto.JudgeRequest;
-import com.anishan.problem.domain.entity.ChoiceFillAnswers;
-import com.anishan.problem.domain.entity.Problem;
-import com.anishan.problem.domain.entity.Records;
-import com.anishan.problem.domain.entity.SysLanguage;
+import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.ProblemJudgeResult;
+import com.anishan.problem.domain.vo.UserAnswer;
 import com.anishan.problem.service.*;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.math.RoundingMode;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,28 +27,19 @@ import java.util.stream.Collectors;
 public class JudgeServiceImpl implements JudgeService {
 
     private final ProblemService problemService;
-    private final OjProblemService ojProblemService;
-    private final ProblemListService problemListService;
+    private final ContestService contestService;
     private final RecordsService recordsService;
     private final ChoiceFillAnswersService choiceFillAnswersService;
     private final SysLanguageService sysLanguageService;
 
-    public static boolean answerEquals(Set<?> set1, Set<?> set2){
-        if(set1 == null || set2 ==null){
-            return false;
-        }
-        if(set1.size()!=set2.size()){
-            return false;
-        }
-        return set1.containsAll(set2);
-    }
 
+    private void doJudgeOj(JudgeRequest judgeRequest, List<OjProblemCase> cases) {
+
+    }
 
     private void judgeOj(Problem problem, JudgeRequest judgeRequest) {
         SysLanguage language = sysLanguageService.getById(judgeRequest.getLanguageId());
         ThrowUtil.runtime(language == null, "不支持的语言");
-
-
 
         //todo
     }
@@ -64,12 +55,15 @@ public class JudgeServiceImpl implements JudgeService {
             Map<Integer, List<ChoiceFillAnswers>> blankAnswers
     ) {
         Integer index = judgeAnswer.getIndex();
+//        没有对应答案直接0分
         if (!blankAnswers.containsKey(index)) {
             return ScoreAndIsCorrected.wrong();
         }
 
+//        去除首尾空格
         String userAnswers = judgeAnswer.getAnswer().trim();
 
+//        判断多个答案中是否有一样的
         List<ChoiceFillAnswers> choiceFillAnswers = blankAnswers.get(index);
         for (ChoiceFillAnswers choiceFillAnswer : choiceFillAnswers) {
             String answerText = choiceFillAnswer.getAnswerText();
@@ -81,7 +75,7 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     /**
-     * 判断是否正确，正确给分，否则0分，用于填空题
+     * 判断是否正确，正确给分，否则0分，用于选择题
      * @param judgeAnswer 用户输入的答案
      * @param choiceFillAnswers 标准答案
      * @return 分数和是否正确
@@ -91,16 +85,21 @@ public class JudgeServiceImpl implements JudgeService {
             List<ChoiceFillAnswers> choiceFillAnswers
     ) {
         Integer index = judgeAnswer.getIndex();
+//        初始化一个0分结果
         ScoreAndIsCorrected scoreAndIsCorrected = new ScoreAndIsCorrected();
         scoreAndIsCorrected.setScore(BigDecimal.ZERO);
         scoreAndIsCorrected.setCorrected(false);
+
+//        遍历标准答案，存在一样的答案就算对
         for (ChoiceFillAnswers choiceFillAnswer : choiceFillAnswers) {
             if (Objects.equals(choiceFillAnswer.getBlankIndex(), index)) {
                 scoreAndIsCorrected.setCorrected(true);
                 scoreAndIsCorrected.setScore(choiceFillAnswer.getScore());
+
+                return scoreAndIsCorrected;
             }
         }
-        return  scoreAndIsCorrected;
+        return scoreAndIsCorrected;
     }
 
 
@@ -146,7 +145,13 @@ public class JudgeServiceImpl implements JudgeService {
         );
 
 
+
+
         ProblemJudgeResult judgeResult = doJudgeFill(blankAnswers, judgeRequest);
+
+        BigDecimal fillMark = calcFillFullMark(blankAnswers);
+        judgeResult.setFullMark(fillMark);
+
 
         judgeResult.setAnswers(blankAnswers.stream().map(x -> new JudgeAnswer(x.getBlankIndex(), x.getAnswerText())).collect(Collectors.toList()));
 
@@ -155,11 +160,12 @@ public class JudgeServiceImpl implements JudgeService {
 
 
     private ProblemJudgeResult doJudgeChoice(List<ChoiceFillAnswers> answer, JudgeRequest judgeRequest) {
-
+//        初始化一个空的结果
         ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
         problemJudgeResult.setTotalScore(BigDecimal.ZERO);
         problemJudgeResult.setCorrect(false);
 
+//        去重
         judgeRequest.getAnswers().forEach(x -> x.setAnswer(null));
         List<JudgeAnswer> collect = judgeRequest
                 .getAnswers()
@@ -167,15 +173,22 @@ public class JudgeServiceImpl implements JudgeService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        if (answer.size() < judgeRequest.getAnswers().size()) {
+
+//        用户答案比标准答案多直接0分
+        if (answer.size() < collect.size()) {
             return problemJudgeResult;
         }
 
+//        遍历用户答案
         for (JudgeAnswer judgeRequestAnswer : collect) {
+//            判题，查看用户答案是否正确
             ScoreAndIsCorrected scoreAndIsCorrected = judgeScore(judgeRequestAnswer, answer);
+
+//            正确就加分
             if (scoreAndIsCorrected.isCorrected()) {
                 problemJudgeResult.add(scoreAndIsCorrected.getScore());
             } else {
+//                选择题只要不正确直接0分
                 problemJudgeResult.setCorrect(false);
                 problemJudgeResult.setTotalScore(BigDecimal.ZERO);
                 return problemJudgeResult;
@@ -200,8 +213,43 @@ public class JudgeServiceImpl implements JudgeService {
                 .collect(Collectors.toList());
         ProblemJudgeResult problemJudgeResult = doJudgeChoice(blankAnswers, judgeRequest);
         problemJudgeResult.setAnswers(answers);
+
+        BigDecimal fillMark = calcChoiceFullMark(blankAnswers);
+        problemJudgeResult.setFullMark(fillMark);
+
         return problemJudgeResult;
     }
+
+    private BigDecimal calcFillFullMark(List<ChoiceFillAnswers> answers) {
+        List<ChoiceFillAnswers> distinct = CollUtil.distinct(answers, ChoiceFillAnswers::getBlankIndex, false);
+        BigDecimal fullMark = BigDecimal.ZERO;
+        for (ChoiceFillAnswers choiceFillAnswers : distinct) {
+            fullMark = fullMark.add(choiceFillAnswers.getScore());
+        }
+        return fullMark;
+    }
+
+    private BigDecimal calcChoiceFullMark(List<ChoiceFillAnswers> answers) {
+        List<ChoiceFillAnswers> collect = CollUtil.distinct(answers, ChoiceFillAnswers::getBlankIndex, false)
+                .stream()
+                .filter(ChoiceFillAnswers::getIsCorrect)
+                .collect(Collectors.toList());
+
+        BigDecimal fullMark = BigDecimal.ZERO;
+        for (ChoiceFillAnswers choiceFillAnswers : collect) {
+            fullMark = fullMark.add(choiceFillAnswers.getScore());
+        }
+
+        return fullMark;
+    }
+
+    private BigDecimal calcOjFullMark(List<OjProblemCase> answers) {
+        BigDecimal fullMark = BigDecimal.ZERO;
+        for (OjProblemCase answer : answers) {
+            fullMark = fullMark.add(answer.getScore());
+        }
+        return fullMark;
+    };
 
 
 
@@ -221,7 +269,33 @@ public class JudgeServiceImpl implements JudgeService {
                 break;
         }
 
+
+
         return judgeResult;
+    }
+
+
+    private void beforeJudgeCheck(Problem problem, JudgeRequest judgeRequest, Long userId) {
+        ThrowUtil.runtime(problem == null, "题目不存在");
+        if (judgeRequest.getContestId() == null || userId == null) {
+            return;
+        }
+        boolean joined = contestService.isUserJoined(judgeRequest.getContestId(), userId);
+        ThrowUtil.permissionDeny(!joined, "非法访问");
+    }
+
+    private void record(JudgeRequest judgeRequest, Long userId, ProblemJudgeResult judgeResult) {
+        Long problemId = judgeRequest.getProblemId();
+        Records records = new Records();
+
+        UserAnswer userAnswer = new UserAnswer(judgeRequest.getAnswers(), judgeRequest.getCode(), judgeRequest.getLanguageId());
+        records.setContestId(judgeRequest.getContestId());
+        records.setProblemId(problemId);
+        records.setUserId(userId);
+        records.setScore(judgeResult.getTotalScore());
+        records.setStatus(judgeResult.isCorrect());
+        records.setAnswer(userAnswer);
+        recordsService.addRecord(records);
     }
 
     @Override
@@ -229,37 +303,49 @@ public class JudgeServiceImpl implements JudgeService {
         Long problemId = judgeRequest.getProblemId();
 
         Problem problem = problemService.getById(problemId);
+        beforeJudgeCheck(problem, judgeRequest, userId);
 
-        ProblemJudgeResult judge = judge(problem, judgeRequest);
 
+        ProblemJudgeResult judgeResult = judge(problem, judgeRequest);
+
+//        比赛题目不给答案 不显示对错 分数重算
         if (judgeRequest.getContestId() != null) {
-            judge.setAnswers(null);
+            judgeResult.setAnswers(null);
+            judgeResult.setCorrect(false);
+
+//            比赛题目需要重新计算分数   (totalScore / fullMark) * score
+            BigDecimal score = contestService.getScore(judgeRequest.getContestId(), problemId);
+
+            BigDecimal fullMark = judgeResult.getFullMark();
+            BigDecimal totalScore = judgeResult.getTotalScore();
+            BigDecimal newScore = BigDecimal.ZERO;
+            if (!fullMark.equals(BigDecimal.ZERO)) {
+                 newScore = totalScore.divide(fullMark, RoundingMode.DOWN).multiply(score);
+            }
+
+
+//            新分数
+            judgeResult.setTotalScore(newScore);
+            judgeResult.setFullMark(score);
+
         }
 
 
         // 添加做题记录
+        record(judgeRequest, userId, judgeResult);
 
-        ObjectMapper json = new ObjectMapper();
-
-        Records records = new Records();
-
-        records.setContestId(judgeRequest.getContestId());
-        records.setProblemId(problemId);
-        records.setUserId(userId);
-        records.setScore(judge.getTotalScore());
-        records.setStatus(judge.isCorrect() ? 1 : 0);
-        try {
-            records.setAnswer(json.writeValueAsString(judgeRequest.getAnswers()));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        recordsService.addRecord(records);
-
-
-        return judge;
+        return judgeResult;
     }
 
+    @Override
+    public ProblemJudgeResult codeTest(JudgeRequest judgeRequest) {
+        Problem problem = problemService.getById(judgeRequest.getProblemId());
+        beforeJudgeCheck(problem, judgeRequest, null);
+        ThrowUtil.runtime(problem.getType() != ProblemType.OJ, "测试只支持OJ题目");
+
+
+        return null;
+    }
 
 
 }

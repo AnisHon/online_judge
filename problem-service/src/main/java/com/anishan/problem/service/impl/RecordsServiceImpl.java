@@ -36,9 +36,14 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         LambdaQueryWrapper<Records> wrapper = new LambdaQueryWrapper<Records>()
                 .select(Records::getRecordId)
                 .eq(records.getRecordId() != null, Records::getRecordId, records.getRecordId())
-                .eq(records.getContestId() != null, Records::getContestId, records.getContestId())
                 .eq(Records::getProblemId, records.getProblemId())
                 .eq(Records::getUserId, records.getUserId());
+        wrapper = records.getContestId() == null
+                ?
+                wrapper.isNull(Records::getContestId)
+                : wrapper.
+                eq(Records::getContestId, records.getContestId());
+
         return this.getObj(wrapper, x -> (Long) x);
     }
 
@@ -53,14 +58,16 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     }
 
     @Override
-    public void addRecord(Records records) {
+    public boolean addRecord(Records records) {
         Long id = existRecord(records);
+        boolean b;
         if (id == null) {
-            this.save(records);
+            b = this.save(records);
         } else {
             records.setRecordId(id);
-            this.updateById(records);
+            b = this.updateById(records);
         }
+        return b;
     }
 }
 

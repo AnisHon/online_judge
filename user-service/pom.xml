@@ -65,7 +65,6 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
 
-
 <!--        &lt;!&ndash; https://mvnrepository.com/artifact/jakarta.mail/jakarta.mail-api &ndash;&gt;-->
 <!--        <dependency>-->
 <!--            <groupId>jakarta.mail</groupId>-->

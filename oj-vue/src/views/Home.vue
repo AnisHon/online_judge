@@ -40,9 +40,9 @@
 import CustomCard from "@/components/CustomCard/CustomCard.vue";
 import {rank, type UserView} from "@/api/user";
 import {ref} from "vue";
+import {useDark} from "@vueuse/core";
 
 const ranks = ref<UserView[]>([])
-
 
 // created
 rank(20)

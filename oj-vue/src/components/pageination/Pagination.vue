@@ -108,7 +108,6 @@ export default {
 <style scoped>
 .pagination-container {
   display: flex;
-  background: #fff;
   padding: 32px 16px;
 }
 .pagination-container.hidden {

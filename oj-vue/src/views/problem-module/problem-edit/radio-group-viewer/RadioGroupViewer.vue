@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 
-import ProblemRadio from "@/views/system/problem/ProblemRadio/ProblemRadio.vue";
+import ProblemRadio from "@/components/ProblemRadio/ProblemRadio.vue";
 import type {Answer} from "@/api/problem";
 import {numberToLetter} from "@/utils/stringUtils";
 const {choices = []} = defineProps<{
