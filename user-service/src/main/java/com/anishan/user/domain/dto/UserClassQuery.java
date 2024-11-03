@@ -1,6 +1,5 @@
 package com.anishan.user.domain.dto;
 
-import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.domain.dto.PagedQuery;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
