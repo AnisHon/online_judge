@@ -2,7 +2,7 @@ package com.anishan.problem.controller;
 
 import com.anishan.commons.domain.R;
 import com.anishan.commons.e.ProblemType;
-import com.anishan.problem.domain.dto.JudgeRequest;
+import com.anishan.api.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.Records;

@@ -21,7 +21,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.api.domain.SysUser;
+import com.anishan.api.domain.entity.SysUser;
 import com.anishan.user.service.SysUserService;
 import com.anishan.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;

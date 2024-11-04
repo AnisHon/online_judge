@@ -1,7 +1,5 @@
 package com.anishan.problem.domain.entity;
 
-import com.alibaba.nacos.shaded.org.checkerframework.checker.units.qual.A;
-import com.anishan.problem.domain.JudgeAnswer;
 import com.anishan.problem.domain.vo.UserAnswer;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

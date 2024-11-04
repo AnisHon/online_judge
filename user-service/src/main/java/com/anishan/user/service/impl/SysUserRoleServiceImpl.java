@@ -1,14 +1,13 @@
 package com.anishan.user.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import com.anishan.api.domain.SysRole;
-import com.anishan.api.domain.SysUser;
+import com.anishan.api.domain.entity.SysRole;
+import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.UserRoleRelationDto;
 import com.anishan.user.mapper.SysUserMapper;
 import com.anishan.user.service.SysRoleService;
-import com.anishan.user.service.SysUserService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

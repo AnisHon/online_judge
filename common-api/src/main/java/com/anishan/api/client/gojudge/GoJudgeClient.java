@@ -1,19 +1,21 @@
 package com.anishan.api.client.gojudge;
 
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
-@FeignClient(value = "http://localhost:5050", url = "http://localhost:5050")
+@FeignClient(value = "http://8.149.133.76:5050", url = "http://8.149.133.76:5050")
 public interface GoJudgeClient {
 
     @GetMapping("/version")
     JsonNode version();
 
     @PostMapping("/run")
-    JsonNode run(@RequestBody JsonNode cmd);
+    JSONArray run(@RequestBody JSONObject cmd);
 
+    @DeleteMapping("/file/{id}")
+    void delete(@PathVariable("id") String id);
 
 }

@@ -6,7 +6,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
-import com.anishan.api.domain.SysUser;
+import com.anishan.api.domain.entity.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.anishan.user.domain.vo.UserVo;
 

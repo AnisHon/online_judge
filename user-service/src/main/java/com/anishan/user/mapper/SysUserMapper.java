@@ -1,6 +1,6 @@
 package com.anishan.user.mapper;
 
-import com.anishan.api.domain.SysUser;
+import com.anishan.api.domain.entity.SysUser;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.domain.vo.UserVo;

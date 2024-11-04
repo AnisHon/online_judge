@@ -1,4 +1,4 @@
-package com.anishan.problem.domain;
+package com.anishan.api.domain;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

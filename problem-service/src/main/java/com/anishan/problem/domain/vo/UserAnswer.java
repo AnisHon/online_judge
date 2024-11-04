@@ -1,6 +1,6 @@
 package com.anishan.problem.domain.vo;
 
-import com.anishan.problem.domain.JudgeAnswer;
+import com.anishan.api.domain.JudgeAnswer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;

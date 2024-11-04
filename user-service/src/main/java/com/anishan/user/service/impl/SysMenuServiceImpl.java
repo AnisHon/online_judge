@@ -8,7 +8,7 @@ import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.commons.e.MenuType;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
-import com.anishan.api.domain.SysRole;
+import com.anishan.api.domain.entity.SysRole;
 import com.anishan.user.domain.dto.RoleMenuRelationDto;
 import com.anishan.user.domain.entity.SysRoleMenuRelation;
 import com.anishan.user.domain.vo.MenuVo;

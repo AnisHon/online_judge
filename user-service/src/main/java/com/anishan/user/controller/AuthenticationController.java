@@ -1,7 +1,7 @@
 package com.anishan.user.controller;
 
 
-import com.anishan.api.domain.SysUser;
+import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.domain.R;
 import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.vo.*;

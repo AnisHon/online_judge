@@ -14,6 +14,7 @@
         <module>gateway-server</module>
         <module>common-api</module>
         <module>problem-service</module>
+        <module>judge-server</module>
     </modules>
 
     <parent>

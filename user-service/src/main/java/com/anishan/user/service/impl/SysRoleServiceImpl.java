@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.api.domain.SysRole;
+import com.anishan.api.domain.entity.SysRole;
 import com.anishan.user.service.SysRoleService;
 import com.anishan.user.mapper.SysRoleMapper;
 import org.springframework.beans.factory.annotation.Autowired;

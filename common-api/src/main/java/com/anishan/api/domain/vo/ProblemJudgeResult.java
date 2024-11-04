@@ -1,7 +1,7 @@
-package com.anishan.problem.domain.vo;
+package com.anishan.api.domain.vo;
 
+import com.anishan.api.domain.JudgeAnswer;
 import com.anishan.commons.e.JudgeResult;
-import com.anishan.problem.domain.JudgeAnswer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

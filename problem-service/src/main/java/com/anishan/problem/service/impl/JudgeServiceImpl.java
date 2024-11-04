@@ -1,13 +1,14 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.commons.e.ProblemType;
 import com.anishan.commons.util.ThrowUtil;
-import com.anishan.problem.domain.JudgeAnswer;
+import com.anishan.api.domain.JudgeAnswer;
 import com.anishan.problem.domain.ScoreAndIsCorrected;
-import com.anishan.problem.domain.dto.JudgeRequest;
+import com.anishan.api.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.entity.*;
-import com.anishan.problem.domain.vo.ProblemJudgeResult;
+import com.anishan.api.domain.vo.ProblemJudgeResult;
 import com.anishan.problem.domain.vo.UserAnswer;
 import com.anishan.problem.service.*;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;

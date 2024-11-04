@@ -1,6 +1,6 @@
 package com.anishan.user.service;
 
-import com.anishan.api.domain.SysRole;
+import com.anishan.api.domain.entity.SysRole;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.UserRoleRelationDto;

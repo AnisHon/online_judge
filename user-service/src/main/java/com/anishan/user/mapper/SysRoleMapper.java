@@ -1,6 +1,6 @@
 package com.anishan.user.mapper;
 
-import com.anishan.api.domain.SysRole;
+import com.anishan.api.domain.entity.SysRole;
 import com.github.yulichang.base.MPJBaseMapper;
 
 /**

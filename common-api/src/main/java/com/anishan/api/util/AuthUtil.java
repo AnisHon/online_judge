@@ -3,7 +3,7 @@ package com.anishan.api.util;
 import cn.hutool.captcha.AbstractCaptcha;
 import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.LoginUser;
-import com.anishan.api.domain.SysUser;
+import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.util.JwtUtil;
 import org.jetbrains.annotations.Contract;

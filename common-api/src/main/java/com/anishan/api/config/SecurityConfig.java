@@ -3,6 +3,7 @@ package com.anishan.api.config;
 import com.anishan.api.filter.UserAuthenticationFilter;
 import com.anishan.api.handler.AccessDeniedHandlerImpl;
 import com.anishan.api.handler.AuthenticationEntryPointImpl;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -38,7 +40,9 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+//    todo  会不会出问题 待确定
     @Bean
+    @ConditionalOnBean(UserDetailsService.class)
     public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
