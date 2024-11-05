@@ -10,6 +10,7 @@ import com.anishan.judge.entity.LanguageConfig;
 import com.anishan.judge.exception.CompileError;
 import com.anishan.judge.exception.SubmitError;
 import com.anishan.judge.exception.SystemError;
+import com.anishan.judge.judge.Compiler;
 import com.anishan.judge.util.Constants;
 import com.anishan.judge.util.JudgeUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +22,13 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class CompilerImpl {
+public class CompilerImpl implements Compiler {
 
     private final SandboxRunImpl sandboxRun;
 
-
+    @Override
     public String compile(LanguageConfig languageConfig, String code,
-                                 String language, HashMap<String, String> extraFiles) throws SystemError, CompileError, SubmitError {
+                          String language, HashMap<String, String> extraFiles) throws SystemError, CompileError, SubmitError {
 
 
 
@@ -64,6 +65,7 @@ public class CompilerImpl {
         return fileId;
     }
 
+    @Override
     public Boolean compileSpj(String code, Long pid, String language, HashMap<String, String> extraFiles) throws SystemError {
 
         LanguageConfigLoader languageConfigLoader = SpringUtil.getBean(LanguageConfigLoader.class);
@@ -101,7 +103,7 @@ public class CompilerImpl {
         return true;
     }
 
-
+    @Override
     public Boolean compileInteractive(String code, Long pid, String language, HashMap<String, String> extraFiles) throws SystemError {
 
         LanguageConfigLoader languageConfigLoader = SpringUtil.getBean(LanguageConfigLoader.class);

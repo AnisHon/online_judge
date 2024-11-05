@@ -1,4 +1,4 @@
-package com.anishan.problem.domain.vo;
+package com.anishan.api.domain.vo;
 
 import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
@@ -21,7 +21,6 @@ public class OjProblemCaseVo implements Serializable {
     @NotEmpty(groups = {ValidationGroup.Insert.class})
     @ApiModelProperty("测试样例的输入")
     private String input;
-
 
     @NotEmpty(groups = {ValidationGroup.Insert.class})
     @ApiModelProperty("测试样例的输出")

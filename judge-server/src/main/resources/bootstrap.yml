@@ -11,8 +11,8 @@ spring:
       config:
         file-extension: yaml
         shared-configs:
+          - data-id: shared-jdbc.yaml  # 共享mybatis配置
           - data-id: shared_logging.yaml
-          - data-id: shared_knife4j.yaml
           - data-id: shared-redis.yaml
           - data-id: shared_common.yaml
 

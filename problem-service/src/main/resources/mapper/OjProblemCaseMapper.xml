@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anishan.problem.mapper.OjProblemCaseMapper">
 
-    <resultMap id="BaseResultMap" type="com.anishan.api.domain.entity.OjProblemCase">
+    <resultMap id="BaseResultMap" type="com.anishan.problem.domain.entity.OjProblemCase">
             <id property="caseId" column="case_id" jdbcType="BIGINT"/>
             <result property="problemId" column="problem_id" jdbcType="BIGINT"/>
             <result property="input" column="input" jdbcType="VARCHAR"/>

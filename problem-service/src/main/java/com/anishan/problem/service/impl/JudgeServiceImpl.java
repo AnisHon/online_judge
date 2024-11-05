@@ -1,7 +1,7 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.anishan.api.domain.entity.OjProblemCase;
+import com.anishan.problem.domain.entity.OjProblemCase;
 import com.anishan.commons.e.ProblemType;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.api.domain.JudgeAnswer;

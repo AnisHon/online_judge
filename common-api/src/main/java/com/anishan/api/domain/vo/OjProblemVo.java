@@ -1,4 +1,4 @@
-package com.anishan.problem.domain.vo;
+package com.anishan.api.domain.vo;
 
 import com.anishan.commons.e.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -23,13 +22,13 @@ public class OjProblemVo {
     private Long problemId;
 
     @ApiModelProperty("时间限制单位ms")
-    private Integer timeLimit;
+    private Long timeLimit;
 
     @ApiModelProperty("难度 (0 未分类, 1 简单, 2 中等, 3 困难)")
     private Difficulty difficulty;
 
     @ApiModelProperty("内存限制单位kb")
-    private Integer memoryLimit;
+    private Long memoryLimit;
 
     @ApiModelProperty("堆栈内存限制单位mb")
     private Integer stackLimit;

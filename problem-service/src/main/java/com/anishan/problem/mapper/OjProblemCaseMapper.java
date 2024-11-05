@@ -1,6 +1,6 @@
 package com.anishan.problem.mapper;
 
-import com.anishan.api.domain.entity.OjProblemCase;
+import com.anishan.problem.domain.entity.OjProblemCase;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

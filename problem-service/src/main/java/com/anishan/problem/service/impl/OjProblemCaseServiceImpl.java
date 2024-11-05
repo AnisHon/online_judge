@@ -1,10 +1,10 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.anishan.problem.domain.vo.OjProblemCaseVo;
+import com.anishan.api.domain.vo.OjProblemCaseVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.api.domain.entity.OjProblemCase;
+import com.anishan.problem.domain.entity.OjProblemCase;
 import com.anishan.problem.service.OjProblemCaseService;
 import com.anishan.problem.mapper.OjProblemCaseMapper;
 import org.springframework.stereotype.Service;

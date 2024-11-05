@@ -2,7 +2,7 @@ package com.anishan.problem.service;
 
 import com.anishan.problem.domain.dto.OjProblemDto;
 import com.anishan.problem.domain.entity.OjProblem;
-import com.anishan.problem.domain.vo.OjProblemVo;
+import com.anishan.api.domain.vo.OjProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.time.LocalDateTime;
