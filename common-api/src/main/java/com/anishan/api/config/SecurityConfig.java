@@ -40,6 +40,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+
 //    todo  会不会出问题 待确定
     @Bean
     @ConditionalOnBean(UserDetailsService.class)
