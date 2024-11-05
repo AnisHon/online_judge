@@ -2,7 +2,7 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.anishan.problem.domain.dto.OjProblemDto;
-import com.anishan.api.domain.vo.OjProblemVo;
+import com.anishan.problem.domain.vo.OjProblemVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.OjProblem;

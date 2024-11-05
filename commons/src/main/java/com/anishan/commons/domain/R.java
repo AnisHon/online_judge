@@ -24,6 +24,10 @@ public class R<T> {
     @ApiModelProperty("返回数据的")
     private T data;
 
+    public static R<Void> voidR() {
+        return success(null);
+    }
+
     public static <T> R<T> success(T data) {
         return new R<>(HTTP_OK, "success", data);
     }

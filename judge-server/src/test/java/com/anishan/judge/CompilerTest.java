@@ -1,14 +1,11 @@
 package com.anishan.judge;
 
-import cn.hutool.json.JSONArray;
-import com.anishan.api.domain.vo.OjProblemVo;
+import com.anishan.api.client.gojudge.domain.RunResult;
 import com.anishan.judge.config.LanguageConfigLoader;
-import com.anishan.judge.entity.LanguageConfig;
-import com.anishan.judge.entity.RunResult;
+import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.judge.Judge;
 import com.anishan.judge.judge.SandboxRun;
 import com.anishan.judge.judge.impl.CompilerImpl;
-import com.anishan.judge.util.JudgeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -43,14 +40,10 @@ public class CompilerTest {
 
         String fileId = compilerImpl.compile(
                 languageConfigByName,
-                "#include <iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> *((int *)0) >> b;\ncout << a + b << endl;\n}",
+                "#include <iostream>\nusing namespace std;\nint main() {\nint a, b;\ncin >> a >> b;\ncout << a + b << endl;\n}",
                 "C++",
                 null
         );
-        OjProblemVo ojProblemVo = new OjProblemVo();
-        ojProblemVo.setTimeLimit(1000L);
-        ojProblemVo.setStackLimit(1000);
-        ojProblemVo.setMemoryLimit(1000L);
         List<RunResult> runResults = judge.judgeAll(
                 fileId,
                 languageConfigByName,
@@ -62,7 +55,7 @@ public class CompilerTest {
         log.debug(runResults.toString());
 
         runResults.forEach(runResult -> {log.debug(runResult.getFiles().getStdout());});
-        sandboxRun.delFile(fileId);
+//        sandboxRun.delFile(fileId);
     }
 
 }

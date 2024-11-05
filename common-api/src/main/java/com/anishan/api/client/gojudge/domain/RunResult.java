@@ -29,12 +29,14 @@ public class RunResult {
     private Long time;
     private Long memory;
     private Long runTime;
-    private List<StdIoFile> files;
+    private StdIoFile files;
+
+    @Data
+    public static class StdIoFile {
+        private String stderr;
+        private String stdout;
+    }
 
 }
 
-@Data
-class StdIoFile {
-    private String stderr;
-    private String stdout;
-}
+

@@ -1,6 +1,6 @@
-package com.anishan.api.domain.vo;
+package com.anishan.problem.domain.vo;
 
-import com.anishan.api.domain.JudgeAnswer;
+import com.anishan.problem.domain.dto.JudgeAnswer;
 import com.anishan.commons.e.JudgeResult;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

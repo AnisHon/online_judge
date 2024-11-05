@@ -1,22 +1,14 @@
-package com.anishan.problem.domain.entity;
+package com.anishan.problem.domain.vo;
 
 import com.anishan.commons.e.JudgeResult;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
 import lombok.Data;
-import lombok.experimental.Accessors;
 
-/**
- * OJ判题提交记录
- * @TableName submit_log
- */
-@TableName(value ="submit_log")
+import java.util.Date;
+
 @Data
-@Accessors(chain = true)
-public class SubmitLog implements Serializable {
+public class SubmitLogVo {
     /**
      * 提交ID
      */
@@ -26,7 +18,7 @@ public class SubmitLog implements Serializable {
     /**
      * 用户id
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 题目id
@@ -54,9 +46,7 @@ public class SubmitLog implements Serializable {
     private Long memory;
 
     /**
-     * 
+     *
      */
     private Date submitTime;
-
-
 }

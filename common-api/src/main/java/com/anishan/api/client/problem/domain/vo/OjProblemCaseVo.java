@@ -1,4 +1,4 @@
-package com.anishan.api.domain.vo;
+package com.anishan.api.client.problem.domain.vo;
 
 import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;

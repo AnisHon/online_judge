@@ -1,8 +1,8 @@
 package com.anishan.problem.controller;
 
 import com.anishan.commons.domain.R;
-import com.anishan.api.domain.dto.JudgeRequest;
-import com.anishan.api.domain.vo.ProblemJudgeResult;
+import com.anishan.problem.domain.dto.JudgeRequest;
+import com.anishan.problem.domain.vo.ProblemJudgeResult;
 import com.anishan.problem.service.JudgeService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;

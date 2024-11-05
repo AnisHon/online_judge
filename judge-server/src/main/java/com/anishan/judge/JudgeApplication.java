@@ -1,10 +1,12 @@
 package com.anishan.judge;
 
 import com.anishan.api.config.FeignConfig;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
+@EnableRabbit
 @EnableFeignClients(defaultConfiguration = FeignConfig.class, basePackages = "com.anishan.api.client")
 @SpringBootApplication
 public class JudgeApplication {

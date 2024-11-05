@@ -20,8 +20,8 @@ CREATE TABLE sys_language (
 insert into
     sys_language(language_name, compile_command, seq)
 values
-    ('c++', '/usr/bin/g++', 1),
-    ('c', '/usr/bin/g++', 2),
+    ('C++', '/usr/bin/g++', 1),
+    ('C', '/usr/bin/g++', 2),
     ('java', '/usr/bin/javac', 3),
     ('python', '/usr/bin/python', 4);
 
@@ -187,15 +187,16 @@ CREATE TABLE submit_log (
     submit_id   bigint(20)  not null auto_increment comment '提交ID',
     user_id     varchar(32) not null                comment '用户id',
     problem_id  bigint(20)  not null                comment '题目id',
-    language_id bigint(20)  not null                comment '使用语言的id',
-    status      varchar(10) null                    comment '提交结果，取值范围 (AC, RE, WA, TLE, MLE)',
-    time        int(11)     null                    comment '耗时 单位ms',
-    memory      int(11)     null                    comment '内存使用 单位kb',
+    language    varchar(20) not null                comment '使用语言的id',
+    status      varchar(10) null                    comment '提交结果，取值范围 (AC, RE, WA, TLE, MLE, null 编译中)',
+    time        int(20)     null                    comment '耗时 单位ms',
+    memory      int(20)     null                    comment '内存使用 单位kb',
     submit_time datetime    default now() not null,
     PRIMARY KEY (submit_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment 'OJ判题提交记录';
 create index submit_log_problem_id on submit_log(problem_id);
 create index submit_log_user_id on submit_log(user_id);
+create index submit_log_user_problem_id on submit_log(problem_id, user_id);
 
 
 

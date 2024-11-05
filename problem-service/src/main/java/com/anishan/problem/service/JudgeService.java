@@ -1,7 +1,7 @@
 package com.anishan.problem.service;
 
-import com.anishan.api.domain.dto.JudgeRequest;
-import com.anishan.api.domain.vo.ProblemJudgeResult;
+import com.anishan.problem.domain.dto.JudgeRequest;
+import com.anishan.problem.domain.vo.ProblemJudgeResult;
 
 public interface JudgeService {
 

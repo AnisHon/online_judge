@@ -4,14 +4,14 @@ package com.anishan.judge.util;
 import lombok.Getter;
 
 /**
- * @Author: Himit_ZH
- * @Date: 2021/1/1 13:00
- * @Description: 常量枚举类
+ * @author: Himit_ZH
+ * @date: 2021/1/1 13:00
+ * @description: 常量枚举类
  */
 public class Constants {
     /**
-     * @Description 提交评测结果的状态码
-     * @Since 2021/1/1
+     * @description 提交评测结果的状态码
+     * @since 2021/1/1
      */
     @Getter
     public enum Judge {
@@ -38,7 +38,7 @@ public class Constants {
         private final Integer status;
         private final String name;
 
-        private Judge(Integer status, String name) {
+        Judge(Integer status, String name) {
             this.status = status;
             this.name = name;
         }

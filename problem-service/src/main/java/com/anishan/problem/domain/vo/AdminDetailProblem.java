@@ -1,6 +1,5 @@
 package com.anishan.problem.domain.vo;
-import com.anishan.api.domain.vo.OjProblemCaseVo;
-import com.anishan.api.domain.vo.OjProblemVo;
+import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

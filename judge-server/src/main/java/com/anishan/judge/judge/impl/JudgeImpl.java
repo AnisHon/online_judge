@@ -1,11 +1,9 @@
 package com.anishan.judge.judge.impl;
 
 import cn.hutool.json.JSONArray;
-import com.anishan.api.domain.vo.OjProblemCaseVo;
-import com.anishan.api.domain.vo.OjProblemVo;
+import com.anishan.api.client.gojudge.domain.RunResult;
 import com.anishan.judge.config.LanguageConfigLoader;
-import com.anishan.judge.entity.LanguageConfig;
-import com.anishan.judge.entity.RunResult;
+import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.SystemError;
 import com.anishan.judge.judge.Judge;
 import com.anishan.judge.judge.SandboxRun;
@@ -37,7 +35,7 @@ public class JudgeImpl implements Judge {
      * @return GO-Judge判题机的相应结果
      * @throws SystemError 无法连接的时候会抛出异常
      */
-    private RunResult doJudge(
+    private com.anishan.api.client.gojudge.domain.RunResult doJudge(
             String fileId,
             LanguageConfig languageConfig,
             String input, Long maxTime,
@@ -60,16 +58,16 @@ public class JudgeImpl implements Judge {
                 languageConfigByName.getExeName(),
                 fileId,
                 null,
-                true,
+                false,
                 null,
                 null
         );
-        return objectMapper.convertValue(resultNode.get(0), RunResult.class);
+        return objectMapper.convertValue(resultNode.get(0), com.anishan.api.client.gojudge.domain.RunResult.class);
     }
 
 
     @Override
-    public List<RunResult> judgeAll(
+    public List<com.anishan.api.client.gojudge.domain.RunResult> judgeAll(
             String fileId,
             LanguageConfig languageConfig,
             Long memLimit,

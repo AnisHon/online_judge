@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * 题目完成表
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 public class Records implements Serializable {
     /**
      * 

@@ -6,7 +6,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.anishan.judge.config.LanguageConfigLoader;
-import com.anishan.judge.entity.LanguageConfig;
+import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.CompileError;
 import com.anishan.judge.exception.SubmitError;
 import com.anishan.judge.exception.SystemError;

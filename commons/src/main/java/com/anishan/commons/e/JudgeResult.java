@@ -13,7 +13,7 @@ public enum JudgeResult implements IEnum<String>, Enumerator<String> {
     WrongAnswer("WA"),
     TimeLimitExceeded("TLE"),
     MemoryLimitExceeded("MLE"),
-    CompileError("CE")
+    CompileError("CE"),
     ;
 
     private final String value;

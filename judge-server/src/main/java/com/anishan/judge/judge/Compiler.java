@@ -1,6 +1,6 @@
 package com.anishan.judge.judge;
 
-import com.anishan.judge.entity.LanguageConfig;
+import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.CompileError;
 import com.anishan.judge.exception.SubmitError;
 import com.anishan.judge.exception.SystemError;

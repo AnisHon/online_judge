@@ -1,9 +1,7 @@
 package com.anishan.judge.judge;
 
-import com.anishan.api.domain.vo.OjProblemCaseVo;
-import com.anishan.api.domain.vo.OjProblemVo;
-import com.anishan.judge.entity.LanguageConfig;
-import com.anishan.judge.entity.RunResult;
+import com.anishan.api.client.gojudge.domain.RunResult;
+import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.SystemError;
 
 import java.util.List;

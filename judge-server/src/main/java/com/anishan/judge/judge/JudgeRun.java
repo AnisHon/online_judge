@@ -1,7 +1,7 @@
 package com.anishan.judge.judge;
 
 import com.anishan.api.client.gojudge.domain.RunResult;
-import com.anishan.judge.entity.LanguageConfig;
+import com.anishan.judge.domain.entity.LanguageConfig;
 
 public interface JudgeRun {
 

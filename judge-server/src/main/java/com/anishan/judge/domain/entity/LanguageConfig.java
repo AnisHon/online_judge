@@ -1,4 +1,4 @@
-package com.anishan.judge.entity;
+package com.anishan.judge.domain.entity;
 
 import lombok.Data;
 

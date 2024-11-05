@@ -1,6 +1,5 @@
-package com.anishan.api.domain.dto;
+package com.anishan.problem.domain.dto;
 
-import com.anishan.api.domain.JudgeAnswer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

@@ -1,8 +1,10 @@
 package com.anishan.problem.controller;
 
+import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.commons.domain.R;
+import com.anishan.commons.e.JudgeResult;
 import com.anishan.commons.e.ProblemType;
-import com.anishan.api.domain.dto.JudgeRequest;
+import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.Records;
@@ -26,6 +28,24 @@ public class RecordController {
 
     private final RecordsService recordsService;
     private final JudgeService judgeService;
+
+    @PostMapping("judge-save")
+    @ApiOperation("内部接口，保存judge数据")
+    public R<Void> judgeSave(@RequestBody JudgeScore judgeScore) {
+
+        Records records = new Records()
+                .setContestId(judgeScore.getContestId())
+                .setProblemId(judgeScore.getProblemId())
+                .setUserId(judgeScore.getUserId())
+                .setStatus(judgeScore.getResult() == JudgeResult.Accept)
+                .setScore(judgeScore.getScore());
+        recordsService.addRecord(records);
+        return R.success(null);
+    }
+
+
+
+
 
     @PostMapping("/save")
     @ApiOperation("保存数据")

@@ -4,7 +4,7 @@ import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.anishan.judge.entity.LanguageConfig;
+import com.anishan.judge.domain.entity.LanguageConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.Yaml;

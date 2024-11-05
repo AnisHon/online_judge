@@ -1,7 +1,7 @@
 package com.anishan.judge.judge.impl;
 
 import com.anishan.api.client.gojudge.domain.RunResult;
-import com.anishan.judge.entity.LanguageConfig;
+import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.judge.JudgeRun;
 import com.anishan.judge.judge.SandboxRun;
 import lombok.RequiredArgsConstructor;
