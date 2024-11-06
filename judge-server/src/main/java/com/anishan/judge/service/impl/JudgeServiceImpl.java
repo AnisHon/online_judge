@@ -84,8 +84,8 @@ public class JudgeServiceImpl implements JudgeService {
         Optional<RunResult> maxMemory = results.stream().max((a, b) -> Math.toIntExact(a.getMemory() - b.getMemory()));
         // 默认时间取最大值
         judgeScore
-                .setRuntime(maxTime.get())
-                .setMemory(maxMemory.get());
+                .runtimeSetter(maxTime.get())
+                .memorySetter(maxMemory.get());
         if (cases.size() != results.size()) {
             return judgeScore.setResult(JudgeResult.RuntimeError);
         }
@@ -124,6 +124,9 @@ public class JudgeServiceImpl implements JudgeService {
         List<OjProblemCaseVo> cases = message.getCases();
         List<String> inputCases = cases.stream().map(OjProblemCaseVo::getInput).collect(Collectors.toList());
         LanguageConfig languageConfig = getLanguageConfig(message);
+        if (languageConfig == null) {
+            throw new RuntimeException(message.getLanguage());
+        }
         JudgeScore judgeScore = new JudgeScore()
                 .setUserId(message.getUserId())
                 .setProblemId(message.getProblemId())
@@ -136,6 +139,8 @@ public class JudgeServiceImpl implements JudgeService {
             try {
                 fileId = compile(languageConfig, message);
             } catch (CompileError e) {
+                judgeScore.setScore(BigDecimal.ZERO);
+                judgeScore.setResult(JudgeResult.CompileError);
                 return judgeScore.setErrorMessage(e.getStderr());
             }
 

@@ -58,7 +58,6 @@ import {
 } from "@/api/problem";
 import {useRoute} from "vue-router";
 import {computed, reactive} from "vue";
-import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {type JudgeForm} from "@/api/problem/judge";
 import OnlineJudgeProblemReviewer
@@ -83,6 +82,7 @@ const judgeForm = reactive<JudgeForm>({
   contestId: undefined,
   problemId: problemId.value,
   answers: [],
+  code: "",
 });
 
 const problemType = computed(() => {
@@ -136,9 +136,6 @@ const stackLimit = computed(() => {
   return ojProblem.value?.stackLimit || 0;
 })
 
-const stringProblemType = computed(() => {
-  return problemTypeToString(<ProblemType>problemType.value);
-});
 
 const description = computed(() => {
   return problem?.problem.description || "";

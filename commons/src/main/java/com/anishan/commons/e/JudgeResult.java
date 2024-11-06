@@ -25,6 +25,6 @@ public enum JudgeResult implements IEnum<String>, Enumerator<String> {
 
     @Override
     public String value() {
-        return "";
+        return this.value;
     }
 }

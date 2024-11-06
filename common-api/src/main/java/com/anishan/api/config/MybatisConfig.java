@@ -15,7 +15,6 @@ import javax.sql.DataSource;
 @AutoConfiguration
 @Configuration
 @EnableTransactionManagement
-@ConditionalOnBean(DataSource.class)
 public class MybatisConfig {
 
 

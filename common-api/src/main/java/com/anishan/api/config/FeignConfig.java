@@ -2,8 +2,10 @@ package com.anishan.api.config;
 
 
 import com.anishan.api.util.AuthUtil;
+import com.anishan.api.util.FeignResultDecoder;
 import feign.Logger;
 import feign.RequestInterceptor;
+import feign.codec.Decoder;
 import org.springframework.context.annotation.Bean;
 
 public class FeignConfig {
@@ -11,6 +13,9 @@ public class FeignConfig {
     public Logger.Level feignLogLevel(){
         return Logger.Level.FULL;
     }
+
+
+
 
     @Bean
     public RequestInterceptor userInfoRequestInterceptor(){

@@ -55,12 +55,10 @@
 
             <div v-if="!isOjProblem">
               <div class="submit">
-                <el-button type="success" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
+                <el-button type="success" :disabled="isShowResult" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
               </div>
 
-              <div class="result" v-if="isShowResult">
-                <ProblemResult :type="problemType" :result="judgeResult"/>
-              </div>
+
 
             </div>
 
@@ -70,8 +68,10 @@
               <div>
                 <markdown-preview :text="hint" />
               </div>
+            </div>
 
-
+            <div class="result" v-if="isShowResult">
+              <ProblemResult :type="problemType" :result="judgeResult"/>
             </div>
 
           </div>
@@ -95,28 +95,40 @@
       </el-row>
 
 
+
+
+
     </transition>
 
+
+
+    <el-dialog v-model="openOjDialog">
+      <template #title>
+        <h2>
+          运行结果
+        </h2>
+      </template>
+      <template #default>
+
+      </template>
+
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  debouncedGetDetailProblem,
-  type OjProblemView,
-  type ProblemDetailView,
-  ProblemType,
-} from "@/api/problem";
+import {debouncedGetDetailProblem, type OjProblemView, type ProblemDetailView, ProblemType,} from "@/api/problem";
 import {computed, onMounted, onUnmounted, reactive, type Ref, ref, watch} from "vue";
 import EnhancedCodeEditor from '@/components/EnhancedCodeEdior/index.vue'
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {
-  type Answer, debouncedSave,
+  type Answer,
   getDebouncedJudge,
   getUserAnswer,
   type JudgeForm,
-  type JudgeResponse, saveUserAnswer,
+  type JudgeResponse,
+  saveUserAnswer,
 } from "@/api/problem/judge";
 import {debounce} from "@/utils/debounce";
 import useLoading from "@/hooks/useLoading";
@@ -225,8 +237,9 @@ const judgeFormCopy = reactive<JudgeForm>({
 const doJudge = getDebouncedJudge(judgeForm,
     (data: JudgeResponse) => {
       showAnswers.value =  Array.isArray(data.answers) && data.answers.length > 0;
-      // judgeResult.value = data;
-      // judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
+
+      judgeResult.value = data;
+      judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
     },
     undefined,
     finish
@@ -236,11 +249,15 @@ const doJudge = getDebouncedJudge(judgeForm,
 
 const showAnswers = ref(false);
 
+const openOjDialog = ref(true);
 
 // 三个事件
 const onHandleSubmit = () => {
   loading()
   doJudge();
+  if (problemType.value === ProblemType.OJ) {
+    openOjDialog.value = false;
+  }
 }
 
 const onHandleFullScreen = () => {

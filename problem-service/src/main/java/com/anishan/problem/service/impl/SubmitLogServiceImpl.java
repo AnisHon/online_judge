@@ -4,10 +4,12 @@ import cn.hutool.core.bean.BeanUtil;
 
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.commons.e.JudgeResult;
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.problem.mapper.SubmitLogMapper;
 import com.anishan.problem.service.SubmitLogService;
+import com.anishan.problem.util.SubmitLogUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
@@ -25,6 +27,8 @@ import org.springframework.stereotype.Service;
 public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog>
     implements SubmitLogService {
 
+    private final SubmitLogUtil submitLogUtil;
+
     @Override
     public Long logQueue(Long userId, Long problemId, String language) {
         SubmitLog submitLog = new SubmitLog()
@@ -32,6 +36,12 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
                 .setStatus(JudgeResult.Queue)
                 .setUserId(userId)
                 .setProblemId(problemId);
+
+        ThrowUtil.runtime(submitLogUtil.isExist(userId), "请等待");
+
+
+        submitLogUtil.cacheLog(submitLog);
+
         this.save(submitLog);
         return submitLog.getSubmitId();
     }
@@ -45,7 +55,15 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
 
 
     @Override
-    public boolean changeStatus(Long id, JudgeResult result) {
+    public boolean changeStatus(Long userId, Long id, JudgeResult result) {
+
+        submitLogUtil.update(new SubmitLog()
+                .setUserId(userId)
+                .setStatus(result)
+        );
+        submitLogUtil.setExpired(userId, 20L);
+
+
         return this.update(
                 new LambdaUpdateWrapper<SubmitLog>()
                         .set(SubmitLog::getStatus, result)
@@ -54,14 +72,35 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
     }
 
     @Override
-    public SubmitLogVo getLog(Long id) {
-        SubmitLog log = this.getById(id);
-        return BeanUtil.copyProperties(log, SubmitLogVo.class);
+    public SubmitLogVo getLog(Long id, Long userId) {
+        if (id == null) {
+            return null;
+        }
+
+        SubmitLog submitLog = submitLogUtil.get(userId);
+
+
+
+        if (submitLog == null) {
+            submitLog = this.getById(id);
+        }
+
+
+        return BeanUtil.copyProperties(submitLog, SubmitLogVo.class);
     }
 
     @Override
     public boolean update(SubmitLogDto submitLog) {
+        if (submitLog == null) {
+            return false;
+        }
+
         SubmitLog log = BeanUtil.copyProperties(submitLog, SubmitLog.class);
+
+        // 缓存也改一下
+        submitLogUtil.update(log);
+        submitLogUtil.setExpired(submitLog.getUserId(), 20L);
+
         return this.updateById(log);
     }
 

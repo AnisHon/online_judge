@@ -15,7 +15,6 @@ import com.anishan.problem.domain.dto.PagedProblem;
 import com.anishan.problem.domain.dto.ProblemDto;
 import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.*;
-import com.anishan.problem.mapper.ProblemListMapper;
 import com.anishan.problem.mapper.ProblemMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
 import com.anishan.problem.service.*;
@@ -29,6 +28,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
 * @author happy
@@ -45,7 +46,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final ChoiceFillAnswersService choiceFillAnswersService;
     private final TagService tagService;
     private final OjProblemCaseService ojProblemCaseService;
-    private final ProblemListMapper problemListMapper;
     private final ProblemProblemListMapper problemProblemListMapper;
 
 
@@ -243,7 +243,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             case FILL:
             case CHOICE:
             case MULTI_CHOICE:
-                result = doUpdateFillAnswers(problem.getChoices());
+                result = doUpdateFillAnswers(problem.getChoices(), entity.getProblemId());
                 break;
 
         }
@@ -251,8 +251,28 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         return result;
     }
 
-    private boolean doUpdateFillAnswers(List<ChoiceFillAnswersDto> choices) {
+    private boolean doUpdateFillAnswers(List<ChoiceFillAnswersDto> choices, Long problemId) {
+        if (CollectionUtil.isEmpty(choices)) {
+            return true;
+        }
         List<ChoiceFillAnswers> answers = BeanUtil.copyToList(choices, ChoiceFillAnswers.class);
+        answers.forEach(x -> x.setProblemId(problemId));
+
+        List<Long> ids = answers
+                .stream()
+                .map(ChoiceFillAnswers::getAnswerId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        LambdaQueryWrapper<ChoiceFillAnswers> wrapper = new LambdaQueryWrapper<ChoiceFillAnswers>()
+                .eq(ChoiceFillAnswers::getProblemId, problemId)
+                .notIn(!CollectionUtil.isEmpty(ids), ChoiceFillAnswers::getAnswerId, ids);
+
+        choiceFillAnswersService.remove(
+                wrapper
+        );
+
+
         return choiceFillAnswersService.saveOrUpdateBatch(answers);
     }
 
@@ -268,6 +288,21 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         if (CollectionUtil.isEmpty(cases)) {
             return true;
         }
+        Long problemId = cases.get(0).getProblemId();
+
+        List<Long> ids = cases
+                .stream()
+                .map(OjProblemCase::getCaseId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        LambdaQueryWrapper<OjProblemCase> wrapper = new LambdaQueryWrapper<OjProblemCase>()
+                .eq(OjProblemCase::getProblemId, problemId)
+                .notIn(!CollectionUtil.isEmpty(ids), OjProblemCase::getCaseId, ids);
+
+        ojProblemCaseService.remove(
+                wrapper
+        );
+
         return ojProblemCaseService.saveOrUpdateBatch(cases);
     }
 

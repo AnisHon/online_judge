@@ -3,6 +3,8 @@ server:
 spring:
   config:
     name: problem-service
+  datasource:
+    hikari:
 
 
 oj:

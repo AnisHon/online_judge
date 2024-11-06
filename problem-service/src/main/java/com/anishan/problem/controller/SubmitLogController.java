@@ -1,6 +1,7 @@
 package com.anishan.problem.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.log.Log;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.commons.domain.R;
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
@@ -43,17 +44,19 @@ public class SubmitLogController {
     }
 
     @PostMapping("/change-status")
-    public R<Boolean> changeStatus(@RequestBody SubmitLogDto submitLog) {
+    public R<Boolean> changeStatus(@RequestBody SubmitLogDto submitLog, @RequestHeader("user-id") Long userId) {
         SubmitLog log = BeanUtil.copyProperties(submitLog, SubmitLog.class);
-        boolean b = submitLogService.changeStatus(log.getSubmitId(), log.getStatus());
+        boolean b = submitLogService.changeStatus(userId, log.getSubmitId(), log.getStatus());
         return R.success(b);
     }
 
     @GetMapping("/get/{id}")
-    public R<SubmitLogVo> getLog(@PathVariable("id") Long id) {
-        SubmitLogVo log = submitLogService.getLog(id);
+    public R<SubmitLogVo> getLog(@PathVariable("id") Long id, @RequestHeader("user-id")Long userId) {
+        SubmitLogVo log = submitLogService.getLog(id, userId);
         return R.success(log);
     }
+
+
 
 
 

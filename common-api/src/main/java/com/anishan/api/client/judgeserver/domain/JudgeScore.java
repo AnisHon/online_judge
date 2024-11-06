@@ -23,47 +23,16 @@ public class JudgeScore {
     private Long memory;
     private String errorMessage;
 
-    public JudgeScore setRuntime(RunResult runResult) {
+    public JudgeScore runtimeSetter(RunResult runResult) {
         if (runResult != null) {
             this.runtime = runResult.getTime() / 1000 / 1000;
         }
         return this;
     }
 
-    public JudgeScore setMemory(RunResult runResult) {
+    public void memorySetter(RunResult runResult) {
         if (runResult != null) {
             this.memory = runResult.getMemory() / 1024 / 1024;
         }
-        return this;
-    }
-
-    public JudgeScore setResult(Status status) {
-        switch (status) {
-            case Accepted:
-                this.result = JudgeResult.Accept;
-                break;
-            case TimeLimitExceeded:
-                this.result = JudgeResult.TimeLimitExceeded;
-                break;
-            case MemoryLimitExceeded:
-                this.result = JudgeResult.MemoryLimitExceeded;
-                break;
-            case OutputLimitExceeded:
-                this.result = JudgeResult.WrongAnswer;
-                break;
-            case NonzeroExitStatus:
-            case FileError:
-            case Signalled:
-            case InternalError:
-                this.result = JudgeResult.RuntimeError;
-                break;
-        }
-        return this;
-
-    }
-
-    public JudgeScore setResult(JudgeResult result) {
-        this.result = result;
-        return this;
     }
 }

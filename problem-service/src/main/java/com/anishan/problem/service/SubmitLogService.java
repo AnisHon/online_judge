@@ -17,9 +17,9 @@ public interface SubmitLogService extends IService<SubmitLog> {
 
     Long logJudge(SubmitLogDto log);
 
-    boolean changeStatus(Long id, JudgeResult result);
+    boolean changeStatus(Long userId, Long id, JudgeResult result);
 
-    SubmitLogVo getLog(Long id);
+    SubmitLogVo getLog(Long id, Long userId);
 
     boolean update(SubmitLogDto submitLog);
 }

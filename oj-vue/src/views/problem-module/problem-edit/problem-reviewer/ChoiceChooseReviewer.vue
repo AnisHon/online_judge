@@ -3,7 +3,7 @@
 
   <div>
     <div class="choices">
-      <ProblemRadioGroupViewer ref="problemRadioGroupRef" :choices="choices" :is-multi="isMulti" />
+      <ProblemRadioGroupViewer ref="problemRadioGroupRef" :choices="choices"  :is-multi="isMulti" />
     </div>
   </div>
 

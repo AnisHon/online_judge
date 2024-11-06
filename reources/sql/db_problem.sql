@@ -21,9 +21,17 @@ insert into
     sys_language(language_name, compile_command, seq)
 values
     ('C++', '/usr/bin/g++', 1),
+    ('C++ With O2', '/usr/bin/g++', 1),
+    ('C++ 17', '/usr/bin/g++', 1),
+    ('C++ 17 With O2', '/usr/bin/g++', 1),
+    ('C++ 20', '/usr/bin/g++', 1),
+    ('C++ 20 With O2', '/usr/bin/g++', 1),
     ('C', '/usr/bin/g++', 2),
-    ('java', '/usr/bin/javac', 3),
-    ('python', '/usr/bin/python', 4);
+    ('C With O2', '/usr/bin/g++', 2),
+    ('Java', '/usr/bin/javac', 3),
+    ('Python2', '/usr/bin/python', 4),
+    ('Python3', '/usr/bin/python', 4),
+    ('Golang', '/usr/bin/python', 4);
 
 
 -- ----------------------------

@@ -4,7 +4,7 @@
       <el-form-item>
         <el-button-group>
           <el-button type="success" @click="emit('test')" :icon="IconBug">
-            运行
+            测试
           </el-button>
           <el-button type="success" @click="emit('submit')" :icon="Upload">
             提交

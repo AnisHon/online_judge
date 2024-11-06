@@ -20,7 +20,7 @@ public class SubmitLogDto {
     /**
      * 用户id
      */
-    private String userId;
+    private Long userId;
 
     /**
      * 题目id

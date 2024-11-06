@@ -31,7 +31,7 @@ public class RecordController {
 
     @PostMapping("judge-save")
     @ApiOperation("内部接口，保存judge数据")
-    public R<Void> judgeSave(@RequestBody JudgeScore judgeScore) {
+    public void judgeSave(@RequestBody JudgeScore judgeScore) {
 
         Records records = new Records()
                 .setContestId(judgeScore.getContestId())
@@ -40,7 +40,6 @@ public class RecordController {
                 .setStatus(judgeScore.getResult() == JudgeResult.Accept)
                 .setScore(judgeScore.getScore());
         recordsService.addRecord(records);
-        return R.success(null);
     }
 
 
