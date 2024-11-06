@@ -1,8 +1,8 @@
 package com.anishan.judge.util;
 
 
+import com.anishan.commons.e.Enumerator;
 import lombok.Getter;
-
 /**
  * @author: Himit_ZH
  * @date: 2021/1/1 13:00
@@ -14,7 +14,7 @@ public class Constants {
      * @since 2021/1/1
      */
     @Getter
-    public enum Judge {
+    public enum Judge implements Enumerator<Integer> {
         // 提交失败
         STATUS_NOT_SUBMITTED(-10, "Not Submitted"),
         STATUS_CANCELLED(-4, "Cancelled"),
@@ -50,6 +50,11 @@ public class Constants {
                 }
             }
             return STATUS_NULL;
+        }
+
+        @Override
+        public Integer value() {
+            return this.status;
         }
     }
 

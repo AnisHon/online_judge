@@ -1,5 +1,6 @@
 package com.anishan.judge.judge.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONArray;
 import com.anishan.api.client.gojudge.domain.RunResult;
 import com.anishan.judge.config.LanguageConfigLoader;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -35,7 +37,7 @@ public class JudgeImpl implements Judge {
      * @return GO-Judge判题机的相应结果
      * @throws SystemError 无法连接的时候会抛出异常
      */
-    private com.anishan.api.client.gojudge.domain.RunResult doJudge(
+    private RunResult doJudge(
             String fileId,
             LanguageConfig languageConfig,
             String input, Long maxTime,
@@ -62,12 +64,13 @@ public class JudgeImpl implements Judge {
                 null,
                 null
         );
-        return objectMapper.convertValue(resultNode.get(0), com.anishan.api.client.gojudge.domain.RunResult.class);
+
+        return objectMapper.convertValue(resultNode.get(0), RunResult.class);
     }
 
 
     @Override
-    public List<com.anishan.api.client.gojudge.domain.RunResult> judgeAll(
+    public List<RunResult> judgeAll(
             String fileId,
             LanguageConfig languageConfig,
             Long memLimit,
@@ -75,17 +78,33 @@ public class JudgeImpl implements Judge {
             Integer stackLimit,
             List<String> cases) throws SystemError {
         ArrayList<RunResult> results = new ArrayList<>(cases.size());
-        for (String case_ : cases) {
+
+        // 没有测试用例，很抽象，运行一下，应付一下，反手甩一个RE
+        if (CollectionUtil.isEmpty(cases)) {
             results.add(
                     doJudge(
                             fileId,
                             languageConfig,
-                            case_,
+                            "",
                             timeLimit,
                             memLimit,
                             stackLimit
                     ));
+        } else {
+            // 正常运行
+            for (String case_ : cases) {
+                results.add(
+                        doJudge(
+                                fileId,
+                                languageConfig,
+                                Objects.requireNonNullElse(case_, ""), // 是null就返回空串
+                                timeLimit,
+                                memLimit,
+                                stackLimit
+                        ));
+            }
         }
+
         return results;
     }
 }

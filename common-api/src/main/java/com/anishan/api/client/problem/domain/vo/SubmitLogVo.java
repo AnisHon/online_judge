@@ -1,4 +1,4 @@
-package com.anishan.problem.domain.dto;
+package com.anishan.api.client.problem.domain.vo;
 
 import com.anishan.commons.e.JudgeResult;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class SubmitLogDto {
+public class SubmitLogVo {
     /**
      * 提交ID
      */

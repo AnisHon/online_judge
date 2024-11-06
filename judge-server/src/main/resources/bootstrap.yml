@@ -15,4 +15,5 @@ spring:
           - data-id: shared_logging.yaml
           - data-id: shared-redis.yaml
           - data-id: shared_common.yaml
+          - data-id: shared_rabbit.yaml
 

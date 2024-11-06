@@ -74,7 +74,7 @@ CREATE TABLE oj_problem_case (
     problem_id  bigint(20)  not null                comment '题目id',
     input       longtext                            comment '测试样例的输入',
     output      longtext                            comment '测试样例的输出',
-    score       int(11) default 100                 comment '答对的分数',
+    score       decimal(2, 2) default 0             comment '答对的分数',
     del_flag    boolean default 0 not null          comment '删除标记',
     create_time datetime default now(),
     update_time datetime default now() on update now(),

@@ -16,11 +16,8 @@ public class ProblemJudgeResult {
     @ApiModelProperty("是否正确")
     private boolean correct;
 
-    @ApiModelProperty("OJ测评结果 (AC Accept RE RuntimeError WA WrongAnswer TLE TimeLimitExceed MLE MemoryLimitExceed CE CompileError)")
-    private JudgeResult judgeResult;
-
-    @ApiModelProperty("错误信息，std err的信息")
-    private String errorMessage;
+    @ApiModelProperty("OJ判题ID")
+    private Long submitId;
 
     @ApiModelProperty("标准答案")
     private List<JudgeAnswer> answers;

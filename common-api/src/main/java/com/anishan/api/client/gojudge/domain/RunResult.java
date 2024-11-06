@@ -1,10 +1,7 @@
 package com.anishan.api.client.gojudge.domain;
 
-import com.anishan.api.client.gojudge.enumeration.Status;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * [
@@ -24,7 +21,7 @@ import java.util.List;
 @ApiModel("运行结果")
 @Data
 public class RunResult {
-    private Status status;
+    private Integer status;
     private Integer exitStatus;
     private Long time;
     private Long memory;

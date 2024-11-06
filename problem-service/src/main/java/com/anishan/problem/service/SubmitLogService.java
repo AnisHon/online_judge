@@ -1,9 +1,9 @@
 package com.anishan.problem.service;
 
-import com.anishan.api.client.gojudge.enumeration.Status;
+import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.commons.e.JudgeResult;
 import com.anishan.problem.domain.entity.SubmitLog;
-import com.anishan.problem.domain.vo.SubmitLogVo;
+import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -13,11 +13,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface SubmitLogService extends IService<SubmitLog> {
 
-    Long logCompiling(Long userId, Long problemId, String language);
+    Long logQueue(Long userId, Long problemId, String language);
 
-    Long logJudge(SubmitLog log);
+    Long logJudge(SubmitLogDto log);
 
     boolean changeStatus(Long id, JudgeResult result);
 
     SubmitLogVo getLog(Long id);
+
+    boolean update(SubmitLogDto submitLog);
 }

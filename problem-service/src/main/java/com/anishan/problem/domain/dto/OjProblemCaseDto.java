@@ -8,6 +8,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Data
 @ApiModel("OJ判题测试用例")
@@ -28,6 +29,6 @@ public class OjProblemCaseDto implements Serializable {
 
     @Min(value = 0, groups = {ValidationGroup.Insert.class})
     @ApiModelProperty("答对的分数")
-    private Integer score;
+    private BigDecimal score;
 
 }

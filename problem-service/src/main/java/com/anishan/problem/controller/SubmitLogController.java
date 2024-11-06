@@ -3,9 +3,9 @@ package com.anishan.problem.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.commons.domain.R;
-import com.anishan.problem.domain.dto.SubmitLogDto;
+import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.problem.domain.entity.SubmitLog;
-import com.anishan.problem.domain.vo.SubmitLogVo;
+import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.problem.service.SubmitLogService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +20,9 @@ public class SubmitLogController {
 
     private final SubmitLogService submitLogService;
 
-    @PostMapping("compiling")
-    public R<Long> logCompiling(JudgeMessage judgeMessage) {
-        Long id = this.submitLogService.logCompiling(
+    @PostMapping("/queue")
+    public R<Long> logQueue(JudgeMessage judgeMessage) {
+        Long id = this.submitLogService.logQueue(
                 judgeMessage.getUserId(),
                 judgeMessage.getProblemId(),
                 judgeMessage.getLanguage()
@@ -30,13 +30,19 @@ public class SubmitLogController {
         return R.success(id);
     }
 
-    @PostMapping("log-judge")
-    public R<Long> logJudge(@RequestBody SubmitLog submitLog) {
+    @PostMapping("/log-judge")
+    public R<Long> logJudge(@RequestBody SubmitLogDto submitLog) {
         Long id = this.submitLogService.logJudge(submitLog);
         return R.success(id);
     }
 
-    @PostMapping("change-status")
+    @PostMapping("/update")
+    public R<Boolean> update(@RequestBody SubmitLogDto submitLog) {
+        boolean b = this.submitLogService.update(submitLog);
+        return R.success(b);
+    }
+
+    @PostMapping("/change-status")
     public R<Boolean> changeStatus(@RequestBody SubmitLogDto submitLog) {
         SubmitLog log = BeanUtil.copyProperties(submitLog, SubmitLog.class);
         boolean b = submitLogService.changeStatus(log.getSubmitId(), log.getStatus());

@@ -2,7 +2,9 @@ package com.anishan.judge.mq;
 
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
-import com.anishan.judge.exception.CompileError;
+import com.anishan.api.client.problem.client.RecordClient;
+import com.anishan.api.client.problem.client.SubmitLogClient;
+import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.judge.exception.SubmitError;
 import com.anishan.judge.exception.SystemError;
 import com.anishan.judge.service.JudgeService;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Component;
 public class JudgeListener {
 
     private final JudgeService judgeService;
+    private final SubmitLogClient submitLogClient;
+    private final RecordClient recordClient;
 
     @RabbitListener(
             bindings = @QueueBinding(
@@ -40,7 +44,20 @@ public class JudgeListener {
            log.error(e.getMessage(), e);
         }
 
+        SubmitLogDto submitLogDto = new SubmitLogDto()
+                .setStatus(judgeScore.getResult())
+                .setTime(judgeScore.getRuntime())
+                .setMemory(judgeScore.getMemory());
+
+        // 更新日志状态
+        submitLogClient.update(submitLogDto, message.getUserId());
+
+        // 更新record
+        recordClient.judgeSave(message.getUserId(), judgeScore);
+
+
 
     }
+
 
 }

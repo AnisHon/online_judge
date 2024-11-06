@@ -1,6 +1,8 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.anishan.api.client.judgeserver.domain.JudgeMessage;
+import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.anishan.problem.domain.entity.OjProblemCase;
 import com.anishan.commons.e.ProblemType;
 import com.anishan.commons.util.ThrowUtil;
@@ -13,6 +15,7 @@ import com.anishan.problem.domain.vo.UserAnswer;
 import com.anishan.problem.service.*;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,19 +33,56 @@ public class JudgeServiceImpl implements JudgeService {
     private final ProblemService problemService;
     private final ContestService contestService;
     private final RecordsService recordsService;
+    private final OjProblemService ojProblemService;
+    private final OjProblemCaseService ojProblemCaseService;
     private final ChoiceFillAnswersService choiceFillAnswersService;
     private final SysLanguageService sysLanguageService;
+    private final RabbitTemplate rabbitTemplate;
+    private final SubmitLogService submitLogService;
 
 
-    private void doJudgeOj(JudgeRequest judgeRequest, List<OjProblemCase> cases) {
+    private ProblemJudgeResult judgeOj(Long userId, Problem problem, JudgeRequest judgeRequest) {
 
-    }
+        // 获取OJ题目
+        OjProblem ojProblem = ojProblemService.getById(problem.getOjId());
+        ThrowUtil.runtime(ojProblem == null, "题目被删除或不存在");
 
-    private void judgeOj(Problem problem, JudgeRequest judgeRequest) {
+        // 获取语言
         SysLanguage language = sysLanguageService.getById(judgeRequest.getLanguageId());
         ThrowUtil.runtime(language == null, "不支持的语言");
+        String languageName = language.getLanguageName();
 
-        //todo
+        // 获取所有的cases
+        List<OjProblemCaseVo> cases = ojProblemCaseService.getByProblemId(problem.getProblemId());
+
+        // 设置为排队状态，获得submitID
+        Long submitId = submitLogService.logQueue(userId, problem.getProblemId(), languageName);
+
+        // 获得分数
+        BigDecimal score = contestService.getScore(judgeRequest.getContestId(), problem.getProblemId());
+
+
+        JudgeMessage judgeMessage = new JudgeMessage(
+                userId,
+                problem.getProblemId(),
+                judgeRequest.getContestId(),
+                submitId,
+                judgeRequest.getCode(),
+                languageName,
+                ojProblem.getTimeLimit(),
+                ojProblem.getMemoryLimit(),
+                ojProblem.getStackLimit(),
+                cases,
+                score
+        );
+        // 入队
+        rabbitTemplate.convertAndSend("judge-exchange", "judge", judgeMessage);
+
+        ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
+        problemJudgeResult.setSubmitId(submitId);
+
+        return problemJudgeResult;
+
     }
 
     /**
@@ -250,16 +290,16 @@ public class JudgeServiceImpl implements JudgeService {
             fullMark = fullMark.add(answer.getScore());
         }
         return fullMark;
-    };
+    }
 
 
 
-    private ProblemJudgeResult judge(Problem problem, JudgeRequest judgeRequest) {
+    private ProblemJudgeResult judge(Long userId, Problem problem, JudgeRequest judgeRequest) {
         ProblemType type = problem.getType();
         ProblemJudgeResult judgeResult = null;
         switch (type) {
             case OJ:
-                judgeOj(problem, judgeRequest);
+                judgeResult = judgeOj(userId, problem, judgeRequest);
                 break;
             case FILL:
                 judgeResult = judgeFill(problem, judgeRequest);
@@ -307,7 +347,14 @@ public class JudgeServiceImpl implements JudgeService {
         beforeJudgeCheck(problem, judgeRequest, userId);
 
 
-        ProblemJudgeResult judgeResult = judge(problem, judgeRequest);
+        ProblemJudgeResult judgeResult = judge(userId, problem, judgeRequest);
+
+        // OJ题目不能在这里算分直接返回
+        if (problem.getType() == ProblemType.OJ) {
+            return judgeResult;
+        }
+
+
 
 //        比赛题目不给答案 不显示对错 分数重算
         if (judgeRequest.getContestId() != null) {

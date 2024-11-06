@@ -4,9 +4,14 @@ spring:
   config:
     name: judge-server
 
+
+
+
 #共用一个数据库
 oj:
   db:
     database: db_problem
   knife4j:
     resource: com.anishan.judge
+
+

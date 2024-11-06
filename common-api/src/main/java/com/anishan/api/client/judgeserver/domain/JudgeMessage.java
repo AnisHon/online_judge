@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -21,5 +22,5 @@ public class JudgeMessage {
     private Long memoryLimit;
     private Integer stackLimit;
     private List<OjProblemCaseVo> cases;
-    private List<OjProblemCaseVo> totalMark;
+    private BigDecimal score;
 }

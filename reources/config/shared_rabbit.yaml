@@ -1,0 +1,17 @@
+spring:
+  rabbitmq:
+    port: 5672
+    host: 8.149.133.76
+    username: anishan
+    password: change-this-db-password
+    #这个配置是保证提供者确保消息推送到交换机中，不管成不成功，都会回调
+    publisher-confirm-type: correlated
+    #保证交换机能把消息推送到队列中
+    publisher-returns: true
+    virtual-host: /judge
+    #这个配置是保证消费者会消费消息，手动确认
+    listener:
+      simple:
+        acknowledge-mode: manual
+    template:
+      mandatory: true

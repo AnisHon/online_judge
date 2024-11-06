@@ -23,7 +23,7 @@ public class OjProblem implements Serializable {
     /**
      * 单位ms
      */
-    private Integer timeLimit;
+    private Long timeLimit;
 
     /**
      * 难度 (0 未分类, 1 简单, 2 中等, 3 困难)
@@ -34,7 +34,7 @@ public class OjProblem implements Serializable {
     /**
      * 单位kb
      */
-    private Integer memoryLimit;
+    private Long memoryLimit;
 
     /**
      * 单位mb

@@ -17,20 +17,22 @@ public class JudgeScore {
     private Long contestId;
     private BigDecimal score;
     private JudgeResult result;
+    // ms
     private Long runtime;
+    // kb
     private Long memory;
     private String errorMessage;
 
     public JudgeScore setRuntime(RunResult runResult) {
         if (runResult != null) {
-            this.runtime = runResult.getTime();
+            this.runtime = runResult.getTime() / 1000 / 1000;
         }
         return this;
     }
 
     public JudgeScore setMemory(RunResult runResult) {
         if (runResult != null) {
-            this.memory = runResult.getMemory();
+            this.memory = runResult.getMemory() / 1024 / 1024;
         }
         return this;
     }

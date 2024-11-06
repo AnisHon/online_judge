@@ -1,11 +1,11 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.anishan.api.client.gojudge.enumeration.Status;
 
+import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.commons.e.JudgeResult;
 import com.anishan.problem.domain.entity.SubmitLog;
-import com.anishan.problem.domain.vo.SubmitLogVo;
+import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.problem.mapper.SubmitLogMapper;
 import com.anishan.problem.service.SubmitLogService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -26,10 +26,10 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
     implements SubmitLogService {
 
     @Override
-    public Long logCompiling(Long userId, Long problemId, String language) {
+    public Long logQueue(Long userId, Long problemId, String language) {
         SubmitLog submitLog = new SubmitLog()
                 .setLanguage(language)
-                .setStatus(null)
+                .setStatus(JudgeResult.Queue)
                 .setUserId(userId)
                 .setProblemId(problemId);
         this.save(submitLog);
@@ -37,9 +37,10 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
     }
 
     @Override
-    public Long logJudge(SubmitLog log) {
-        this.save(log);
-        return log.getSubmitId();
+    public Long logJudge(SubmitLogDto log) {
+        SubmitLog submitLog = BeanUtil.copyProperties(log, SubmitLog.class);
+        this.save(submitLog);
+        return submitLog.getSubmitId();
     }
 
 
@@ -58,6 +59,11 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
         return BeanUtil.copyProperties(log, SubmitLogVo.class);
     }
 
+    @Override
+    public boolean update(SubmitLogDto submitLog) {
+        SubmitLog log = BeanUtil.copyProperties(submitLog, SubmitLog.class);
+        return this.updateById(log);
+    }
 
 
 }
