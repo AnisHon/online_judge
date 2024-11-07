@@ -80,7 +80,14 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
 
     @Override
     public ContestVo getContestById(Long id) {
-        Contest contest = this.getById(id);
+        Contest contest = this.getOne(
+                new LambdaQueryWrapper<Contest>()
+                        .select(
+                                Contest::getContestId, Contest::getUserId, Contest::getTitle, Contest::getListId,
+                                Contest::getDescription, Contest::getAuth, Contest::getStartTime, Contest::getEndTime
+                        )
+                        .eq(Contest::getContestId, id)
+        );
         return BeanUtil.copyProperties(contest, ContestVo.class);
     }
 

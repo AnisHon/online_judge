@@ -13,7 +13,7 @@ import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
-import com.anishan.user.domain.vo.UserVo;
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.user.service.SysRoleService;
 import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.util.UserUtil;
@@ -218,6 +218,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         );
         return BeanUtil.copyToList(users, UserVo.class);
     }
+
 
 
     private SysUser doSaveUser(SysUserDto sysUserDto) {

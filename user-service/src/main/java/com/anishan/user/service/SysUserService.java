@@ -8,7 +8,7 @@ import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.api.domain.entity.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.anishan.user.domain.vo.UserVo;
+import com.anishan.api.client.user.domain.vo.UserVo;
 
 import java.math.BigDecimal;
 import java.util.List;

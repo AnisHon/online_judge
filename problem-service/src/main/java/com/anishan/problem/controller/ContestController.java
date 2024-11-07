@@ -33,8 +33,7 @@ public class ContestController {
     private final RecordsService recordsService;
 
     @GetMapping("/get/{id}")
-    @PreAuthorize("hasAuthority('problem:contest:list')")
-    @ApiOperation("通过id获取班级")
+    @ApiOperation("通过id获取比赛")
     public R<ContestVo> getContestById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
         ContestVo clazz = contestService.getContestById(id);
         return R.success(clazz);

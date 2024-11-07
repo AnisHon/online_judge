@@ -1,7 +1,12 @@
 package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.Records;
+import com.anishan.problem.domain.vo.ProblemStatistic;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -9,8 +14,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-16 22:39:16
 * @Entity com.anishan.problem.entity.Records
 */
-public interface RecordsMapper extends BaseMapper<Records> {
+public interface RecordsMapper extends MPJBaseMapper<Records> {
 
+    List<ProblemStatistic> statistic(@Param("contestId") Long contestId);
 }
 
 

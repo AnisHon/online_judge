@@ -33,6 +33,7 @@ import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/mode/css/css.js';
 import 'codemirror/mode/clike/clike.js';
 import 'codemirror/mode/python/python.js';
+import 'codemirror/mode/go/go.js';
 
 
 // 引入代码自动提示插件
@@ -55,20 +56,29 @@ const code = defineModel<string>({required: true})
 
 
 const {language, height} = defineProps<{
-  language: 'java' | 'c' | 'c++' | 'python' | string,
+  language: string | 'Java' | 'C' | 'C++' | 'Python2' | 'Python3' | 'Golang',
   height: number,
 }>()
 
 const modeMap = {
-  'java' :'text/x-java',
-  'c': "text/x-csrc",
-  'c++': 'text/x-c++src',
-  'python': 'text/x-python',
+  'Java' :'text/x-java',
+  'C': "text/x-csrc",
+  'C With O2': "text/x-csrc",
+  'C++': 'text/x-c++src',
+  'Python2': 'text/x-python',
+  'Python3': 'text/x-python',
+  'Golang': 'text/x-go',
 }
 
 const mode = computed((): string => {
   // @ts-ignore
-  return modeMap[language]
+  if (language.includes("C++")) {
+    return modeMap["C++"];
+  }
+
+
+  //@ts-ignore
+  return modeMap[language];
 })
 
 const theme = computed(() => {
@@ -118,7 +128,6 @@ const onReady = (cm: Editor) => {
 
 watch(mode, () => {
   cminstance.value?.setOption('mode', mode.value);
-
 })
 
 watch(theme, () => {

@@ -3,8 +3,8 @@ server:
 spring:
   config:
     name: problem-service
-  datasource:
-    hikari:
+
+
 
 
 oj:
@@ -13,3 +13,4 @@ oj:
 
   knife4j:
     resource: com.anishan.problem
+

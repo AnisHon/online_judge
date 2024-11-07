@@ -66,7 +66,8 @@ public class JudgeListener {
                         .setProblemId(message.getProblemId())
                         .setStatus(judgeScore.getResult())
                         .setTime(judgeScore.getRuntime())
-                        .setMemory(judgeScore.getMemory());
+                        .setMemory(judgeScore.getMemory())
+                        .setStderr(judgeScore.getErrorMessage());
 
 
 

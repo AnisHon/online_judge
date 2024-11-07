@@ -9,7 +9,7 @@ import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.api.domain.entity.SysUser;
-import com.anishan.user.domain.vo.UserVo;
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

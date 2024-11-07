@@ -89,6 +89,11 @@ export const constRoutes =  [
         path: "check-in",
         name: "check-in",
         component: () => import('@/views/check-in/CheckIn.vue'),
+      },
+      {
+        path: "setting",
+        name: "setting",
+        component: () => import('@/views/setting/Setting.vue'),
       }
     ],
     meta: {

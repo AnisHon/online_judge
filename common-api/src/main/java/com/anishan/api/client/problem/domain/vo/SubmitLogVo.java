@@ -35,6 +35,8 @@ public class SubmitLogVo {
      */
     private JudgeResult status;
 
+    private String stderr;
+
     /**
      * 耗时 单位ms
      */

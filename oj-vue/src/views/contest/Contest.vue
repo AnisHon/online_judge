@@ -90,9 +90,9 @@ import {reactive, ref} from "vue";
 import type {PagedType} from "@/api/pagedType";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {Calendar, Clock} from "@element-plus/icons-vue";
-import dayjs from "dayjs";
-import {authTagType, authText} from "@/utils/contest";
+import {authTagType, authText, differ, isContestOver, isNotStart} from "@/utils/contest";
 import {useRouter} from "vue-router";
+import {formatDate} from "compatx";
 
 
 const router = useRouter();
@@ -123,27 +123,6 @@ const {isLoading, loading, get} = debouncedGetContest(page, (data) => {
   list.push(...data.data);
 });
 
-const formatDate = (dateStr: string) => {
-  return  dayjs(dateStr).format('YYYY/MM/DD HH:mm:ss')
-};
-
-const differ = (start: string, end: string) => {
-  const startTime = dayjs(start);
-  const endTime = dayjs(end);
-  return endTime.diff(startTime, 'hours');
-};
-
-const isContestOver = (end: string) => {
-  const currTimeStamp = dayjs().unix();
-  const endTimeStamp = dayjs(end).unix();
-  return currTimeStamp > endTimeStamp
-};
-
-const isNotStart = (start: string) => {
-  const currTimeStamp = dayjs().unix();
-  const startTimeStamp = dayjs(start).unix();
-  return currTimeStamp < startTimeStamp;
-};
 
 const currentContest = ref<ContestView>();
 
@@ -183,7 +162,6 @@ const joinContest = (contest: ContestView) => {
   currentContest.value = contest;
   joinedLoading();
   joinedGet(contest.contestId)
-
 }
 
 const getList = () => {

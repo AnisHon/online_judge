@@ -1,0 +1,3 @@
+judge:
+  config:
+    judge-interval: 10

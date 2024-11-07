@@ -3,7 +3,7 @@ package com.anishan.user.mapper;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
-import com.anishan.user.domain.vo.UserVo;
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Mapper;

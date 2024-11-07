@@ -108,6 +108,8 @@ user.getUser().then((data) => {nikeName.value = data.nikeName})
 const handleCommand = (key: string) => {
   if (key === 'logout') {
     logout();
+  } else if (key === 'setting') {
+    router.push({name: 'setting'});
   }
 }
 

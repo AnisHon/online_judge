@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -34,13 +35,14 @@ public class SubmitLogUtil {
     public void update(SubmitLog submitLog) {
         String key = getSubmitLogKey(submitLog.getUserId());
 
-        SubmitLog submitLogOrigin = get(submitLog.getUserId());
+        SubmitLog submitLogOrigin = Objects.requireNonNullElse(get(submitLog.getUserId()), new SubmitLog());
 
         BeanUtil.copyProperties(
+                submitLog,
                 submitLogOrigin,
-                submitLog, CopyOptions.create().setIgnoreNullValue(true).setIgnoreError(true));
+                CopyOptions.create().setIgnoreNullValue(true).setIgnoreError(true));
 
-        redisTemplate.opsForValue().set(key, submitLog);
+        redisTemplate.opsForValue().set(key, submitLogOrigin);
     }
 
     public void setExpired(Long userId, Long seconds) {

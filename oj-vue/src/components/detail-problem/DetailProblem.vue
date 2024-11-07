@@ -89,27 +89,47 @@
               @submit="onHandleSubmit"
               @full-screen="onHandleFullScreen"
               @on-ready="onEditorReady"
+              @open-log="openOjDialog = true"
+              @test="submitTest"
+              :loading="isLoading"
           />
         </el-col>
 
       </el-row>
-
-
-
-
-
     </transition>
 
 
 
     <el-dialog v-model="openOjDialog">
-      <template #title>
+      <template #header>
         <h2>
           运行结果
         </h2>
       </template>
       <template #default>
+        <el-table :data="submitLogs">
+          <el-table-column prop="submitId" label="提交ID"/>
+          <el-table-column prop="userId" label="用户ID"/>
+          <el-table-column prop="problemId" label="问题ID"/>
+          <el-table-column prop="language" label="语言"/>
+          <el-table-column prop="status" label="结果">
+            <template v-slot="scope">
+              <el-tooltip content="AC 通过 WA 答案错误 CE 编译错误 RE 运行时错误 TLE 超时 MLE 内存过限">
+                <el-tag type="info" v-if="scope.row.status === OJResult.QUEUE">排队中</el-tag>
+                <el-tag type="primary" v-else-if="scope.row.status === OJResult.COMPILING">编译中</el-tag>
+                <el-tag type="success" v-else-if="scope.row.status === OJResult.ACCEPT">AC</el-tag>
+                <el-tag type="danger" v-else>{{ scope.row.status }}</el-tag>
+              </el-tooltip>
+            </template>
+          </el-table-column >
+          <el-table-column prop="time" label="时间"/>
+          <el-table-column prop="memory" label="内存"/>
+        </el-table>
 
+        <div v-if="!!errMsg">
+          <h3>标准错误流输出</h3>
+          <p style="color: red; padding: 20px; font-size: 16px;white-space: pre-wrap;" v-text="errMsg"></p>
+        </div>
       </template>
 
     </el-dialog>
@@ -124,10 +144,13 @@ import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {
   type Answer,
+  fetchLog,
   getDebouncedJudge,
   getUserAnswer,
   type JudgeForm,
   type JudgeResponse,
+  type LogSubmit,
+  OJResult,
   saveUserAnswer,
 } from "@/api/problem/judge";
 import {debounce} from "@/utils/debounce";
@@ -152,6 +175,7 @@ const {problemId, contestId} = defineProps<{problemId: number, contestId?: numbe
 const {loading, finish, isLoading} = useLoading()
 // 填空题有多少空
 const count = computed(() => problem.value?.count || 0)
+
 
 // 各种信息的计算属性
 const problemType = computed(() => problem.value?.problemVo.type)
@@ -234,12 +258,45 @@ const judgeFormCopy = reactive<JudgeForm>({
 });
 
 
+const errMsg = ref<string>();
+const submitLogs = reactive<LogSubmit[]>([])
+
+
+const submitTest = () => {
+
+}
+
+const getOjLog = (id: number) => {
+  const submitLog = {
+    submitId: 0,
+    userId: 0,
+    problemId: 0,
+    language: "",
+    status: OJResult.QUEUE,
+    time: 0,
+  }
+  submitLogs.push(submitLog);
+  fetchLog(id, (data: LogSubmit) => {
+    __.assign(submitLogs[(submitLogs.length - 1)], data);
+    errMsg.value = data.stderr;
+  });
+}
+
 const doJudge = getDebouncedJudge(judgeForm,
     (data: JudgeResponse) => {
-      showAnswers.value =  Array.isArray(data.answers) && data.answers.length > 0;
+      if (!data) {
+        return;
+      }
+
+      showAnswers.value =  Array.isArray(data.answers) && data.answers?.length > 0;
 
       judgeResult.value = data;
       judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
+
+      if (problemType.value === ProblemType.OJ) {
+        openOjDialog.value = true;
+        getOjLog(<number>data.submitId);
+      }
     },
     undefined,
     finish
@@ -249,15 +306,16 @@ const doJudge = getDebouncedJudge(judgeForm,
 
 const showAnswers = ref(false);
 
-const openOjDialog = ref(true);
+const openOjDialog = ref(false);
+
+
+
 
 // 三个事件
 const onHandleSubmit = () => {
   loading()
   doJudge();
-  if (problemType.value === ProblemType.OJ) {
-    openOjDialog.value = false;
-  }
+
 }
 
 const onHandleFullScreen = () => {
@@ -279,6 +337,9 @@ const reset = () => {
   judgeForm.code = "";
   judgeForm.problemId = problemId;
   judgeForm.contestId = contestId;
+  judgeForm.languageId = 1;
+
+  isFullScreen.value = false;
 }
 
 const initBlanks = (count: number) => {

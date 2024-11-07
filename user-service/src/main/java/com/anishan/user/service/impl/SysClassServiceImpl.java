@@ -13,7 +13,7 @@ import com.anishan.user.domain.dto.UserClassQuery;
 import com.anishan.user.domain.entity.StudentClassRelation;
 import com.anishan.user.domain.vo.BinaryResultOv;
 import com.anishan.user.domain.vo.ClassVo;
-import com.anishan.user.domain.vo.UserVo;
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.StudentClassService;
 import com.anishan.user.service.TeacherClassService;

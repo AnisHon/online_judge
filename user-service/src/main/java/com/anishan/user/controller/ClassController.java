@@ -9,7 +9,7 @@ import com.anishan.user.domain.dto.ClassPagedQuery;
 import com.anishan.user.domain.dto.UserClassQuery;
 import com.anishan.user.domain.entity.SysClass;
 import com.anishan.user.domain.vo.ClassVo;
-import com.anishan.user.domain.vo.UserVo;
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.user.service.SysClassService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;

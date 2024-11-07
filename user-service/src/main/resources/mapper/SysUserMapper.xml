@@ -51,7 +51,7 @@
 
 
 
-    <select id="selectUserByUserRoleQuery" resultType="com.anishan.user.domain.vo.UserVo" >
+    <select id="selectUserByUserRoleQuery" resultType="com.anishan.api.client.user.domain.vo.UserVo" >
 
         select distinct
             su.user_id as user_id,

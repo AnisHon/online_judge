@@ -1,6 +1,7 @@
 package com.anishan.problem.domain.entity;
 
 import com.anishan.commons.e.JudgeResult;
+import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -41,6 +42,7 @@ public class SubmitLog implements Serializable {
     /**
      * 提交结果，取值范围 (AC, RE, WA, TLE, MLE)
      */
+    @EnumValue
     private JudgeResult status;
 
     /**
@@ -52,6 +54,8 @@ public class SubmitLog implements Serializable {
      * 内存使用 单位kb
      */
     private Long memory;
+
+    private String stderr;
 
     /**
      * 

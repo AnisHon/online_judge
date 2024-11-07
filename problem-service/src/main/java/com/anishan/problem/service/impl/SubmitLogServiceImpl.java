@@ -5,6 +5,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.commons.e.JudgeResult;
 import com.anishan.commons.util.ThrowUtil;
+import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.problem.mapper.SubmitLogMapper;
@@ -28,6 +29,7 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
     implements SubmitLogService {
 
     private final SubmitLogUtil submitLogUtil;
+    private final JudgeConfig judgeConfig;
 
     @Override
     public Long logQueue(Long userId, Long problemId, String language) {
@@ -98,8 +100,9 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
         SubmitLog log = BeanUtil.copyProperties(submitLog, SubmitLog.class);
 
         // 缓存也改一下
+
         submitLogUtil.update(log);
-        submitLogUtil.setExpired(submitLog.getUserId(), 20L);
+        submitLogUtil.setExpired(submitLog.getUserId(), judgeConfig.getJudgeInterval().longValue());
 
         return this.updateById(log);
     }

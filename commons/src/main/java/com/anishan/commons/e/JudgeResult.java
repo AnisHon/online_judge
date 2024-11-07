@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IEnum;
 import io.swagger.annotations.ApiModel;
 import lombok.Getter;
 
-@Getter
 @ApiModel("AC RE WA TLE MLE CE")
 public enum JudgeResult implements IEnum<String>, Enumerator<String> {
 
@@ -25,6 +24,11 @@ public enum JudgeResult implements IEnum<String>, Enumerator<String> {
 
     @Override
     public String value() {
+        return this.value;
+    }
+
+    @Override
+    public String getValue() {
         return this.value;
     }
 }

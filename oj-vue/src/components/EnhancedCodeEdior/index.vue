@@ -3,11 +3,14 @@
     <el-form :inline="true" ref="formRef" :model="codeForm">
       <el-form-item>
         <el-button-group>
-          <el-button type="success" @click="emit('test')" :icon="IconBug">
-            测试
-          </el-button>
-          <el-button type="success" @click="emit('submit')" :icon="Upload">
+<!--          <el-button type="success" @click="emit('test')" :icon="IconBug" :loading="loading">-->
+<!--            测试-->
+<!--          </el-button>-->
+          <el-button type="primary" @click="emit('submit')" :icon="Upload" :loading="loading">
             提交
+          </el-button>
+          <el-button type="success" @click="emit('open-log')" :icon="Upload">
+            提交记录
           </el-button>
         </el-button-group>
 
@@ -17,6 +20,7 @@
         <el-select
             v-model="codeForm.languageId"
             placeholder="Select"
+            default-first-option
             style="width: 150px"
         >
           <el-option
@@ -61,9 +65,10 @@ const currLang = ref<string>("");
 
 const languages = ref<LanguageView[] | null>(null);
 
-const {heightProp} = defineProps<{heightProp: number}>()
+const {heightProp, loading} = defineProps<{heightProp: number, loading: boolean}>()
 
 const emit = defineEmits<{
+  (e: 'open-log'): void,
   (e: 'submit'): void;
   (e: 'test'): void;
   (e: 'fullScreen'): void;

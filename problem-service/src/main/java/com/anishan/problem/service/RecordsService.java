@@ -1,7 +1,12 @@
 package com.anishan.problem.service;
 
 import com.anishan.problem.domain.entity.Records;
+import com.anishan.problem.domain.vo.ScoredUser;
+import com.anishan.problem.domain.vo.ProblemStatistic;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 /**
 * @author happy
@@ -14,4 +19,10 @@ public interface RecordsService extends IService<Records> {
     Long existRecord(Records records);
 
     boolean addRecord(Records records);
+
+    BigDecimal score(Long contestId, Long userId);
+
+    List<ScoredUser> rank(Long contestId);
+
+    List<ProblemStatistic> statistic(Long contestId);
 }

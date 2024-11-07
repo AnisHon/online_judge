@@ -5,6 +5,7 @@ import {get, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, pagedFetch, remove, update} from "@/utils/simpleCRUD";
+import type {UserView} from "@/api/user";
 
 enum ContestAuth {
     PUBLIC,
@@ -46,6 +47,18 @@ interface JoinContestResponse {
     message: string;
 }
 
+interface ScoredUser {
+    userVo: UserView;
+    score: number;
+}
+
+interface StatisticProblem {
+    problemId: number;
+    title: string;
+    rightNum: number;
+    wrongNum: number;
+}
+
 const dict = {
     contestAuth: [
         {
@@ -60,6 +73,17 @@ const dict = {
         }
     ],
 }
+
+const rank = async (id: number) => {
+    const {data} = await get<ScoredUser[], number>("/problem-api/record/rank", id);
+    return data;
+}
+
+const statistic = async (id: number) => {
+    const {data} = await get<StatisticProblem[], number>("/problem-api/record/statistic", id);
+    return data;
+}
+
 const join = async (req: JoinContestRequest) => {
     const {data} = await post<JoinContestRequest, JoinContestResponse>("/problem-api/contest/join", req);
     return data;
@@ -80,6 +104,10 @@ const isJoined = async (contestId: number) => {
     return data;
 }
 
+const fetchContestById = async (contestId: number) => {
+    const {data} = await get<ContestView , number>("/problem-api/contest/get", contestId);
+    return data;
+}
 
 
 const debouncedIsJoined = (success: successCallback<boolean>) => {
@@ -158,10 +186,17 @@ const debouncedGetContestAdmin = (page: PagedType, success: successCallback<Page
     return {loading, isLoading, get};
 }
 
+const getScore = async (contestId: number) => {
+    const {data} = await get<number | null>("/problem-api/record/score", contestId);
+    return data;
+}
+
 export type {
     ContestForm,
     ContestView,
-    JoinContestRequest
+    JoinContestRequest,
+    StatisticProblem,
+    ScoredUser
 }
 
 export {
@@ -175,6 +210,10 @@ export {
     debouncedGetContestAdmin,
     debouncedIsJoined,
     debouncedJoin,
+    fetchContestById,
+    getScore,
+    rank,
+    statistic,
     dict,
     ContestAuth
 }

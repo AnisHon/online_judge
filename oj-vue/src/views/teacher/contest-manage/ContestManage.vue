@@ -68,6 +68,25 @@
               @click="handleDelete(scope.row)"
               v-has="'problem:contest:remove'"
           >删除</el-link>
+
+          <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
+                       v-has-any="['problem:contest:rank', 'problem:contest:statistic']">
+            <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <div v-has="'problem:contest:statistic'">
+                  <el-dropdown-item command="handleStatistic" icon="PieChart"
+                  >题目统计</el-dropdown-item>
+                </div>
+                <div v-has="'problem:contest:rank'" >
+                  <el-dropdown-item command="handleRank" icon="user"
+                  >排名</el-dropdown-item>
+                </div>
+
+              </el-dropdown-menu>
+            </template>
+
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
@@ -152,6 +171,26 @@
     <el-dialog title="选择题单" v-model="openSelectList" append-to-body>
       <ListView v-model="form.listId" v-model:isOpen="openSelectList"/>
     </el-dialog>
+
+    <el-dialog v-model="openRank" title="排名">
+      <el-table :data="sortedScoredUsers">
+        <el-table-column type="index" width="50" />
+        <el-table-column prop="userVo.userName" label="用户名" />
+        <el-table-column prop="userVo.nikeName" label="昵称" />
+        <el-table-column prop="score" label="分数" />
+      </el-table>
+    </el-dialog>
+
+    <el-dialog v-model="openStatistic" title="统计">
+      <el-table :data="sortStatisticProblems">
+        <el-table-column type="index" width="50" />
+        <el-table-column prop="problemId" label="问题ID" />
+        <el-table-column prop="title" label="题目" />
+        <el-table-column prop="rightNum" label="正确个数" />
+        <el-table-column prop="wrongNum" label="错误个数" />
+      </el-table>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -164,8 +203,8 @@ import {
   debouncedAddContest,
   debouncedGetContestAdmin,
   debouncedUpdateContest,
-  dict,
-  removeContest
+  dict, rank,
+  removeContest, type ScoredUser, statistic, type StatisticProblem
 } from "@/api/contest";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
@@ -245,6 +284,45 @@ const handleSelectionChange = (selection: ContestView[]) => {
   multiple.value = !selection.length;
 }
 
+const scoredUsers = reactive<ScoredUser[]>([])
+const statisticProblems = reactive<StatisticProblem[]>([])
+
+const openRank = ref(false);
+const openStatistic = ref(false);
+
+const sortedScoredUsers = computed(() => {
+  scoredUsers.sort((a, b) => b.score - a.score);
+  return scoredUsers;
+})
+
+const sortStatisticProblems = computed(() => {
+  statisticProblems.sort((a, b) => b.wrongNum - a.wrongNum);
+  return statisticProblems;
+})
+
+const handleCommand = (command: string, row: ContestView) => {
+  if (command === "handleStatistic") {
+    statistic(row.contestId).then((data) => {
+      if (!data) {
+        return;
+      }statisticProblems.length = 0;
+      statisticProblems.push(...data);
+    })
+    openStatistic.value = true;
+
+  } else if (command === "handleRank") {
+    rank(row.contestId).then((data) => {
+      if (!data) {
+        return;
+      }
+      console.log(data)
+      scoredUsers.length = 0;
+      scoredUsers.push(...data);
+    })
+    openRank.value = true;
+
+  }
+}
 
 const handleDelete = (row: ContestView | Event) => {
   if (row instanceof Event) {
@@ -345,6 +423,9 @@ getList()
     .el-select {
       --el-select-width: 220px;
     }
+  }
+  .el-table__row .el-dropdown {
+    height: 23px;
   }
 
 }

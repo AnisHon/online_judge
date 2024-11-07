@@ -7,7 +7,7 @@ import com.anishan.user.domain.dto.ClassPagedQuery;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.user.domain.vo.BinaryResultOv;
 import com.anishan.user.domain.vo.ClassVo;
-import com.anishan.user.domain.vo.UserVo;
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.user.service.*;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.dao.DuplicateKeyException;

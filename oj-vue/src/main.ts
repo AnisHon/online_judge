@@ -31,5 +31,5 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.directive("has", has);
 app.directive('hasAny', hasAny)
 
-router.isReady().then(() => app.mount('#app'))
-// app.mount('#app')
+// router.isReady().then(() => app.mount('#app')
+app.mount('#app')

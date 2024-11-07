@@ -8,7 +8,11 @@ import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.Records;
+import com.anishan.problem.domain.vo.ContestVo;
+import com.anishan.problem.domain.vo.ProblemStatistic;
+import com.anishan.problem.domain.vo.ScoredUser;
 import com.anishan.problem.domain.vo.UserAnswer;
+import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.JudgeService;
 import com.anishan.problem.service.RecordsService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -17,8 +21,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Api("负责题目数据回写的接口")
 @RestController
@@ -28,6 +37,7 @@ public class RecordController {
 
     private final RecordsService recordsService;
     private final JudgeService judgeService;
+    private final ContestService contestService;
 
     @PostMapping("judge-save")
     @ApiOperation("内部接口，保存judge数据")
@@ -41,9 +51,6 @@ public class RecordController {
                 .setScore(judgeScore.getScore());
         recordsService.addRecord(records);
     }
-
-
-
 
 
     @PostMapping("/save")
@@ -93,5 +100,36 @@ public class RecordController {
         }
 
         return R.success(records.getAnswer());
+    }
+
+    @GetMapping("/score/{contestId}")
+    @ApiOperation("获取分数")
+    public R<BigDecimal> score(@PathVariable("contestId") Long contestId, @RequestHeader("user-id") Long userId) {
+        ContestVo contest = contestService.getContestById(contestId);
+
+        if (LocalDateTime.now().isBefore(contest.getEndTime())) {
+            return R.success(null);
+        }
+
+        BigDecimal score = recordsService.score(contestId, userId);
+        return R.success(score);
+    }
+
+
+    @GetMapping("/rank/{contestId}")
+    @PreAuthorize("hasAuthority('problem:contest:rank')")
+    @ApiOperation("排名")
+    public R<List<ScoredUser>> rank(@PathVariable("contestId") Long contestId) {
+        List<ScoredUser> users = recordsService.rank(contestId);
+        return R.success(users);
+    }
+
+
+    @GetMapping("/statistic/{contestId}")
+    @PreAuthorize("hasAuthority('problem:contest:statistic')")
+    @ApiOperation("统计题目对错情况")
+    public R<List<ProblemStatistic>> statistic(@PathVariable("contestId") Long contestId) {
+        List<ProblemStatistic> statistic = recordsService.statistic(contestId);
+        return R.success(statistic);
     }
 }

@@ -1,4 +1,4 @@
-package com.anishan.user.domain.vo;
+package com.anishan.api.client.user.domain.vo;
 
 import com.anishan.commons.e.UserState;
 import com.anishan.commons.e.ValidationGroup;

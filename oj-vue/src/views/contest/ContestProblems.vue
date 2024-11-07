@@ -1,21 +1,19 @@
 <template>
   <splitpanes class="contest-problem-container">
     <pane min-size="10" max-size="30" v-loading="isLoading"  ref="problemsPane" class="problem-list" >
-
       <el-table
-          :data="sortedProblemList"
-          ref="tableRef"
-          height="100%"
-          :max-height="maxProblemListHeight"
-          @row-click="selectProblem"
-          row-class-name="problem-row"
-          highlight-current-row
-      >
-        <el-table-column width="50" label="#" prop="problemOrder"/>
-        <el-table-column label="题目" prop="title"/>
-        <el-table-column label="分数" prop="score"/>
-      </el-table>
-
+            :data="sortedProblemList"
+            ref="tableRef"
+            height="100%"
+            :max-height="maxProblemListHeight"
+            @row-click="selectProblem"
+            row-class-name="problem-row"
+            highlight-current-row
+        >
+          <el-table-column width="50" label="#" prop="problemOrder"/>
+          <el-table-column label="题目" prop="title"/>
+          <el-table-column label="分数" prop="score"/>
+        </el-table>
     </pane>
     <pane>
 
@@ -26,7 +24,43 @@
           :contest-id="contestId"
       />
       <div v-else>
-        123
+        <div v-if="!!contest" style="position: relative;">
+          <div style="position: absolute;right: 50px;top:50px;font-size: 36px;" v-if="!!score">
+            分数：{{ score }}
+          </div>
+
+          <el-card>
+            <div class="absoluteCenter">
+              <h1 style="text-align: center">{{ contest.title }}</h1>
+              <el-space wrap alignment="center">
+                <el-tag type="info">{{ formatDate(contest.startTime) }}</el-tag>
+                <el-tag type="info">{{ formatDate(contest.endTime) }}</el-tag>
+                <el-tag :type="authTagType(contest.auth)">{{ authText(contest.auth) }}</el-tag>
+              </el-space>
+              <el-divider />
+              <div class="absoluteCenter">
+                <el-tag style="margin-left: auto" type="danger" v-if="isContestOver(contest.endTime)">
+                  已结束
+                </el-tag>
+                <el-tag style="margin-left: auto" type="success" v-else-if="isNotStart(contest.startTime)">
+                  未开始
+                </el-tag>
+                <el-tag style="margin-left: auto" type="primary" v-else>
+                  正在进行
+                </el-tag>
+              </div>
+            </div>
+
+          </el-card>
+
+
+          <div style="margin: 20px">
+            <markdown-preview :text="contest.description"/>
+          </div>
+
+
+
+        </div>
       </div>
     </pane>
   </splitpanes>
@@ -41,6 +75,9 @@ import {debouncedGetProblems} from "@/api/list/problem";
 import {useRoute} from "vue-router";
 import DetailProblem from "@/components/detail-problem/DetailProblem.vue";
 import {ElTable} from "element-plus";
+import {type ContestView, fetchContestById, getScore} from "@/api/contest";
+import MarkdownPreview from "@/components/MarkdownPreview.vue";
+import {authTagType, authText, formatDate, isContestOver, isNotStart} from "@/utils/contest";
 
 const route = useRoute();
 
@@ -57,9 +94,13 @@ const problemsPane = ref<ComponentInstance<Pane>>();
 // 题目列表最大高度
 const maxProblemListHeight = ref<number>(999);
 
-const contestId = computed(() => parseInt(<string>route.params.id))
+const contestId = computed(() => parseInt(<string>route.params.id));
 
-const problemList = reactive<ProblemInListView[]>([])
+const problemList = reactive<ProblemInListView[]>([]);
+
+const contest = ref<ContestView>();
+
+const score = ref<number | null>(null);
 
 const sortedProblemList = computed(() => {
   problemList.sort((a, b) => <number>a.problemOrder - <number>b.problemOrder);
@@ -74,6 +115,7 @@ const {isLoading, loading, get} = debouncedGetProblems((data) => {
 const getProblems = () => {
   loading();
   get(contestId.value);
+  fetchContestById(contestId.value).then(data => contest.value = data);
 }
 
 const selectProblem = (row: ProblemInListView) => {
@@ -91,9 +133,11 @@ const setMaxHeight = () => {
   maxProblemListHeight.value = (<HTMLElement>problemsPane.value?.$el).clientHeight;
 }
 
+
+
 // created
 getProblems();
-
+getScore(contestId.value).then(data => score.value = data);
 
 onMounted(() => {
   setMaxHeight();

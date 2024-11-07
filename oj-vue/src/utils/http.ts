@@ -27,7 +27,7 @@ const error401 = () => {
 
 const service = axios.create({
     baseURL: "http://localhost:5173/api", // 设置基础 URL
-    timeout: 10000, // 设置请求超时时间
+    timeout: 60000, // 设置请求超时时间
 });
 
 // 请求拦截器

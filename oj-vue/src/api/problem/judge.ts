@@ -1,7 +1,9 @@
-import {type failCallback, type finallyCallback, post, type successCallback} from "@/utils/http";
+import {type failCallback, type finallyCallback, get, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 
 enum OJResult {
+    QUEUE = "QUEUE",
+    COMPILING = "compiling",
     ACCEPT = "AC",
     RUNTIME_ERROR = "RE",
     WRONG_ANSWER = "WA",
@@ -14,6 +16,7 @@ interface Answer {
     index: number;
     answer: string;
 }
+
 
 
 interface JudgeForm {
@@ -29,6 +32,7 @@ interface JudgeResponse {
     answers?: Answer[],
     correct: boolean;
     judgeResult: OJResult;
+    submitId?: number;
     errorMessage: string;
     totalScore: string;
     fullMark: string;
@@ -43,6 +47,30 @@ interface UserAnswer {
 interface UserAnswerRequest {
     contestId?: number;
     problemId?: number;
+}
+
+interface LogSubmit {
+    submitId: number;
+    userId: number;
+    problemId: number;
+    language: string;
+    status: OJResult;
+    time?: number;
+    memory?: number;
+    submitTime?: string;
+    stderr?: string;
+}
+
+async function fetchLog(id: number, success: successCallback<LogSubmit>) {
+    const {data} = await get<LogSubmit, number>("/problem-api/log/get", id);
+    success(data);
+    const intervalId = setInterval(async () => {
+        const {data} = await get<LogSubmit, number>("/problem-api/log/get", id);
+        success(data);
+        if (data.status !== OJResult.COMPILING && data.status !== OJResult.QUEUE) {
+            clearInterval(intervalId);
+        }
+    }, 1000);
 }
 
 async function getUserAnswer(req: UserAnswerRequest): Promise<UserAnswer> {
@@ -67,10 +95,22 @@ const debouncedSave = () => {
     }, 500)
 }
 
+async function test(judgeForm: JudgeForm, fail: failCallback): Promise<JudgeResponse> {
+    const {code, data} =
+        await post<JudgeForm, JudgeResponse>("/problem-api/judge/test", judgeForm, (msg) => {
+            ElMessage.warning(msg);
+        });
+
+    return data
+}
+
 
 async function judge(judgeForm: JudgeForm, fail: failCallback): Promise<JudgeResponse> {
     const {code, data} =
-        await post<JudgeForm, JudgeResponse>("/problem-api/judge", judgeForm, fail);
+        await post<JudgeForm, JudgeResponse>("/problem-api/judge", judgeForm, (msg) => {
+            ElMessage.warning(msg);
+        });
+
     return data
 }
 
@@ -93,16 +133,21 @@ const getDebouncedJudge = (
 
 }
 
+export type {
+    Answer,
+    JudgeForm,
+    JudgeResponse,
+    LogSubmit
+}
 
 export {
-    type Answer,
-    type JudgeForm,
-    type JudgeResponse,
     judge,
     getDebouncedJudge,
     getUserAnswer,
     saveUserAnswer,
-    debouncedSave
+    debouncedSave,
+    fetchLog,
+    OJResult
 }
 
 

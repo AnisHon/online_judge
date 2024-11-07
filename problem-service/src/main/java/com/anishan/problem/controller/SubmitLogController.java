@@ -9,6 +9,7 @@ import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.problem.service.SubmitLogService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +52,7 @@ public class SubmitLogController {
     }
 
     @GetMapping("/get/{id}")
+    @ApiOperation("外部接口，用户获取运行结果")
     public R<SubmitLogVo> getLog(@PathVariable("id") Long id, @RequestHeader("user-id")Long userId) {
         SubmitLogVo log = submitLogService.getLog(id, userId);
         return R.success(log);
