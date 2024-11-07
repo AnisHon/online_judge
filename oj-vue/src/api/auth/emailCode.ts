@@ -11,18 +11,23 @@ export interface ForgetPassEmailRequest {
     username: string;
 }
 
-export default async function (emailInfo: SendEmail) {
+export interface ForgetPasswordResponse {
+    success: boolean;
+    message: string;
+}
 
-    const {data: {message, success}} = await post("/user-api/auth/send-email-code", emailInfo)
+export async function sendEmailCodePromise(emailInfo: SendEmail) {
+
+    const {data: {message, success}} = await post<SendEmail, ForgetPasswordResponse>("/user-api/auth/send-email-code", emailInfo)
 
     if (!success) {
-        return await Promise.reject(message)
+        throw message;
     }
 }
 
 export async function sendForgetEmailCode(req: ForgetPassEmailRequest) {
-    const {data: {message, success}} = await post("/user-api/auth/send-forget-email-code", req)
+    const {data: {message, success}} = await post<ForgetPassEmailRequest, ForgetPasswordResponse>("/user-api/auth/send-forget-email-code", req)
     if (!success) {
-        return await Promise.reject(message)
+        throw message;
     }
 }

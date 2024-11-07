@@ -41,6 +41,12 @@ interface UserView {
     remark: string;
 }
 
+interface UserForm {
+    userId?: number;
+    userName?: string;
+    nikeName?: string;
+}
+
 interface QueryUser extends SortedPagedType{
     userId?: number;
     userName?: string;
@@ -164,7 +170,8 @@ export type {
     UserAddForm,
     UserUpdateForm,
     QueryRoleUser,
-    UserView
+    UserView,
+    UserForm
 }
 
 export {

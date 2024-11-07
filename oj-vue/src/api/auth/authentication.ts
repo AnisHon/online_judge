@@ -1,4 +1,4 @@
-import {get, post} from '@/utils/http'
+import {type AjaxResult, get, post} from '@/utils/http'
 import {type LoginUser} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
 import router from '@/router'
@@ -95,6 +95,13 @@ async function forgetPassword(data: ForgetPasswordForm) {
     }
 }
 
+async function resetPassword(data: {code: string, password: string}) {
+    const param = {code: data.code, password: data.password};
+    const {data: r} =
+        await post<typeof param, Boolean>('/user-api/auth/forget-pass', param);
+    return r;
+}
+
 async function logout() {
     get("/user-api/auth/logout");
     // const router = useRouter();
@@ -112,7 +119,8 @@ export {
     checkAvailableUsername,
     signUp,
     logout,
-    forgetPassword
+    forgetPassword,
+    resetPassword
 }
 
 
