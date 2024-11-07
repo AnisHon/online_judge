@@ -2,7 +2,9 @@ package com.anishan.user.domain.vo;
 
 import com.anishan.commons.e.MenuType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -11,11 +13,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class TreedMenuVo {
 
-    private final MenuVo menu;
+    private MenuVo menu;
     private List<TreedMenuVo> children;
+
+    public TreedMenuVo(MenuVo menu) {
+        this.menu = menu;
+    }
 
     public void setChild(List<MenuVo> children) {
         this.children = children

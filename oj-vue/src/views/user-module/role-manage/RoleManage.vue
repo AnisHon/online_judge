@@ -71,6 +71,16 @@
             v-has="'user:role:remove'"
         >删除</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+            type="warning"
+            plain
+            icon="refresh"
+            size="small"
+            @click="handleRefresh"
+            v-has="'user:role:list'"
+        >刷新角色缓存</el-button>
+      </el-col>
       <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
     </el-row>
 
@@ -201,7 +211,7 @@ import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {ElDialog, ElMessageBox, ElTree} from "element-plus";
 import __ from "lodash";
-import {type QueryRole, removeRole, type RoleForm, RoleStatus, type RoleView} from "@/api/role";
+import {type QueryRole, refresh, removeRole, type RoleForm, RoleStatus, type RoleView} from "@/api/role";
 import {debouncedAddRole, debouncedGetRole, debouncedUpdateRole, dict} from "@/api/role";
 import {useRoute, useRouter} from "vue-router";
 import {debouncedGrant, debouncedRevoke, listRoleMenu, type MenuRoleRelation, type TreedMenu} from "@/api/auth/menu";
@@ -293,7 +303,9 @@ const handleSelectionChange = (selection: RoleView[]) => {
   multiple.value = !selection.length;
 }
 
-
+const handleRefresh = () => {
+  refresh();
+}
 
 const handleDelete = (row: RoleView | Event) => {
   if (row instanceof Event) {

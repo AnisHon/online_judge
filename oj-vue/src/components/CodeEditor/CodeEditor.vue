@@ -128,12 +128,14 @@ const onReady = (cm: Editor) => {
 
 watch(mode, () => {
   cminstance.value?.setOption('mode', mode.value);
-})
+}, {immediate: true});
 
 watch(theme, () => {
   cminstance.value?.setOption('theme', theme.value);
   cminstance.value?.refresh()
 })
+
+
 
 defineExpose({code})
 

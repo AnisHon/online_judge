@@ -7,6 +7,7 @@ import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.SysUserService;
+import com.anishan.user.util.RoleUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -59,6 +60,8 @@ public class AuthenticationController {
     public R<List<TreedMenuVo>> menus() {
         return R.success(authenticationService.getTreedMenuByRole());
     }
+
+
 
     @GetMapping("/logout")
     @ApiOperation("登出")

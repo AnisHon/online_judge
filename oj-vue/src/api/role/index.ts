@@ -1,5 +1,5 @@
 import type {PagedResponse, SortedPagedType,} from "@/api/pagedType";
-import {type successCallback} from "@/utils/http";
+import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, postedRemove, remove, update} from "@/utils/simpleCRUD";
@@ -54,7 +54,11 @@ const removeRole = async (id: number | number[]) => {
 }
 
 
-
+const refresh = async () => {
+    await get("/user-api/role/refresh")
+        .then(() => ElMessage.success("刷新成功"))
+        .catch(() => ElMessage.warning("刷新失败，请联系开发者"));
+}
 
 const addRole = async (form: RoleForm) => {
     await add(form, "/user-api/role/add");
@@ -136,6 +140,7 @@ export {
     debouncedUpdateRole,
     debouncedGrant,
     RoleStatus,
+    refresh,
     revoke,
     dict
 }

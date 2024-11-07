@@ -48,7 +48,8 @@ public class RecordController {
                 .setProblemId(judgeScore.getProblemId())
                 .setUserId(judgeScore.getUserId())
                 .setStatus(judgeScore.getResult() == JudgeResult.Accept)
-                .setScore(judgeScore.getScore());
+                .setScore(judgeScore.getScore())
+                .setAnswer(new UserAnswer(null, judgeScore.getCode(), judgeScore.getLanguageId()));
         recordsService.addRecord(records);
     }
 

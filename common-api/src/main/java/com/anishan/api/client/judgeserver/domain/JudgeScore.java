@@ -17,6 +17,8 @@ public class JudgeScore {
     private Long contestId;
     private BigDecimal score;
     private JudgeResult result;
+    private String code;
+    private Long languageId;
     // ms
     private Long runtime;
     // kb

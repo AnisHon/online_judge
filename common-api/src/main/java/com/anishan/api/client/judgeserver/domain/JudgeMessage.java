@@ -16,6 +16,7 @@ public class JudgeMessage {
     private Long problemId;
     private Long contestId;
     private Long submitId;
+    private Long languageId;
     private String code;
     private String language;
     private Long timeLimit;

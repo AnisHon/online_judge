@@ -394,7 +394,7 @@ const getAnswer = async () => {
   judgeForm.code = <string>answer.code;
   answer.answers?.sort((a, b) => a.index - b.index);
   judgeForm.answers = <Answer[]>answer.answers;
-  judgeForm.languageId = answer.languageId;
+  judgeForm.languageId = !!answer.languageId ? answer.languageId : 1;
 }
 
 const saveAnswer = async () => {
@@ -407,15 +407,20 @@ const saveAnswer = async () => {
 
 }
 
-watch(() => problemId, async () => {
 
+// created
+getProblem();
+
+watch(() => problemId, async () => {
   if (!__.isEqual(judgeForm, judgeFormCopy)) {
     await saveAnswer()
   }
   reset();
   await getProblem();
 
-}, {immediate: true})
+})
+
+
 
 defineExpose<{isProblemLoading: Ref<boolean>}>({isProblemLoading: problemIsLoading})
 

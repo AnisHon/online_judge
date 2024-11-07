@@ -15,6 +15,7 @@ import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.*;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.user.util.EmailSender;
+import com.anishan.user.util.RoleUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final SysRoleMenuService sysRoleMenuService;
     private final UserConfig config;
     private final AuthUtil authUtil;
+    private final RoleUtil roleUtil;
+
     // 默认就是student
 
     @Override
@@ -377,20 +380,47 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .collect(Collectors.toList());
     }
 
+    private List<MenuVo> useCache(List<Long> roleIds) {
+        for (Long roleId : roleIds) {
+            boolean exist = roleUtil.isExist(roleId);
+            if (!exist) {
+                List<SysMenu> menus = sysRoleMenuService.getAuthorityMenu(List.of(roleId));
+                List<MenuVo> menuVos = BeanUtil.copyToList(menus, MenuVo.class);
+                roleUtil.cacheMenus(roleId, menuVos);
+            }
+        }
+
+        return roleUtil.getMenus(roleIds);
+
+    }
+
     @Override
     public List<MenuVo> getAuths() {
         Long userId = myId();
         List<Long> roleIds = getRoleIdsByUserId(userId);
-        List<SysMenu> authorityMenu = sysRoleMenuService.getAuthorityMenu(roleIds);
 
-        return BeanUtil.copyToList(authorityMenu, MenuVo.class);
+        return useCache(roleIds);
+//        List<SysMenu> authorityMenu = sysRoleMenuService.getAuthorityMenu(roleIds);
+    }
+
+    public List<TreedMenuVo> useTreedMenuCache(List<Long> roleIds) {
+        for (Long roleId : roleIds) {
+            boolean exist = roleUtil.isExistTreedMenu(roleId);
+            if (!exist) {
+                List<TreedMenuVo> menus = sysMenuService.getTreedMenuByRole(List.of(roleId));
+                roleUtil.cacheTreedMenus(roleId, menus);
+            }
+        }
+        return roleUtil.getTreedMenus(roleIds);
     }
 
     @Override
     public List<TreedMenuVo> getTreedMenuByRole() {
         Long userId = myId();
         List<Long> roleIds = getRoleIdsByUserId(userId);
-        return sysMenuService.getTreedMenuByRole(roleIds);
+//        return sysMenuService.getTreedMenuByRole(roleIds);
+
+        return useTreedMenuCache(roleIds);
     }
 
     @Override

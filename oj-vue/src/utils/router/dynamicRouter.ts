@@ -3,6 +3,7 @@ import {type RouterType} from "@/router/dynamic";
 import __ from 'lodash';
 
 const flattenMenuTree = (treedMenu: TreedMenu[]): MenuView[] => {
+
     const result: MenuView[] = [];
     if (!treedMenu) {
         return [];
@@ -33,7 +34,7 @@ const getDynamicRecursion = (constRouter: RouterType[], flattenMenu: MenuView[])
     }
     constRouter.forEach((router: RouterType) => {
         flattenMenu.forEach((menu: MenuView) => {
-            if (menu.menuName === router.meta.name) {
+            if (menu && menu.menuName === router.meta.name) {
                 router.path = __.isEmpty(menu.router) ? router.path : menu.router;
                 router.meta.icon = menu.icon;
                 router.meta.type = menu.menuType;

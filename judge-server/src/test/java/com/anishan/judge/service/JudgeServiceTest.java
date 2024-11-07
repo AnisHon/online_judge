@@ -23,34 +23,6 @@ public class JudgeServiceTest {
     @Test
     @SneakyThrows
     public void test() {
-        String code = "#include <stdio.h>\n" +
-                "int main()\n" +
-                "{\n" +
-                "   printf(\"Hello, World!\");\n" +
-                "   return 0;\n" +
-                "}";
-        OjProblemCaseVo e1 = new OjProblemCaseVo();
-        e1.setScore(BigDecimal.TEN);
-        e1.setInput("");
-        e1.setOutput("Hello, World!");
-        JudgeMessage judgeMessage = new JudgeMessage(
-                1L,
-                1001L,
-                null,
-                1L,
-                code,
-                "C",
-                1000L,
-                1000L,
-                128,
-                List.of(e1),
-                BigDecimal.ONE
-        );
-        JudgeScore judge = judgeService.judge(judgeMessage);
-
-        log.debug(judge.toString());
-
-
     }
 
 

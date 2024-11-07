@@ -12,6 +12,7 @@ import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.domain.vo.RoleVo;
 import com.anishan.user.service.SysRoleService;
 import com.anishan.user.service.SysUserRoleService;
+import com.anishan.user.util.RoleUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,14 @@ public class RoleController {
 
     private final SysRoleService sysRoleService;
     private final SysUserRoleService sysUserRoleService;
+    private final RoleUtil roleUtil;
+    @GetMapping("/refresh")
+    @PreAuthorize("hasAuthority('user:role:list')")
+    @ApiOperation("刷新角色缓存")
+    public R<String> refresh() {
+        roleUtil.refresh();
+        return R.success();
+    }
 
     @GetMapping("/get/{id}")
     @PreAuthorize("hasAuthority('user:role:list')")

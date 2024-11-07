@@ -48,6 +48,7 @@ public class JudgeListener {
 
         try {
             judgeScore = judgeService.judge(message);
+            judgeScore.setCode(message.getCode());
         } catch (SystemError | SubmitError e) {
            log.error("判题机出错");
            log.error(e.getMessage(), e);
@@ -68,7 +69,6 @@ public class JudgeListener {
                         .setTime(judgeScore.getRuntime())
                         .setMemory(judgeScore.getMemory())
                         .setStderr(judgeScore.getErrorMessage());
-
 
 
         // 更新日志状态

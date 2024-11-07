@@ -67,6 +67,7 @@ public class JudgeServiceImpl implements JudgeService {
                 problem.getProblemId(),
                 judgeRequest.getContestId(),
                 submitId,
+                judgeRequest.getLanguageId(),
                 judgeRequest.getCode(),
                 languageName,
                 ojProblem.getTimeLimit(),
@@ -355,6 +356,8 @@ public class JudgeServiceImpl implements JudgeService {
         }
 
 
+        // 添加做题记录
+        record(judgeRequest, userId, judgeResult);
 
 //        比赛题目不给答案 不显示对错 分数重算
         if (judgeRequest.getContestId() != null) {
@@ -379,8 +382,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
 
 
-        // 添加做题记录
-        record(judgeRequest, userId, judgeResult);
+
 
         return judgeResult;
     }
