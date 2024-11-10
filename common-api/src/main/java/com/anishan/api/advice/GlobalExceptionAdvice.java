@@ -3,6 +3,7 @@ package com.anishan.api.advice;
 import cn.hutool.http.HttpStatus;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.exception.IllegalTokenException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -18,6 +19,7 @@ import org.springframework.security.access.AccessDeniedException;
 import java.util.Objects;
 
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionAdvice {
 
     @ResponseBody
@@ -31,8 +33,9 @@ public class GlobalExceptionAdvice {
             temp = temp.getCause();
         }
 
-        // todo
-        e.printStackTrace();
+        if (e != null) {
+            log.error(e.getMessage(), e);
+        }
 
         return R.error(HttpStatus.HTTP_INTERNAL_ERROR, builder.toString());
     }

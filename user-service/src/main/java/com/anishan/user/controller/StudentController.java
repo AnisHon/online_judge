@@ -43,8 +43,6 @@ public class StudentController {
     }
 
 
-    // my homework
-    // todo
 
 
 

@@ -42,7 +42,6 @@ public class SecurityConfig {
     }
 
 
-//    todo  会不会出问题 待确定
     @Bean
 //    @ConditionalOnBean(UserDetailsService.class)
     public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration config) throws Exception {
