@@ -4,7 +4,11 @@ spring:
   config:
     name: judge-server
 
-
+  rabbitmq:
+    listener:
+      simple:
+        concurrency: 5
+        max-concurrency: 10
 
 #共用一个数据库
 oj:

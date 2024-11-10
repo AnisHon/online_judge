@@ -89,6 +89,8 @@ services:
       - MQ_USERNAME=admin
       - MQ_PASSWORD=admin
       - MQ_V_HOST=/
+      - MQ_CONCURRENCY=6
+      - MQ_MAX_CONCURRENCY=12
 
     networks:
       - default
@@ -160,6 +162,8 @@ services:
     restart: always
     ports:
       - "80:80"
+    networks:
+      - oj-net
 
 networks:
   oj-net:

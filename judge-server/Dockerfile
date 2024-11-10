@@ -39,5 +39,13 @@ ADD go-judge_1.8.5_linux_386.tar.gz /opt
 
 EXPOSE 8082
 
-CMD ["sh", "-c", "/opt/go-judge & java -jar judge-server-1.0.0-beta.jar --judge.url=http://localhost:5050 --server.port=8082 --spring.cloud.nacos.server-addr=${NACOS_URL} --oj.db.host=${DB_HOST} --spring.redis.host=${REDIS_HOST} --oj.redis.host=${REDIS_HOST} --spring.rabbitmq.host=${MQ_HOST} --spring.rabbitmq.virtual-host=${MQ_V_HOST} --spring.rabbitmq.username=${MQ_USERNAME} --spring.rabbitmq.password=${MQ_PASSWORD}"]
+CMD ["sh", "-c", "/opt/go-judge & java -jar  judge-server-1.0.0-beta.jar", \
+    "--judge.url=http://localhost:5050 --server.port=8082", \
+    "--spring.cloud.nacos.server-addr=${NACOS_URL} --oj.db.host=${DB_HOST} --spring.redis.host=${REDIS_HOST} --oj.redis.host=${REDIS_HOST} ", \
+    "--spring.rabbitmq.host=${MQ_HOST}", \
+    "--spring.rabbitmq.virtual-host=${MQ_V_HOST}",\
+    "--spring.rabbitmq.username=${MQ_USERNAME}",\
+    "--spring.rabbitmq.password=${MQ_PASSWORD}",\
+    "--spring.rabbitmq.listener.concurrency=${MQ_CONCURRENCY} --spring.rabbitmq.listener.max-concurrency=${MQ_MAX_CONCURRENCY}"\
+    ]
 

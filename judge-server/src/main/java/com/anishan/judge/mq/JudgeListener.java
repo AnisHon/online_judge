@@ -32,8 +32,7 @@ public class JudgeListener {
                     value = @Queue(name = "judge-queue"),
                     exchange = @Exchange(name = "judge-exchange"),
                     key = "judge"
-            ),
-            concurrency = "2-4"
+            )
     )
     public void judge(JudgeMessage message) {
 
