@@ -36,7 +36,7 @@
           </el-col>
           <el-col :span="6" style="display: flex; justify-content: center; align-items: center;">
             <el-tag size="large" :type="authTagType(item.auth)">{{ authText(item.auth) }}</el-tag>
-            <el-button style="margin-left: auto" type="danger" v-if="isContestOver(item.endTime)">
+            <el-button style="margin-left: auto" type="danger" v-if="isContestOver(item.endTime)" @click="joinContest(item)">
               已结束
             </el-button>
             <el-button style="margin-left: auto" type="primary" v-else-if="isNotStart(item.startTime)">
@@ -135,6 +135,7 @@ const {post: join} = debouncedJoin(form, (data) => {
     ElMessage.error(data.message);
   }
   open.value = false;
+  enter(currentContest.value!.contestId);
 });
 
 const submit = () => {
@@ -142,17 +143,28 @@ const submit = () => {
 }
 
 const {isLoading: isJoinedLoading, loading: joinedLoading, get: joinedGet} = debouncedIsJoined((success) => {
-  if (success) {
-    ElMessage.success("已加入，进入比赛")
-    enter(currentContest.value!.contestId)
+  // 比赛结束且未参加，不允许进入
+  if (isContestOver(currentContest.value!.endTime) && !success) {
+    ElMessage.warning("您未参加该场比赛");
     return;
   }
+
+  // 无论是否结束已经参加，直接进入
+  if (success) {
+    ElMessage.success("已加入，进入比赛");
+    enter(currentContest.value!.contestId);
+    return;
+  }
+
+  // 比赛进行中，没有参加，判断是否需要输入密码
   if (currentContest.value?.auth === ContestAuth.PUBLIC) {
+    // 公共比赛加入比赛
     join();
   } else if (currentContest.value?.auth === ContestAuth.PRIVATE) {
+    // 私有比赛输入密码
     open.value = true;
   } else {
-    ElMessage.warning("此比赛不可加入")
+    ElMessage.warning("白名单赛制，无法参加")
   }
 
 })

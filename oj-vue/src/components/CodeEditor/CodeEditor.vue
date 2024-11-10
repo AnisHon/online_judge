@@ -76,7 +76,6 @@ const mode = computed((): string => {
     return modeMap["C++"];
   }
 
-
   //@ts-ignore
   return modeMap[language];
 })
@@ -126,8 +125,11 @@ const onReady = (cm: Editor) => {
   })
 };
 
+
+console.log(mode.value)
 watch(mode, () => {
   cminstance.value?.setOption('mode', mode.value);
+
 }, {immediate: true});
 
 watch(theme, () => {

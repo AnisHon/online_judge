@@ -84,27 +84,30 @@ const onHandleFullScreen = () => {
   emit('fullScreen');
 };
 
-const initLanguages = () => {
-  languageStore.getLanguages()
-      .then((languageArray) => {
-        languages.value = languageArray;
-        codeForm.value.languageId = languageArray[0].languageId;
-      })
-}
-
-watch(() => codeForm.value.languageId, () => {
+const setLanguage = () => {
   languages.value?.forEach((item) => {
     if (item.languageId === codeForm.value.languageId) {
       currLang.value = item.languageName;
     }
   })
+}
+
+const initLanguages = () => {
+  languageStore.getLanguages()
+      .then((languageArray) => {
+        languages.value = languageArray;
+        codeForm.value.languageId = languageArray[0].languageId;
+        setLanguage();
+      })
+}
+
+watch(() => codeForm.value.languageId, () => {
+  setLanguage();
 })
 
 onMounted(() => {
   emit("onReady")
 })
-
-
 
 // created
 initLanguages();

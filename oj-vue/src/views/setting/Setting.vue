@@ -33,262 +33,261 @@
               <el-tag type="danger">未开放</el-tag>
             </el-descriptions-item>
           </el-descriptions>
-
-          <el-tabs v-model="defaultActive">
-            <el-tab-pane label="角色信息" name="first">
-              <el-card class="tab-card absoluteCenter">
-                <el-form label-width="100" style="min-width: 500px">
-                  <el-form-item label="用户编号">
-                    <el-input v-model="userForm.userId" disabled/>
-                  </el-form-item>
-
-                  <el-form-item label="用户名">
-                    <el-input v-model="userForm.userName" disabled/>
-                  </el-form-item>
-                  <el-form-item label="用户昵称">
-                    <el-input v-model="userForm.userId" />
-                  </el-form-item>
-
-                  <el-form-item label="个性签名">
-                    <el-input  type="textarea" model-value="禁用" disabled />
-                  </el-form-item>
-
-                  <el-form-item>
-                    <el-button type="success">更改信息</el-button>
-                  </el-form-item>
-
-
-                </el-form>
-              </el-card>
-            </el-tab-pane>
-            <el-tab-pane label="修改密码" name="second" >
-              <el-card class="tab-card absoluteCenter">
-                <el-form
-                    label-width="100px"
-                    ref="formRef"
-                    style="min-width: 500px"
-                    :model="resetForm"
-                    status-icon
-                    :rules="rules"
-                    :aria-autocomplete="false"
-                >
-                  <el-form-item label="用户名" prop="username">
-                    <el-input
-                        v-model="userForm.userName"
-                        type="text"
-                        disabled
-                        autocomplete="off"
-                        placeholder="请输入用户名或邮箱"
-                        prefix-icon="UserFilled"
-                    />
-                  </el-form-item>
-
-                  <el-form-item label="邮箱" prop="password">
-                    <el-input
-                        v-model="resetForm.password"
-                        type="password"
-                        autocomplete="off"
-                        placeholder="请输入邮箱"
-                        prefix-icon="Lock"
-                    />
-                  </el-form-item>
-
-                  <el-form-item label="确认密码" prop="repeatPassword">
-                    <el-input
-                        v-model="resetForm.repeatPassword"
-                        type="password"
-                        autocomplete="off"
-                        placeholder="请输入密码"
-                        prefix-icon="Lock"
-                    />
-                  </el-form-item>
-
-                  <el-row justify="space-between" style="width: 100%;">
-                    <el-col :span="14" >
-                      <el-form-item label="验证码" prop="captchaCode">
-                        <el-input
-                            v-model="resetForm.captchaCode"
-                            type="text"
-                            autocomplete="off"
-                            placeholder="请输入验证码"
-                            :prefix-icon="IconCaptcha"
-                        />
-                      </el-form-item>
-                    </el-col>
-
-
-                    <el-col :span="10" style="position: relative;">
-                      <el-image
-                          :src="imgData"
-                          style="width: 100px; position: absolute;
-              right: 0"
-                          @click="refreshCaptchaCode"
-                      />
-                    </el-col>
-
-
-                  </el-row>
-
-                  <el-row justify="space-between" style="width: 100%;">
-                    <el-col :span="14" >
-                      <el-form-item label="邮箱验证码" prop="emailCode">
-                        <el-input
-                            v-model="resetForm.emailCode"
-                            type="text"
-                            autocomplete="off"
-                            placeholder="请输入验证码"
-                            :prefix-icon="IconCaptcha"
-                        />
-                      </el-form-item>
-                    </el-col>
-
-
-                    <el-col :span="10" style="position: relative;">
-                      <el-button
-                          @click="sendEmailCode()"
-                          style="position: absolute; right: 0;"
-                          :loading="isLoading"
-                          :disabled="isLoading"
-                      >
-                        获取邮箱验证码
-                      </el-button>
-                    </el-col>
-
-
-                  </el-row>
-
-                  <el-form-item>
-                    <el-button
-                        type="primary"
-                        @click="submitResetPassword(formRef)"
-                        style="width: 80%; margin: auto"
-                        :loading="isLoading"
-                        :disabled="isLoading"
-                    >
-                      重设密码
-                    </el-button>
-                  </el-form-item>
-                </el-form>
-              </el-card>
-            </el-tab-pane>
-            <el-tab-pane label="修改邮箱" name="third">
-              <el-card class="tab-card absoluteCenter">
-                <el-form
-                    label-width="100px"
-                    ref="formRef"
-                    style="min-width: 500px"
-                    :model="resetForm"
-                    status-icon
-                    :rules="rules"
-                    :aria-autocomplete="false"
-                >
-                  <el-form-item label="用户名" prop="username">
-                    <el-input
-                        v-model="userForm.userName"
-                        type="text"
-                        disabled
-                        autocomplete="off"
-                        placeholder="请输入用户名或邮箱"
-                        prefix-icon="UserFilled"
-                    />
-                  </el-form-item>
-
-                  <el-form-item label="密码" prop="password">
-                    <el-input
-                        v-model="resetForm.password"
-                        type="password"
-                        autocomplete="off"
-                        placeholder="请输入密码"
-                        prefix-icon="Lock"
-                    />
-                  </el-form-item>
-
-                  <el-form-item label="确认密码" prop="repeatPassword">
-                    <el-input
-                        v-model="resetForm.repeatPassword"
-                        type="password"
-                        autocomplete="off"
-                        placeholder="请输入密码"
-                        prefix-icon="Lock"
-                    />
-                  </el-form-item>
-
-                  <el-row justify="space-between" style="width: 100%;">
-                    <el-col :span="14" >
-                      <el-form-item label="验证码" prop="captchaCode">
-                        <el-input
-                            v-model="resetForm.captchaCode"
-                            type="text"
-                            autocomplete="off"
-                            placeholder="请输入验证码"
-                            :prefix-icon="IconCaptcha"
-                        />
-                      </el-form-item>
-                    </el-col>
-
-
-                    <el-col :span="10" style="position: relative;">
-                      <el-image
-                          :src="imgData"
-                          style="width: 100px; position: absolute;
-              right: 0"
-                          @click="refreshCaptchaCode"
-                      />
-                    </el-col>
-
-
-                  </el-row>
-
-                  <el-row justify="space-between" style="width: 100%;">
-                    <el-col :span="14" >
-                      <el-form-item label="邮箱验证码" prop="emailCode">
-                        <el-input
-                            v-model="resetForm.emailCode"
-                            type="text"
-                            autocomplete="off"
-                            placeholder="请输入验证码"
-                            :prefix-icon="IconCaptcha"
-                        />
-                      </el-form-item>
-                    </el-col>
-
-
-                    <el-col :span="10" style="position: relative;">
-                      <el-button
-                          @click="sendEmailCode()"
-                          style="position: absolute; right: 0;"
-                          :loading="isLoading"
-                          :disabled="isLoading"
-                      >
-                        获取邮箱验证码
-                      </el-button>
-                    </el-col>
-
-
-                  </el-row>
-
-                  <el-form-item>
-                    <el-button
-                        type="primary"
-                        @click="submitResetPassword(formRef)"
-                        style="width: 80%; margin: auto"
-                        :loading="isLoading"
-                        :disabled="isLoading"
-                    >
-                      重设密码
-                    </el-button>
-                  </el-form-item>
-                </el-form>
-              </el-card>
-            </el-tab-pane>
-<!--            <el-tab-pane label="" name="fourth">-->
-<!--              <el-card class="tab-card">-->
-<!--              4-->
-<!--              </el-card>-->
-<!--            </el-tab-pane>-->
-          </el-tabs>
-
         </header>
+        <el-tabs v-model="defaultActive">
+          <el-tab-pane label="角色信息" name="first">
+            <el-card class="tab-card absoluteCenter">
+              <el-form label-width="100" style="min-width: 500px">
+                <el-form-item label="用户编号">
+                  <el-input v-model="userForm.userId" disabled/>
+                </el-form-item>
+
+                <el-form-item label="用户名">
+                  <el-input v-model="userForm.userName" disabled/>
+                </el-form-item>
+                <el-form-item label="用户昵称">
+                  <el-input v-model="userForm.userId" />
+                </el-form-item>
+
+                <el-form-item label="个性签名">
+                  <el-input  type="textarea" model-value="禁用" disabled />
+                </el-form-item>
+
+                <el-form-item>
+                  <el-button type="success">更改信息</el-button>
+                </el-form-item>
+
+
+              </el-form>
+            </el-card>
+          </el-tab-pane>
+          <el-tab-pane label="修改密码" name="second" >
+            <el-card class="tab-card absoluteCenter">
+              <el-form
+                  label-width="100px"
+                  ref="formRef"
+                  style="min-width: 500px"
+                  :model="resetForm"
+                  status-icon
+                  :rules="rules"
+                  :aria-autocomplete="false"
+              >
+                <el-form-item label="用户名" prop="username">
+                  <el-input
+                      v-model="userForm.userName"
+                      type="text"
+                      disabled
+                      autocomplete="off"
+                      placeholder="请输入用户名或邮箱"
+                      prefix-icon="UserFilled"
+                  />
+                </el-form-item>
+
+                <el-form-item label="密码" prop="password">
+                  <el-input
+                      v-model="resetForm.password"
+                      type="password"
+                      autocomplete="off"
+                      placeholder="请输入邮箱"
+                      prefix-icon="Lock"
+                  />
+                </el-form-item>
+
+                <el-form-item label="确认密码" prop="repeatPassword">
+                  <el-input
+                      v-model="resetForm.repeatPassword"
+                      type="password"
+                      autocomplete="off"
+                      placeholder="请输入密码"
+                      prefix-icon="Lock"
+                  />
+                </el-form-item>
+
+                <el-row justify="space-between" style="width: 100%;">
+                  <el-col :span="14" >
+                    <el-form-item label="验证码" prop="captchaCode">
+                      <el-input
+                          v-model="resetForm.captchaCode"
+                          type="text"
+                          autocomplete="off"
+                          placeholder="请输入验证码"
+                          :prefix-icon="IconCaptcha"
+                      />
+                    </el-form-item>
+                  </el-col>
+
+
+                  <el-col :span="10" style="position: relative;">
+                    <el-image
+                        :src="imgData"
+                        style="width: 100px; position: absolute;
+              right: 0"
+                        @click="refreshCaptchaCode"
+                    />
+                  </el-col>
+
+
+                </el-row>
+
+                <el-row justify="space-between" style="width: 100%;">
+                  <el-col :span="14" >
+                    <el-form-item label="邮箱验证码" prop="emailCode">
+                      <el-input
+                          v-model="resetForm.emailCode"
+                          type="text"
+                          autocomplete="off"
+                          placeholder="请输入验证码"
+                          :prefix-icon="IconCaptcha"
+                      />
+                    </el-form-item>
+                  </el-col>
+
+
+                  <el-col :span="10" style="position: relative;">
+                    <el-button
+                        @click="sendEmailCode()"
+                        style="position: absolute; right: 0;"
+                        :loading="isLoading"
+                        :disabled="isLoading"
+                    >
+                      获取邮箱验证码
+                    </el-button>
+                  </el-col>
+
+
+                </el-row>
+
+                <el-form-item>
+                  <el-button
+                      type="primary"
+                      @click="submitResetPassword(formRef)"
+                      style="width: 80%; margin: auto"
+                      :loading="isLoading"
+                      :disabled="isLoading"
+                  >
+                    重设密码
+                  </el-button>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </el-tab-pane>
+          <el-tab-pane label="修改邮箱" name="third" disabled>
+            <el-card class="tab-card absoluteCenter">
+              <el-form
+                  label-width="100px"
+                  ref="formRef"
+                  style="min-width: 500px"
+                  :model="resetForm"
+                  status-icon
+                  :rules="rules"
+                  :aria-autocomplete="false"
+              >
+                <el-form-item label="用户名" prop="username">
+                  <el-input
+                      v-model="userForm.userName"
+                      type="text"
+                      disabled
+                      autocomplete="off"
+                      placeholder="请输入用户名或邮箱"
+                      prefix-icon="UserFilled"
+                      disable
+                  />
+                </el-form-item>
+
+                <el-form-item label="新邮箱" prop="email">
+                  <el-input
+                      v-model="resetForm.email"
+                      type="password"
+                      autocomplete="off"
+                      placeholder="请输入密码"
+                      prefix-icon="IconEmail"
+                  />
+                </el-form-item>
+
+                <el-form-item label="确认密码" prop="repeatPassword">
+                  <el-input
+                      v-model="resetForm.repeatPassword"
+                      type="password"
+                      autocomplete="off"
+                      placeholder="请输入密码"
+                      prefix-icon="Lock"
+                  />
+                </el-form-item>
+
+                <el-row justify="space-between" style="width: 100%;">
+                  <el-col :span="14" >
+                    <el-form-item label="验证码" prop="captchaCode">
+                      <el-input
+                          v-model="resetForm.captchaCode"
+                          type="text"
+                          autocomplete="off"
+                          placeholder="请输入验证码"
+                          :prefix-icon="IconCaptcha"
+                      />
+                    </el-form-item>
+                  </el-col>
+
+
+                  <el-col :span="10" style="position: relative;">
+                    <el-image
+                        :src="imgData"
+                        style="width: 100px; position: absolute;
+              right: 0"
+                        @click="refreshCaptchaCode"
+                    />
+                  </el-col>
+
+
+                </el-row>
+
+                <el-row justify="space-between" style="width: 100%;" >
+                  <el-col :span="14" >
+                    <el-form-item label="邮箱验证码" prop="emailCode">
+                      <el-input
+                          v-model="resetForm.emailCode"
+                          type="text"
+                          autocomplete="off"
+                          placeholder="请输入验证码"
+                          :prefix-icon="IconCaptcha"
+                      />
+                    </el-form-item>
+                  </el-col>
+
+
+                  <el-col :span="10" style="position: relative;">
+                    <el-button
+                        @click="sendEmailCode()"
+                        style="position: absolute; right: 0;"
+                        :loading="isLoading"
+                        :disabled="isLoading"
+                    >
+                      获取邮箱验证码
+                    </el-button>
+                  </el-col>
+
+
+                </el-row>
+
+                <el-form-item>
+                  <el-button
+                      type="primary"
+                      @click="submitResetPassword(formRef)"
+                      style="width: 80%; margin: auto"
+                      :loading="isLoading"
+                      :disabled="isLoading"
+                  >
+                    重设密码
+                  </el-button>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </el-tab-pane>
+          <!--            <el-tab-pane label="" name="fourth">-->
+          <!--              <el-card class="tab-card">-->
+          <!--              4-->
+          <!--              </el-card>-->
+          <!--            </el-tab-pane>-->
+        </el-tabs>
 
       </el-card>
     </div>
@@ -307,6 +306,7 @@ import type {FormInstance, FormRules} from "element-plus";
 import {resetPassword} from "@/api/auth/authentication";
 import {sendForgetEmailCode} from "@/api/auth/emailCode";
 import getCaptcha from "@/api/auth/captchaCode";
+import IconEmail from "@/assets/icons/IconEmail.vue";
 
 const userStore = useUserStore();
 const router = useRouter();
