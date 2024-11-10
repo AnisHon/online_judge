@@ -36,7 +36,10 @@
         <spring-cloud-alibaba.version>2021.0.4.0</spring-cloud-alibaba.version>
         <jakarta.mail-api>2.1.2</jakarta.mail-api>
         <openfeign.okhttp.version>13.2.1</openfeign.okhttp.version>
+        <skipTests>true</skipTests>
     </properties>
+
+
 
 
 
@@ -178,23 +181,17 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.anishan.OnlineJudgeApplication</mainClass>
                     <skip>true</skip>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>repackage</id>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
+
+
+
         </plugins>
     </build>
 

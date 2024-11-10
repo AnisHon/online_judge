@@ -122,8 +122,7 @@
 import {reactive, ref} from "vue";
 import {
   debouncedGetRoleUser,
-  type QueryRoleUser,
-  removeUser
+  type QueryRoleUser
 } from "@/api/user";
 import {type UserView} from "@/api/user";
 import {useColumn} from "@/hooks/useColumn";

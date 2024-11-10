@@ -1,0 +1,162 @@
+services:
+  oj-mysql:
+    build:
+      context: resources/sql
+      dockerfile: Dockerfile
+    container_name: oj-mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - /opt/mysql/data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=change-this-db-password
+    restart: always
+    networks:
+      - default
+      - oj-net
+
+  oj-redis:
+    image: redis:latest
+    container_name: oj-redis
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    ports:
+      - '6379:6379'
+    volumes:
+      - /opt/redis/data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - default
+      - oj-net
+
+  oj-mq:
+    image: rabbitmq:management
+    container_name: oj-mq
+    volumes:
+      - /opt/rabbitmq:/var/lib/rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    restart: always
+    networks:
+      - default
+      - oj-net
+
+
+  oj-nacos:
+    image: nacos/nacos-server
+    container_name: oj-nacos
+    depends_on:
+      - oj-mysql
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    volumes:
+      - /opt/nacos/logs:/home/nacos/logs
+    environment:
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=8.149.133.76
+      - MYSQL_SERVICE_DB_NAME=nacos
+      - MYSQL_SERVICE_PORT=3306
+      - MYSQL_SERVICE_USER=root
+      - MYSQL_SERVICE_PASSWORD=change-this-db-password
+    restart: always
+    networks:
+      - default
+      - oj-net
+
+  judge-server:
+    build:
+      context: judge-server
+      dockerfile: Dockerfile
+    container_name: judge-server
+    depends_on:
+      - oj-nacos
+      - oj-redis
+    restart: always
+    privileged: true
+    environment:
+      - NACOS_URL=oj-nacos:8848
+      - DB_HOST=oj-mysql
+      - REDIS_HOST=oj-redis
+
+    networks:
+      - default
+      - oj-net
+
+  problem-service:
+    build:
+      context: problem-service
+      dockerfile: Dockerfile
+    container_name: problem-service
+    depends_on:
+      - oj-nacos
+      - oj-redis
+    restart: always
+    environment:
+      - NACOS_URL=oj-nacos:8848
+      - DB_HOST=oj-mysql
+      - REDIS_HOST=oj-redis
+    networks:
+      - default
+      - oj-net
+
+  user-service:
+    build:
+      context: user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    depends_on:
+      - oj-nacos
+      - oj-redis
+    restart: always
+    environment:
+      - NACOS_URL=oj-nacos:8848
+      - DB_HOST=oj-mysql
+      - REDIS_HOST=oj-redis
+
+
+    networks:
+      - default
+      - oj-net
+
+  gateway-server:
+    build:
+      context: gateway-server
+      dockerfile: Dockerfile
+    container_name: gateway-server
+    depends_on:
+      - oj-nacos
+    restart: always
+    ports:
+      - "8000:80"
+    environment:
+      - NACOS_URL=oj-nacos:8848
+
+    networks:
+      - default
+      - oj-net
+
+  oj-vue:
+    build:
+      context: oj-vue
+      dockerfile: Dockerfile
+    container_name: oj-vue
+
+    restart: always
+    ports:
+      - "80:80"
+
+networks:
+  oj-net:
+    driver: bridge
+
+
+
+
+

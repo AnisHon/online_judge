@@ -14,7 +14,7 @@
     <div>
       <div class="answer">
         <span v-for="(value, key) of groupResult">
-          <markdown-preview :text="itemIndexText(parseInt(key))"/>
+          <markdown-preview :text="itemIndexText(parseInt(<string>key))"/>
             <span v-for="i of value" :key="i.index">
               <markdown-preview :text="itemText(i)"/>
             </span>

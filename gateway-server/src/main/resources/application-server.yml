@@ -1,0 +1,58 @@
+server:
+  port: 8000
+spring:
+  application:
+    name: gateway
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      routes:
+        - id: user
+          uri: lb://user-service
+          predicates:
+            - Path=/user-api/**
+
+        - id: problem
+          uri: lb://problem-service
+          predicates:
+            - Path=/problem-api/**
+      default-filters:
+        - StripPrefix=1
+
+
+knife4j:
+  # 聚合swagger文档
+  gateway:
+    enabled: true
+    # 排序规则(tag/operation排序自4.2.0版本新增)
+    # 取值：alpha-默认排序规则，官方swagger-ui默认实现,order-Knife4j提供的增强排序规则，开发者可扩展x-order，根据数值来自定义排序
+    tags-sorter: order
+    operations-sorter: order
+    # 指定手动配置的模式(默认为该模式)
+    strategy: manual
+    routes:
+      - name: 用户服务
+        # 真实子服务访问url地址-提供OpenAPI的文档
+        url: /user-api/v2/api-docs?group=default
+        service-name: user-service
+        # 路由前缀
+        # 兼容OpenAPI3规范在聚合时丢失contextPath属性的异常情况，由开发者自己配置contextPath,Knife4j的前端Ui做兼容处理,与url属性独立不冲突，仅OpenAPI3规范聚合需要，OpenAPI2规范不需要设置此属性,默认为(apiPathPrefix)
+        context-path: /
+        order: 1
+
+
+      - name: 题目服务
+        url: /problem-api/v2/api-docs?group=default
+        service-name: problem-service
+        context-path: /
+        order: 2
+
+
+
+

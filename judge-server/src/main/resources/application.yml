@@ -13,4 +13,6 @@ oj:
   knife4j:
     resource: com.anishan.judge
 
-
+# judge的url
+judge:
+  url: http://8.149.133.76:5050

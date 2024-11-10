@@ -165,4 +165,21 @@ public class AuthUtil {
         }
         return (LoginUser) principal;
     }
+
+    public static LoginUser getNonThrowUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//          todo
+        if (authentication == null) {
+            LoginUser loginUser = new LoginUser();
+            loginUser.setUser(new SysUser());
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof String) {
+            return null;
+        }
+        return (LoginUser) principal;
+
+    }
+
 }

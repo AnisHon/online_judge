@@ -132,7 +132,7 @@
 import {onMounted, reactive, ref} from 'vue'
 import {type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode'
-import getEmailCode from '@/api/auth/emailCode'
+import {sendEmailCodePromise} from '@/api/auth/emailCode'
 import {signUp, checkAvailableUsername, checkAvailableEmail} from "@/api/auth/authentication"
 import IconEmail from "@/assets/icons/IconEmail.vue";
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
@@ -263,7 +263,7 @@ const sendEmailCode = () => {
   } else if (!emailRe.test(signUpForm.email)) {
     ElMessage.error("邮箱无效")
   } else {
-    getEmailCode({
+    sendEmailCodePromise({
       captchaCode: signUpForm.captchaCode,
       email: signUpForm.email,
       captchaToken: signUpForm.token,

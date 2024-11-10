@@ -19,6 +19,7 @@
 <script lang="ts">
 import { scrollTo } from '@/utils/scroll-to'
 
+
 export default {
   name: 'Pagination',
   props: {
@@ -71,7 +72,7 @@ export default {
       get() {
         return this.page
       },
-      set(val) {
+      set(val: any) {
         this.$emit('update:page', val)
       }
     },
@@ -79,25 +80,27 @@ export default {
       get() {
         return this.limit
       },
-      set(val) {
+      set(val: any) {
         this.$emit('update:limit', val)
       }
     }
   },
   inject: ['elMain'],
   methods: {
-    handleSizeChange(val) {
+    handleSizeChange(val: any) {
       if (this.currentPage * val > this.total) {
         this.currentPage = 1;
       }
       this.$emit('pagination', { page: this.currentPage, limit: val });
       if (this.autoScroll) {
+        // @ts-ignore
         scrollTo(0, 800, undefined, this.elMain?.elMainRef.value?.$el);
       }
     },
-    handleCurrentChange(val) {
+    handleCurrentChange(val: any) {
       this.$emit('pagination', { page: val, limit: this.pageSize });
       if (this.autoScroll) {
+        // @ts-ignore
         scrollTo(0, 800, undefined, this.elMain?.elMainRef.value?.$el);
       }
     }
