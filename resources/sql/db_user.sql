@@ -158,6 +158,7 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (122, '删除题目', 3, 12, '#', 'B', 'problem:list:del-problem', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (123, '删除题单', 4, 12, '#', 'B', 'problem:list:delete', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (124, '修改题单', 5, 12, '#', 'B', 'problem:list:update', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (125, '列出题单', 5, 12, '#', 'B', 'problem:list:list', '#');
 
 # menu_id 13 目录编辑
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (130, '添加目录', 1, 13, '#', 'B', 'problem:folder:add', '#');
