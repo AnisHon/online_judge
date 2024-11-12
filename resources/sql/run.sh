@@ -9,6 +9,8 @@ FILE_PATH="/opt/initialized"
 # 检测文件是否存在
 if [ -f "$FILE_PATH" ]; then
   echo "File $FILE_PATH exists, open Mysql"
+  # 保持 MySQL 服务运行
+  tail -f /dev/null
 else
 
   # 等待 MySQL 服务启动
@@ -26,12 +28,16 @@ else
     if [ $? -eq 0 ]; then
       echo "SQL script executed successfully."
     else
-      echo "Failed to execute SQL script."
-      exit 1
+      echo "Databases exists skip scripts."
     fi
 
   # 创建文件
   touch "$FILE_PATH"
+
+  rm -f /opt/db_problem.sql
+  rm -f /opt/db_user.sql
+  rm -f /opt/nacos.sql
+
 fi
 
 # 保持 MySQL 服务运行

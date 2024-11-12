@@ -1,6 +1,5 @@
 FROM ubuntu:latest
 LABEL authors=anishan
-LABEL maintainer=
 LABEL version=1.0
 LABEL description=UserService
 LABEL privileged=true

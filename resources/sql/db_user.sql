@@ -1,4 +1,4 @@
-drop database if exists db_user;
+drop database db_user;
 create database db_user character set utf8mb4;
 use db_user;
 

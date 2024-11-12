@@ -1,4 +1,4 @@
-create database if not exists db_problem;
+create database db_problem;
 use db_problem;
 
 
