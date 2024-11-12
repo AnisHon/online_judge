@@ -141,7 +141,7 @@ public class ProblemController {
 
     @PostMapping("/list-new-problems/{listId}")
     @ApiOperation("获取题单中没有的题目")
-    @PreAuthorize("'problem:list:list'")
+    @PreAuthorize("hasAuthority('problem:problem:list')")
     public R<PagedResult<ProblemVo>> listNewProblems(
             @PathVariable @NotNull Long listId,
             @RequestBody @Validated PagedProblem query) {
