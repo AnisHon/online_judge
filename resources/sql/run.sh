@@ -3,23 +3,35 @@ echo "Starting MySQL service..."
 #service mysql start
 docker-entrypoint.sh mysqld &
 
-# 等待 MySQL 服务启动
-echo "Waiting for MySQL to be ready..."
-while ! mysqladmin ping -h"127.0.0.1" --silent; do
-  sleep 1
-done
+# 定义要检测的文件路径
+FILE_PATH="/opt/initialized"
 
-echo "MySQL is ready. Running the SQL script..."
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_problem.sql"
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_user.sql"
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "nacos.sql"
-
-# shellcheck disable=SC2181
-if [ $? -eq 0 ]; then
-  echo "SQL script executed successfully."
+# 检测文件是否存在
+if [ -f "$FILE_PATH" ]; then
+  echo "File $FILE_PATH exists, open Mysql"
 else
-  echo "Failed to execute SQL script."
-  exit 1
+
+  # 等待 MySQL 服务启动
+    echo "Waiting for MySQL to be ready..."
+    while ! mysqladmin ping -h"127.0.0.1" --silent; do
+      sleep 1
+    done
+
+    echo "MySQL is ready. Running the SQL script..."
+    mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_problem.sql"
+    mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_user.sql"
+    mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "nacos.sql"
+
+    # shellcheck disable=SC2181
+    if [ $? -eq 0 ]; then
+      echo "SQL script executed successfully."
+    else
+      echo "Failed to execute SQL script."
+      exit 1
+    fi
+
+  # 创建文件
+  touch "$FILE_PATH"
 fi
 
 # 保持 MySQL 服务运行
