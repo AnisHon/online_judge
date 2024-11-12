@@ -4,6 +4,7 @@ import com.anishan.problem.domain.entity.OjProblemCase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 

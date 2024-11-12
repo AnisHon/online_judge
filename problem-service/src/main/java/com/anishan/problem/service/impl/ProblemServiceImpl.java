@@ -152,6 +152,11 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private boolean doAddChoiceFillAnswers(List<ChoiceFillAnswersDto> dtoAnswers, Long problemId) {
         List<ChoiceFillAnswers> answers =
                 BeanUtil.copyToList(dtoAnswers, ChoiceFillAnswers.class);
+
+        answers.forEach(x -> {
+            ThrowUtil.runtime(x.getBlankIndex() == null, "索引不能为空");
+        });
+
         answers.forEach(x -> x.setProblemId(problemId));
         return choiceFillAnswersService.saveBatch(answers);
     }
