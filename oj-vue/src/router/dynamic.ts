@@ -216,7 +216,6 @@ const addAdditional =  (router: Router) => {
         if (router.hasRoute(v.meta.parent)) {
             // @ts-ignore
             router.addRoute(v.meta.parent, v)
-
         }
     })
 }

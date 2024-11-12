@@ -21,8 +21,8 @@
     </div>
     <div class="tags">
       <el-space>
-        <el-tag>
-          {{ problem?.problem.source }}
+        <el-tag v-if="problem.problem && problem.problem.source">
+          {{ problem.problem.source }}
         </el-tag>
       </el-space>
     </div>

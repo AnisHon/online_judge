@@ -3,6 +3,7 @@ package com.anishan.api.config;
 import com.anishan.api.filter.UserAuthenticationFilter;
 import com.anishan.api.handler.AccessDeniedHandlerImpl;
 import com.anishan.api.handler.AuthenticationEntryPointImpl;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -43,7 +45,7 @@ public class SecurityConfig {
 
 
     @Bean
-//    @ConditionalOnBean(UserDetailsService.class)
+    @ConditionalOnBean(UserDetailsService.class)
     public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
@@ -68,7 +70,10 @@ public class SecurityConfig {
                 .exceptionHandling(conf -> {
                     conf.accessDeniedHandler(new AccessDeniedHandlerImpl());
                     conf.authenticationEntryPoint(new AuthenticationEntryPointImpl());
+
                 }).build();
+
+
     }
 
 

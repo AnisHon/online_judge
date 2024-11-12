@@ -17,7 +17,7 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list &
     apt install -y \
     gcc \
     g++ \
-    python3 \
+    python3.12 \
     openjdk-17-jdk \
     golang \
     curl && \

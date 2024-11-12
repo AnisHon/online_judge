@@ -19,7 +19,7 @@ public class AccessDeniedHandlerImpl implements AccessDeniedHandler {
             HttpServletRequest request,
             HttpServletResponse response,
             AccessDeniedException accessDeniedException
-    ) throws IOException, ServletException {
+    ) throws IOException {
         response.setStatus(HttpStatus.SC_FORBIDDEN);
         response.setContentType("application/json");
 

@@ -141,16 +141,16 @@ run:
 ---
 language: Python3
 src_path: main.py
-exe_path: __pycache__/main.cpython-37.pyc
+exe_path: __pycache__/main.cpython-312.pyc
 compile:
   env: python3
-  command: /usr/bin/python3.7 -m py_compile /w/{src_path}
+  command: /usr/bin/python3 -m py_compile /w/{src_path}
   maxCpuTime: 5s
   maxRealTime: 10s
   maxMemory: 256mb
 run:
   env: python3
-  command: /usr/bin/python3.7 /w/{exe_path}
+  command: /usr/bin/python3 /w/{exe_path}
 
 ---
 language: PyPy2

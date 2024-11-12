@@ -76,6 +76,8 @@ services:
       context: judge-server
       dockerfile: Dockerfile
     container_name: judge-server
+    ports:
+      - "5050:5050"
     depends_on:
       - oj-nacos
       - oj-redis

@@ -21,13 +21,10 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
     ) throws IOException {
 
         R<String> rest;
-        if (authException instanceof IllegalTokenException) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            rest = R.unauthorized(authException.getMessage());
-        } else {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            rest = R.forbidden();
-        }
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        rest = R.unauthorized(authException.getMessage());
+
 
         new ObjectMapper().writeValue(response.getWriter(), rest);
 

@@ -22,7 +22,13 @@ const error401 = () => {
     token.clearToken();
     ElMessage.warning("令牌过期，请重新登录");
     router.replace({name: 'login'});
+};
 
+const error403 = () => {
+    const token = useToken();
+    token.clearToken();
+    ElMessage.error("拒绝访问");
+    router.replace({name: '403'});
 };
 
 const service = axios.create({
@@ -49,7 +55,11 @@ service.interceptors.response.use(
         if (response.status === 200) {
             return response.data;
         }
-        ElMessage.error(response.data.code + ":" + response.data.message);
+        if (response.status === 403) {
+            error403();
+        } else {
+            ElMessage.error(response.data.code + ":" + response.data.message);
+        }
         return Promise.reject(new Error(response.data.message));
     },
     error => {

@@ -1,8 +1,7 @@
-import {type AjaxResult, get, post} from '@/utils/http'
+import {get, post} from '@/utils/http'
 import {type LoginUser} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
 import router from '@/router'
-import {addDynamics} from "@/router/dynamic";
 import {useMenuStore} from "@/stores/useMenuStore";
 
 export interface LoginForm {
@@ -54,11 +53,7 @@ async function getMe(): Promise<LoginUser> {
 }
 
 const toHome = () => {
-    const menu = useMenuStore();
-    menu.getDynamicRouters().then((data) => {
-        addDynamics(data, router)
-        router.replace({name: "home"});
-    });
+    router.replace({name: "home"});
 }
 
 async function login(data: LoginForm) {
@@ -103,7 +98,7 @@ async function resetPassword(data: {code: string, password: string}) {
 }
 
 async function logout() {
-    get("/user-api/auth/logout");
+    await get("/user-api/auth/logout");
     // const router = useRouter();
 
 
