@@ -47,17 +47,16 @@ public class JudgeImpl implements Judge {
 
         maxTime = Math.min(maxTime, languageConfig.getMaxCpuTime());
         maxMemory = Math.min(maxMemory, languageConfig.getMaxMemory());
-        LanguageConfig languageConfigByName = languageConfigLoader.getLanguageConfigByName("C++");
         JSONArray resultNode = sandboxRun.testCase(
-                JudgeUtils.translateCommandline(languageConfigByName.getRunCommand()),
-                languageConfigByName.getRunEnvs(),
+                JudgeUtils.translateCommandline(languageConfig.getRunCommand()),
+                languageConfig.getRunEnvs(),
                 null,
                 input,
                 maxTime,
                 maxMemory,
                 1024L * 200L,
                 maxStack,
-                languageConfigByName.getExeName(),
+                languageConfig.getExeName(),
                 fileId,
                 null,
                 false,

@@ -5,7 +5,7 @@ import type {PagedResponse, PagedType} from "@/api/pagedType";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
 import {add, remove, update} from "@/utils/simpleCRUD";
-import {saveUserAnswer} from "@/api/problem/judge";
+import {type LogSubmit, saveUserAnswer} from "@/api/problem/judge";
 
 
 // 1 OJ, 2 FILL, 3 CHOICE
@@ -277,6 +277,11 @@ async function getDetailProblem(id: number): Promise<ProblemDetailView> {
     return <ProblemDetailView>data
 }
 
+const recentSubmit = async (problemId: number) => {
+    const {data} = await get<LogSubmit[], number>("/problem-api/log/recent-submit/", problemId);
+    return data
+}
+
 const debouncedGetDetailProblem = (success: successCallback<ProblemDetailView>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce((x) => {
@@ -305,6 +310,7 @@ export {
     debouncedUpdateProblem,
     debouncedAddProblem,
     debouncedGetDetailProblem,
+    recentSubmit,
     dict
 
 }

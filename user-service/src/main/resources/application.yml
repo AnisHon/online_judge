@@ -2,7 +2,6 @@ spring:
   config:
     name: user-service
 
-
 oj:
   db:
     database: db_user

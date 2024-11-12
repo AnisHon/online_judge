@@ -92,7 +92,8 @@ public class RecordController {
 
         Records records = recordsService.getOne(new LambdaQueryWrapper<Records>()
                 .eq(Records::getUserId, userId)
-                .eq(Records::getContestId, userAnswerRequest.getContestId())
+                .eq(userAnswerRequest.getContestId() != null, Records::getContestId, userAnswerRequest.getContestId())
+                .isNull(userAnswerRequest.getContestId() == null, Records::getContestId)
                 .eq(Records::getProblemId, userAnswerRequest.getProblemId())
         );
 

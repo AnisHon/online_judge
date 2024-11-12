@@ -9,12 +9,14 @@ import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.problem.service.SubmitLogService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Api("内部接口，记录提交的")
@@ -61,12 +63,20 @@ public class SubmitLogController {
         return R.success(log);
     }
 
-    @GetMapping("/recent-submit/{id}")
+    @GetMapping("/recent-submit/{problemId}")
     @ApiOperation("最近提交记录")
-    public R<List<SubmitLogVo>> recentSubmit(@PathVariable("id") Long id, @RequestHeader("user-id") Long userId) {
-        List<SubmitLog> list = submitLogService.list(new LambdaQueryWrapper<SubmitLog>()
+    public R<List<SubmitLogVo>> recentSubmit(
+            @NotNull @PathVariable("problemId") Long problemId,
+            @RequestHeader("user-id") Long userId
+    ) {
+
+
+        Page<SubmitLog> page = Page.of(1, 15);
+
+        List<SubmitLog> list = submitLogService.list(page, new LambdaQueryWrapper<SubmitLog>()
                 .eq(SubmitLog::getUserId, userId)
-                .eq(SubmitLog::getProblemId, id)
+                .eq(SubmitLog::getProblemId, problemId)
+                .orderByDesc(SubmitLog::getSubmitTime)
         );
         List<SubmitLogVo> submitLogVos = BeanUtil.copyToList(list, SubmitLogVo.class);
         return R.success(submitLogVos);

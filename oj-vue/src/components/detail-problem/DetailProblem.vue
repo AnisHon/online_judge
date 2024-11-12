@@ -122,8 +122,8 @@
               </el-tooltip>
             </template>
           </el-table-column >
-          <el-table-column prop="time" label="时间"/>
-          <el-table-column prop="memory" label="内存"/>
+          <el-table-column prop="time" label="时间(ms)"/>
+          <el-table-column prop="memory" label="内存(MiB)"/>
         </el-table>
 
         <div v-if="!!errMsg">
@@ -137,7 +137,13 @@
 </template>
 
 <script setup lang="ts">
-import {debouncedGetDetailProblem, type OjProblemView, type ProblemDetailView, ProblemType,} from "@/api/problem";
+import {
+  debouncedGetDetailProblem,
+  type OjProblemView,
+  type ProblemDetailView,
+  ProblemType,
+  recentSubmit,
+} from "@/api/problem";
 import {computed, onMounted, onUnmounted, reactive, type Ref, ref, watch} from "vue";
 import EnhancedCodeEditor from '@/components/EnhancedCodeEdior/index.vue'
 import {problemTypeToString} from "@/utils/problem";
@@ -377,12 +383,16 @@ const {loading: loadingProblem, isLoading: problemIsLoading, get} =
 
     })
 
+
+
 const getProblem = async () => {
   loadingProblem()
 
   // 取题目
   get(problemId)
 
+  const logs = await recentSubmit(problemId)
+  submitLogs.push(...logs);
 
 }
 
