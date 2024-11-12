@@ -101,7 +101,7 @@ CREATE TABLE choice_fill_answers (
     problem_id bigint(20)       not null                comment '题目id',
     answer_text text            default null            comment '选项或填空答案',
     is_correct  bool            default false           comment '是否为正确答案（选择题专用）默认false',
-    score       decimal(2, 2)   default 0 not null      comment '分数',
+    score       decimal(3, 2)   default 0 not null      comment '分数',
     blank_index int             null                    comment '填空题空格索引, 选择题ABCD索引 1表示A',
     del_flag    boolean         default 0 not null      comment '删除标记',
     create_time datetime        default now() not null ,
