@@ -1,7 +1,6 @@
 package com.anishan.judge.service;
 
-import com.anishan.api.client.judgeserver.domain.JudgeMessage;
-import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
+
 import com.anishan.judge.config.LanguageConfigLoader;
 import com.anishan.judge.domain.entity.LanguageConfig;
 import lombok.SneakyThrows;
@@ -9,8 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.List;
 
 @SpringBootTest
 public class TestT {

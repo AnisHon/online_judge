@@ -1,7 +1,6 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.anishan.problem.domain.entity.OjProblemCase;

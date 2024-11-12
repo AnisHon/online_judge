@@ -23,7 +23,6 @@ import java.util.Objects;
 public class JudgeImpl implements Judge {
 
     private final SandboxRun sandboxRun;
-    private final LanguageConfigLoader languageConfigLoader;
     private final ObjectMapper objectMapper;
 
     /**

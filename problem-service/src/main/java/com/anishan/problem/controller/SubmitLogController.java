@@ -1,7 +1,6 @@
 package com.anishan.problem.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.log.Log;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.commons.domain.R;
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;

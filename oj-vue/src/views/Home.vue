@@ -53,7 +53,6 @@
 import CustomCard from "@/components/CustomCard/CustomCard.vue";
 import {rank, type UserView} from "@/api/user";
 import {ref} from "vue";
-import {useDark} from "@vueuse/core";
 import {useRouter} from "vue-router";
 import {type ProblemView, recentProblem} from "@/api/problem";
 import {problemTypeToString} from "@/utils/problem";
