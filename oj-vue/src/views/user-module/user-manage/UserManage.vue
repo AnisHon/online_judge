@@ -127,7 +127,7 @@
               <el-dropdown-menu>
                 <div v-has="['user:user:edit']" >
                   <el-dropdown-item command="handleResetPass" icon="Lock"
-                  >重制密码</el-dropdown-item>
+                  >重置密码</el-dropdown-item>
                 </div>
 
               </el-dropdown-menu>

@@ -78,7 +78,7 @@
 
             <el-col :span="24">
               <el-form-item label="提示" prop="problem.hint">
-                <el-input type="textarea" v-model="problem.problem.hint" placeholder="题目描述"/>
+                <el-input type="textarea" v-model="problem.problem.hint" placeholder="提示"/>
               </el-form-item>
             </el-col>
 
