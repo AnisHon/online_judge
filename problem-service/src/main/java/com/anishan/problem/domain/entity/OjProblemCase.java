@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * OJ判题测试用例
@@ -13,6 +14,7 @@ import lombok.Data;
  */
 @TableName(value ="oj_problem_case")
 @Data
+@Accessors(chain = true)
 public class OjProblemCase implements Serializable {
     /**
      * 主键id

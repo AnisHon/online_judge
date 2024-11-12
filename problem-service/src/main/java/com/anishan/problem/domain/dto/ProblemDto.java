@@ -3,6 +3,7 @@ package com.anishan.problem.domain.dto;
 import com.anishan.commons.e.ProblemAuth;
 import com.anishan.commons.e.ProblemType;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 
 /**
@@ -11,6 +12,7 @@ import lombok.Data;
  */
 
 @Data
+@Accessors(chain = true)
 public class ProblemDto {
     /**
      * 主键

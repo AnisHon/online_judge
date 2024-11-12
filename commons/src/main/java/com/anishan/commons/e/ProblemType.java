@@ -16,6 +16,8 @@ public enum ProblemType implements IEnum<Integer>, Enumerator<Integer> {
         this.value = value;
     }
 
+
+
     @Override
     public Integer value() {
         return this.value;

@@ -4,6 +4,7 @@ import com.anishan.commons.e.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
  */
 @Data
 @ApiModel("填空题选择题答案")
+@Accessors(chain = true)
 public class ChoiceFillAnswersDto implements Serializable {
 
     @NotNull(groups = ValidationGroup.Update.class)

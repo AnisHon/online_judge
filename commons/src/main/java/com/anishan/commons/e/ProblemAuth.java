@@ -1,5 +1,7 @@
 package com.anishan.commons.e;
 
+import cn.hutool.core.thread.ThreadUtil;
+import com.anishan.commons.util.ThrowUtil;
 import com.baomidou.mybatisplus.annotation.IEnum;
 
 public enum ProblemAuth implements Enumerator<Integer>, IEnum<Integer> {
@@ -21,4 +23,6 @@ public enum ProblemAuth implements Enumerator<Integer>, IEnum<Integer> {
     public Integer getValue() {
         return value;
     }
+
+
 }

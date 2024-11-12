@@ -4,12 +4,14 @@ import com.anishan.problem.domain.entity.OjProblemCase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.experimental.Accessors;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @Data
 @ApiModel("添加或更新问题")
+@Accessors(chain = true)
 public class DetailProblemDto {
     @ApiModelProperty("问题本体")
     private ProblemDto problem;

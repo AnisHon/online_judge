@@ -3,6 +3,7 @@ package com.anishan.problem.domain.dto;
 import com.anishan.commons.e.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
  */
 @TableName(value ="oj_problem")
 @Data
+@Accessors(chain = true)
 public class OjProblemDto {
     /**
      * 主键
