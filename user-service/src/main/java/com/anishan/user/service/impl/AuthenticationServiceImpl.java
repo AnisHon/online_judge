@@ -372,9 +372,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private List<Long> getRoleIdsByUserId(Long userId) {
+        // 只有启用后的角色才返回 0是启用
         return sysUserRoleService
                 .getRolesByUserId(userId)
                 .stream()
+                .filter(x -> x.getStatus() == 0)
                 .map(SysRole::getRoleId)
                 .collect(Collectors.toList());
     }
@@ -382,6 +384,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private List<MenuVo> useCache(List<Long> roleIds) {
         for (Long roleId : roleIds) {
             boolean exist = roleUtil.isExist(roleId);
+
             if (!exist) {
                 List<SysMenu> menus = sysRoleMenuService.getAuthorityMenu(List.of(roleId));
                 List<MenuVo> menuVos = BeanUtil.copyToList(menus, MenuVo.class);

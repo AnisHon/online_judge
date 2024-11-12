@@ -95,8 +95,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole>
     }
 
 
-
-
     @Override
     public boolean addRole(RoleDto roleDto) {
         SysRole sysRole = BeanUtil.copyProperties(roleDto, SysRole.class, "roleId");
