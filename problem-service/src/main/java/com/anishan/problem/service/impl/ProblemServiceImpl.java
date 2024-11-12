@@ -136,7 +136,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     private void doAddOjCases(DetailProblemDto problem, Long problemId) {
-        if (!CollectionUtil.isEmpty(problem.getCases())) {
+        if (CollectionUtil.isEmpty(problem.getCases())) {
             return;
         }
         List<OjProblemCase> entityCase =
