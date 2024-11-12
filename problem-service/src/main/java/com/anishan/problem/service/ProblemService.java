@@ -34,7 +34,7 @@ public interface ProblemService extends IService<Problem> {
 
     PagedResult<TaggedProblemVo> listTaggerProblems(PagedProblem pagedProblem);
 
-    boolean addProblem(DetailProblemDto problem);
+    Long addProblem(DetailProblemDto problem);
 
     boolean updateProblem(DetailProblemDto problem);
 

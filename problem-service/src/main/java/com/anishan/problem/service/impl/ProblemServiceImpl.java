@@ -135,9 +135,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
     }
 
-    private boolean doAddOjCases(DetailProblemDto problem, Long problemId) {
+    private void doAddOjCases(DetailProblemDto problem, Long problemId) {
         if (!CollectionUtil.isEmpty(problem.getCases())) {
-            return true;
+            return;
         }
         List<OjProblemCase> entityCase =
                 BeanUtil.copyToList(problem.getCases(), OjProblemCase.class);
@@ -146,7 +146,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
         boolean b = ojProblemCaseService.saveBatch(entityCase);
         ThrowUtil.runtime(!b, "OJ题目测试用例添加失败");
-        return b;
 
     }
 
@@ -157,41 +156,35 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         return choiceFillAnswersService.saveBatch(answers);
     }
 
-    private boolean doAddFillProblem(DetailProblemDto problem, Long problemId) {
+    private void doAddFillProblem(DetailProblemDto problem, Long problemId) {
         List<ChoiceFillAnswersDto> choices = problem.getChoices();
         boolean b = doAddChoiceFillAnswers(choices, problemId);
         ThrowUtil.runtime(!b, "填空答案添加失败");
 
-        return true;
     }
 
-    private boolean doAddChoiceProblem(DetailProblemDto problem, Long problemId) {
+    private void doAddChoiceProblem(DetailProblemDto problem, Long problemId) {
         List<ChoiceFillAnswersDto> choices = problem.getChoices();
         boolean b = doAddChoiceFillAnswers(choices, problemId);
         ThrowUtil.runtime(!b, "单选题答案添加失败");
 
-        return true;
     }
 
-    private boolean doAddMultiChoiceProblem(DetailProblemDto problem, Long problemId) {
+    private void doAddMultiChoiceProblem(DetailProblemDto problem, Long problemId) {
         List<ChoiceFillAnswersDto> choices = problem.getChoices();
         boolean b = doAddChoiceFillAnswers(choices, problemId);
         ThrowUtil.runtime(!b, "多选题答案添加失败");
 
-        return true;
     }
-    private boolean doAddProblem(Problem problem) {
+    private void doAddProblem(Problem problem) {
 
         boolean save = this.save(problem);
-        if (!save) {
-            throw new RuntimeException("添加失败");
-        }
-        return true;
+        ThrowUtil.runtime(!save, "题目添加失败");
     }
 
 
-    private boolean decidedAddProblem(DetailProblemDto problem) {
-        boolean result = false;
+    private Long decidedAddProblem(DetailProblemDto problem) {
+
 
         Problem entity = BeanUtil.copyProperties(problem.getProblem(), Problem.class);
 
@@ -199,35 +192,36 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             case OJ:
                 Long ojId = doAddOjProblem(problem);
                 entity.setOjId(ojId);
-                result = doAddProblem(entity);
-                result &= doAddOjCases(problem, entity.getProblemId());
+                doAddProblem(entity);
+                doAddOjCases(problem, entity.getProblemId());
                 break;
             case FILL:
                 doAddProblem(entity);
-                result = doAddFillProblem(problem, entity.getProblemId());
+                doAddFillProblem(problem, entity.getProblemId());
                 break;
             case CHOICE:
                 doAddProblem(entity);
-                result = doAddChoiceProblem(problem, entity.getProblemId());
+                doAddChoiceProblem(problem, entity.getProblemId());
                 break;
             case MULTI_CHOICE:
                 doAddProblem(entity);
-                result = doAddMultiChoiceProblem(problem, entity.getProblemId());
+                doAddMultiChoiceProblem(problem, entity.getProblemId());
                 break;
         }
 
-        return result;
+        return entity.getProblemId();
     }
 
 
     /**
      * 添加problem，开启了事务
+     *
      * @param problem 需要添加的problem，需要题目，测试用例，选项，答案
      * @return 返回是否添加成功
      */
     @Override
     @Transactional
-    public boolean addProblem(DetailProblemDto problem) {
+    public Long addProblem(DetailProblemDto problem) {
         return decidedAddProblem(problem);
     }
 

@@ -109,8 +109,8 @@ public class ProblemController {
     @PostMapping("/addProblem")
     @ApiOperation("添加题目")
     @PreAuthorize("hasAuthority('problem:problem:add')")
-    public R<Boolean> addProblem(@RequestBody @Validated(ValidationGroup.Insert.class) DetailProblemDto problem) {
-        boolean b = problemService.addProblem(problem);
+    public R<Long> addProblem(@RequestBody @Validated(ValidationGroup.Insert.class) DetailProblemDto problem) {
+        Long b = problemService.addProblem(problem);
         return R.success(b);
     }
 
