@@ -128,7 +128,7 @@
 
         <div v-if="!!errMsg">
           <h3>标准错误流输出</h3>
-          <p style="color: red; padding: 20px; font-size: 16px;white-space: pre-wrap;" v-text="errMsg"></p>
+          <p style="color: red; padding: 20px; font-size: 16px;white-space: pre-wrap; font-family: Inconsolata, Helvetica, sans-serif; " v-text="errMsg" ></p>
         </div>
       </template>
 

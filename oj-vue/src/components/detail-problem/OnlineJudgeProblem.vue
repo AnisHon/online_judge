@@ -39,12 +39,17 @@ const {problem} = defineProps<{problem: OjProblemView}>()
   display: flex;
   flex-direction: column;
 
+  p {
+    white-space: pre-wrap;
+  }
+
   .example_wrapper {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
   }
+
 
   .example {
     flex: 1;
