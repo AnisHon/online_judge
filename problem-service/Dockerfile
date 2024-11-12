@@ -16,4 +16,4 @@ WORKDIR /opt
 
 COPY target/problem-service-1.0.0-beta.jar /opt
 
-CMD ["sh", "-c",  "java -jar /opt/problem-service-1.0.0-beta.jar --spring.cloud.nacos.server-addr=${NACOS_URL} --oj.db.host=${DB_HOST} --spring.redis.host=${REDIS_HOST} --oj.redis.host=${REDIS_HOST} --spring.rabbitmq.host=${MQ_HOST} --spring.rabbitmq.virtual-host=${MQ_V_HOST} --spring.rabbitmq.username=${MQ_USERNAME} --spring.rabbitmq.password=${MQ_PASSWORD}"]
+CMD ["sh", "-c",  "java -jar /opt/problem-service-1.0.0-beta.jar --spring.cloud.nacos.server-addr=${NACOS_URL} --oj.db.host=${DB_HOST} --spring.redis.host=${REDIS_HOST} --oj.redis.host=${REDIS_HOST}  --oj.mq.host=${MQ_HOST} --oj.mq.v-host=${MQ_V_HOST} --oj.mq.username=${MQ_USERNAME} --oj.mq.password=${MQ_PASSWORD}"]

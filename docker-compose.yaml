@@ -40,6 +40,10 @@ services:
       - "15672:15672"
       - "5672:5672"
     restart: always
+    environment:
+      - RABBITMQ_DEFAULT_VHOST=/
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
     networks:
       - default
       - oj-net
@@ -160,7 +164,11 @@ services:
       context: oj-vue
       dockerfile: Dockerfile
     container_name: oj-vue
-
+    depends_on:
+      - gateway-server
+      - judge-server
+      - problem-service
+      - user-service
     restart: always
     ports:
       - "80:80"
