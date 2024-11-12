@@ -59,9 +59,9 @@
 
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="列表ID" align="center" prop="listId" v-if="columns[0].visible" />
-      <el-table-column label="列表名称" align="center" prop="listName" v-if="columns[1].visible" />
-      <el-table-column label="列表描述" align="center" prop="description" v-if="columns[2].visible" />
+      <el-table-column label="题单ID" align="center" prop="listId" v-if="columns[0].visible" />
+      <el-table-column label="题单名称" align="center" prop="listName" v-if="columns[1].visible" />
+      <el-table-column label="题单描述" align="center" prop="description" v-if="columns[2].visible" />
       <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[2].visible" />
       <el-table-column label="操作" align="center" list-name="small-padding fixed-width">
         <template v-slot:default="scope">
@@ -110,7 +110,7 @@
       <el-form :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="24">
-            <el-form-item label="列表名称" prop="listName">
+            <el-form-item label="题单名称" prop="listName">
               <el-input v-model="form.listName" placeholder="请输入班级名称"/>
             </el-form-item>
           </el-col>
@@ -173,14 +173,14 @@ const rules = ref();
 
 const open = ref(false);
 
-const {columns} = useColumn(['列表ID', '列表名称', '列表描述']);
+const {columns} = useColumn(['题单ID', '题单名称', '题单描述']);
 
 
 const isListEdit = computed(() => {
   return route.name === 'list-edit'
 })
 
-// 重制列表
+// 重制题单
 const resetQuery = () => {
   queryParams.listName = undefined;
   queryParams.listId = undefined;
@@ -207,7 +207,7 @@ const {loading, isLoading, get} = debouncedGetList(queryParams, (data) => {
 const tableList = reactive<ListView[]>([]);
 const total = ref<number>(0);
 
-// 获取列表
+// 获取题单
 const getList = () => {
   loading();
   get();
@@ -312,7 +312,7 @@ const handleCommand = (command: string, row: ListView) => {
 
 
 
-// created -> 获取列表
+// created -> 获取题单
 getList()
 
 
