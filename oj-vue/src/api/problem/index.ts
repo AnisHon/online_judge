@@ -217,10 +217,11 @@ async function removeProblems(ids: number | number[]) {
 }
 
 async function addProblems(form: ProblemForm) {
-    await add(form, "/problem-api/problem/addProblem");
+    const {data} = await post<ProblemForm, number>("/problem-api/problem/addProblem", form);
+    return data
 }
 
-const debouncedAddProblem = (form: ProblemForm, success: successCallback<void>) => {
+const debouncedAddProblem = (form: ProblemForm, success: successCallback<number>) => {
     const {loading, isLoading, finish} = useLoading()
     const add = debounce(() => {
         addProblems(form)

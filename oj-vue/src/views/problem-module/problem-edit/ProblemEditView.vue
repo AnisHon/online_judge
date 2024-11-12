@@ -269,7 +269,9 @@ const back = () => {
 }
 
 const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateProblem(problem, () => {})
-const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddProblem(problem, () => {})
+const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddProblem(problem, (id: number) => {
+  router.replace({name: "edit-problem", query: {id: id}});
+})
 
 const submit = () => {
   if (isAdd.value) {
