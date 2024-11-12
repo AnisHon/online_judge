@@ -4,8 +4,8 @@ import {ElMessage} from "element-plus";
 import type {PagedResponse, PagedType} from "@/api/pagedType";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
-import {add, remove, update} from "@/utils/simpleCRUD";
-import {type LogSubmit, saveUserAnswer} from "@/api/problem/judge";
+import {remove, update} from "@/utils/simpleCRUD";
+import {type LogSubmit} from "@/api/problem/judge";
 
 
 // 1 OJ, 2 FILL, 3 CHOICE
@@ -282,6 +282,11 @@ const recentSubmit = async (problemId: number) => {
     return data
 }
 
+const recentProblem = async (): Promise<ProblemView[]> => {
+    const {data} = await get<ProblemView[], number>("/problem-api/problem/recent-problems", 15);
+    return data
+}
+
 const debouncedGetDetailProblem = (success: successCallback<ProblemDetailView>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce((x) => {
@@ -311,6 +316,7 @@ export {
     debouncedAddProblem,
     debouncedGetDetailProblem,
     recentSubmit,
+    recentProblem,
     dict
 
 }

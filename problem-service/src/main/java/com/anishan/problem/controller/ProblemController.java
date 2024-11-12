@@ -1,17 +1,22 @@
 package com.anishan.problem.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.e.ProblemAuth;
 import com.anishan.commons.e.ValidationGroup;
 import com.anishan.problem.domain.dto.DetailProblemDto;
 import com.anishan.problem.domain.dto.PagedProblem;
 import com.anishan.problem.domain.dto.ProblemTagDto;
+import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.vo.AdminDetailProblem;
 import com.anishan.problem.domain.vo.DetailProblem;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.service.TagService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -34,6 +40,22 @@ public class ProblemController {
     private final ProblemService problemService;
     private final TagService tagService;
 
+    @GetMapping("/recent-problems/{limit}")
+    @ApiOperation("最近题目，最多50个")
+    public R<List<ProblemVo>> getRecentProblems(@NotNull @PathVariable Integer limit) {
+        limit = Math.min(limit, 50);
+
+        Page<Problem> page = Page.of(1, limit);
+        List<Problem> list = problemService.list(
+                page,
+                new LambdaQueryWrapper<Problem>()
+                        .eq(Problem::getAuth, ProblemAuth.Public)
+                        .orderByDesc(Problem::getCreateTime)
+        );
+
+        List<ProblemVo> problemVos = BeanUtil.copyToList(list, ProblemVo.class);
+        return R.success(problemVos);
+    }
 
     @PostMapping("/list")
     @ApiOperation("条件分页查询题目，这个接口不带标签，无法获取比赛题目")

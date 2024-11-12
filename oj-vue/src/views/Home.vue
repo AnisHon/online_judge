@@ -14,8 +14,21 @@
             <p v-for="i in 4" :key="i">item {{i}}</p>
           </custom-card>
 
-          <custom-card icon="Notification" title="公告">
-            <p v-for="i in 4" :key="i">item {{i}}</p>
+          <custom-card icon="Notification" title="最近题目" more @show-more="handleShowMore">
+            <el-table :show-header="false" :data="problems">
+              <el-table-column label="题目ID" prop="problemId"/>
+              <el-table-column prop="title" label="题目">
+                <template #default="scope">
+                  <el-link target="_blank" type="primary" @click="router.push({name: 'problem', params: {id: scope.row.problemId}})">{{ scope.row.title }}</el-link>
+                </template>
+              </el-table-column>
+              <el-table-column label="问题来源" align="center" prop="source" />
+              <el-table-column label="问题类型" align="center" prop="type" >
+                <template v-slot="scope">
+                  <el-tag type="primary">{{ problemTypeToString(scope.row.type) }}</el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
           </custom-card>
 
         </el-space>
@@ -41,14 +54,31 @@ import CustomCard from "@/components/CustomCard/CustomCard.vue";
 import {rank, type UserView} from "@/api/user";
 import {ref} from "vue";
 import {useDark} from "@vueuse/core";
+import {useRouter} from "vue-router";
+import {type ProblemView, recentProblem} from "@/api/problem";
+import {problemTypeToString} from "@/utils/problem";
 
 const ranks = ref<UserView[]>([])
+
+const problems = ref<ProblemView[]>([])
+
+const router = useRouter();
 
 // created
 rank(20)
     .then((data) => {
       ranks.value = data;
     })
+
+
+
+recentProblem().then((data) => {
+  problems.value = data;
+})
+
+const handleShowMore = () => {
+  router.push({name: "problems"})
+}
 
 </script>
 
