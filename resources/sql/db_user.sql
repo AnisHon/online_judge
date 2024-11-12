@@ -267,7 +267,7 @@ insert into sys_role_menu(role_id, menu_id)
         where
             menu_id not in (select menu_id from sys_role_menu where role_id = 2)
           and
-            menu_id not in (220, 221, 222, 223, 230, 231, 232, 233, 234, 235, 22, 23, 324, 325)
+            menu_id not in (220, 221, 222, 223, 230, 231, 233, 234, 235, 22, 23, 324, 325)
     );
 
 
