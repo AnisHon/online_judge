@@ -166,6 +166,7 @@ import FillBlankProblem from "./FillBlank.vue";
 import ChoiceChooseProblem from "./ChoiceChoose.vue";
 import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
 import __ from "lodash";
+import {letterToNumber} from "@/utils/stringUtils";
 
 const problem = ref<ProblemDetailView>();
 
@@ -381,6 +382,22 @@ const {loading: loadingProblem, isLoading: problemIsLoading, get} =
       // 判断是否修改过
       __.assign(judgeFormCopy, JSON.parse(JSON.stringify(judgeForm)));
 
+
+      judgeForm.answers.forEach(x => {
+
+        if (problem.value?.problemVo.type === ProblemType.FILL) {
+          if (problem.value.count !== judgeForm.answers.length) {
+            judgeForm.answers.length = <number>problem.value.count;
+          }
+        } else {
+          const find = problem.value?.choices?.find(item => letterToNumber(<string>item.order) === x.index);
+          if (!find) {
+            judgeForm.answers = [];
+            return;
+          }
+        }
+
+      })
     })
 
 
