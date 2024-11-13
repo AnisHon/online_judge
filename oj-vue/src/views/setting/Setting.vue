@@ -46,7 +46,7 @@
                   <el-input v-model="userForm.userName" disabled/>
                 </el-form-item>
                 <el-form-item label="用户昵称">
-                  <el-input v-model="userForm.userId" />
+                  <el-input v-model="userForm.nikeName" />
                 </el-form-item>
 
                 <el-form-item label="个性签名">
