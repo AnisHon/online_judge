@@ -2,6 +2,7 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.problem.domain.vo.OjProblemVo;
 import com.anishan.problem.domain.entity.OjProblemCase;
@@ -18,6 +19,7 @@ import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.mapper.ProblemMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
 import com.anishan.problem.service.*;
+import com.anishan.problem.util.ProblemUploadUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -26,7 +28,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -47,6 +53,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final TagService tagService;
     private final OjProblemCaseService ojProblemCaseService;
     private final ProblemProblemListMapper problemProblemListMapper;
+    private final ProblemUploadUtil problemUploadUtil;
 
 
     public Problem doGetProblem(Long id) {
@@ -153,9 +160,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         List<ChoiceFillAnswers> answers =
                 BeanUtil.copyToList(dtoAnswers, ChoiceFillAnswers.class);
 
-        answers.forEach(x -> {
-            ThrowUtil.runtime(x.getBlankIndex() == null, "索引不能为空");
-        });
+        answers.forEach(x -> ThrowUtil.runtime(x.getBlankIndex() == null, "索引不能为空"));
 
         answers.forEach(x -> x.setProblemId(problemId));
         return choiceFillAnswersService.saveBatch(answers);
@@ -448,6 +453,53 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         Page<ProblemVo> page = query.customPage();
         page = problemMapper.selectJoinPage(page, ProblemVo.class, wrapper);
         return PagedResult.build(page);
+    }
+
+    private List<DetailProblemDto> multiToObj(MultipartFile file) throws IOException {
+        InputStream inputStream = file.getInputStream();
+        return problemUploadUtil.jsonToProblem(inputStream);
+    }
+
+    @Override
+    @Transactional
+    public boolean saveProblems(List<DetailProblemDto> problems) {
+        boolean b = true;
+        for (DetailProblemDto problem : problems) {
+            Long id = addProblem(problem);
+            b &= id != null;
+        }
+        return b;
+    }
+
+    @Override
+    @Transactional
+    public boolean saveListProblems(List<List<DetailProblemDto>> problems) {
+        boolean b = true;
+        for (List<DetailProblemDto> problem : problems) {
+            b &= saveProblems(problem);
+        }
+        return b;
+    }
+
+    @Override
+    @Transactional
+    public boolean saveMultiParts(MultipartFile[] files) {
+        if (ArrayUtil.isEmpty(files)) {
+            return false;
+        }
+        List<List<DetailProblemDto>> objs = new ArrayList<>(files.length);
+        try {
+            for (MultipartFile file : files) {
+                List<DetailProblemDto> detailProblems = multiToObj(file);
+                if (!CollectionUtil.isEmpty(detailProblems)) {
+                    objs.add(detailProblems);
+                }
+            }
+        } catch (IOException io) {
+            throw new IllegalArgumentException("传输参数错误");
+        }
+
+        return saveListProblems(objs);
     }
 
 

@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -38,6 +39,15 @@ public class ProblemController {
 
     private final ProblemService problemService;
     private final TagService tagService;
+
+
+    @PostMapping("/upload")
+    @ApiOperation("上传题目")
+    @PreAuthorize("hasAuthority('problem:problem:add')")
+    public R<Boolean> upload(@RequestParam("file") MultipartFile[] files) {
+        boolean b = problemService.saveMultiParts(files);
+        return R.success(b);
+    }
 
     @GetMapping("/recent-problems/{limit}")
     @ApiOperation("最近题目，最多50个")

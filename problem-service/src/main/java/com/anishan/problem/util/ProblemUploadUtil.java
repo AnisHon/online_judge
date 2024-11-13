@@ -50,7 +50,7 @@ public class ProblemUploadUtil {
                 .setBlankIndex(blankIndex.asInt())
                 .setIsCorrect(isCorrect != null && isCorrect.asBoolean(false));
         ThrowUtil.illegalArgument(result.getIsCorrect() && score == null, "缺少分数");
-        result.setScore(new BigDecimal(result.getIsCorrect() ? score.asText("1"): "0"));
+        result.setScore(new BigDecimal(score.asText("1")));
 
         return result;
     }
@@ -69,8 +69,8 @@ public class ProblemUploadUtil {
 
 
         return new OjProblemCase()
-                .setInput(input.asText())
-                .setOutput(output.asText())
+                .setInput(input.asText().replace("\r\n", "\n"))
+                .setOutput(output.asText().replace("\r\n", "\n"))
                 .setScore(new BigDecimal(score == null ? "1" : score.asText("1")));
 
     }
@@ -149,7 +149,6 @@ public class ProblemUploadUtil {
         ThrowUtil.illegalArgument(result.getTimeLimit() <= 0, "实现限制不能为0或空");
         ThrowUtil.illegalArgument(result.getMemoryLimit() <= 0, "实现限制不能为0或空");
         ThrowUtil.illegalArgument(result.getStackLimit() <= 0, "实现限制不能为0或空");
-
         return result;
     }
 
@@ -188,9 +187,18 @@ public class ProblemUploadUtil {
         }
 
         ProblemDto problem = toProblem(node);
-        OjProblemDto ojProblemDto = toOjProblemDto(node);
-        List<OjProblemCase> cases = toCases(node.get("test_data"));
-        List<ChoiceFillAnswersDto> answers = toAnswers(node.get("answers"));
+
+
+        OjProblemDto ojProblemDto = null;
+        List<OjProblemCase> cases = null;
+        List<ChoiceFillAnswersDto> answers = null;
+
+        if (Objects.requireNonNull(problem.getType()) == ProblemType.OJ) {
+            ojProblemDto = toOjProblemDto(node);
+            cases = toCases(node.get("test_data"));
+        } else {
+            answers = toAnswers(node.get("answers"));
+        }
 
         return new DetailProblemDto()
                 .setProblem(problem)
@@ -210,14 +218,9 @@ public class ProblemUploadUtil {
         ArrayList<DetailProblemDto> problemList = new ArrayList<>();
 
         node.forEach(problem -> {
-            try {
-                DetailProblemDto detailProblem = toDetailProblem(problem);
-                if (detailProblem != null) {
-                    problemList.add(detailProblem);
-                }
-            } catch (Exception e) {
-                log.error("curr {}", problem.toString());
-                log.error(e.toString());
+            DetailProblemDto detailProblem = toDetailProblem(problem);
+            if (detailProblem != null) {
+                problemList.add(detailProblem);
             }
 
         });

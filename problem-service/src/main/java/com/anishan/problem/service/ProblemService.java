@@ -9,8 +9,10 @@ import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.DetailProblem;
 import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -41,4 +43,10 @@ public interface ProblemService extends IService<Problem> {
     AdminDetailProblem getAdminDetail(@NotNull Long id);
 
     PagedResult<ProblemVo> listProblemNotInList(@NotNull Long listId, PagedProblem query);
+
+    boolean saveProblems(List<DetailProblemDto> problems);
+
+    boolean saveListProblems(List<List<DetailProblemDto>> problems);
+
+    boolean saveMultiParts(MultipartFile[] files);
 }
