@@ -228,7 +228,6 @@ import {type UserView} from "@/api/user";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import IconLoader from "@/components/IconLoader/IconLoader.vue"
 import {ElDialog, ElMessageBox, type FormInstance} from "element-plus";
 import __ from "lodash";
 import {getRole, type RoleView} from "@/api/role";
