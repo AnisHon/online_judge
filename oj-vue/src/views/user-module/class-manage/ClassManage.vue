@@ -38,7 +38,7 @@
             icon="edit"
             size="small"
             :disabled="single"
-            @click="handleUpdate"
+            @click="handleUpdate()"
             v-has="'user:class:edit'"
         >修改</el-button>
       </el-col>
@@ -252,9 +252,14 @@ const handleAdd = () => {
   dialogState.value = 1;
   open.value = true;
 }
-const handleUpdate = (data: ClassView) => {
+const handleUpdate = (data: ClassView | void) => {
   open.value = true;
   dialogState.value = 2;
+  if (!data) {
+    const id = ids.value[0];
+    data = __.find(tableList, x => x.classId === id)
+  }
+
   __.assign(form, data)
 }
 

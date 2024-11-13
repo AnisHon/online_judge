@@ -11,17 +11,18 @@
             v-has="'problem:folder:add'"
         >新增</el-button>
       </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="success"
-            plain
-            icon="edit"
-            size="small"
-            :disabled="single"
-            @click="handleUpdate"
-            v-has="'problem:folder:update'"
-        >修改</el-button>
-      </el-col>
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--            v-if="false"-->
+<!--            type="success"-->
+<!--            plain-->
+<!--            icon="edit"-->
+<!--            size="small"-->
+<!--            :disabled="single"-->
+<!--            @click="handleUpdate()"-->
+<!--            v-has="'problem:folder:update'"-->
+<!--        >修改</el-button>-->
+<!--      </el-col>-->
       <el-col :span="1.5">
         <el-button
             type="danger"
@@ -289,9 +290,14 @@ const handleAdd = () => {
   open.value = true;
 }
 const handleUpdate = (data: TreedFolderView) => {
-  treeRef.value?.filter(data.folder.folderId)
+  treeRef.value?.filter(data?.folder.folderId)
   open.value = true;
   dialogState.value = 2;
+
+  // if (data instanceof Event) {
+  //   const id = ids.value[0];
+  //   data = __.find(tableList, x => x.folder.folderId === id)
+  // }
   __.assign(form, data.folder)
 }
 

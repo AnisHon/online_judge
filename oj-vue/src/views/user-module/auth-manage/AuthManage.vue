@@ -61,7 +61,7 @@
             icon="edit"
             size="small"
             :disabled="single"
-            @click="handleUpdate"
+            @click="handleUpdate()"
             v-has="'user:menu:edit'"
         >修改</el-button>
       </el-col>
@@ -345,9 +345,13 @@ const handleAdd = () => {
   dialogState.value = 1;
   open.value = true;
 }
-const handleUpdate = (data: MenuView) => {
+const handleUpdate = (data: MenuView | void) => {
   open.value = true;
   dialogState.value = 2;
+  if (!data) {
+    const id = ids.value[0];
+    data = __.find(tableList, x => x.menuId === id)
+  }
   __.assign(form, data)
 }
 

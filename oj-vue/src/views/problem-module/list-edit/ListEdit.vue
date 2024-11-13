@@ -39,7 +39,7 @@
             icon="edit"
             size="small"
             :disabled="single"
-            @click="handleUpdate"
+            @click="handleUpdate()"
             v-has="'problem:list:update'"
         >修改</el-button>
       </el-col>
@@ -278,9 +278,14 @@ const handleAdd = () => {
   dialogState.value = 1;
   open.value = true;
 }
-const handleUpdate = (data: ListView) => {
+const handleUpdate = (data: ListView | void) => {
   open.value = true;
   dialogState.value = 2;
+
+  if (!data) {
+    const id = ids.value[0];
+    data = __.find(tableList, x => x.listId === id)
+  }
   __.assign(form, data)
 }
 
