@@ -306,9 +306,6 @@ import type {FormInstance, FormRules} from "element-plus";
 import {resetPassword} from "@/api/auth/authentication";
 import {sendForgetEmailCode} from "@/api/auth/emailCode";
 import getCaptcha from "@/api/auth/captchaCode";
-import IconEmail from "@/assets/icons/IconEmail.vue";
-import {update} from "@/utils/simpleCRUD";
-import {async} from "fast-glob";
 
 const userStore = useUserStore();
 const router = useRouter();
