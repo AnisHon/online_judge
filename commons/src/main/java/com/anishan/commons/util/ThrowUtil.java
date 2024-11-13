@@ -12,7 +12,7 @@ public class ThrowUtil {
 
     public static void illegalArgument(boolean b, String msg) {
         if (b) {
-            throw new RuntimeException(msg);
+            throw new IllegalArgumentException(msg);
         }
     }
 

@@ -139,8 +139,8 @@ public class ProblemUploadUtil {
         OjProblemDto result = new OjProblemDto()
                 .setTimeLimit(timeLimit.asInt() * 1000) // ms
                 .setMemoryLimit(memoryLimit.asInt() * 1024) // kb
-                .setInput(timeLimit.asText())
-                .setOutput(timeLimit.asText())
+                .setInput(input.asText())
+                .setOutput(output.asText())
                 .setInputExample(sampleInput.asText())
                 .setOutputExample(sampleOutput.asText())
                 .setDifficulty(Difficulty.valueOf(difficulty == null ? Difficulty.Unknown.name() : difficulty.asText(Difficulty.Unknown.name())))

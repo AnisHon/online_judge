@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
@@ -41,6 +42,13 @@ public class GlobalExceptionAdvice {
     }
 
     @ResponseBody
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
+    public R<String> handleIllegalArgumentException(IllegalArgumentException e) {
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+    }
+
+    @ResponseBody
     @ExceptionHandler(IllegalTokenException.class)
     public R<String> handleIllegalTokenException(IllegalTokenException e) {
         return R.error(HttpStatus.HTTP_UNAUTHORIZED, e.getMessage());
@@ -60,18 +68,21 @@ public class GlobalExceptionAdvice {
 
     @ResponseBody
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED)
     public R<String> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         return R.error(HttpStatus.HTTP_BAD_METHOD, e.getMessage());
     }
 
     @ResponseBody
     @ExceptionHandler(NoHandlerFoundException.class)
+    @ResponseStatus(org.springframework.http.HttpStatus.NOT_FOUND)
     public R<String> handleNoHandlerFoundException(NoHandlerFoundException e) {
         return R.error(HttpStatus.HTTP_NOT_FOUND, e.getMessage());
     }
 
     @ResponseBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
     public R<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         String defaultMessage = Objects.requireNonNull(e.getFieldError()).getDefaultMessage();
         String field = e.getFieldError().getField();
@@ -80,6 +91,7 @@ public class GlobalExceptionAdvice {
 
     @ResponseBody
     @ExceptionHandler(DuplicateKeyException.class)
+    @ResponseStatus(org.springframework.http.HttpStatus.CONFLICT)
     public R<String> handleDuplicateKeyException(DuplicateKeyException e) {
         return R.error(HttpStatus.HTTP_CONFLICT, e.getMessage());
     }

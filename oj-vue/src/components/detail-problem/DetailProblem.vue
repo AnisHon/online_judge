@@ -70,7 +70,7 @@
               </div>
             </div>
 
-            <div class="result" v-if="isShowResult">
+            <div class="result" v-if="isShowResult && !isOjProblem">
               <ProblemResult :type="problemType" :result="judgeResult"/>
             </div>
 
