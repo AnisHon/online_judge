@@ -1,9 +1,10 @@
 import type {PagedResponse, PagedType, SortedPagedType,} from "@/api/pagedType";
 import {get, post, type successCallback} from "@/utils/http";
-import {debounce} from "lodash";
+import __, {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, simpleGet, update} from "@/utils/simpleCRUD";
 import type {Ref} from "vue";
+import {useUserStore} from "@/stores/useUserStore";
 
 enum UserStatus {
     NORMAL,
@@ -165,6 +166,16 @@ const debouncedGetRoleUser = (queryData: QueryRoleUser, success: successCallback
     }, 1000);
     return {loading, isLoading, get};
 }
+
+
+const changeSelf = async (form: UserForm) => {
+    await update(form, "/user-api/user/change-myself");
+    const userStore = useUserStore();
+    await userStore.loadUser()
+}
+
+const change = __.debounce(changeSelf, 1000);
+
 export type {
     QueryUser,
     UserAddForm,
@@ -187,6 +198,7 @@ export {
     debouncedReset,
     UserStatus,
     rank,
+    change,
     dict
 }
 

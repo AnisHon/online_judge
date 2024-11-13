@@ -24,7 +24,6 @@ public class SysUserDto {
     private Long role;
 
     @ApiModelProperty("用户奖励分数")
-    @NotNull
     private BigDecimal points;
 
     @Email(groups = ValidationGroup.Insert.class)
@@ -32,7 +31,6 @@ public class SysUserDto {
     private String email;
     @ApiModelProperty("昵称，不填写会自动生成")
     private String nikeName;
-    @NotNull
     @Length(min = 8, max = 16)
     @ApiModelProperty(value = "密码，明文", required = true)
     private String password;
