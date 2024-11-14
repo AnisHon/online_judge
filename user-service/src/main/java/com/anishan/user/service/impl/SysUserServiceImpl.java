@@ -24,7 +24,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.user.service.SysUserService;
 import com.anishan.user.mapper.SysUserMapper;
+import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -135,17 +137,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     @Override
     public boolean existsUsername(String username) {
-        long count = this.count(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getUserName, username)
-        );
+        long count = sysUserMapper.selectJoinCount(new MPJLambdaQueryWrapper<SysUser>()
+                .disableLogicDel()
+                .eq(SysUser::getUserName, username));
         return count > 0;
     }
 
     @Override
     public boolean existsEmail(String email) {
-        long count = this.count(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getEmail, email)
-        );
+        long count = sysUserMapper.selectJoinCount(new MPJLambdaQueryWrapper<SysUser>()
+                .disableLogicDel()
+                .eq(SysUser::getEmail, email));
         return count > 0;
     }
 

@@ -67,11 +67,11 @@ service.interceptors.response.use(
         if (error.status == 401) {
             error401();
         } else if (error.status == 400) {
-            ElMessage.error(error.message);
+            ElMessage.error(error.data.message);
         } else if (error.status == 404) {
             ElMessage.error("接口404 : " + error.config.url)
         } else {
-            ElMessage.error(error.message);
+            ElMessage.error(error.data.message);
         }
         return error;
     }

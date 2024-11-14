@@ -97,6 +97,7 @@ services:
       - MQ_V_HOST=/
       - MQ_CONCURRENCY=6
       - MQ_MAX_CONCURRENCY=12
+      - GIN_MODE=release
 
     networks:
       - default
@@ -173,6 +174,7 @@ services:
     ports:
       - "80:80"
     networks:
+      - default
       - oj-net
 
 networks:

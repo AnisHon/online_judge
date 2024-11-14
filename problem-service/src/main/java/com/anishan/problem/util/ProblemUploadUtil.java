@@ -145,7 +145,7 @@ public class ProblemUploadUtil {
                 .setInputExample(sampleInput.asText())
                 .setOutputExample(sampleOutput.asText())
                 .setDifficulty(Difficulty.valueOf(difficulty == null ? Difficulty.Unknown.name() : difficulty.asText(Difficulty.Unknown.name())))
-                .setStackLimit(stackLimit == null ? 128 : stackLimit.asInt(128));
+                .setStackLimit(stackLimit == null ? 128 : stackLimit.asInt(1-28));
 
         ThrowUtil.illegalArgument(result.getTimeLimit() <= 0, "实现限制不能为0或空");
         ThrowUtil.illegalArgument(result.getMemoryLimit() <= 0, "实现限制不能为0或空");
@@ -173,7 +173,7 @@ public class ProblemUploadUtil {
         problemDto
                 .setTitle(title.asText())
                 .setDescription(description.asText())
-                .setSource(source == null ? null : source.asText(null))
+                .setSource(source == null ? "共有题库" : source.asText("共有题库"))
                 .setHint(hint == null ? null : hint.asText(null))
                 .setAuth(ProblemAuth.valueOf(auth == null ? ProblemAuth.Public.name() : auth.asText(ProblemAuth.Public.name())))
                 .setType(ProblemType.valueOf(type == null ? ProblemType.OJ.name() : type.asText(ProblemType.OJ.name())));

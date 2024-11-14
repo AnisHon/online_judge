@@ -224,8 +224,8 @@ create table sys_user_role (
 -- ----------------------------
 -- 初始化-用户和角色关联表数据
 -- ----------------------------
-insert into sys_user_role values ('1', '1');
-insert into sys_user_role values ('2', '2');
+insert into sys_user_role values ('2', '1');
+insert into sys_user_role values ('1', '2');
 insert into sys_user_role values ('3', '3');
 insert into sys_user_role values ('4', '4');
 
