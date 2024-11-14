@@ -26,15 +26,16 @@
         problem_id,score,answer
     </sql>
     <select id="statistic" resultMap="statisticResultMap">
-        select
-            p.problem_id as problem_id, p.title as title,
-            sum(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS right_num,
-            sum(CASE WHEN status = 0 THEN 1 ELSE 0 END) AS wrong_num
-        from records r
-        right join problem p on p.problem_id = r.problem_id
-        where
-            contest_id = #{contestId}
-        group by r.problem_id
+        select p.problem_id              as problem_id,
+               p.title                   as title,
+               sum(IF(status = 1, 1, 0)) AS right_num,
+               sum(IF(status = 0 or ISNULL(status), 1, 0)) AS wrong_num
+        from contest c
+            right join problem_problem_list ppl on ppl.list_id = c.list_id
+            left join records r on r.problem_id = ppl.problem_id and r.contest_id = #{contestId}
+            left join problem p on p.problem_id = ppl.problem_id
+        where c.contest_id = #{contestId}
+        group by p.problem_id
 
     </select>
 </mapper>
