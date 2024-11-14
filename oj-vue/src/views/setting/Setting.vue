@@ -88,7 +88,7 @@
                       v-model="resetForm.password"
                       type="password"
                       autocomplete="off"
-                      placeholder="请输入邮箱"
+                      placeholder="请输入m密码"
                       prefix-icon="Lock"
                   />
                 </el-form-item>
@@ -98,7 +98,7 @@
                       v-model="resetForm.repeatPassword"
                       type="password"
                       autocomplete="off"
-                      placeholder="请输入密码"
+                      placeholder="请重复密码"
                       prefix-icon="Lock"
                   />
                 </el-form-item>
@@ -395,6 +395,7 @@ const doResetPassword = () => {
         isLoading.value = false
       })
 }
+
 
 const submitResetPassword = (formEl: FormInstance | undefined) => {
   if (!formEl) return

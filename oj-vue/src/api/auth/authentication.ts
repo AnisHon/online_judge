@@ -90,10 +90,12 @@ async function forgetPassword(data: ForgetPasswordForm) {
     }
 }
 
+
+
 async function resetPassword(data: {code: string, password: string}) {
     const param = {code: data.code, password: data.password};
     const {data: r} =
-        await post<typeof param, Boolean>('/user-api/auth/forget-pass', param);
+        await post<typeof param, Boolean>('/user-api/auth/reset-pass', param);
     return r;
 }
 
