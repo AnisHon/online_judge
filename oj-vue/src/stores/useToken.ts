@@ -11,11 +11,11 @@ export const useToken = defineStore('token', {
         }
     },
     actions: {
-        setToken(token_: string) {
+        async setToken(token_: string) {
             const user = useUserStore();
             this.token = token_;
 
-            user.loadUser();
+            await user.loadUser();
         },
 
         hasToken() {

@@ -61,7 +61,7 @@ async function login(data: LoginForm) {
     const tokenStore = useToken();
 
     if (success) {
-        tokenStore.setToken(token);
+        await tokenStore.setToken(token);
         toHome()
     } else {
         throw message;
