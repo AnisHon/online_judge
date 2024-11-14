@@ -87,8 +87,9 @@
               </el-select>
             </el-form-item>
           </el-col>
+
           <el-col :span="12">
-            <el-form-item label="题单ID" prop="icon">
+            <el-form-item label="题单ID" prop="icon" >
               <el-input-number
                   v-model="form.listId"
                   @click="openSelectList = true"
@@ -100,6 +101,11 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
+            <el-form-item>
+              <el-checkbox v-model="hasParentId">是否有父目录</el-checkbox>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24"  v-show="hasParentId">
             <el-form-item label="父ID" prop="icon">
               <el-tree
                   ref="treeRef"
@@ -152,7 +158,7 @@ import ListView from "@/components/ListView/ListView.vue";
 
 // 查询需要的表单数据
 
-
+const hasParentId = ref(true);
 const form = reactive<FolderForm>({
   folderId: undefined,
   folderName: '',
@@ -245,6 +251,17 @@ const handleSelectionChange = (selection: TreedFolderView[]) => {
 }
 
 
+const getIds = (folder: TreedFolderView, ids: number[] | undefined) => {
+  if (!ids) {
+    ids = []
+  }
+
+  ids.push(folder.folder.folderId);
+  if (!__.isEmpty(folder.children)) {
+    folder.children.forEach(x => getIds(x, ids));
+  }
+  return ids;
+}
 
 const handleDelete = (row: TreedFolderView | Event) => {
   if (row instanceof Event) {
@@ -256,12 +273,13 @@ const handleDelete = (row: TreedFolderView | Event) => {
           removeFolder(ids.value).then(getList);
         })
   } else {
-    ElMessageBox.confirm('是否确认删除名称为"' + row.folder.folderName + '"的数据项？', {
+    ElMessageBox.confirm('是否确认删除名称为"' + row.folder.folderName + '"的数据项目和其子数据项？？', {
       confirmButtonText: '确定',
       cancelButtonText: '取消'
     })
         .then(() => {
-          removeFolder(<number>row.id).then(getList);
+          const ids = getIds(row, undefined)
+          removeFolder(ids).then(getList);
         })
   }
 
@@ -304,7 +322,9 @@ const handleUpdate = (data: TreedFolderView) => {
 const submitForm = () => {
 
   const keys = treeRef.value?.getCheckedKeys();
-  if (keys?.length) {
+  if (!hasParentId) {
+    form.parentId = 0;
+  } else if (keys?.length) {
     form.parentId = <number>keys[0]
   } else {
     form.parentId = 0;
