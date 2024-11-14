@@ -346,6 +346,8 @@ const reset = () => {
   judgeForm.contestId = contestId;
   judgeForm.languageId = 1;
 
+  submitLogs.length = 0;
+
   isFullScreen.value = false;
 }
 
