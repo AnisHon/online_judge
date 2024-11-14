@@ -1,7 +1,6 @@
 <template>
   <el-form
       ref="formRef"
-      label-position="left"
       style="max-width: 600px"
       :model="forgetPasswordForm"
       status-icon
@@ -12,7 +11,7 @@
       <h1 style="margin: 0; color: #303133; text-align: center; width: 100%;">忘记密码</h1>
     </el-form-item>
 
-    <el-form-item label="用户名" prop="username">
+    <el-form-item prop="username">
       <el-input
           v-model="forgetPasswordForm.username"
           type="text"
@@ -22,7 +21,7 @@
       />
     </el-form-item>
 
-    <el-form-item label="密码" prop="password">
+    <el-form-item prop="password">
       <el-input
           v-model="forgetPasswordForm.password"
           type="password"
@@ -32,7 +31,7 @@
       />
     </el-form-item>
 
-    <el-form-item label="确认密码" prop="repeatPassword">
+    <el-form-item prop="repeatPassword">
       <el-input
           v-model="forgetPasswordForm.repeatPassword"
           type="password"
@@ -44,7 +43,7 @@
 
     <el-row justify="space-between" style="width: 100%;">
       <el-col :span="14" >
-        <el-form-item label="验证码" prop="captchaCode">
+        <el-form-item prop="captchaCode">
           <el-input
               v-model="forgetPasswordForm.captchaCode"
               type="text"
@@ -70,7 +69,7 @@
 
     <el-row justify="space-between" style="width: 100%;">
       <el-col :span="14" >
-        <el-form-item label="邮箱验证码" prop="emailCode">
+        <el-form-item prop="emailCode">
           <el-input
               v-model="forgetPasswordForm.emailCode"
               type="text"
@@ -117,6 +116,7 @@ import getCaptcha from '@/api/auth/captchaCode'
 import {forgetPassword} from "@/api/auth/authentication"
 import {sendForgetEmailCode} from "@/api/auth/emailCode";
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
+import router from "@/router";
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
@@ -186,9 +186,9 @@ const doResetPassword = () => {
   })
       .then(()  => {
         ElMessage.success("重设成功")
+        router.push({name: "login"})
       })
       .catch((msg) => {
-        console.log(msg)
         ElMessage.error(msg)
         refreshCaptchaCode()
       })
