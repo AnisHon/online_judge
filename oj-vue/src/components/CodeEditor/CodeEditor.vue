@@ -23,9 +23,9 @@ import "codemirror/mode/clike/clike.js"
 
 // theme
 
-import "codemirror/theme/dracula.css"
-import 'codemirror/theme/blackboard.css';
-import 'codemirror/theme/cobalt.css';
+// import "codemirror/theme/dracula.css"
+// import 'codemirror/theme/blackboard.css';
+// import 'codemirror/theme/cobalt.css';
 import 'codemirror/theme/eclipse.css';
 import 'codemirror/theme/material-darker.css';
 
@@ -144,7 +144,17 @@ defineExpose({code})
 
 </script>
 <style scoped>
+.CodeMirror,
 .cm-component {
   font-family: monospace;
 }
+
+
 </style>
+
+<style>
+.CodeMirror-scroll {
+  font-family: monospace !important;
+}
+</style>
+

@@ -385,7 +385,7 @@ const {loading: loadingProblem, isLoading: problemIsLoading, get} =
       __.assign(judgeFormCopy, JSON.parse(JSON.stringify(judgeForm)));
 
 
-      judgeForm.answers.forEach(x => {
+      judgeForm.answers?.forEach(x => {
 
         if (problem.value?.problemVo.type === ProblemType.FILL) {
           if (problem.value.count !== judgeForm.answers.length) {

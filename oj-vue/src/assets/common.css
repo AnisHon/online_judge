@@ -1,3 +1,7 @@
+@font-face {
+    font-family: "AdobeHeitiStd-Regular";
+    src: url("fonts/consolas/Consolas.ttf");
+}
 body {
     font: 14px/1.5 "Helvetica Neue",Helvetica,Arial,"Microsoft Yahei","Hiragino Sans GB","Heiti SC","WenQuanYi Micro Hei",sans-serif;
 }
