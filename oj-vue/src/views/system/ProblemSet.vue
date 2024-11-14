@@ -38,8 +38,9 @@
 <script setup lang="ts">
 import ProblemList from "@/components/problemset/ProblemList.vue";
 import {type ProblemParam, ProblemType} from "@/api/problem"
-import {reactive} from "vue";
+import {type Component, type ComponentInstance, inject, reactive} from "vue";
 import ProblemListForm from "@/components/problemset/ProblemListForm.vue";
+import {scrollTo} from "@/utils/scroll-to";
 
 
 const pageNav = reactive({
@@ -59,12 +60,10 @@ const pageNav = reactive({
   });
 
   const handleTotalPageChange = () => {
-    const page = currentPage.currentPage / pageNav.pageCount;
-    pageNav.pageCount = Math.ceil(pageNav.totalRecords / pageNav.pageSize);
-    pageNav.currentPage = page * pageNav.pageCount;
-
+    currentPage.currentPage = 1;
     currentPage.pageSize = pageNav.pageSize;
-    currentPage.currentPage = pageNav.currentPage
+    //@ts-ignore
+    scrollTo(0, 800, undefined, elMain?.elMainRef.value?.$el);
   }
 
 
@@ -75,8 +74,12 @@ const pageNav = reactive({
     currentPage.type = value.type
   }
 
+  const elMain = inject("elMain");
+
   const handlePageChange = (value: number) => {
     currentPage.currentPage = value
+    //@ts-ignore
+    scrollTo(0, 800, undefined, elMain?.elMainRef.value?.$el);
   }
 
   const handleLoadFinish = (currentPage: number, pageSize: number, totalRecords: number) => {

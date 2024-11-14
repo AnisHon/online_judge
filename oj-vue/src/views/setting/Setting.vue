@@ -46,7 +46,7 @@
                   <el-input v-model="userForm.userName" disabled/>
                 </el-form-item>
                 <el-form-item label="用户昵称">
-                  <el-input v-model="userForm.userId" />
+                  <el-input v-model="userForm.nikeName" />
                 </el-form-item>
 
                 <el-form-item label="个性签名">
@@ -54,7 +54,7 @@
                 </el-form-item>
 
                 <el-form-item>
-                  <el-button type="success">更改信息</el-button>
+                  <el-button type="success" @click="changeSelf">更改信息</el-button>
                 </el-form-item>
 
 
@@ -299,14 +299,13 @@
 import {type LoginUser, useUserStore} from "@/stores/useUserStore";
 import {computed, onMounted, reactive, ref} from "vue";
 import {useRouter} from "vue-router";
-import type {UserForm} from "@/api/user";
+import {change, type UserForm} from "@/api/user";
 import __ from "lodash";
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
 import type {FormInstance, FormRules} from "element-plus";
 import {resetPassword} from "@/api/auth/authentication";
 import {sendForgetEmailCode} from "@/api/auth/emailCode";
 import getCaptcha from "@/api/auth/captchaCode";
-import IconEmail from "@/assets/icons/IconEmail.vue";
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -320,13 +319,14 @@ const userForm = reactive<UserForm>({
 })
 
 const user = computed((): LoginUser => {
-  __.assign(userForm, userStore.user)
+
   return <LoginUser> userStore.user;
 })
 
 const goBack = () => {
   router.push({name: "home"});
 }
+
 
 
 const formRef = ref<FormInstance>()
@@ -431,9 +431,21 @@ const refreshCaptchaCode = async () => {
   resetForm.token = token
 }
 
+// 修改个人信息
+const changeSelf = () => {
+  change(userForm);
+}
+
 onMounted(() => {
   refreshCaptchaCode()
+  userStore.getUser().then((user) => {
+    __.assign(userForm, user);
+  })
+
+
 })
+
+
 
 // created
 userStore.loadUser();

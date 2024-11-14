@@ -1,7 +1,7 @@
 import type {MenuType} from "@/api/auth/menu";
 import {type Router} from "vue-router";
 
-const Layout = () => import("@/Layout.vue")
+const Layout = import("@/Layout.vue")
 const Teacher = () => import("@/views/teacher/Teacher.vue");
 const HomeworkManage = () => import("@/views/teacher/homework-manage/HomeworkManage.vue");
 const ContestManage = () => import("@/views/teacher/contest-manage/ContestManage.vue");

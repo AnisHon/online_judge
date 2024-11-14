@@ -69,6 +69,16 @@
             v-has="'problem:problem:remove'"
         >删除</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+            type="warning"
+            plain
+            icon="upload"
+            size="small"
+            @click="handleUpload"
+            v-has="'problem:problem:add'"
+        >上传</el-button>
+      </el-col>
       <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
     </el-row>
 
@@ -156,7 +166,32 @@
       </template>
     </el-dialog>
 
-
+    <el-dialog title="上传题目" v-model="openUpload" width="680px" append-to-body>
+      <el-upload
+          drag
+          ref="uploadRef"
+          action="/api/problem-api/problem/upload"
+          multiple
+          :on-error="uploadError"
+          :on-success="uploadSuccess"
+          accept="application/json"
+          :auto-upload="false"
+      >
+        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <div class="el-upload__text">
+          将文件拖到这里 <em>或点击选择文件</em>
+        </div>
+        <template #tip>
+          <div class="el-upload__tip">
+            json格式文件，必须符合网站文档格式，不要大于500kb
+          </div>
+        </template>
+      </el-upload>
+      <template #footer>
+        <el-button type="primary" @click="onHandleSubmit" :loading="isLoading">确 定</el-button>
+        <el-button @click="onUploadCancel">取 消</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -173,7 +208,7 @@ import {
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElMessageBox} from "element-plus";
+import {ElDialog, ElMessageBox, type UploadInstance} from "element-plus";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {
@@ -185,6 +220,9 @@ import {
 } from "@/api/problem/label";
 import __ from "lodash";
 import {useRoute, useRouter} from "vue-router";
+import {UploadFilled} from "@element-plus/icons-vue";
+import type {UploadAjaxError} from "element-plus/es/components/upload/src/ajax";
+import type {AjaxResult} from "@/utils/http";
 
 const route = useRoute();
 const router = useRouter();
@@ -213,7 +251,7 @@ const resetQuery = () => {
   getList();
 };
 
-
+const uploadRef = ref<UploadInstance>();
 const showSearch = ref(true);
 
 const {loading, isLoading, get: getProblem} = debouncedGetProblem(queryParams, (data) => {
@@ -245,7 +283,51 @@ const handleSelectionChange = (selection: ProblemView[]) => {
   multiple.value = !selection.length;
 }
 
+// 上传对话框
+const openUpload = ref(false);
 
+// 上传按钮
+const handleUpload = () => {
+  openUpload.value = true;
+}
+
+// 提交上传
+
+const up = __.debounce(() => uploadRef.value?.submit(), 1000)
+
+const onHandleSubmit = () => {
+
+  isLoading.value = true;
+  up();
+}
+
+// 取消
+const onUploadCancel = () => {
+  uploadRef.value?.clearFiles();
+  openUpload.value = false;
+}
+
+// 上传成功
+const uploadSuccess = (resp: AjaxResult<boolean>) => {
+  uploadRef.value?.clearFiles();
+  isLoading.value = false;
+  getList();
+
+  if (resp.data) {
+    ElMessage.success("导入成功");
+  } else {
+    ElMessage.warning("部分导入失败");
+  }
+
+}
+
+
+
+const uploadError = (evt: UploadAjaxError) => {
+  isLoading.value = false;
+  const msg = JSON.parse(evt.message).message;
+  ElMessage.error(msg)
+}
 
 const handleDelete = (row: ProblemView | Event) => {
   if (row instanceof Event) {

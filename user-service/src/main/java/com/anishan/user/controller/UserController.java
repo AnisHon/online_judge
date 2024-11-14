@@ -7,6 +7,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.e.ValidationGroup;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
+import com.anishan.user.domain.dto.SysUserInfoDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.api.client.user.domain.vo.UserVo;
@@ -136,8 +137,16 @@ public class UserController {
     }
 
     // change myself
-    // todo
+    @PostMapping("/change-myself")
+    @ApiOperation("更改个人信息")
+    public R<Boolean> changeMyself(@RequestBody @Validated SysUserInfoDto sysUserDto, @RequestHeader("user-id") Long userId) {
+        SysUser sysUser = new SysUser();
+        sysUser.setUserId(userId);
+        sysUser.setNikeName(sysUserDto.getNikeName());
 
+        boolean b = sysUserService.updateById(sysUser);
+        return R.success(b);
+    }
 
 
 }

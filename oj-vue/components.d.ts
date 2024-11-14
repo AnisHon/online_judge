@@ -62,6 +62,7 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTransfer: typeof import('element-plus/es')['ElTransfer']
     ElTree: typeof import('element-plus/es')['ElTree']
+    ElUpload: typeof import('element-plus/es')['ElUpload']
     EnhancedCodeEdior: typeof import('./src/components/EnhancedCodeEdior/index.vue')['default']
     FillBlank: typeof import('./src/components/detail-problem/FillBlank.vue')['default']
     GeneralManageLayout: typeof import('./src/components/GeneralManageLayout/index.vue')['default']

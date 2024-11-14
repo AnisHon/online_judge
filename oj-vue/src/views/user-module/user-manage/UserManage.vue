@@ -69,7 +69,7 @@
             icon="edit"
             size="small"
             :disabled="single"
-            @click="handleUpdate"
+            @click="handleUpdate()"
             v-has="'user:user:edit'"
         >修改</el-button>
       </el-col>
@@ -228,7 +228,6 @@ import {type UserView} from "@/api/user";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import IconLoader from "@/components/IconLoader/IconLoader.vue"
 import {ElDialog, ElMessageBox, type FormInstance} from "element-plus";
 import __ from "lodash";
 import {getRole, type RoleView} from "@/api/role";
@@ -395,9 +394,14 @@ const handleAdd = () => {
   dialogState.value = 1;
   open.value = true;
 }
-const handleUpdate = (data: UserView) => {
+const handleUpdate = (data: UserView | void) => {
   open.value = true;
   dialogState.value = 2;
+  if (!data) {
+    const id = ids.value[0];
+    data = __.find(tableList, x => x.userId === id)
+  }
+
   __.assign(addForm, data)
   __.assign(updateForm, data)
 }

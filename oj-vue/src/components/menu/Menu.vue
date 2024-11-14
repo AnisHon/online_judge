@@ -25,7 +25,7 @@
     <el-menu-item index="contest" route="contest">
       <template #title><span>比赛</span></template>
     </el-menu-item>
-    <el-menu-item index="homework" route="homework">
+    <el-menu-item index="homework" route="homework" v-show="false">
       <template #title><span>作业</span></template>
     </el-menu-item>
     <el-menu-item index="check-in" route="check-in">
