@@ -111,7 +111,7 @@
         <el-row>
           <el-col :span="24">
             <el-form-item label="题单名称" prop="listName">
-              <el-input v-model="form.listName" placeholder="请输入班级名称"/>
+              <el-input v-model="form.listName" placeholder="请输入题单名称"/>
             </el-form-item>
           </el-col>
           <el-col :span="24">

@@ -246,7 +246,7 @@ const handleSelectionChange = (selection: TreedFolderView[]) => {
 
 
 
-const handleDelete = (row: FolderView | Event) => {
+const handleDelete = (row: TreedFolderView | Event) => {
   if (row instanceof Event) {
     ElMessageBox.confirm(`您是否要删除ID为${ids.value}的数据项？`, {
       confirmButtonText: '确定',
@@ -256,12 +256,12 @@ const handleDelete = (row: FolderView | Event) => {
           removeFolder(ids.value).then(getList);
         })
   } else {
-    ElMessageBox.confirm('是否确认删除名称为"' + row.folderName + '"的数据项？', {
+    ElMessageBox.confirm('是否确认删除名称为"' + row.folder.folderName + '"的数据项？', {
       confirmButtonText: '确定',
       cancelButtonText: '取消'
     })
         .then(() => {
-          removeFolder(row.folderId).then(getList);
+          removeFolder(<number>row.id).then(getList);
         })
   }
 
