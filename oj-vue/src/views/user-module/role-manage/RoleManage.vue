@@ -94,7 +94,7 @@
           {{ roleStatusText(scope.row.status) }}
         </template>
       </el-table-column>
-      <el-table-column label="标记" align="center" prop="mark" v-if="columns[3].visible" />
+      <el-table-column label="标记" align="center" prop="remark" v-if="columns[3].visible" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-space>

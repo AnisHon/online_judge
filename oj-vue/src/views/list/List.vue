@@ -27,7 +27,7 @@
           <el-table-column label="问题ID" align="center" prop="problemId"/>
           <el-table-column label="题目" prop="title">
             <template v-slot="scope">
-              <el-link type="primary" @click="router.push({name: 'problem', params: scope.row.problemId})">{{ scope.row.title }}</el-link>
+              <el-link type="primary"  @click="handleClickProblem(scope.row.problemId)">{{ scope.row.title }}</el-link>
             </template>
           </el-table-column>
           <el-table-column label="问题来源" align="center" prop="source" />
@@ -69,6 +69,13 @@ const orderedTableList = computed(() => {
 
 const isLoading = ref<boolean>(false);
 
+const handleClickProblem = (id: number) => {
+  const routeUrl = router.resolve({
+    name: "problem",
+    params: {id: id}
+  })
+  window.open(routeUrl.href, '_blank')
+}
 
 const handleNodeClick = (node: TreedFolderView) => {
   if (node.file) {

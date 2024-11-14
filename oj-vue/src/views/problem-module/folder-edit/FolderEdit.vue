@@ -133,20 +133,20 @@
 import {computed, reactive, ref} from "vue";
 import {
   debouncedAddFolder,
-  debouncedUpdateFolder,
   debouncedGetTreedFolder,
+  debouncedUpdateFolder,
   dict,
   type FolderForm,
   FolderType,
   type FolderView,
-  removeFolder, type TreedFolderView
+  removeFolder,
+  type TreedFolderView
 } from "@/api/folder";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import {ElDialog, ElMessageBox, type ElTree} from "element-plus";
 import __ from "lodash";
 import ListView from "@/components/ListView/ListView.vue";
-
 
 
 // 查询需要的表单数据
@@ -301,7 +301,7 @@ const submitForm = () => {
   if (keys?.length) {
     form.parentId = <number>keys[0]
   } else {
-    form.parentId = undefined;
+    form.parentId = 0;
   }
   if (dialogState.value === 1) {
     addLoading();

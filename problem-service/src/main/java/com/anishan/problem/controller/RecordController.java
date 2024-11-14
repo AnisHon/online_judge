@@ -8,6 +8,7 @@ import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.Records;
+import com.anishan.problem.domain.entity.UserContestRelation;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemStatistic;
 import com.anishan.problem.domain.vo.ScoredUser;
@@ -15,8 +16,11 @@ import com.anishan.problem.domain.vo.UserAnswer;
 import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.JudgeService;
 import com.anishan.problem.service.RecordsService;
+import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.github.yulichang.extension.mapping.mapper.MPJMappingWrapper;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +42,7 @@ public class RecordController {
     private final RecordsService recordsService;
     private final JudgeService judgeService;
     private final ContestService contestService;
+    private final UserContestService userContestService;
 
     @PostMapping("judge-save")
     @ApiOperation("内部接口，保存judge数据")
@@ -133,5 +138,16 @@ public class RecordController {
     public R<List<ProblemStatistic>> statistic(@PathVariable("contestId") Long contestId) {
         List<ProblemStatistic> statistic = recordsService.statistic(contestId);
         return R.success(statistic);
+    }
+
+    @GetMapping("/join-number/{contestId}")
+    @ApiOperation("参加的人数")
+    public R<Long> joinNumber(@PathVariable("contestId") Long contestId) {
+        long count = userContestService
+                .count(
+                        new LambdaQueryWrapper<UserContestRelation>()
+                                .eq(UserContestRelation::getContestId, contestId)
+                );
+        return R.success(count);
     }
 }

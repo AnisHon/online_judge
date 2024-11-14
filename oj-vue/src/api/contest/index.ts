@@ -81,6 +81,8 @@ const rank = async (id: number) => {
 
 const statistic = async (id: number) => {
     const {data} = await get<StatisticProblem[], number>("/problem-api/record/statistic", id);
+    const {data: count} = await get<number, number>("/problem-api/record/join-number", id);
+    data.forEach(x => x.wrongNum = count - x.rightNum);
     return data;
 }
 

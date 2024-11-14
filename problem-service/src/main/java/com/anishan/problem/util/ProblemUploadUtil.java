@@ -42,7 +42,8 @@ public class ProblemUploadUtil {
         JsonNode blankIndex = node.get("blank_index");
         JsonNode score = node.get("score");
 
-        ThrowUtil.illegalArgument(answerText == null, "文本不能为空");
+        ThrowUtil
+                .illegalArgument(answerText == null, "文本不能为空");
         ThrowUtil.illegalArgument(blankIndex == null, "索引不能为空");
 
         ChoiceFillAnswersDto result = new ChoiceFillAnswersDto()
