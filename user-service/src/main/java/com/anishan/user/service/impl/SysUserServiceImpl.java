@@ -204,8 +204,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     /**
      * 通过roleId分页查询user
-     * @param userQuery
-     * @return
      */
     @Override
     public PagedResult<UserVo> getUserByRoleId(PagedUserRoleQuery userQuery) {
