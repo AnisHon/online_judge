@@ -1,10 +1,12 @@
 package com.anishan.judge.mq;
 
+import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.problem.client.RecordClient;
 import com.anishan.api.client.problem.client.SubmitLogClient;
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
+import com.anishan.api.util.RedisJudgeTestUtil;
 import com.anishan.commons.e.JudgeResult;
 import com.anishan.judge.exception.SubmitError;
 import com.anishan.judge.exception.SystemError;
@@ -26,6 +28,7 @@ public class JudgeListener {
     private final JudgeService judgeService;
     private final SubmitLogClient submitLogClient;
     private final RecordClient recordClient;
+    private final RedisJudgeTestUtil redisJudgeTestUtil;
 
     @RabbitListener(
             bindings = @QueueBinding(
@@ -82,5 +85,34 @@ public class JudgeListener {
 
     }
 
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(name = "test-queue"),
+                    exchange = @Exchange(name = "judge-exchange"),
+                    key = "test"
+            )
+    )
+    public void test(JudgeMessage message) {
+
+        TestResult testResult;
+        message.setTimeLimit(9999999999999999L);
+        message.setMemoryLimit(9999999999999999L);
+        message.setStackLimit(999999999);
+        try {
+            testResult = judgeService.test(message);
+        } catch (SystemError | SubmitError e) {
+            log.error("判题机出错");
+            log.error(e.getMessage(), e);
+            return;
+        } catch (RuntimeException e) {
+            log.error("判题机收到非法语言：{}", e.getMessage());
+            return;
+        }
+
+        testResult.setUserId(message.getUserId());
+
+        redisJudgeTestUtil.save(testResult, 10);
+
+    }
 
 }

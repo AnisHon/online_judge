@@ -1,7 +1,9 @@
 package com.anishan.problem.controller;
 
+import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.commons.domain.R;
 import com.anishan.problem.domain.dto.JudgeRequest;
+import com.anishan.problem.domain.dto.TestRequest;
 import com.anishan.problem.domain.vo.ProblemJudgeResult;
 import com.anishan.problem.service.JudgeService;
 import io.swagger.annotations.ApiModel;
@@ -35,13 +37,18 @@ public class JudgeController {
 
     @PostMapping("/test")
     @ApiOperation("OJ代码测试运行")
-    public R<ProblemJudgeResult> test(@RequestBody JudgeRequest judgeRequest) {
-
-        ProblemJudgeResult judge = judgeService.codeTest(judgeRequest);
-        return R.success(judge);
-
+    public R<String> test(@RequestHeader("user-id") Long userId,@RequestBody TestRequest testRequest) {
+        judgeService.codeTest(userId, testRequest);
+        return R.success();
     }
 
+
+    @GetMapping("/test-status")
+    @ApiOperation("OJ代码测试结果查看")
+    public R<TestResult> testStatus(@RequestHeader("user-id") Long userId) {
+        TestResult testResult = judgeService.testStatus(userId);
+        return R.success(testResult);
+    }
 
 
 

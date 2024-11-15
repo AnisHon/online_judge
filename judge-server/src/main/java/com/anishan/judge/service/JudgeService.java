@@ -1,6 +1,7 @@
 package com.anishan.judge.service;
 
 import com.anishan.api.client.gojudge.domain.RunResult;
+import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.judge.domain.entity.LanguageConfig;
@@ -48,4 +49,6 @@ public interface JudgeService {
      * @throws SubmitError 提交失败
      */
     JudgeScore judge(JudgeMessage message) throws SystemError, SubmitError;
+
+    TestResult test(JudgeMessage message) throws SystemError, SubmitError;
 }

@@ -1,5 +1,7 @@
 package com.anishan.judge.util;
 
+import com.anishan.commons.e.JudgeResult;
+
 import java.util.*;
 
 /**
@@ -69,6 +71,28 @@ public class JudgeUtils {
         } else {
             return new ArrayList<>();
         }
+    }
+    public static JudgeResult judgeToStatus(Integer judge) {
+        JudgeResult result;
+        switch (judge) {
+
+            case 0: // AC
+                result = JudgeResult.Accept;
+                break;
+            case -1:
+                result = JudgeResult.WrongAnswer;
+                break;
+            case 1:
+                result = JudgeResult.TimeLimitExceeded;
+                break;
+            case 2:
+                result = JudgeResult.MemoryLimitExceeded;
+                break;
+            case 3:
+            default:
+                result = JudgeResult.RuntimeError;
+        }
+        return result;
     }
 
 }

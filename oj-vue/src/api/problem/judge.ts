@@ -1,4 +1,4 @@
-import {type failCallback, type finallyCallback, get, post, type successCallback} from "@/utils/http";
+import {type AjaxResult, type failCallback, type finallyCallback, get, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 
 enum OJResult {
@@ -59,6 +59,28 @@ interface LogSubmit {
     memory?: number;
     submitTime?: string;
     stderr?: string;
+}
+
+interface TestForm {
+    languageId?: number;
+    stdin?: string;
+    code?: string;
+}
+
+interface TestResult {
+    userId: 0
+    judgeResult: OJResult,
+    stderr?: string,
+    stdout?: string,
+}
+
+async function sendTest(testForm: TestForm): Promise<AjaxResult<void | AjaxResult<void>>> {
+    return await post<TestForm, void | AjaxResult<void>>("/problem-api/judge/test", testForm);
+}
+
+async function testStatus() {
+    const {data} = await get<TestResult, void>("/problem-api/judge/test-status");
+    return data;
 }
 
 async function fetchLog(id: number, success: successCallback<LogSubmit>) {
@@ -137,7 +159,9 @@ export type {
     Answer,
     JudgeForm,
     JudgeResponse,
-    LogSubmit
+    LogSubmit,
+    TestResult,
+    TestForm
 }
 
 export {
@@ -147,6 +171,8 @@ export {
     saveUserAnswer,
     debouncedSave,
     fetchLog,
+    sendTest,
+    testStatus,
     OJResult
 }
 

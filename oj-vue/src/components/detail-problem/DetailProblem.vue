@@ -133,6 +133,28 @@
       </template>
 
     </el-dialog>
+
+    <el-dialog v-model="openTestDialog" append-to-body width="1000px">
+      <template #header>
+        <h2>
+          测试运行
+        </h2>
+      </template>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <h3>标准输入</h3>
+          <el-input type="textarea" v-model="stdin" />
+        </el-col>
+        <el-col :span="12">
+          <h3>输出</h3>
+          <p style="white-space: pre; font-family: monospace" v-if="testResult?.stdout" v-text="testResult.stdout"></p>
+          <p style="white-space: pre; font-family: monospace" v-if="testResult?.stderr" v-text="testResult?.stderr"></p>
+        </el-col>
+      </el-row>
+      <div class="absoluteCenter" style="margin: 20px 0">
+        <el-button type="primary" style="width: 100px" :loading="isLoading" @click="handleTestSubmit" >提 交</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -157,7 +179,9 @@ import {
   type JudgeResponse,
   type LogSubmit,
   OJResult,
-  saveUserAnswer,
+  saveUserAnswer, sendTest,
+  type TestResult,
+  testStatus,
 } from "@/api/problem/judge";
 import {debounce} from "@/utils/debounce";
 import useLoading from "@/hooks/useLoading";
@@ -167,6 +191,8 @@ import ChoiceChooseProblem from "./ChoiceChoose.vue";
 import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
 import __ from "lodash";
 import {letterToNumber} from "@/utils/stringUtils";
+
+const openTestDialog = ref(false);
 
 const problem = ref<ProblemDetailView>();
 
@@ -268,8 +294,61 @@ const judgeFormCopy = reactive<JudgeForm>({
 const errMsg = ref<string>();
 const submitLogs = reactive<LogSubmit[]>([])
 
+const stdin = ref<string>("")
 
 const submitTest = () => {
+  openTestDialog.value = true;
+}
+
+const testResult = ref<TestResult>()
+
+const refreshState = () => {
+  const id = setInterval(async () => {
+    const data = await testStatus();
+    if (!data) {
+      clearInterval(id);
+      finish();
+      return;
+    }
+    switch (data.judgeResult) {
+      case OJResult.ACCEPT:
+        testResult.value = data;
+        break;
+      case OJResult.COMPILE_ERROR:
+        testResult.value = data;
+        break;
+      case OJResult.RUNTIME_ERROR:
+        testResult.value = data;
+        testResult.value.stderr = "发生运行异常";
+        break;
+      case OJResult.MEMORY_LIMIT_EXCEEDED:
+        testResult.value = data;
+        testResult.value.stderr = "内存超限";
+        break;
+      case OJResult.TIME_LIMIT_EXCEEDED:
+        testResult.value = data;
+        testResult.value.stderr = "时间超限";
+        break;
+    }
+    if (!data || data.judgeResult != OJResult.QUEUE) {
+      clearInterval(id);
+      finish();
+      return;
+    }
+  }, 1000)
+
+
+
+}
+
+const handleTestSubmit = async () => {
+  loading();
+  const {code} = await sendTest({code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value});
+  if (code == 200) {
+    refreshState();
+  } else {
+    finish();
+  }
 
 }
 

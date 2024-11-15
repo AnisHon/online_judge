@@ -24,4 +24,5 @@ public class JudgeMessage {
     private Integer stackLimit;
     private List<OjProblemCaseVo> cases;
     private BigDecimal score;
+    private String testInput;
 }

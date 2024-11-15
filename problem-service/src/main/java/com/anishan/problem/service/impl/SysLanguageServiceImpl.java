@@ -2,7 +2,6 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.map.MapUtil;
 import com.anishan.problem.domain.vo.SysLanguageVo;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.SysLanguage;
@@ -37,10 +36,21 @@ public class SysLanguageServiceImpl extends ServiceImpl<SysLanguageMapper, SysLa
     }
 
     @Override
-    public List<SysLanguageVo> listAll() {
-        List<SysLanguage> list = this.list();
-        return BeanUtil.copyToList(list, SysLanguageVo.class);
+    public String getNameById(Long languageId) {
+        doGetLanguage();
+        SysLanguageVo sysLanguageVo = languageCache.get(languageId);
+        if (sysLanguageVo != null) {
+            return sysLanguageVo.getLanguageName();
+        }
+        return null;
     }
+
+    @Override
+    public List<SysLanguageVo> listAll() {
+//        List<SysLanguage> list = this.list();
+        return doGetLanguage();
+    }
+
 }
 
 

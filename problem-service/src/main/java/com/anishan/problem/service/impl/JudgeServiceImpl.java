@@ -1,8 +1,12 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
+import com.anishan.api.util.RedisJudgeTestUtil;
+import com.anishan.commons.e.JudgeResult;
+import com.anishan.problem.domain.dto.TestRequest;
 import com.anishan.problem.domain.entity.OjProblemCase;
 import com.anishan.commons.e.ProblemType;
 import com.anishan.commons.util.ThrowUtil;
@@ -39,6 +43,8 @@ public class JudgeServiceImpl implements JudgeService {
     private final SysLanguageService sysLanguageService;
     private final RabbitTemplate rabbitTemplate;
     private final SubmitLogService submitLogService;
+    private final RedisJudgeTestUtil redisJudgeTestUtil;
+
 
 
     private ProblemJudgeResult judgeOj(Long userId, Problem problem, JudgeRequest judgeRequest) {
@@ -48,9 +54,8 @@ public class JudgeServiceImpl implements JudgeService {
         ThrowUtil.runtime(ojProblem == null, "题目被删除或不存在");
 
         // 获取语言
-        SysLanguage language = sysLanguageService.getById(judgeRequest.getLanguageId());
-        ThrowUtil.runtime(language == null, "不支持的语言");
-        String languageName = language.getLanguageName();
+        String languageName = sysLanguageService.getNameById(judgeRequest.getLanguageId());
+        ThrowUtil.runtime(languageName == null, "不支持的语言");
 
         // 获取所有的cases
         List<OjProblemCaseVo> cases = ojProblemCaseService.getByProblemId(problem.getProblemId());
@@ -74,7 +79,8 @@ public class JudgeServiceImpl implements JudgeService {
                 ojProblem.getMemoryLimit(),
                 ojProblem.getStackLimit(),
                 cases,
-                score
+                score,
+                null
         );
         // 入队
         rabbitTemplate.convertAndSend("judge-exchange", "judge", judgeMessage);
@@ -388,13 +394,34 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     @Override
-    public ProblemJudgeResult codeTest(JudgeRequest judgeRequest) {
-        Problem problem = problemService.getById(judgeRequest.getProblemId());
-        beforeJudgeCheck(problem, judgeRequest, null);
-        ThrowUtil.runtime(problem.getType() != ProblemType.OJ, "测试只支持OJ题目");
+    public void codeTest(Long userId, TestRequest testRequest) {
+
+        ThrowUtil.runtime(redisJudgeTestUtil.exists(userId), "请冷却后重试");
+
+        JudgeMessage judgeMessage = new JudgeMessage();
+        judgeMessage.setCode(testRequest.getCode());
+        Long languageId = testRequest.getLanguageId();
+        String nameById = sysLanguageService.getNameById(languageId);
+        judgeMessage.setLanguage(nameById);
+        judgeMessage.setUserId(userId);
+        judgeMessage.setTestInput(testRequest.getStdin());
+
+        rabbitTemplate.convertAndSend("judge-exchange", "test", judgeMessage);
 
 
-        return null;
+        TestResult testResult = new TestResult();
+
+
+
+
+        testResult.setUserId(userId);
+        testResult.setJudgeResult(JudgeResult.Queue);
+        redisJudgeTestUtil.save(testResult, 60);
+    }
+
+    @Override
+    public TestResult testStatus(Long userId) {
+        return redisJudgeTestUtil.get(userId);
     }
 
 

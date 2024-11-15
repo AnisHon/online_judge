@@ -88,7 +88,7 @@
                       v-model="resetForm.password"
                       type="password"
                       autocomplete="off"
-                      placeholder="请输入m密码"
+                      placeholder="请输入密码"
                       prefix-icon="Lock"
                   />
                 </el-form-item>

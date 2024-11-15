@@ -13,6 +13,8 @@ import java.util.List;
 */
 public interface SysLanguageService extends IService<SysLanguage> {
 
+    String getNameById(Long languageId);
+
     List<SysLanguageVo> listAll();
 
 }

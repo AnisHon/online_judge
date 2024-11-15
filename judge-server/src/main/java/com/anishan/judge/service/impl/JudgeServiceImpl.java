@@ -2,6 +2,7 @@ package com.anishan.judge.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.anishan.api.client.gojudge.domain.RunResult;
+import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
@@ -16,6 +17,7 @@ import com.anishan.judge.judge.Judge;
 import com.anishan.judge.judge.SandboxRun;
 import com.anishan.judge.service.JudgeService;
 import com.anishan.judge.util.Constants;
+import com.anishan.judge.util.JudgeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -56,28 +58,6 @@ public class JudgeServiceImpl implements JudgeService {
         sandboxRun.delFile(fileId);
     }
 
-    private JudgeResult judgeToStatus(Integer judge) {
-        JudgeResult result;
-        switch (judge) {
-
-            case 0: // AC
-                result = JudgeResult.Accept;
-                break;
-            case -1:
-                result = JudgeResult.WrongAnswer;
-                break;
-            case 1:
-                result = JudgeResult.TimeLimitExceeded;
-                break;
-            case 2:
-                result = JudgeResult.MemoryLimitExceeded;
-                break;
-            case 3:
-            default:
-                result = JudgeResult.RuntimeError;
-        }
-        return result;
-    }
 
     private JudgeScore judgeCases(JudgeScore judgeScore, List<OjProblemCaseVo> cases, List<RunResult> results) {
         Optional<RunResult> maxTime = results.stream().max((a, b) -> Math.toIntExact(a.getTime() - b.getTime()));
@@ -101,7 +81,7 @@ public class JudgeServiceImpl implements JudgeService {
             RunResult userAnswer = results.get(i);
 
             if (!Objects.equals(userAnswer.getStatus(), Constants.Judge.STATUS_ACCEPTED.getStatus()) && judgeScore.getResult() != JudgeResult.WrongAnswer) {
-                judgeScore.setResult(judgeToStatus(userAnswer.getStatus()));
+                judgeScore.setResult(JudgeUtils.judgeToStatus(userAnswer.getStatus()));
                 judgeScore.setErrorMessage(userAnswer.getFiles().getStderr());
                 continue;
             }
@@ -160,6 +140,22 @@ public class JudgeServiceImpl implements JudgeService {
         BigDecimal score = calcScore(message, judgeScore);
 
         return judgeScore.setScore(score);
+    }
+
+    @Override
+    public TestResult test(JudgeMessage message) throws SystemError, SubmitError {
+        String language = message.getLanguage();
+        LanguageConfig languageConfig = languageConfigLoader.getLanguageConfigByName(language);
+        String fileId = null;
+        try {
+            fileId = compile(languageConfig, message);
+        } catch (CompileError e) {
+            return TestResult.compileError(e.getStderr());
+        }
+        RunResult runResult = runCases(languageConfig, fileId, message, List.of(message.getTestInput())).get(0);
+
+
+        return TestResult.fromTestResul(runResult, JudgeUtils.judgeToStatus(runResult.getStatus()));
     }
 
     private static BigDecimal calcScore(JudgeMessage message, JudgeScore judgeScore) {

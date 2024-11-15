@@ -3,13 +3,13 @@
     <el-form :inline="true" ref="formRef" :model="codeForm">
       <el-form-item>
         <el-button-group>
-<!--          <el-button type="success" @click="emit('test')" :icon="IconBug" :loading="loading">-->
-<!--            测试-->
-<!--          </el-button>-->
+          <el-button type="success" @click="emit('test')" :icon="IconBug" :loading="loading">
+            测试
+          </el-button>
           <el-button type="primary" @click="emit('submit')" :icon="Upload" :loading="loading">
             提交
           </el-button>
-          <el-button type="success" @click="emit('open-log')" :icon="Upload">
+          <el-button type="warning" @click="emit('open-log')" :icon="Upload">
             提交记录
           </el-button>
         </el-button-group>
