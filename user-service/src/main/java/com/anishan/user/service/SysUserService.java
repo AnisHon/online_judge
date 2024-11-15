@@ -5,6 +5,7 @@ import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
+import com.anishan.user.domain.dto.SysUserInfoDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.api.domain.entity.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -53,4 +54,6 @@ public interface SysUserService extends IService<SysUser> {
     PagedResult<UserVo> getUserByRoleId(PagedUserRoleQuery userQuery);
 
     List<UserVo> rank(Integer limit);
+
+    boolean changeInfo(SysUserInfoDto sysUserDto, Long userId);
 }

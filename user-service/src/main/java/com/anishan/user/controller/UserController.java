@@ -140,11 +140,10 @@ public class UserController {
     @PostMapping("/change-myself")
     @ApiOperation("更改个人信息")
     public R<Boolean> changeMyself(@RequestBody @Validated SysUserInfoDto sysUserDto, @RequestHeader("user-id") Long userId) {
-        SysUser sysUser = new SysUser();
-        sysUser.setUserId(userId);
-        sysUser.setNikeName(sysUserDto.getNikeName());
 
-        boolean b = sysUserService.updateById(sysUser);
+
+        boolean b = sysUserService.changeInfo(sysUserDto, userId);
+
         return R.success(b);
     }
 

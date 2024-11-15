@@ -4,6 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.anishan.api.client.user.domain.vo.UserVo;
+import com.anishan.api.domain.LoginUser;
+import com.anishan.api.domain.entity.SysRole;
+import com.anishan.api.domain.entity.SysUser;
+import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -11,22 +16,22 @@ import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
+import com.anishan.user.domain.dto.SysUserInfoDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
-import com.anishan.api.client.user.domain.vo.UserVo;
+import com.anishan.user.mapper.SysUserMapper;
+import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysRoleService;
 import com.anishan.user.service.SysUserRoleService;
+import com.anishan.user.service.SysUserService;
 import com.anishan.user.util.UserUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.api.domain.entity.SysUser;
-import com.anishan.user.service.SysUserService;
-import com.anishan.user.mapper.SysUserMapper;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -55,7 +61,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     private final SysUserRoleService sysUserRoleService;
     private final PasswordEncoder passwordEncoder;
     private final UserConfig config;
-
+    private final SysMenuService sysMenuService;
+    private final AuthUtil authUtil;
 
 
     @Override
@@ -221,6 +228,55 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         return BeanUtil.copyToList(users, UserVo.class);
     }
 
+    public LoginUser getLoginUser(Long userId) {
+        SysUser sysUser = this.getById(userId);
+
+        return getLoginUser(sysUser, sysUserRoleService, sysMenuService);
+    }
+
+    @NotNull
+    public static LoginUser getLoginUser(SysUser sysUser, SysUserRoleService sysUserRoleService, SysMenuService sysMenuService) {
+        List<SysRole> roles;
+        List<String> authorities;
+        try {
+            roles = sysUserRoleService.getRolesByUserId(sysUser.getUserId());
+        } catch (Exception e) {
+            roles = new ArrayList<>();
+        }
+
+        try {
+            authorities = sysMenuService.getAuthorities_(roles);
+        } catch (Exception e) {
+            authorities = new ArrayList<>();
+        }
+
+        LoginUser loginUser = new LoginUser();
+        loginUser.setUser(sysUser);
+        loginUser.setRoles(roles);
+        loginUser.setAuths(authorities);
+
+        return loginUser;
+    }
+
+
+    private void refreshUser(Long userId) {
+        LoginUser loginUser = getLoginUser(userId);
+        authUtil.cacheLoginUser(loginUser);
+    }
+
+    @Override
+    public boolean changeInfo(SysUserInfoDto sysUserDto, Long userId) {
+        SysUser sysUser = new SysUser();
+        sysUser.setUserId(userId);
+        sysUser.setNikeName(sysUserDto.getNikeName());
+
+        boolean b = this.updateById(sysUser);
+
+        if (b)  {
+            refreshUser(userId);
+        }
+        return b;
+    }
 
 
     private SysUser doSaveUser(SysUserDto sysUserDto) {

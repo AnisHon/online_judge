@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="GatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+    <option name="ACTIVE_PROFILES" value="dev" />
     <module name="gateway-server" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.anishan.gateway.GatewayApplication" />
     <extension name="coverage">

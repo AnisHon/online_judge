@@ -1,7 +1,6 @@
 package com.anishan.user.service.impl;
 
 import com.anishan.api.domain.LoginUser;
-import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysUserRoleService;
@@ -11,9 +10,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
+
+import static com.anishan.user.service.impl.SysUserServiceImpl.getLoginUser;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -37,26 +36,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         Optional.ofNullable(sysUser).orElseThrow(() -> new UsernameNotFoundException(username));
 
-        List<SysRole> roles;
-        List<String> authorities;
-        try {
-            roles = sysUserRoleService.getRolesByUserId(sysUser.getUserId());
-        } catch (Exception e) {
-            roles = new ArrayList<>();
-        }
-
-        try {
-            authorities = sysMenuService.getAuthorities_(roles);
-        } catch (Exception e) {
-            authorities = new ArrayList<>();
-        }
-
-        LoginUser loginUser = new LoginUser();
-        loginUser.setUser(sysUser);
-        loginUser.setRoles(roles);
-        loginUser.setAuths(authorities);
-
-        return loginUser;
+        return getLoginUser(sysUser, sysUserRoleService, sysMenuService);
     }
 
     @Override
