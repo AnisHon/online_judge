@@ -10,7 +10,7 @@
             row-class-name="problem-row"
             highlight-current-row
         >
-          <el-table-column width="50" label="#" prop="problemOrder"/>
+          <el-table-column width="50" type="index" label="#"/>
           <el-table-column label="题目" prop="title"/>
           <el-table-column label="分数" prop="score"/>
         </el-table>
