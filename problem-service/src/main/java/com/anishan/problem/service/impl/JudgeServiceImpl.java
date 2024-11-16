@@ -329,7 +329,9 @@ public class JudgeServiceImpl implements JudgeService {
             return;
         }
         boolean joined = contestService.isUserJoined(judgeRequest.getContestId(), userId);
+        boolean isEnabled = contestService.isContestEnable(judgeRequest.getContestId());
         ThrowUtil.permissionDeny(!joined, "非法访问");
+        ThrowUtil.illegalArgument(!isEnabled, "不允许提交题目");
     }
 
     private void record(JudgeRequest judgeRequest, Long userId, ProblemJudgeResult judgeResult) {

@@ -3,10 +3,10 @@
     <el-form :inline="true" ref="formRef" :model="codeForm">
       <el-form-item>
         <el-button-group>
-          <el-button type="success" @click="emit('test')" :icon="IconBug" :loading="loading">
+          <el-button :disabled="disableSubmit" type="success" @click="emit('test')" :icon="IconBug" :loading="loading">
             测试
           </el-button>
-          <el-button type="primary" @click="emit('submit')" :icon="Upload" :loading="loading">
+          <el-button :disabled="disableSubmit" type="primary" @click="emit('submit')" :icon="Upload" :loading="loading">
             提交
           </el-button>
           <el-button type="warning" @click="emit('open-log')" :icon="Upload">
@@ -65,7 +65,7 @@ const currLang = ref<string>("");
 
 const languages = ref<LanguageView[] | null>(null);
 
-const {heightProp, loading} = defineProps<{heightProp: number, loading: boolean}>()
+const {heightProp, loading, disableSubmit = false} = defineProps<{heightProp: number, loading: boolean, disableSubmit?: boolean}>()
 
 const emit = defineEmits<{
   (e: 'open-log'): void,

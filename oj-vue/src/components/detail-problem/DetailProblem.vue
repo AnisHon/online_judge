@@ -55,7 +55,7 @@
 
             <div v-if="!isOjProblem">
               <div class="submit">
-                <el-button type="success" :disabled="isShowResult" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
+                <el-button type="success" :disabled="isShowResult || disableSubmit" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
               </div>
 
 
@@ -84,6 +84,7 @@
             style="padding: 0 20px"
         >
           <enhanced-code-editor
+              :disable-submit="disableSubmit"
               v-model="judgeForm"
               :heightProp="height"
               @submit="onHandleSubmit"
@@ -203,7 +204,7 @@ const isFullScreen = ref(false)
 const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 
 // 传入题目组件
-const {problemId, contestId} = defineProps<{problemId: number, contestId?: number}>()
+const {problemId, contestId, disableSubmit = false} = defineProps<{problemId: number, contestId?: number, disableSubmit?: boolean}>()
 
 const {loading, finish, isLoading} = useLoading()
 // 填空题有多少空
@@ -520,7 +521,7 @@ const saveAnswer = async () => {
 getProblem();
 
 watch(() => problemId, async () => {
-  if (!__.isEqual(judgeForm, judgeFormCopy)) {
+  if (!__.isEqual(judgeForm, judgeFormCopy) && !disableSubmit) {
     await saveAnswer()
   }
   reset();

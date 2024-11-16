@@ -64,14 +64,15 @@ service.interceptors.response.use(
     },
     error => {
         // 处理错误
+        console.log(error)
         if (error.status == 401) {
             error401();
         } else if (error.status == 400) {
-            ElMessage.error(error.data.message);
+            ElMessage.error(error.response.data.message);
         } else if (error.status == 404) {
             ElMessage.error("接口404 : " + error.config.url)
         } else {
-            ElMessage.error(error.data.message);
+            ElMessage.error(error.response.data.message);
         }
         return error;
     }

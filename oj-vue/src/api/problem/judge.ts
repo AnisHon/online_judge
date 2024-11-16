@@ -129,9 +129,7 @@ async function test(judgeForm: JudgeForm, fail: failCallback): Promise<JudgeResp
 
 async function judge(judgeForm: JudgeForm, fail: failCallback): Promise<JudgeResponse> {
     const {code, data} =
-        await post<JudgeForm, JudgeResponse>("/problem-api/judge", judgeForm, (msg) => {
-            ElMessage.warning(msg);
-        });
+        await post<JudgeForm, JudgeResponse>("/problem-api/judge", judgeForm);
 
     return data
 }

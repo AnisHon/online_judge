@@ -123,7 +123,7 @@ import {
 import {useStatuesColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElInputNumber, ElMessageBox, type InputInstance} from "element-plus";
+import {ElDialog, ElInputNumber, ElMessageBox} from "element-plus";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {useRoute, useRouter} from "vue-router";
@@ -160,6 +160,9 @@ const form = reactive<ProblemListRelation>({
   score: 0,
   problemOrder: 0
 })
+
+
+
 
 const {columns} = useStatuesColumn(
     ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示', '问题顺序', '分数'],
@@ -208,14 +211,6 @@ const addProblemIds = ref<number[]>([])
 
 const isEdit = ref(false)
 
-interface SelectionCellProps {
-  value: string
-  intermediate?: boolean
-  onChange: (value: string) => void
-  onBlur: () => void
-  onKeydownEnter: () => void
-  forwardRef: (el: InputInstance) => void
-}
 
 
 const handleSelectionChange = (selection: ProblemInListView[]) => {
@@ -256,7 +251,7 @@ const handleAdd = () => {
   open.value = true;
 }
 const handleUpdate = (data: ProblemInListView) => {
-  if (data.tempOrder === null || data.tempScore === null) {
+  if (!data.tempOrder || !data.tempScore) {
     data.tempOrder = data.problemOrder;
     data.tempScore = data.score;
     return
