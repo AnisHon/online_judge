@@ -251,11 +251,12 @@ const handleAdd = () => {
   open.value = true;
 }
 const handleUpdate = (data: ProblemInListView) => {
-  if (!data.tempOrder || !data.tempScore) {
-    data.tempOrder = data.problemOrder;
+  if (data.tempScore === undefined || data.tempOrder === undefined) {
     data.tempScore = data.score;
-    return
-  } else if (data.tempScore === data.score && data.tempOrder === data.problemOrder) {
+    data.tempOrder = data.problemOrder;
+  }
+
+  if (data.tempScore === data.score && data.tempOrder === data.problemOrder) {
     return;
   }
   data.score = data.tempScore;
