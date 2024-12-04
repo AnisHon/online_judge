@@ -35,6 +35,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -71,6 +72,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         return BeanUtil.copyProperties(sysUser, UserVo.class);
     }
 
+
+    // +=操作使用事务
+    @Transactional
     @Override
     public boolean addPoint(Long userId, BigDecimal point) {
         return sysUserMapper.addPoints(userId, point) > 0;
