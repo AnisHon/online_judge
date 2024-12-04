@@ -17,13 +17,19 @@ const differ = (start: string, end: string) => {
     return endTime.diff(startTime, 'hours');
 };
 
-const isContestOver = (end: string) => {
+const isContestOver = (end: string | undefined): boolean => {
+    if (!end) {
+        return true;
+    }
     const currTimeStamp = dayjs().unix();
     const endTimeStamp = dayjs(end).unix();
     return currTimeStamp > endTimeStamp
 };
 
-const isNotStart = (start: string) => {
+const isNotStart = (start: string | undefined) => {
+    if (!start) {
+        return true;
+    }
     const currTimeStamp = dayjs().unix();
     const startTimeStamp = dayjs(start).unix();
     return currTimeStamp < startTimeStamp;

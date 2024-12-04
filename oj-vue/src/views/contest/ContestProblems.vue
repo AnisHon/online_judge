@@ -10,7 +10,7 @@
             row-class-name="problem-row"
             highlight-current-row
         >
-          <el-table-column width="50" label="#" prop="problemOrder"/>
+          <el-table-column width="50" type="index" label="#"/>
           <el-table-column label="题目" prop="title"/>
           <el-table-column label="分数" prop="score"/>
         </el-table>
@@ -22,10 +22,11 @@
           v-if="currentRow"
           :problem-id="currentRow.problemId"
           :contest-id="contestId"
+          :disable-submit="!isContestEnabled"
       />
       <div v-else>
         <div v-if="!!contest" style="position: relative;">
-          <div style="position: absolute;right: 50px;top:50px;font-size: 36px;" v-if="!!score">
+          <div style="position: absolute;left: 50px;top:50px;font-size: 36px; color: darkred" v-if="score === 0 || !!score">
             分数：{{ score }}
           </div>
 
@@ -67,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { Splitpanes, Pane } from 'splitpanes'
+import {Pane, Splitpanes} from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import {type ComponentInstance, computed, onMounted, onUnmounted, reactive, ref} from "vue";
 import type {ProblemInListView} from "@/api/list";
@@ -107,15 +108,24 @@ const sortedProblemList = computed(() => {
   return problemList;
 })
 
+const isContestEnabled = computed(() => {
+  return !isContestOver(contest.value?.endTime) && !isNotStart(contest.value?.startTime);
+})
+
 const {isLoading, loading, get} = debouncedGetProblems((data) => {
   problemList.length = 0;
   problemList.push(...data);
 })
 
-const getProblems = () => {
+const getProblems = async () => {
   loading();
   get(contestId.value);
-  fetchContestById(contestId.value).then(data => contest.value = data);
+  contest.value = await fetchContestById(contestId.value);
+  if (!isContestEnabled.value) {
+    getScore(contestId.value).then(data => {
+      score.value = !!data ? data : 0;
+    });
+  }
 }
 
 const selectProblem = (row: ProblemInListView) => {
@@ -137,7 +147,8 @@ const setMaxHeight = () => {
 
 // created
 getProblems();
-getScore(contestId.value).then(data => score.value = data);
+
+
 
 onMounted(() => {
   setMaxHeight();
