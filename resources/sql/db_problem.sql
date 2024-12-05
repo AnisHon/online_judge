@@ -240,11 +240,29 @@ create table records(
 create index records_contest_id_idx on records(contest_id);
 create index records_user_id_idx on records(user_id);
 create index records_problem_id_idx on records(problem_id);
-
+create index records_problem_id_user_id_idx on records(problem_id, user_id);
+create index records_problem_id_user_id_idx on records(problem_id, user_id);
 
 
 -- ----------------------------
--- 13、比赛参加表
+-- 13、比赛完成表-2 后期预留表
+-- ----------------------------
+drop table if exists contest_records;
+create table contest_records(
+    contest_id  bigint(20)      null                     comment '比赛ID，非比赛可不填',
+    user_id     bigint(20)      not null                 comment '用户ID',
+    problem_id  bigint(20)      not null                 comment '题目id',
+    status      boolean         not null                 comment '是否正确',
+    score       DECIMAL(3, 2)   null                     comment '最终得分',
+    answer      json            null                     comment '答案',
+    primary key (contest_id, user_id, problem_id)
+) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '比赛题目记录';
+create index contest_records_contest_id_idx on records(contest_id);
+create index contest_records_user_id_idx on records(user_id);
+create index contest_records_problem_id_idx on records(problem_id);
+
+-- ----------------------------
+-- 14、比赛参加表
 -- ----------------------------
 drop table if exists user_contest;
 create table user_contest(
@@ -255,6 +273,18 @@ create table user_contest(
 create index user_contest_user_id_idx on user_contest(user_id);
 create index user_contest_contest_id_idx on user_contest(contest_id);
 
+
+-- ----------------------------
+-- 15、白名单题单关系表
+-- ----------------------------
+drop table if exists class_contest;
+create table class_contest(
+    class_id bigint(20) not null comment '班级ID',
+    contest_id bigint(20) not null comment '比赛ID',
+    primary key (class_id, contest_id)
+) ENGINE=InnoDB default charset=utf8 comment '白名单题单关系表';
+create index class_contest_class_id_idx on class_contest(class_id);
+create index class_contest_contest_id_idx on class_contest(contest_id);
 
 
 
