@@ -16,8 +16,6 @@ import com.anishan.user.domain.vo.ClassVo;
 import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.StudentClassService;
-import com.anishan.user.service.TeacherClassService;
-import com.anishan.user.util.UserUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -25,6 +23,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.user.domain.entity.SysClass;
 import com.anishan.user.service.SysClassService;
 import com.anishan.user.mapper.SysClassMapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,19 +48,16 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
     private final SysClassMapper sysClassMapper;
     private final StudentClassService studentClassService;
     private final AuthenticationService authenticationService;
-    private final TeacherClassService teacherClassService;
 
     @Autowired
     public SysClassServiceImpl(
             SysClassMapper sysClassMapper,
             StudentClassService studentClassService,
-            AuthenticationService authenticationService,
-            TeacherClassService teacherClassService
+            AuthenticationService authenticationService
     ) {
         this.sysClassMapper = sysClassMapper;
         this.studentClassService = studentClassService;
         this.authenticationService = authenticationService;
-        this.teacherClassService = teacherClassService;
     }
 
     @Override
@@ -199,26 +195,14 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
         return doListClassVo(classPagedQuery, classIds);
     }
 
-    @Override
-    public PagedResult<ClassVo> listClassOfTeacher(ClassPagedQuery classPagedQuery) {
-        Long id = authenticationService.myId();
-        return listClassOfTeacher(classPagedQuery, id);
-    }
 
-    @Override
-    public PagedResult<ClassVo> listClassOfTeacher(ClassPagedQuery classPagedQuery, Long userId) {
-        List<Long> classIds = teacherClassService.listClassIdOfTeacher(userId);
 
-        return doListClassVo(classPagedQuery, classIds);
-    }
 
     @Transactional
     @Override
     public boolean createClass(ClassDto classDto) {
         SysClass sysClass = BeanUtil.copyProperties(classDto, SysClass.class, "classId");
         int b = sysClassMapper.insert(sysClass);
-        Long userId = UserUtil.getUserId();
-        teacherClassService.addTeacherForClass(userId, sysClass.getClassId());
         return b > 0;
     }
 
@@ -240,6 +224,16 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
         Page<UserVo> userVoPage = sysClassMapper.selectJoinPage(query.customPage(), UserVo.class, wrapper);
 
         return PagedResult.build(userVoPage);
+    }
+
+    // todo 待验证
+    @Override
+    public boolean existUser(Long classId, Long user) {
+        return studentClassService.exists(
+                new LambdaQueryWrapper<StudentClassRelation>()
+                        .eq(StudentClassRelation::getClassId, classId)
+                        .eq(StudentClassRelation::getStudentId, user)
+        );
     }
 
 

@@ -30,28 +30,6 @@ public class TeacherController {
         this.sysClassService = sysClassService;
     }
 
-
-    // my class
-    @PostMapping("/list-classes")
-    @ApiOperation("列出用户加入的班级")
-    @PreAuthorize("hasAuthority('user:teacher:list-class')")
-    public R<PagedResult<ClassVo>> listClasses(@RequestBody @Validated ClassPagedQuery classPagedQuery) {
-        return sysClassService.listClassOfTeacher(classPagedQuery).toR();
-    }
-
-    // my student (class_id)
-
-    @PostMapping("/list")
-    @ApiOperation("列出班级内所有的学生，如果classId为null就列出所有学生")
-    public R<PagedResult<UserVo>> listStudents(@RequestBody @Validated UserPagedQuery userPagedQuery) {
-        PagedResult<UserVo> userVoPagedResult;
-
-        userVoPagedResult = sysUserService.listStudentsOfTeacher(userPagedQuery);
-
-        return userVoPagedResult.toR();
-
-    }
-
     // create class
     @PostMapping("/create-class")
     @ApiOperation("创建班级，如果失败msg就是原因")

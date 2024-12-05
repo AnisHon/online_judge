@@ -46,11 +46,9 @@ public interface SysClassService extends IService<SysClass> {
 
     PagedResult<ClassVo> listClassOfUser(ClassPagedQuery classPagedQuery, Long userId);
 
-    PagedResult<ClassVo> listClassOfTeacher(ClassPagedQuery classPagedQuery);
-
-    PagedResult<ClassVo> listClassOfTeacher(ClassPagedQuery classPagedQuery, Long userId);
-
     boolean createClass(ClassDto classDto);
 
     PagedResult<UserVo> getStudents(UserClassQuery query);
+
+    boolean existUser(@NotNull Long classId, @NotNull Long userId);
 }

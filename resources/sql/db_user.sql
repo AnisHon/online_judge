@@ -74,16 +74,11 @@ create table sys_class (
 -- ---------------------------
 -- 4、教师(用户)班级关系表
 -- ----------------------------
-drop table if exists teacher_class;
-create table teacher_class (
-    teacher_id   bigint(20) not null comment '教师ID(user_id)',
-    class_id     bigint(20) not null comment '班级ID',
-    primary key(teacher_id, class_id)
-) engine=innodb comment = '教师班级关系表';
+
 
 
 -- ---------------------------
--- 5、学生(用户)班级关系表
+-- 5、用户班级关系表
 -- ----------------------------
 drop table if exists student_class;
 create table student_class (

@@ -114,4 +114,13 @@ public class ClassController {
         return result.toR();
     }
 
+
+    //todo 待验证
+    @GetMapping("/exists/{classId}/{userId}")
+    @PreAuthorize("hasAuthority('user:class:list-user')")
+    public R<Boolean> isUserExists(@PathVariable @NotNull Long classId, @PathVariable @NotNull Long userId) {
+        boolean b =  sysClassService.existUser(classId, userId);
+        return R.success(b);
+    }
+
 }

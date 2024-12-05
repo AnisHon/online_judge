@@ -17,4 +17,5 @@ public interface UserClient {
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("通过多个id获取用户，id之间用','隔开")
     R<List<UserVo>> listUser(@PathVariable("ids") List<Long> ids);
+
 }
