@@ -110,10 +110,10 @@ public class UserController {
 
     @GetMapping("/remove/{id}")
     @PreAuthorize("hasAuthority('user:user:remove')")
-    @ApiOperation("删除用户")
+    @ApiOperation("删除用户，由于其破坏性较大所以已经禁止删除")
     public R<Boolean> remove(@PathVariable @NotNull Long id) {
-        boolean b = sysUserService.removeById(id);
-        return R.success(b);
+//        boolean b = sysUserService.removeById(id);
+        return R.success(false);
     }
 
     @GetMapping("/removeBatch/{ids}")
