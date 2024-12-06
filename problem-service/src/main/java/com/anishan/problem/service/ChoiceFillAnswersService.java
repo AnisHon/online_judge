@@ -2,7 +2,7 @@ package com.anishan.problem.service;
 
 import com.anishan.problem.domain.entity.ChoiceFillAnswers;
 import com.anishan.problem.domain.vo.ChoiceFillAnswersVo;
-import com.anishan.problem.domain.vo.ProblemChoice;
+import com.anishan.problem.domain.vo.ProblemChoiceBlank;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -14,9 +14,9 @@ import java.util.List;
 */
 public interface ChoiceFillAnswersService extends IService<ChoiceFillAnswers> {
 
-    List<ProblemChoice> getChoice(Long problemId);
+    List<ProblemChoiceBlank> getChoice(Long problemId);
 
     List<ChoiceFillAnswersVo> getChoiceVo(Long problemId);
 
-    Long countAnswers(Long problemId);
+    List<ChoiceFillAnswersVo> getAnswerIndexes(Long problemId);
 }

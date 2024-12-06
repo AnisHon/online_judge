@@ -10,8 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel("选择题答案")
-public class ProblemChoice {
+public class ProblemChoiceBlank {
 
+    @ApiModelProperty("填空的索引")
+    private Integer blankIndex;
     @ApiModelProperty("ABCD选项")
     private Character order;
     @ApiModelProperty("选项内容")

@@ -22,8 +22,9 @@ import type {JudgeForm} from "@/api/problem/judge";
 
 const judgeForm = defineModel<JudgeForm>({required: true});
 
+
 const itemLabel = (index: number) => {
-  return `第${index + 1}项`
+  return `第${index}项`
 }
 
 

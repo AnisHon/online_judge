@@ -49,7 +49,7 @@
 
             <div class="detail-problem">
               <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
-              <fill-blank-problem :count="count" v-model="judgeForm"  v-else-if="isFillProblem" />
+              <fill-blank-problem v-model="judgeForm"  v-else-if="isFillProblem" />
               <choice-choose-problem :problem-view="problem" v-model="judgeForm" v-else-if="isChoiceProblem" />
             </div>
 
@@ -207,9 +207,6 @@ const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 const {problemId, contestId, disableSubmit = false} = defineProps<{problemId: number, contestId?: number, disableSubmit?: boolean}>()
 
 const {loading, finish, isLoading} = useLoading()
-// 填空题有多少空
-const count = computed(() => problem.value?.count || 0)
-
 
 // 各种信息的计算属性
 const problemType = computed(() => problem.value?.problemVo.type)
@@ -398,11 +395,9 @@ const openOjDialog = ref(false);
 
 
 
-// 三个事件
 const onHandleSubmit = () => {
   loading()
   doJudge();
-
 }
 
 const onHandleFullScreen = () => {
@@ -431,7 +426,7 @@ const reset = () => {
   isFullScreen.value = false;
 }
 
-const initBlanks = (count: number) => {
+const initBlanks = () => {
 
   // 有内容就不动
   if (judgeForm.answers.length > 0) {
@@ -439,9 +434,10 @@ const initBlanks = (count: number) => {
   }
 
   // 没内容再添加
-  for (let i = 0; i < count; i++) {
+  const choices = problem.value?.choices || [];
+  for (let choice of choices) {
     judgeForm.answers.push(reactive({
-      index: i,
+      index: <number>choice!.blankIndex,
       answer: ""
     }))
   }
@@ -458,7 +454,7 @@ const {loading: loadingProblem, isLoading: problemIsLoading, get} =
 
       // 初始化填空题
       if (problem.value?.problemVo.type === ProblemType.FILL) {
-        initBlanks(problem.value.count || 0);
+        initBlanks();
       }
 
       // 判断是否修改过
@@ -468,8 +464,8 @@ const {loading: loadingProblem, isLoading: problemIsLoading, get} =
       judgeForm.answers?.forEach(x => {
 
         if (problem.value?.problemVo.type === ProblemType.FILL) {
-          if (problem.value.count !== judgeForm.answers.length) {
-            judgeForm.answers.length = <number>problem.value.count;
+          if (problem.value.choices?.length !== judgeForm.answers.length) {
+            judgeForm.answers.length = <number>problem.value.choices?.length;
           }
         } else {
           const find = problem.value?.choices?.find(item => letterToNumber(<string>item.order) === x.index);

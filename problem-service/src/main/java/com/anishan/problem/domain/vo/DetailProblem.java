@@ -18,9 +18,7 @@ public class DetailProblem {
     @ApiModelProperty("OJ问题ID")
     private OjProblemVo ojProblemVo;
     @ApiModelProperty("选择问题的选项")
-    private List<ProblemChoice> choices;
+    private List<ProblemChoiceBlank> choices;
     @ApiModelProperty("对应的几个Tag")
     private List<TagVo> tagVo;
-    @ApiModelProperty("填空题有几个空")
-    private Long count;
 }

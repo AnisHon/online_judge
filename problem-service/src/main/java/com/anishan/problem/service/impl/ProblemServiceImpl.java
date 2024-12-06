@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
 * @author happy
@@ -364,6 +365,17 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
 
+    public void getFillAnswers(DetailProblem detailProblem, Long problemId) {
+
+        List<ChoiceFillAnswersVo> answerIndexes = choiceFillAnswersService.getAnswerIndexes(problemId);
+
+        List<ProblemChoiceBlank> blanks = answerIndexes.stream()
+                .map(x -> new ProblemChoiceBlank(x.getBlankIndex(), null, null))
+                .collect(Collectors.toList());
+
+        detailProblem.setChoices(blanks);
+    }
+
     public DetailProblem doGetDetail(ProblemVo problem, Long ojId) {
         if (problem == null) {
             return null;
@@ -371,19 +383,18 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
         List<TagVo> tags = tagService.getTagByProblemId(problem.getProblemId());
 
-        DetailProblem detailProblem = new DetailProblem(problem, null, null, tags, null);
+        DetailProblem detailProblem = new DetailProblem(problem, null, null, tags);
         switch (problem.getType()) {
             case OJ:
                 OjProblemVo ojProblem = ojProblemService.getOjProblemById(ojId);
                 detailProblem.setOjProblemVo(ojProblem);
                 break;
             case FILL:
-                Long count = choiceFillAnswersService.countAnswers(problem.getProblemId());
-                detailProblem.setCount(count);
+                getFillAnswers(detailProblem, problem.getProblemId());
                 break;
             case MULTI_CHOICE:
             case CHOICE:
-                List<ProblemChoice> choices = choiceFillAnswersService.getChoice(problem.getProblemId());
+                List<ProblemChoiceBlank> choices = choiceFillAnswersService.getChoice(problem.getProblemId());
                 detailProblem.setChoices(choices);
                 break;
         }

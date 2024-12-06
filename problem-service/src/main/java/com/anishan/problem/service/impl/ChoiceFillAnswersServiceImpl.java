@@ -2,7 +2,7 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.anishan.problem.domain.vo.ChoiceFillAnswersVo;
-import com.anishan.problem.domain.vo.ProblemChoice;
+import com.anishan.problem.domain.vo.ProblemChoiceBlank;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -24,11 +24,11 @@ public class ChoiceFillAnswersServiceImpl extends ServiceImpl<ChoiceFillAnswersM
     implements ChoiceFillAnswersService{
 
     @Override
-    public List<ProblemChoice> getChoice(Long problemId) {
+    public List<ProblemChoiceBlank> getChoice(Long problemId) {
        return this.list(new LambdaQueryWrapper<ChoiceFillAnswers>()
                .eq(ChoiceFillAnswers::getProblemId, problemId)
                .orderByAsc(ChoiceFillAnswers::getBlankIndex)
-        ).stream().map(x -> new ProblemChoice(x.indexToChoice(), x.getAnswerText())).collect(Collectors.toList());
+        ).stream().map(x -> new ProblemChoiceBlank(null, x.indexToChoice(), x.getAnswerText())).collect(Collectors.toList());
     }
 
     @Override
@@ -41,12 +41,14 @@ public class ChoiceFillAnswersServiceImpl extends ServiceImpl<ChoiceFillAnswersM
     }
 
     @Override
-    public Long countAnswers(Long problemId) {
-        return this.count(new QueryWrapper<ChoiceFillAnswers>()
-                        .select("distinct blank_index")
-                        .lambda()
-                        .eq(ChoiceFillAnswers::getProblemId, problemId)
+    public List<ChoiceFillAnswersVo> getAnswerIndexes(Long problemId) {
+        List<ChoiceFillAnswers> list = this.list(new QueryWrapper<ChoiceFillAnswers>()
+                .select("distinct blank_index")
+                .lambda()
+                .eq(ChoiceFillAnswers::getProblemId, problemId)
         );
+        return BeanUtil.copyToList(list, ChoiceFillAnswersVo.class);
+
     }
 }
 

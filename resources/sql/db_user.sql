@@ -129,7 +129,7 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 
 # 二级菜单
 # menu_id 3 教师功能 teacher
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (30, '我的班级', 1, 3, 'my-class', 'I', '#', 'School');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (30, '用户组', 1, 3, 'my-class', 'I', '#', 'School');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (31, '作业管理', 2, 3, 'homework-manage', 'I', '#', 'Histogram');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (32, '竞赛管理', 3, 3, 'contest-manage', 'I', '#', 'Flag');
 

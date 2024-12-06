@@ -85,8 +85,9 @@ export interface ProblemParam {
 }
 
 export interface ChoiceProblemView {
-    content: string,
-    order: string | number
+    blankIndex?: number;
+    content?: string,
+    order?: string | number
 }
 
 export interface OjProblemView {
@@ -110,7 +111,6 @@ export interface ProblemDetailView {
     ojProblemVo?: OjProblemView;
     problemVo: ProblemView;
     tagVo: TagView[];
-    count?: number;
 }
 
 export interface PagedData {

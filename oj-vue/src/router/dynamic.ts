@@ -64,7 +64,7 @@ const dynamicConst: RouterType = {
                     name: 'my-class',
                     component: MyClass,
                     meta: {
-                        name: "我的班级"
+                        name: "用户组"
                     }
                 },
                 {

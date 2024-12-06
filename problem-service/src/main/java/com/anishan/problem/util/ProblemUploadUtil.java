@@ -16,12 +16,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -31,6 +32,40 @@ public class ProblemUploadUtil {
 
 
     private final ObjectMapper objectMapper;
+    private Pattern pattern;
+    Map<String, String> mdStringMapper;
+
+    @PostConstruct
+    public void init() {
+        mdStringMapper = new HashMap<>();
+        mdStringMapper.put("\n", "\n\n");
+        mdStringMapper.put("\t", "&emsp;");
+
+        // 构建正则表达式
+        String regex = String.join("|", mdStringMapper.keySet());
+        pattern = Pattern.compile(regex);
+
+
+    }
+
+    private String formatMDString(String text) {
+        Matcher matcher = pattern.matcher(text);
+
+        // 使用 StringBuffer 进行替换操作
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            matcher.appendReplacement(sb, mdStringMapper.get(matcher.group()));
+        }
+        matcher.appendTail(sb);
+
+        return sb.toString();
+    }
+
+
+    private String formatAnswerString(String text) {
+        return text.replace("\r\n", "\n");
+    }
+
 
     private ChoiceFillAnswersDto toChoiceFillAnswers(JsonNode node) {
         if (node == null) {
@@ -46,8 +81,10 @@ public class ProblemUploadUtil {
                 .illegalArgument(answerText == null, "文本不能为空");
         ThrowUtil.illegalArgument(blankIndex == null, "索引不能为空");
 
+        String answer = formatAnswerString(answerText.asText());
+
         ChoiceFillAnswersDto result = new ChoiceFillAnswersDto()
-                .setAnswerText(answerText.asText())
+                .setAnswerText(answer)
                 .setBlankIndex(blankIndex.asInt())
                 .setIsCorrect(isCorrect != null && isCorrect.asBoolean(false));
         ThrowUtil.illegalArgument(result.getIsCorrect() && score == null, "缺少分数");
@@ -69,10 +106,15 @@ public class ProblemUploadUtil {
         ThrowUtil.illegalArgument(output == null, "索引不能为空");
 
 
+        String inputText = formatAnswerString(input.asText());
+        String outputText = formatAnswerString(output.asText());
+        BigDecimal score1 = new BigDecimal(score == null ? "1" : score.asText("1"));
+
+
         return new OjProblemCase()
-                .setInput(input.asText().replace("\r\n", "\n"))
-                .setOutput(output.asText().replace("\r\n", "\n"))
-                .setScore(new BigDecimal(score == null ? "1" : score.asText("1")));
+                .setInput(inputText)
+                .setOutput(outputText)
+                .setScore(score1);
 
     }
 
@@ -137,19 +179,31 @@ public class ProblemUploadUtil {
         ThrowUtil.illegalArgument(sampleInput == null, "输人示例不能为空");
         ThrowUtil.illegalArgument(sampleOutput == null, "输出示例不能为空");
 
+        String inputText = formatMDString(input.asText());
+        String outputText = formatMDString(output.asText());
+
+        Difficulty difficulty1 =
+                Difficulty.valueOf(
+                        difficulty == null ?
+                                Difficulty.Unknown.name()
+                                :
+                                difficulty.asText(Difficulty.Unknown.name())
+                );
+
         OjProblemDto result = new OjProblemDto()
                 .setTimeLimit(timeLimit.asInt() * 1000) // ms
                 .setMemoryLimit(memoryLimit.asInt() * 1024) // kb
-                .setInput(input.asText())
-                .setOutput(output.asText())
+                .setInput(inputText)
+                .setOutput(outputText)
                 .setInputExample(sampleInput.asText())
                 .setOutputExample(sampleOutput.asText())
-                .setDifficulty(Difficulty.valueOf(difficulty == null ? Difficulty.Unknown.name() : difficulty.asText(Difficulty.Unknown.name())))
+                .setDifficulty(difficulty1)
                 .setStackLimit(stackLimit == null ? 128 : stackLimit.asInt(1-28));
 
-        ThrowUtil.illegalArgument(result.getTimeLimit() <= 0, "实现限制不能为0或空");
-        ThrowUtil.illegalArgument(result.getMemoryLimit() <= 0, "实现限制不能为0或空");
-        ThrowUtil.illegalArgument(result.getStackLimit() <= 0, "实现限制不能为0或空");
+        ThrowUtil.illegalArgument(result.getTimeLimit() <= 0, "时间限制不能为0或空");
+        ThrowUtil.illegalArgument(result.getMemoryLimit() <= 0, "内存限制不能为0或空");
+        ThrowUtil.illegalArgument(result.getStackLimit() <= 0, "栈空间限制不能为0或空");
+
         return result;
     }
 
@@ -170,9 +224,10 @@ public class ProblemUploadUtil {
         ThrowUtil.illegalArgument(title== null, "题目不能为空");
         ThrowUtil.illegalArgument(description == null, "题目描述不能为空");
 
+        String descriptionText = formatMDString(description.asText());
         problemDto
                 .setTitle(title.asText())
-                .setDescription(description.asText())
+                .setDescription(descriptionText)
                 .setSource(source == null ? "共有题库" : source.asText("共有题库"))
                 .setHint(hint == null ? null : hint.asText(null))
                 .setAuth(ProblemAuth.valueOf(auth == null ? ProblemAuth.Public.name() : auth.asText(ProblemAuth.Public.name())))
