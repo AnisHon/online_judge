@@ -1,7 +1,7 @@
 package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.domain.dto.PagedQuery;
-import com.anishan.commons.e.ProblemType;
+import com.anishan.commons.enumeration.ProblemType;
 import com.anishan.problem.domain.entity.Problem;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

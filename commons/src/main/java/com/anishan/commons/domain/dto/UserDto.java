@@ -1,6 +1,6 @@
 package com.anishan.commons.domain.dto;
 
-import com.anishan.commons.e.UserState;
+import com.anishan.commons.enumeration.UserState;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

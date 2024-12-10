@@ -8,7 +8,7 @@ import com.anishan.problem.domain.vo.OjProblemVo;
 import com.anishan.problem.domain.entity.OjProblemCase;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.commons.e.ProblemAuth;
+import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.ChoiceFillAnswersDto;
 import com.anishan.problem.domain.dto.DetailProblemDto;
@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
 * @author happy

@@ -1,7 +1,6 @@
 package com.anishan.user.domain.dto;
 
-import com.anishan.commons.e.ValidationGroup;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.anishan.commons.enumeration.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;

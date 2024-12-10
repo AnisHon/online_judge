@@ -1,5 +1,6 @@
 package com.anishan.user.service;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.api.client.gojudge.GoJudgeClient;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.mapper.SysRoleMenuMapper;

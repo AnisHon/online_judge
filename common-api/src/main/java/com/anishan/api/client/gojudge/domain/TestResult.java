@@ -1,6 +1,6 @@
 package com.anishan.api.client.gojudge.domain;
 
-import com.anishan.commons.e.JudgeResult;
+import com.anishan.commons.enumeration.JudgeResult;
 import lombok.Data;
 
 @Data

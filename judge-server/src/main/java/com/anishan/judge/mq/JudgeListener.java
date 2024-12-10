@@ -7,7 +7,7 @@ import com.anishan.api.client.problem.client.RecordClient;
 import com.anishan.api.client.problem.client.SubmitLogClient;
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.api.util.RedisJudgeTestUtil;
-import com.anishan.commons.e.JudgeResult;
+import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.judge.exception.SubmitError;
 import com.anishan.judge.exception.SystemError;
 import com.anishan.judge.service.JudgeService;

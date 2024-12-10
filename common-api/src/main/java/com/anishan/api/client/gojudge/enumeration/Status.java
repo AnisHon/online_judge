@@ -1,7 +1,6 @@
 package com.anishan.api.client.gojudge.enumeration;
 
-import com.anishan.commons.e.Enumerator;
-import lombok.Data;
+import com.anishan.commons.enumeration.Enumerator;
 import lombok.Getter;
 
 @Getter

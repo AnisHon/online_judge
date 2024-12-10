@@ -1,6 +1,6 @@
 package com.anishan.problem.domain.vo;
 
-import com.anishan.commons.e.FolderType;
+import com.anishan.commons.enumeration.FolderType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @ApiModel("树状TreeVo")
 @Data

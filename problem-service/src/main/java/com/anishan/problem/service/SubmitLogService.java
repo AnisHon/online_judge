@@ -1,7 +1,7 @@
 package com.anishan.problem.service;
 
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
-import com.anishan.commons.e.JudgeResult;
+import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.baomidou.mybatisplus.extension.service.IService;

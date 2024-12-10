@@ -1,6 +1,6 @@
 package com.anishan.problem.domain.vo;
 
-import com.anishan.commons.e.Difficulty;
+import com.anishan.commons.enumeration.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

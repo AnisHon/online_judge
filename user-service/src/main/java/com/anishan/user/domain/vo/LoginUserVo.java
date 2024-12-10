@@ -1,7 +1,7 @@
 package com.anishan.user.domain.vo;
 
-import com.anishan.commons.e.UserState;
-import com.anishan.commons.e.ValidationGroup;
+import com.anishan.commons.enumeration.UserState;
+import com.anishan.commons.enumeration.ValidationGroup;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

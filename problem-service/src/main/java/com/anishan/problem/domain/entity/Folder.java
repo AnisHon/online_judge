@@ -1,6 +1,6 @@
 package com.anishan.problem.domain.entity;
 
-import com.anishan.commons.e.FolderType;
+import com.anishan.commons.enumeration.FolderType;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;

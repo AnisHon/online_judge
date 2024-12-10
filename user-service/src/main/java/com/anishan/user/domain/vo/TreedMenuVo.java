@@ -1,11 +1,9 @@
 package com.anishan.user.domain.vo;
 
-import com.anishan.commons.e.MenuType;
+import com.anishan.commons.enumeration.MenuType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;

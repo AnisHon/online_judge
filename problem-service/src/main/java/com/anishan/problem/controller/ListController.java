@@ -2,7 +2,7 @@ package com.anishan.problem.controller;
 
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.commons.e.ValidationGroup;
+import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;

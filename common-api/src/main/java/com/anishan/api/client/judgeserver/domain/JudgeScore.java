@@ -1,8 +1,7 @@
 package com.anishan.api.client.judgeserver.domain;
 
 import com.anishan.api.client.gojudge.domain.RunResult;
-import com.anishan.api.client.gojudge.enumeration.Status;
-import com.anishan.commons.e.JudgeResult;
+import com.anishan.commons.enumeration.JudgeResult;
 import lombok.Data;
 import lombok.experimental.Accessors;
 

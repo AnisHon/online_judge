@@ -6,7 +6,7 @@ import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
-import com.anishan.commons.e.JudgeResult;
+import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.judge.config.LanguageConfigLoader;
 import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.CompileError;

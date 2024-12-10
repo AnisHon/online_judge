@@ -1,7 +1,7 @@
 package com.anishan.judge.util;
 
 
-import com.anishan.commons.e.Enumerator;
+import com.anishan.commons.enumeration.Enumerator;
 import lombok.Getter;
 /**
  * @author: Himit_ZH

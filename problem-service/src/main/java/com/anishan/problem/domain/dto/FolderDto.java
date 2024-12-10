@@ -1,14 +1,13 @@
 package com.anishan.problem.domain.dto;
 
-import com.anishan.commons.e.FolderType;
-import com.anishan.commons.e.ValidationGroup;
+import com.anishan.commons.enumeration.FolderType;
+import com.anishan.commons.enumeration.ValidationGroup;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 

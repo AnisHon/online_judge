@@ -1,8 +1,8 @@
 package com.anishan.problem.util;
 
-import com.anishan.commons.e.Difficulty;
-import com.anishan.commons.e.ProblemAuth;
-import com.anishan.commons.e.ProblemType;
+import com.anishan.commons.enumeration.Difficulty;
+import com.anishan.commons.enumeration.ProblemAuth;
+import com.anishan.commons.enumeration.ProblemType;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.ChoiceFillAnswersDto;
 import com.anishan.problem.domain.dto.DetailProblemDto;

@@ -1,13 +1,12 @@
 package com.anishan.problem.domain.dto;
 
-import com.anishan.commons.e.ValidationGroup;
+import com.anishan.commons.enumeration.ValidationGroup;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import java.util.Date;
 
 /**
  * 题目标签表

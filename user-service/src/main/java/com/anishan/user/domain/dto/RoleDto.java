@@ -1,6 +1,6 @@
 package com.anishan.user.domain.dto;
 
-import com.anishan.commons.e.ValidationGroup;
+import com.anishan.commons.enumeration.ValidationGroup;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

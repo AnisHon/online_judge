@@ -12,7 +12,7 @@ import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.commons.e.SseEvent;
+import com.anishan.commons.enumeration.SseEvent;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.*;
@@ -54,6 +54,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     private final String baseString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
                                       "abcdefghijklmnopqrstuvwxyz" +
                                       "0123456789";
+
+
 
     private final SysUserMapper sysUserMapper;
     private final SysRoleService sysRoleService;

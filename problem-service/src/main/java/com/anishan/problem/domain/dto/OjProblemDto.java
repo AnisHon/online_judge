@@ -1,11 +1,10 @@
 package com.anishan.problem.domain.dto;
 
-import com.anishan.commons.e.Difficulty;
+import com.anishan.commons.enumeration.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**

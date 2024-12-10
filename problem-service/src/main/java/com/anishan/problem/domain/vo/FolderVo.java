@@ -1,6 +1,6 @@
 package com.anishan.problem.domain.vo;
 
-import com.anishan.commons.e.FolderType;
+import com.anishan.commons.enumeration.FolderType;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

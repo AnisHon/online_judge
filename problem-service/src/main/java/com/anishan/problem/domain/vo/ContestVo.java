@@ -1,5 +1,5 @@
 package com.anishan.problem.domain.vo;
-import com.anishan.commons.e.ContestAuth;
+import com.anishan.commons.enumeration.ContestAuth;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

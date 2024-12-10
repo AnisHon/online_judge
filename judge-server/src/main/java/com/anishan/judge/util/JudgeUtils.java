@@ -1,6 +1,6 @@
 package com.anishan.judge.util;
 
-import com.anishan.commons.e.JudgeResult;
+import com.anishan.commons.enumeration.JudgeResult;
 
 import java.util.*;
 

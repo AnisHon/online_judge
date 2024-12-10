@@ -1,7 +1,7 @@
 package com.anishan.problem.domain.entity;
 
-import com.anishan.commons.e.ProblemAuth;
-import com.anishan.commons.e.ProblemType;
+import com.anishan.commons.enumeration.ProblemAuth;
+import com.anishan.commons.enumeration.ProblemType;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;

@@ -1,6 +1,6 @@
 package com.anishan.user.domain.entity;
 
-import com.anishan.commons.e.MenuType;
+import com.anishan.commons.enumeration.MenuType;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;

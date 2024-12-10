@@ -2,7 +2,7 @@ package com.anishan.api.domain;
 
 import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
-import com.anishan.commons.e.UserState;
+import com.anishan.commons.enumeration.UserState;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;

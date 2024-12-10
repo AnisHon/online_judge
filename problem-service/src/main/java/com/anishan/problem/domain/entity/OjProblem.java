@@ -1,6 +1,6 @@
 package com.anishan.problem.domain.entity;
 
-import com.anishan.commons.e.Difficulty;
+import com.anishan.commons.enumeration.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;

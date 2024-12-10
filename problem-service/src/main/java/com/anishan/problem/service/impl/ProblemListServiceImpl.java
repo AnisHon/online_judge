@@ -3,7 +3,7 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.commons.e.ProblemAuth;
+import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;

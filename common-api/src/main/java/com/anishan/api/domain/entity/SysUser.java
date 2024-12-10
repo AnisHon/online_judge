@@ -1,6 +1,6 @@
 package com.anishan.api.domain.entity;
 
-import com.anishan.commons.e.UserState;
+import com.anishan.commons.enumeration.UserState;
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

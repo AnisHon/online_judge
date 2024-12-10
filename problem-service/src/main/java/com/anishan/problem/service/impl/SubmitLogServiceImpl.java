@@ -3,7 +3,7 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
-import com.anishan.commons.e.JudgeResult;
+import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.entity.SubmitLog;
