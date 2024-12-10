@@ -16,38 +16,6 @@ import javax.annotation.Resource;
 public class SysUserServiceTest {
 
 
-    @Resource
-    GoJudgeClient goJudge;
-    @Resource
-    SysUserService sysUserService;
-
-    @Resource
-    SysUserMapper sysUserMapper;
-    @Resource
-    PasswordEncoder passwordEncoder;
-    @Resource
-    AuthenticationService authenticationService;
-    @Resource
-    UserConfig userConfig;
-    @Autowired
-    private SysRoleMenuMapper sysRoleMenuMapper;
-
-    @Test
-    public void getUserByIdTest() {
-
-    }
-    @Resource
-    SysUserRoleService sysUserRoleService;
-
-    @Resource
-    SysUserRoleMapper sysUserRoleMapper;
-
-    @Resource
-    SysRoleMenuService sysRoleMenuService;
-
-    @Test
-    public void jwtTest() {
-    }
 
 
 }
