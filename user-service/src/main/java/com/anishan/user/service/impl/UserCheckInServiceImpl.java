@@ -65,10 +65,9 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
         final Long checkInAward = config.getCheckInAward();
         final Long checkMaxAward = config.getCheckMaxAward();
 
-        System.out.println(config);
 
-        System.out.println(checkInAward);
-        System.out.println(checkMaxAward);
+
+
         long temp = checkInAward + continuityDays;
         BigDecimal award = BigDecimal.valueOf(temp > checkMaxAward ? checkMaxAward : temp);
 

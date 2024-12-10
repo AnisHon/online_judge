@@ -16,12 +16,20 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 @Api("用户实体操作接口，删改查")
@@ -31,6 +39,7 @@ import java.util.List;
 public class UserController {
 
     private final SysUserService sysUserService;
+
 
     @Autowired
     public UserController(SysUserService sysUserService) {
@@ -146,6 +155,9 @@ public class UserController {
 
         return R.success(b);
     }
+
+
+
 
 
 }

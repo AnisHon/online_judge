@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-html="getRenderText">
+    <div v-html="getRenderText" >
     </div>
   </div>
 

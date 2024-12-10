@@ -209,7 +209,7 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
     @Override
     public PagedResult<UserVo> getStudents(UserClassQuery query) {
 
-        System.out.println(query);
+
         MPJLambdaWrapper<SysClass> wrapper = new MPJLambdaWrapper<SysClass>()
                 .selectAll(SysUser.class)
                 .leftJoin(StudentClassRelation.class, StudentClassRelation::getClassId, SysClass::getClassId)

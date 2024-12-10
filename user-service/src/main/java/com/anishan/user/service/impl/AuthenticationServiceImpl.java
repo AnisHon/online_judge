@@ -74,7 +74,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private String createLoginTokenAndCache(LoginUser loginUser) {
         authUtil.cacheLoginUser(loginUser);
-        return AuthUtil.createToken(loginUser.getUser().getUserId());
+        String token = AuthUtil.createToken(loginUser.getUser().getUserId());
+        // todo 后期用于白名单
+        authUtil.cacheToken(loginUser.getUser().getUserId(), token);
+
+        return token;
     }
 
 

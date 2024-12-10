@@ -33,7 +33,13 @@
       <el-table-column label="提示" width="60" align="center" prop="hint" v-if="columns[7].visible" />
     </el-table>
 
-
+    <pagination
+        v-show="total>0"
+        :total="total"
+        v-model:page="queryParams.currentPage"
+        v-model:limit="queryParams.pageSize"
+        @pagination="getList"
+    />
   </div>
 </template>
 
@@ -49,12 +55,16 @@ import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {debouncedFetchProblemsNotInList, type ListProblemQuery} from "@/api/list";
 import ListProblemViewForm from "@/views/problem-module/list-edit/list-problem-view/ListProblemViewForm.vue";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
+import Pagination from "@/components/pageination/Pagination.vue";
 
 const {listId} = defineProps<{
   listId: number
 }>()
 // 显示搜索栏
 const showSearch = ref(true);
+
+const total = ref(0)
+
 // 查询需要的表单数据
 const queryParams = reactive<ListProblemQuery>({
   currentPage: 1,
@@ -70,10 +80,10 @@ const {columns} = useStatuesColumn(
     ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示'],
     [false, true, false, true, true, true, false, false]
 );
-
 const {loading, isLoading, get: getProblem} = debouncedFetchProblemsNotInList(queryParams, (data) => {
   tableList.length = 0;
-  tableList.push(...data.data)
+  tableList.push(...data.data);
+  total.value = data.totalRecords;
 });
 
 

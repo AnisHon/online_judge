@@ -34,7 +34,7 @@ public class SysUserServiceTest {
 
     @Test
     public void getUserByIdTest() {
-        System.out.println(userConfig);
+
     }
     @Resource
     SysUserRoleService sysUserRoleService;

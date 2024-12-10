@@ -47,6 +47,9 @@ public class AuthUtil {
     private static String getLoginKey(@NotNull Long id) {
         return "user-service:userId:" + id;
     }
+    private static String getTokenKey(@NotNull Long id) {
+        return "user-service:token:userId:" + id;
+    }
 
     private static LoginUser getLoginUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -120,6 +123,11 @@ public class AuthUtil {
         redisTemplate.opsForValue().set(loginKey, user, JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
     }
 
+    public void cacheToken(Long userId, @NotNull String token) {
+        String tokenKey = getTokenKey(userId);
+        redisTemplate.opsForValue().set(tokenKey, token, JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
+    }
+
     public LoginUser getLoginUser(Long userId) {
         String loginKey = getLoginKey(userId);
         Object o = redisTemplate.opsForValue().get(loginKey);
@@ -148,7 +156,11 @@ public class AuthUtil {
 
     public void removeUser(Long id) {
         String loginKey = getLoginKey(id);
+        String tokenKey = getTokenKey(id);
+
         redisTemplate.delete(loginKey);
+        redisTemplate.delete(tokenKey);
+
     }
 
     public static LoginUser getContextUser() {

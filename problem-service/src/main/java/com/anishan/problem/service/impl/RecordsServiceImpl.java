@@ -1,7 +1,9 @@
 package com.anishan.problem.service.impl;
 
 import com.anishan.api.client.user.client.UserClient;
+import com.anishan.api.client.user.client.UserInternalClient;
 import com.anishan.api.client.user.domain.vo.UserVo;
+import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.vo.ScoredUser;
 import com.anishan.problem.domain.vo.ProblemStatistic;
 import com.anishan.problem.service.ContestService;
@@ -14,12 +16,10 @@ import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +35,10 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     private final ContestService contestService;
     private final RecordsMapper recordsMapper;
     private final UserClient userClient;
+    private final JudgeConfig judgeConfig;
+    private final UserInternalClient userInternalClient;
+
+
     /**
      * 判断是否存在，但是不返回boolean值
      * @param records 记录
@@ -60,6 +64,7 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         return this.getObj(wrapper, x -> (Long) x);
     }
 
+
     public void checkBeforeAdd(Records records) {
         if (records.getContestId() == null) {
             return;
@@ -70,9 +75,54 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         }
     }
 
+    private void doAddPoint(Records newRec, Records oldRec) {
+        boolean newStatus = newRec.isStatus();
+
+        // 新纪录是正确的，旧记录没有或者不对，才加分
+        boolean condition = newStatus && (oldRec == null || !oldRec.isStatus());
+
+        if (!condition) {
+            return;
+        }
+
+        BigDecimal point = judgeConfig.getIsFixedAwardPoint() ? judgeConfig.getAwardPoint() : newRec.getScore();
+
+        userInternalClient.addPoint(point.toString(), newRec.getUserId());
+
+    }
+
+
+    private Long addPoint(Records records) {
+        if (records == null || records.getProblemId() == null || records.getUserId() == null) {
+            return null;
+        }
+        LambdaQueryWrapper<Records> wrapper = new LambdaQueryWrapper<Records>()
+                .select(Records::getRecordId, Records::isStatus)
+                .eq(records.getRecordId() != null, Records::getRecordId, records.getRecordId())
+                .eq(Records::getProblemId, records.getProblemId())
+                .eq(Records::getUserId, records.getUserId());
+        wrapper = records.getContestId() == null ?
+                wrapper.isNull(Records::getContestId)
+                :
+                wrapper.eq(Records::getContestId, records.getContestId());
+
+        Records one = this.getOne(wrapper);
+
+
+        doAddPoint(records, one);
+
+        return Optional.ofNullable(one).map(Records::getRecordId).orElse(null);
+    }
+
+    /**
+     * 添加一条记录，顺便会给用户加奖励分
+     * @param records 记录类
+     * @return 返回bool类型表示是否成功
+     */
+    @Transactional
     @Override
     public boolean addRecord(Records records) {
-        Long id = existRecord(records);
+        Long id = addPoint(records);
         boolean b;
         if (id == null) {
             b = this.save(records);

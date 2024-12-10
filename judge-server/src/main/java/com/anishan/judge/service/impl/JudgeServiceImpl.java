@@ -159,6 +159,9 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     private static BigDecimal calcScore(JudgeMessage message, JudgeScore judgeScore) {
+        if (message.getContestId() == null) {
+            return judgeScore.getScore();
+        }
         BigDecimal totalScore = BigDecimal.ZERO;
         BigDecimal score = judgeScore.getScore();
         for (OjProblemCaseVo case_ : message.getCases()) {

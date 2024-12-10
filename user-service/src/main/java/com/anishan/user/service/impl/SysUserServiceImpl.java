@@ -12,18 +12,17 @@ import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.e.SseEvent;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.config.UserConfig;
-import com.anishan.user.domain.dto.PagedUserRoleQuery;
-import com.anishan.user.domain.dto.SysUserDto;
-import com.anishan.user.domain.dto.SysUserInfoDto;
-import com.anishan.user.domain.dto.UserPagedQuery;
+import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.mapper.SysUserMapper;
 import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysRoleService;
 import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.service.SysUserService;
+import com.anishan.user.util.SseUtils;
 import com.anishan.user.util.UserUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -35,8 +34,8 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -64,6 +63,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     private final UserConfig config;
     private final SysMenuService sysMenuService;
     private final AuthUtil authUtil;
+    private final SseUtils sseUtils;
 
 
     @Override
@@ -77,8 +77,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     @Transactional
     @Override
     public boolean addPoint(Long userId, BigDecimal point) {
-        return sysUserMapper.addPoints(userId, point) > 0;
+
+
+        boolean b = sysUserMapper.addPoints(userId, point) > 0;
+        UserPoint userPoint = getPoint(userId);
+        sseUtils.sendMessage(userId, SseEvent.UpdatePoint, userPoint);
+        return b;
     }
+
 
     @Override
     public List<UserVo> listUserById(List<Long> ids) {
@@ -308,6 +314,19 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     }
 
 
+    @Override
+    public UserPoint getPoint(Long userId) {
+        BigDecimal point = this.getObj(new LambdaQueryWrapper<SysUser>()
+                        .select(SysUser::getPoints)
+                        .eq(SysUser::getUserId, userId),
+                x -> (BigDecimal) x
+        );
+
+        UserPoint userPoint = new UserPoint();
+        userPoint.setPoint(point);
+        return userPoint;
+
+    }
 
 
 

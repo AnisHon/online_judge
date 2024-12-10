@@ -33,7 +33,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
+    },
+    extensions: ['.js', '.vue', '.ts'], // 确保可以解析 .vue 文件
   },
   build: {
     chunkSizeWarningLimit: 700

@@ -23,7 +23,7 @@ public class TestT {
     public void test() {
 
         LanguageConfig python3 = languageConfigLoader.getLanguageConfigByName("Python3");
-        System.out.println(python3.getRunCommand());
+
 
 //        String code = "i = input()\n" +
 //                "a ,b = i.split(\" \")\n" +

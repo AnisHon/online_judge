@@ -3,10 +3,7 @@ package com.anishan.user.service;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.user.domain.dto.PagedUserRoleQuery;
-import com.anishan.user.domain.dto.SysUserDto;
-import com.anishan.user.domain.dto.SysUserInfoDto;
-import com.anishan.user.domain.dto.UserPagedQuery;
+import com.anishan.user.domain.dto.*;
 import com.anishan.api.domain.entity.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.anishan.api.client.user.domain.vo.UserVo;
@@ -56,4 +53,6 @@ public interface SysUserService extends IService<SysUser> {
     List<UserVo> rank(Integer limit);
 
     boolean changeInfo(SysUserInfoDto sysUserDto, Long userId);
+
+    UserPoint getPoint(Long userId);
 }

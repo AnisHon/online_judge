@@ -3,6 +3,11 @@ import {useToken} from "@/stores/useToken";
 import {ElMessage} from "element-plus";
 import router from "@/router"
 
+
+export const baseURL = "/api";
+
+
+
 export interface AjaxResult<T> {
     code: number;
     message: string;
@@ -32,7 +37,7 @@ const error403 = () => {
 };
 
 const service = axios.create({
-    baseURL: "/api", // 设置基础 URL
+    baseURL: baseURL, // 设置基础 URL
     timeout: 60000, // 设置请求超时时间
 });
 
