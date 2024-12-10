@@ -1,4 +1,4 @@
-package com.anishan.commons.e;
+package com.anishan.commons.enumeration;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

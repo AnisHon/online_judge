@@ -1,8 +1,7 @@
-package com.anishan.commons.e;
+package com.anishan.commons.enumeration;
 
 import com.baomidou.mybatisplus.annotation.IEnum;
 import io.swagger.annotations.ApiModel;
-import lombok.Getter;
 
 @ApiModel("AC RE WA TLE MLE CE")
 public enum JudgeResult implements IEnum<String>, Enumerator<String> {

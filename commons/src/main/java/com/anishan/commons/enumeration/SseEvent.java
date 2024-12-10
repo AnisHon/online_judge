@@ -1,10 +1,11 @@
-package com.anishan.commons.e;
+package com.anishan.commons.enumeration;
 
 import lombok.Getter;
 
 @Getter
 public enum SseEvent {
     UpdatePoint("update-point"),
+    Ping("ping"),
     ;
 
 

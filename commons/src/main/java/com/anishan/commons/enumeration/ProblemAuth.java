@@ -1,22 +1,16 @@
-package com.anishan.commons.e;
+package com.anishan.commons.enumeration;
 
 import com.baomidou.mybatisplus.annotation.IEnum;
 
-public enum Difficulty implements Enumerator<Integer>, IEnum<Integer> {
-
-    Unknown(0),
-    easy(1),
-    medium(2),
-    hard(3),
+public enum ProblemAuth implements Enumerator<Integer>, IEnum<Integer> {
+    Public(1),
+    Contest(2),
     ;
-
-
     private final int value;
 
-    Difficulty(int value) {
+    ProblemAuth(int value) {
         this.value = value;
     }
-
 
     @Override
     public Integer value() {
@@ -27,4 +21,6 @@ public enum Difficulty implements Enumerator<Integer>, IEnum<Integer> {
     public Integer getValue() {
         return value;
     }
+
+
 }

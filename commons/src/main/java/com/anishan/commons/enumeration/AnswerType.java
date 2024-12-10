@@ -1,7 +1,6 @@
-package com.anishan.commons.e;
+package com.anishan.commons.enumeration;
 
 import com.baomidou.mybatisplus.annotation.IEnum;
-import io.swagger.models.auth.In;
 
 public enum AnswerType implements IEnum<Integer>, Enumerator<Integer> {
 

@@ -1,18 +1,22 @@
-package com.anishan.commons.e;
+package com.anishan.commons.enumeration;
 
-import cn.hutool.core.thread.ThreadUtil;
-import com.anishan.commons.util.ThrowUtil;
 import com.baomidou.mybatisplus.annotation.IEnum;
 
-public enum ProblemAuth implements Enumerator<Integer>, IEnum<Integer> {
-    Public(1),
-    Contest(2),
+public enum Difficulty implements Enumerator<Integer>, IEnum<Integer> {
+
+    Unknown(0),
+    easy(1),
+    medium(2),
+    hard(3),
     ;
+
+
     private final int value;
 
-    ProblemAuth(int value) {
+    Difficulty(int value) {
         this.value = value;
     }
+
 
     @Override
     public Integer value() {
@@ -23,6 +27,4 @@ public enum ProblemAuth implements Enumerator<Integer>, IEnum<Integer> {
     public Integer getValue() {
         return value;
     }
-
-
 }

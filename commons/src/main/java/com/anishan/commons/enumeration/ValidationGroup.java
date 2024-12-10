@@ -1,4 +1,4 @@
-package com.anishan.commons.e;
+package com.anishan.commons.enumeration;
 
 public class ValidationGroup {
 

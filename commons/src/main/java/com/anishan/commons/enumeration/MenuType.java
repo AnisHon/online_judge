@@ -1,4 +1,4 @@
-package com.anishan.commons.e;
+package com.anishan.commons.enumeration;
 
 import com.baomidou.mybatisplus.annotation.IEnum;
 import lombok.Getter;
