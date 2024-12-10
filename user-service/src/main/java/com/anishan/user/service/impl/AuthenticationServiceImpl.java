@@ -5,7 +5,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
-import com.anishan.commons.e.UserState;
+import com.anishan.commons.enumeration.UserState;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.LoginForm;
@@ -46,6 +46,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserConfig config;
     private final AuthUtil authUtil;
     private final RoleUtil roleUtil;
+    private final UserConfig userConfig;
 
     // 默认就是student
 
@@ -325,7 +326,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public CaptchaCodeVo sendCaptchaCode() {
-        AbstractCaptcha captcha = AuthUtil.generateCaptchaCode();
+        AbstractCaptcha captcha = AuthUtil.generateCaptchaCode(userConfig.getCaptchaType());
         String token = IdUtil.fastSimpleUUID();
         authUtil.cacheCaptchaCode(token, captcha.getCode());
 

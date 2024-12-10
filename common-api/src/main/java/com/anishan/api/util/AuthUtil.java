@@ -1,9 +1,11 @@
 package com.anishan.api.util;
 
 import cn.hutool.captcha.AbstractCaptcha;
+import cn.hutool.captcha.CaptchaUtil;
 import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.domain.entity.SysUser;
+import com.anishan.commons.enumeration.CaptchaCodeType;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.util.JwtUtil;
 import org.jetbrains.annotations.Contract;
@@ -76,8 +78,26 @@ public class AuthUtil {
     @NotNull
     @Contract(pure = true)
 
-    public static AbstractCaptcha generateCaptchaCode() {
-        return cn.hutool.captcha.CaptchaUtil.createShearCaptcha(150, 75, 4, 2);
+
+
+    public static AbstractCaptcha generateCaptchaCode(CaptchaCodeType captchaType) {
+        AbstractCaptcha captcha = null;
+        final int width = 150, height = 75;
+        switch (captchaType) {
+            case Gif:
+                captcha = CaptchaUtil.createGifCaptcha(width, height);
+                break;
+            case Line:
+                captcha = CaptchaUtil.createLineCaptcha(width, height);
+                break;
+            case Shear:
+                captcha = CaptchaUtil.createShearCaptcha(width, height);
+                break;
+            case Circle:
+                captcha = CaptchaUtil.createCircleCaptcha(width, height);
+                break;
+        }
+        return captcha;
     }
     
 

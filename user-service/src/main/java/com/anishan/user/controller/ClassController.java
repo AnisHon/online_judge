@@ -3,7 +3,7 @@ package com.anishan.user.controller;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.commons.e.ValidationGroup;
+import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.user.domain.dto.ClassDto;
 import com.anishan.user.domain.dto.ClassPagedQuery;
 import com.anishan.user.domain.dto.UserClassQuery;
