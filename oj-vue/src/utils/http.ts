@@ -39,6 +39,7 @@ const error403 = () => {
 const service = axios.create({
     baseURL: baseURL, // 设置基础 URL
     timeout: 60000, // 设置请求超时时间
+    withCredentials: true // 携带cookie
 });
 
 // 请求拦截器

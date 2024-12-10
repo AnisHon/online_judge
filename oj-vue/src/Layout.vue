@@ -15,6 +15,10 @@
 
       </el-main>
     </el-container>
+
+
+
+    <floating-ball/>
   </div>
 </template>
 
@@ -23,6 +27,8 @@
 import MenuBar from "@/components/menu/Menu.vue";
 import {provide, ref} from "vue";
 import {type ElMain} from "element-plus"
+//@ts-ignore
+import FloatingBall from "@/components/FloatingBall/index.vue";
 const elMainRef = ref<InstanceType<typeof ElMain>>();
 provide('elMain', {elMainRef: elMainRef});
 

@@ -1,16 +1,18 @@
 package com.anishan.user.util;
 
 import cn.hutool.core.util.StrUtil;
-import com.anishan.commons.e.SseEvent;
+import com.anishan.commons.enumeration.SseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -20,44 +22,61 @@ public class SseUtils {
 
     private final ObjectMapper objectMapper;
 
+    private static final Map<String, SseEmitter> sseEmitterMap = new ConcurrentHashMap<>();
+    private final SseRedisUtil sseRedisUtil;
 
-    private static final Map<Long, SseEmitter> sseEmitterMap = new ConcurrentHashMap<>();
+
+    public SseEmitter reconnect(String uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        return sseEmitterMap.get(uuid);
+
+    }
+
     /**
      * 创建连接
      */
-    public SseEmitter createSse(Long userId) {
-        if (userId == null) {
+    public SseEmitter createSse(String uuid, Long userId) {
+        if (uuid == null) {
             return null;
         }
 
-        //默认30秒超时,设置为0L则永不超时
-        SseEmitter sseEmitter = new SseEmitter(0L);
-        //完成后回调
-        sseEmitter.onCompletion(() -> sseEmitterMap.remove(userId));
+        // session与用户Id关联
+        sseRedisUtil.saveUserSession(userId, uuid);
 
+        SseEmitter sseEmitter = new SseEmitter(0L);
+
+        //完成后回调
+        sseEmitter.onCompletion(() -> {
+            sseEmitterMap.remove(uuid);
+            sseRedisUtil.removeUserSession(userId, uuid);
+            log.info("[{}]销毁sse连接", uuid);
+        });
         //异常回调
         sseEmitter.onError(
                 throwable -> {
                     try {
-                        log.info("[{}]连接异常,{}", userId, throwable.toString());
+                        log.info("[{}]连接异常,{}", uuid, throwable.toString());
                         sseEmitter.send(SseEmitter.event()
-                                .id(userId.toString())
+                                .id(uuid.toString())
                                 .name("发生异常！")
                                 .data("发生异常请重试！")
                                 .reconnectTime(3000));
-                        sseEmitterMap.put(userId, sseEmitter);
+                        sseEmitterMap.put(uuid, sseEmitter);
                     } catch (IOException e) {
                         log.error(e.getMessage());
                     }
                 }
         );
+
         try {
             sseEmitter.send(SseEmitter.event().reconnectTime(5000));
         } catch (IOException e) {
             log.error(e.getMessage());
         }
-        sseEmitterMap.put(userId, sseEmitter);
-        log.info("[{}]创建sse连接成功！", userId);
+        sseEmitterMap.put(uuid, sseEmitter);
+        log.info("[{}]创建sse连接成功！", uuid);
         return sseEmitter;
     }
 
@@ -65,22 +84,22 @@ public class SseUtils {
      * 给指定用户发送消息
      *
      */
-    public boolean sendMessage(Long id,String messageId, String message) {
+    public boolean sendMessage(String uuid,String messageId, String message) {
         if (StrUtil.isBlank(message)) {
-            log.info("参数异常id: [{}]，msg为null", id);
+            log.info("参数异常id: [{}]，msg为null", uuid);
             return false;
         }
-        SseEmitter sseEmitter = sseEmitterMap.get(id);
+        SseEmitter sseEmitter = sseEmitterMap.get(uuid);
         if (sseEmitter == null) {
-            log.info("消息推送失败id:[{}],没有创建连接，请重试。", id);
+            log.info("消息推送失败id:[{}],没有创建连接，请重试。", uuid);
             return false;
         }
         try {
             sseEmitter.send(SseEmitter.event().id(messageId).reconnectTime(60 * 1000L).data(message));
             return true;
         }catch (Exception e) {
-            sseEmitterMap.remove(id);
-            log.info("用户{},消息id:{},推送异常:{}", id,messageId, e.getMessage());
+            sseEmitterMap.remove(uuid);
+            log.info("用户{},消息id:{},推送异常:{}", uuid,messageId, e.getMessage());
             sseEmitter.complete();
             return false;
         }
@@ -88,24 +107,58 @@ public class SseUtils {
 
     /**
      * 断开
-     * @param id 用户ID
+     *
+     * @param uuid session ID
+     * @param userId 用户Id
      */
-    public void closeSse(Long id){
-        if (sseEmitterMap.containsKey(id)) {
-            SseEmitter sseEmitter = sseEmitterMap.get(id);
+    public void closeSse(String uuid, Long userId){
+        if (sseEmitterMap.containsKey(uuid)) {
+            SseEmitter sseEmitter = sseEmitterMap.get(uuid);
             sseEmitter.complete();
-            sseEmitterMap.remove(id);
         }
     }
 
-    public boolean sendMessage(Long id, SseEvent sseEvent, Object message) {
+    public boolean sendMessage(String uuid, SseEvent sseEvent, Object message) {
         try {
             String s = objectMapper.writeValueAsString(message);
-            return sendMessage(id, sseEvent.getEvent(), s);
+            return sendMessage(uuid, sseEvent.getEvent(), s);
         } catch (JsonProcessingException e) {
             log.error("消息序列化失败", e);
             return false;
         }
     }
 
+    /**
+     * 向某个User广播消息
+     * @param userId 用户ID
+     * @param sseEvent sse消息事件
+     * @param message 消息
+     */
+    public void sendMessage(Long userId, SseEvent sseEvent, Object message) {
+        Set<String> userSessions = sseRedisUtil.getUserSessions(userId);
+        for (String userSession : userSessions) {
+            sendMessage(userSession, sseEvent, message);
+        }
+    }
+
+    /**
+     * 全体广播消息
+     * @param sseEvent 消息事件
+     * @param message 消息
+     */
+    public void sendMessage(SseEvent sseEvent, Object message) {
+        for (String s : sseEmitterMap.keySet()) {
+            sendMessage(s, sseEvent, message);
+        }
+    }
+
+
+
+    @Scheduled(cron = "0/30 * * * * ? ")
+    private void heartbeat() {
+        log.info("定时清理");
+        for (String s : sseEmitterMap.keySet()) {
+            sendMessage(s, SseEvent.Ping, "ping");
+        }
+    }
 }

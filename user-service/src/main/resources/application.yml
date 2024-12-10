@@ -9,6 +9,8 @@ oj:
   knife4j:
     resource: com.anishan.user
 
+  config:
+    captcha-type: line
 
 #config:
 #  check-in-award: 10
