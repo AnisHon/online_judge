@@ -13,9 +13,11 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.SseEvent;
+import com.anishan.commons.enumeration.UserState;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.*;
+import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.mapper.SysUserMapper;
 import com.anishan.user.service.SysMenuService;
@@ -40,6 +42,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * @author anishan
@@ -56,7 +59,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
                                       "0123456789";
 
 
-
     private final SysUserMapper sysUserMapper;
     private final SysRoleService sysRoleService;
     private final SysUserRoleService sysUserRoleService;
@@ -65,6 +67,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     private final SysMenuService sysMenuService;
     private final AuthUtil authUtil;
     private final SseUtils sseUtils;
+    private final UserConfig userConfig;
+
+
+
 
 
     @Override
@@ -241,6 +247,31 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         SysUser sysUser = this.getById(userId);
 
         return getLoginUser(sysUser, sysUserRoleService, sysMenuService);
+    }
+
+    @Override
+    public LoginUser getRootAccount() {
+
+        List<SysMenu> menus = sysMenuService.list();
+        List<String> authority = menus.stream().map(SysMenu::getPerms).collect(Collectors.toList());
+
+
+
+        String password = passwordEncoder.encode(userConfig.getRootPassword());
+
+        // magic number id 0 -> root
+        SysUser sysUser = new SysUser();
+        sysUser.setUserName("root");
+        sysUser.setPassword(password);
+        sysUser.setNikeName("ROOT");
+        sysUser.setEmail("root@example.invalid");
+        sysUser.setStatus(UserState.NORMAL);
+
+        LoginUser loginUser = new LoginUser();
+        loginUser.setUser(sysUser);
+        loginUser.setAuths(authority);
+
+        return loginUser;
     }
 
     @NotNull

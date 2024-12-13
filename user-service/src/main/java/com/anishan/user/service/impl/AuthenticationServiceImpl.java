@@ -92,6 +92,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                 new UsernamePasswordAuthenticationToken(loginForm.getUsername(), loginForm.getPassword());
 
+
         Authentication authenticate = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
         if (authenticate == null) {
             throw new RuntimeException("用户名或密码错误");

@@ -27,7 +27,7 @@ create table sys_user (
 ) engine=innodb auto_increment=100
     comment '用户表' auto_increment = 100;
 
-# www.github.com
+# 默认密码：www.github.com
 insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (1, 'test_teacher', 'teacher@tset.com', '测试教师', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
 insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (2, 'test_student', 'student@tset.com', '测试学生', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
 insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (3, 'test_admin', 'admin@tset.com', '测试管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');

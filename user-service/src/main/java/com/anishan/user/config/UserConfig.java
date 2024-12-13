@@ -15,9 +15,19 @@ public class UserConfig {
     private float acProblemAwardRate;
     private Long defaultRoleId;
 
-    private String fileBaseUrl;
+    /**
+     *
+     */
     private String defaultPassword;
 
+    /**
+     * 验证码类型
+     */
     private CaptchaCodeType captchaType = CaptchaCodeType.Gif;
+
+    /**
+     * Root账户密码
+     */
+    private String rootPassword = "4nX7rcIMdv";
 
 }

@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/internal")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class IntervalController {
+public class InternalController {
 
     private final SysUserService sysUserService;
 

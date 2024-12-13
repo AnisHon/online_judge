@@ -22,22 +22,27 @@ import java.util.Map;
 public class SysLanguageServiceImpl extends ServiceImpl<SysLanguageMapper, SysLanguage>
     implements SysLanguageService{
 
-    private Map<Long, SysLanguageVo> languageCache;
+    private volatile Map<Long, SysLanguageVo> languageCache;
 
-    private List<SysLanguageVo> doGetLanguage() {
+    private synchronized void loadCache() {
         if (languageCache == null) {
             languageCache = new HashMap<>();
             List<SysLanguage> list = this.list();
             List<SysLanguageVo> vos = BeanUtil.copyToList(list, SysLanguageVo.class);
             vos.forEach(x -> languageCache.put(x.getLanguageId(), x));
         }
+    }
 
+    private List<SysLanguageVo> doGetLanguage() {
+        loadCache();
         return ListUtil.toList(languageCache.values());
     }
 
     @Override
     public String getNameById(Long languageId) {
-        doGetLanguage();
+        //加载缓存如果需要
+        loadCache();
+
         SysLanguageVo sysLanguageVo = languageCache.get(languageId);
         if (sysLanguageVo != null) {
             return sysLanguageVo.getLanguageName();

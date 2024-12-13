@@ -22,6 +22,9 @@ spring:
           uri: lb://problem-service
           predicates:
             - Path=/problem-api/**
+
+
+      # todo 上线后需要屏蔽internal等一些接口
       default-filters:
         - StripPrefix=1
 

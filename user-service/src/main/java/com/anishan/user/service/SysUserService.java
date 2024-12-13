@@ -1,5 +1,6 @@
 package com.anishan.user.service;
 
+import com.anishan.api.domain.LoginUser;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -51,6 +52,8 @@ public interface SysUserService extends IService<SysUser> {
     PagedResult<UserVo> getUserByRoleId(PagedUserRoleQuery userQuery);
 
     List<UserVo> rank(Integer limit);
+
+    LoginUser getRootAccount();
 
     boolean changeInfo(SysUserInfoDto sysUserDto, Long userId);
 

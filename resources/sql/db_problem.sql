@@ -29,7 +29,7 @@ values
     ('C', '/usr/bin/g++', 2),
     ('C With O2', '/usr/bin/g++', 2),
     ('Java', '/usr/bin/javac', 3),
-    ('Python2', '/usr/bin/python', 4),
+#     ('Python2', '/usr/bin/python', 4),
     ('Python3', '/usr/bin/python', 4),
     ('Golang', '/usr/bin/python', 4);
 

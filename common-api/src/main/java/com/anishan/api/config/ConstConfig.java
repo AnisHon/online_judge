@@ -15,7 +15,8 @@ public class ConstConfig {
     private Long checkMaxAward;
     private float acProblemAwardRate;
     private Long defaultRoleId;
-    private String fileBaseUrl;
+    // todo 上线后或者用windows的时候这里需要更改
+    private String fileBaseUrl = "/Users/anishan/Project/Web/temp";
 
 
 }
