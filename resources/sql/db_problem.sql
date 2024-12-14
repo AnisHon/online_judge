@@ -259,6 +259,17 @@ create index contest_records_contest_id_idx on records(contest_id);
 create index contest_records_user_id_idx on records(user_id);
 create index contest_records_problem_id_idx on records(problem_id);
 
+
+-- ----------------------------
+-- 13、题目完成表
+-- ----------------------------
+drop table if exists problem_complete;
+create table problem_complete(
+    user_id     bigint(20)      not null                 comment '用户ID',
+    problem_id  bigint(20)      not null                 comment '题目id',
+    primary key (user_id, problem_id)
+) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题目完成表';
+
 -- ----------------------------
 -- 14、比赛参加表
 -- ----------------------------

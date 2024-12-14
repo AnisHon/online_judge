@@ -7,6 +7,7 @@ import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.vo.ScoredUser;
 import com.anishan.problem.domain.vo.ProblemStatistic;
 import com.anishan.problem.service.ContestService;
+import com.anishan.problem.service.ProblemCompleteService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.Records;
@@ -37,7 +38,7 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     private final UserClient userClient;
     private final JudgeConfig judgeConfig;
     private final UserInternalClient userInternalClient;
-
+    private final ProblemCompleteService problemCompleteService;
 
     /**
      * 判断是否存在，但是不返回boolean值
@@ -74,14 +75,14 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
             throw new RuntimeException("非法请求，用户未参加比赛(id: " + records.getContestId() + ")");
         }
     }
-
+    
     private void doAddPoint(Records newRec, Records oldRec) {
         boolean newStatus = newRec.isStatus();
-
+        boolean complete = problemCompleteService.exists(newRec.getUserId(), newRec.getProblemId());
         // 新纪录是正确的，旧记录没有或者不对，才加分
-        boolean condition = newStatus && (oldRec == null || !oldRec.isStatus());
+        boolean isScoreAddable = !complete && newStatus && (oldRec == null || !oldRec.isStatus());
 
-        if (!condition) {
+        if (!isScoreAddable) {
             return;
         }
 
@@ -122,14 +123,18 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     @Transactional
     @Override
     public boolean addRecord(Records records) {
-        Long id = addPoint(records);
+        Long recordId = addPoint(records);
         boolean b;
-        if (id == null) {
+        if (recordId == null) {
             b = this.save(records);
         } else {
-            records.setRecordId(id);
+            records.setRecordId(recordId);
             b = this.updateById(records);
         }
+
+        // 标记已完成
+        problemCompleteService.finish(records.getUserId(), records.getProblemId());
+
         return b;
     }
 

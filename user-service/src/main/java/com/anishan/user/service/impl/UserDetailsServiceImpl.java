@@ -29,13 +29,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
 
     private LoginUser loadByUsername(String username) throws UsernameNotFoundException {
-        SysUser sysUser = sysUserService.getUserByUsernameOrEmail(username);
-        Optional.ofNullable(sysUser).orElseThrow(() -> new UsernameNotFoundException(username));
-
         // root uses in-memory password set by nacos
         if ("root".equals(username)) {
             return sysUserService.getRootAccount();
         }
+
+        SysUser sysUser = sysUserService.getUserByUsernameOrEmail(username);
+        Optional.ofNullable(sysUser).orElseThrow(() -> new UsernameNotFoundException(username));
+
+
 
         return getLoginUser(sysUser, sysUserRoleService, sysMenuService);
     }

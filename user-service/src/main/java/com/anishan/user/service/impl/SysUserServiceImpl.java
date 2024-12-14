@@ -85,7 +85,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     @Override
     public boolean addPoint(Long userId, BigDecimal point) {
 
-
         boolean b = sysUserMapper.addPoints(userId, point) > 0;
         UserPoint userPoint = getPoint(userId);
         sseUtils.sendMessage(userId, SseEvent.UpdatePoint, userPoint);
@@ -161,6 +160,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     @Override
     public boolean existsUsername(String username) {
+
+        // 内存中ROOT用户无法注册
+        if (username.equals("root")) {
+            return true;
+        }
+
+
         long count = sysUserMapper.selectJoinCount(new MPJLambdaQueryWrapper<SysUser>()
                 .disableLogicDel()
                 .eq(SysUser::getUserName, username));
@@ -261,11 +267,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
         // magic number id 0 -> root
         SysUser sysUser = new SysUser();
+        sysUser.setUserId(0L);
         sysUser.setUserName("root");
         sysUser.setPassword(password);
         sysUser.setNikeName("ROOT");
         sysUser.setEmail("root@example.invalid");
         sysUser.setStatus(UserState.NORMAL);
+
 
         LoginUser loginUser = new LoginUser();
         loginUser.setUser(sysUser);

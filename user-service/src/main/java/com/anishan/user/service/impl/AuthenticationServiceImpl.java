@@ -379,6 +379,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private List<Long> getRoleIdsByUserId(Long userId) {
         // 只有启用后的角色才返回 0是启用
+
         return sysUserRoleService
                 .getRolesByUserId(userId)
                 .stream()
@@ -407,17 +408,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Long userId = myId();
         List<Long> roleIds = getRoleIdsByUserId(userId);
 
+        // root auths
+        if (userId == 0L) {
+            return sysMenuService.getRootAuths();
+        }
+
         return useCache(roleIds);
 //        List<SysMenu> authorityMenu = sysRoleMenuService.getAuthorityMenu(roleIds);
     }
 
     public List<TreedMenuVo> useTreedMenuCache(List<Long> roleIds) {
         for (Long roleId : roleIds) {
-            boolean exist = roleUtil.isExistTreedMenu(roleId);
-            if (!exist) {
-                List<TreedMenuVo> menus = sysMenuService.getTreedMenuByRole(List.of(roleId));
-                roleUtil.cacheTreedMenus(roleId, menus);
+            synchronized (this) {
+                boolean exist = roleUtil.isExistTreedMenu(roleId);
+                if (!exist) {
+                    List<TreedMenuVo> menus = sysMenuService.getTreedMenuByRole(List.of(roleId));
+                    roleUtil.cacheTreedMenus(roleId, menus);
+                }
             }
+
         }
         return roleUtil.getTreedMenus(roleIds);
     }
@@ -427,6 +436,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Long userId = myId();
         List<Long> roleIds = getRoleIdsByUserId(userId);
 //        return sysMenuService.getTreedMenuByRole(roleIds);
+
+
+        // in-memory root account
+        if (userId == 0L) {
+            return sysMenuService.getRootTreeMenu();
+        }
+
 
         return useTreedMenuCache(roleIds);
     }

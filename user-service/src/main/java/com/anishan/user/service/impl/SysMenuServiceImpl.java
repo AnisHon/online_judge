@@ -128,6 +128,22 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     }
 
     @Override
+    public List<TreedMenuVo> getRootTreeMenu() {
+        HashSet<MenuVo> all = new HashSet<>(BeanUtil.copyToList(this.list(), MenuVo.class));
+
+        return buildTreeMenu(all);
+    }
+
+    @Override
+    public List<MenuVo> getRootAuths() {
+        List<SysMenu> list = this.list(
+                new LambdaQueryWrapper<SysMenu>()
+                        .eq(SysMenu::getMenuType, MenuType.Button)
+        );
+        return BeanUtil.copyToList(list, MenuVo.class);
+    }
+
+    @Override
     public List<String> getAuthorities(List<Long> roleIds) {
         if (CollectionUtil.isEmpty(roleIds)) {
             return new ArrayList<>();

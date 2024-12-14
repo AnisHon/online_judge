@@ -30,7 +30,6 @@ import java.util.List;
 public class ContestController {
 
     private final ContestService contestService;
-    private final RecordsService recordsService;
 
     @GetMapping("/get/{id}")
     @ApiOperation("通过id获取比赛")

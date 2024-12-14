@@ -31,6 +31,10 @@ public interface SysMenuService extends IService<SysMenu> {
 
     List<TreedMenuVo> getTreedMenuByRole(List<Long> roleIds);
 
+    List<TreedMenuVo> getRootTreeMenu();
+
+    List<MenuVo> getRootAuths();
+
     List<String> getAuthorities(List<Long> roleIds);
 
     List<String> getAuthoritiesByIds(List<Long> menuIds);
