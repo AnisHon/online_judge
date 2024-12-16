@@ -5,6 +5,7 @@ import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.user.domain.dto.UserRoleRelationDto;
 import com.anishan.user.mapper.SysUserMapper;
 import com.anishan.user.service.SysRoleService;
@@ -82,17 +83,13 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
     @Override
     public boolean grant(SysUserRoleRelation sysUserRoleRelation) {
         boolean role = sysRoleService.existRole(sysUserRoleRelation.getRoleId());
-        if (!role) {
-            throw new RuntimeException("角色不存在");
-        }
+
+        ThrowUtil.illegalArgument(!role, "角色不存在");
 
         boolean exists = sysUserMapper.exists(new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getUserId, sysUserRoleRelation.getUserId()));
-        if (exists) {
-            throw new RuntimeException("用户不存在");
-        }
 
-
+        ThrowUtil.illegalArgument(!exists, "用户不存在");
 
         return this.save(sysUserRoleRelation);
     }
@@ -118,9 +115,9 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
                 .map(SysUserRoleRelation::getRoleId)
                 .collect(Collectors.toList());
         boolean roleExists = sysRoleService.isAllExist(roleIds);
-        if (!roleExists) {
-            throw new RuntimeException("RoleId不存在");
-        }
+
+
+        ThrowUtil.illegalArgument(!roleExists, "角色不存在");
 
         List<Long> userIds = sysRelations
                 .stream()
@@ -130,10 +127,7 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
 
         boolean userExist = allUserExists(userIds);
 
-        if (!userExist) {
-            throw new RuntimeException("UserId不存在");
-        }
-
+        ThrowUtil.illegalArgument(!userExist, "用户不存在");
 
         return this.saveBatch(sysRelations);
     }

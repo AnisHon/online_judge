@@ -29,9 +29,6 @@ public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuMapper, SysRo
     implements SysRoleMenuService{
 
     private final SysRoleMenuMapper sysRoleMenuMapper;
-    private final SysRoleService sysRoleService;
-    private final SysUserRoleService sysUserRoleService;
-
 
     @Override
     public List<Long> getMenuIdByRole(List<Long> roleIds) {

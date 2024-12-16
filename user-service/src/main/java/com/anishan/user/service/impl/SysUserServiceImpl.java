@@ -15,6 +15,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.SseEvent;
 import com.anishan.commons.enumeration.UserState;
 import com.anishan.commons.util.MysqlMappingUtils;
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.entity.SysMenu;
@@ -136,10 +137,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     @Override
     @Transactional
     public void addUser(SysUserDto sysUserDto) {
-        boolean b = sysRoleService.existRole(sysUserDto.getRole());
-        if (!b) {
-           throw new RuntimeException("角色不存在");
-        }
+        boolean exists = sysRoleService.existRole(sysUserDto.getRole());
+
+        ThrowUtil.illegalArgument(!exists, "角色不存在");
 
         // 自动填充字段，添加User，会抛出异常
         SysUser sysUser = doSaveUser(sysUserDto);
@@ -331,9 +331,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         sysUserDto = doFillEmptyProperties(sysUserDto);
         SysUser sysUser = BeanUtil.copyProperties(sysUserDto, SysUser.class, "role");
         boolean save = this.save(sysUser);
-        if (!save) {
-            throw new RuntimeException("save failed");
-        }
+
+        ThrowUtil.businessError(!save, "保存失败");
+
         return sysUser;
     }
 

@@ -1,5 +1,6 @@
 package com.anishan.user.service.impl;
 
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.entity.UserCheckIn;
 import com.anishan.user.domain.vo.UserCheckInInfo;
@@ -41,7 +42,6 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
 
     @Override
     public List<UserCheckIn> getUserCheckInList() {
-        LocalDate now = LocalDate.now();
         return this.list(
                 new LambdaUpdateWrapper<UserCheckIn>()
                         .orderByDesc(UserCheckIn::getCurrentTime)
@@ -98,9 +98,7 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
         boolean success = this.save(newCheckIn);
         success = success && sysUserService.addPoint(userId, rewardPoint);
 
-        if (!success) {
-            throw new RuntimeException("发生未知错误");
-        }
+        ThrowUtil.businessError(success, "签到失败，发生未知错误");
 
         return UserCheckInInfo.successChecked(rewardPoint, newCheckIn);
     }

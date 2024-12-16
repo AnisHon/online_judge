@@ -7,6 +7,7 @@ import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.enumeration.UserState;
 import com.anishan.api.domain.LoginUser;
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.LoginForm;
 import com.anishan.user.domain.dto.RegistrationForm;
@@ -85,18 +86,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     public Authentication doCheckLogin(LoginForm loginForm) {
 
-        if (authUtil.checkAndRemoveCaptchaCode(loginForm.getToken(), loginForm.getCaptchaCode())) {
-            throw new RuntimeException("验证码错误");
-        }
+
+        ThrowUtil.illegalArgument(
+                authUtil.checkAndRemoveCaptchaCode(loginForm.getToken(), loginForm.getCaptchaCode()),
+                "验证码错误"
+        );
+
+
 
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                 new UsernamePasswordAuthenticationToken(loginForm.getUsername(), loginForm.getPassword());
 
 
         Authentication authenticate = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
-        if (authenticate == null) {
-            throw new RuntimeException("用户名或密码错误");
-        }
+
+        ThrowUtil.illegalArgument(authenticate == null, "用户名或密码错误");
+
         return authenticate;
 
 
@@ -186,7 +191,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         sysUser.setUserName(registrationForm.getUserName());
         sysUser.setNikeName(registrationForm.getNikeName());
-        sysUser.setEmail(registrationForm.getEmail());
         sysUser.setPassword(passwordEncoder.encode(registrationForm.getPassword()));
 
         LoginUser loginUser = doBuildLoginUser(sysUser);
@@ -292,12 +296,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void doSendEmailCheck(String email, String captchaToken, String captchaCode) {
-        if (authUtil.hasEmailKey(email)){
-            throw new RuntimeException("已发送验证码请等待");
-        }
-        if (authUtil.checkAndRemoveCaptchaCode(captchaToken, captchaCode)){
-            throw new RuntimeException("验证码错误");
-        }
+        ThrowUtil.illegalState(email == null, "未设置邮箱");
+        ThrowUtil.illegalArgument(authUtil.hasEmailKey(email), "请勿重复发送验证码");
+        ThrowUtil.illegalArgument(authUtil.checkAndRemoveCaptchaCode(captchaToken, captchaCode), "验证码错误");
+
     }
 
 
@@ -452,9 +454,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String defaultPassword = config.getDefaultPassword();
         String newPassword = passwordEncoder.encode(defaultPassword);
         boolean exists = sysUserService.existsId(id);
-        if (!exists) {
-            throw new RuntimeException("用户不存在");
-        }
+
+        ThrowUtil.illegalArgument(!exists, "用户不存在");
 
         return sysUserService.update(new LambdaUpdateWrapper<SysUser>()
                 .set(SysUser::getPassword, newPassword)

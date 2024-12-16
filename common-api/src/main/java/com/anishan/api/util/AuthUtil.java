@@ -164,6 +164,12 @@ public class AuthUtil {
         return Objects.equals(code, inputCode);
     }
 
+    /**
+     *  检查并且删除验证码，需要注意该方法返回的是验证码是否错误
+     * @param captchaToken 验证码UUID
+     * @param inputCode    用户输入的验证码
+     * @return             是否正确
+     */
     public boolean checkAndRemoveCaptchaCode(String captchaToken, String inputCode) {
         String code = getAndRemoveCaptchaCode(captchaToken);
         return !Objects.equals(code.toLowerCase(), inputCode.toLowerCase());

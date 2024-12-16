@@ -6,6 +6,7 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.commons.enumeration.MenuType;
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
 import com.anishan.api.domain.entity.SysRole;
@@ -231,16 +232,14 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
         List<Long> menuIds = collect.stream().map(SysRoleMenuRelation::getMenuId).collect(Collectors.toList());
         boolean menuExist = isAllExist(menuIds);
 
-        if (!menuExist) {
-            throw new RuntimeException("menu id 不存在");
-        }
+        ThrowUtil.illegalArgument(!menuExist, "菜单不存在");
 
 
         List<Long> roleIds = collect.stream().map(SysRoleMenuRelation::getRoleId).collect(Collectors.toList());
         boolean roleExist = sysRoleService.isAllExist(roleIds);
-        if (!roleExist) {
-            throw new RuntimeException("role id 不存在");
-        }
+
+
+        ThrowUtil.illegalArgument(!roleExist, "角色不存在");
 
         return sysRoleMenuService.saveBatch(collect);
     }

@@ -10,7 +10,7 @@ drop table if exists sys_user;
 create table sys_user (
     user_id     bigint(20)             not null auto_increment  comment '用户表主键',
     user_name   varchar(32)            not null                 comment '用户名，唯一',
-    email       varchar(255)           not null                 comment '邮箱',
+    email       varchar(255)           null                     comment '邮箱',
     nike_name   varchar(32)            not null                 comment '昵称,不唯一',
     password    varchar(255)           not null                 comment '用户密码-加密',
     status      boolean  default 0     not null                 comment '状态(1封禁, 0正常)',
@@ -21,17 +21,15 @@ create table sys_user (
     remark      varchar(500) default null                       comment '备注',
     primary key sys_user(user_id),
     constraint sys_user_pk_2
-        unique (user_name),
-    constraint sys_user_pk_3
-        unique (email)
+        unique (user_name)
 ) engine=innodb auto_increment=100
     comment '用户表' auto_increment = 100;
-
+create unique index unique_user_email on sys_user(email);
 # 默认密码：www.github.com
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (1, 'test_teacher', 'teacher@tset.com', '测试教师', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (2, 'test_student', 'student@tset.com', '测试学生', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (3, 'test_admin', 'admin@tset.com', '测试管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (4, 'test_super_admin', 'super_admin@tset.com', '超级管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (1, 'test_teacher', null, '测试教师', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (2, 'test_student', null, '测试学生', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (3, 'test_admin', null, '测试管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (4, 'test_super_admin', null, '超级管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
 
 
 -- ----------------------------
