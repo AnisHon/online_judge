@@ -94,6 +94,18 @@
               @test="submitTest"
               :loading="isLoading"
           />
+          <el-row ref="testInputRowRef" :gutter="20">
+            <el-col :span="12">
+              <h3>标准输入</h3>
+              <el-input type="textarea" v-model="stdin" />
+            </el-col>
+            <el-col :span="12">
+              <h3>输出</h3>
+              <p style="white-space: pre; font-family: monospace" v-if="testResult?.stdout" v-text="testResult.stdout"></p>
+              <p style="white-space: pre; font-family: monospace" v-if="testResult?.stderr" v-text="testResult?.stderr"></p>
+            </el-col>
+          </el-row>
+
         </el-col>
 
       </el-row>
@@ -210,6 +222,9 @@ const {loading, finish, isLoading} = useLoading()
 
 // 各种信息的计算属性
 const problemType = computed(() => problem.value?.problemVo.type)
+
+//测试用例输入框
+const testInputRowRef = ref(null);
 
 const isChoiceProblem = computed(() => {
   return problemType.value === ProblemType.CHOICE || problemType.value === ProblemType.MULTI_CHOICE;
@@ -411,7 +426,8 @@ const onEditorReady = () => {
 const height = ref(0)
 
 const getHeight = () => {
-  height.value = contentRef.value?.$el.offsetHeight || 0;
+  // @ts-ignore
+  height.value = contentRef.value?.$el.offsetHeight - testInputRowRef.value?.$el.clientHeight || 0;
 }
 
 const reset = () => {

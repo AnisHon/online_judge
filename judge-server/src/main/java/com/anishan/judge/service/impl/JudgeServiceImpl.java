@@ -58,7 +58,6 @@ public class JudgeServiceImpl implements JudgeService {
         sandboxRun.delFile(fileId);
     }
 
-
     private JudgeScore judgeCases(JudgeScore judgeScore, List<OjProblemCaseVo> cases, List<RunResult> results) {
         Optional<RunResult> maxTime = results.stream().max((a, b) -> Math.toIntExact(a.getTime() - b.getTime()));
         Optional<RunResult> maxMemory = results.stream().max((a, b) -> Math.toIntExact(a.getMemory() - b.getMemory()));
@@ -80,14 +79,16 @@ public class JudgeServiceImpl implements JudgeService {
             OjProblemCaseVo answer = cases.get(i);
             RunResult userAnswer = results.get(i);
 
-            if (!Objects.equals(userAnswer.getStatus(), Constants.Judge.STATUS_ACCEPTED.getStatus()) && judgeScore.getResult() != JudgeResult.WrongAnswer) {
+            boolean isAccepted = !Objects.equals(userAnswer.getStatus(), Constants.Judge.STATUS_ACCEPTED.getStatus()) && judgeScore.getResult() != JudgeResult.WrongAnswer;
+            if (isAccepted) {
                 judgeScore.setResult(JudgeUtils.judgeToStatus(userAnswer.getStatus()));
                 judgeScore.setErrorMessage(userAnswer.getFiles().getStderr());
                 continue;
             }
 
-
-            if (!StrUtil.equals(answer.getOutput(), userAnswer.getFiles().getStdout())) {
+            String stdout = StrUtil.strip(userAnswer.getFiles().getStdout(), "\n");
+            String answerOutput = StrUtil.strip(answer.getOutput(), "\n");
+            if (!StrUtil.equals(answerOutput, stdout)) {
                 judgeScore.setResult(JudgeResult.WrongAnswer);
             } else  {
                 score = score.add(Objects.requireNonNullElse(answer.getScore(), BigDecimal.ZERO));
