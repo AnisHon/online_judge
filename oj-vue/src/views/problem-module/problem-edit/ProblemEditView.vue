@@ -1,84 +1,91 @@
 <template>
   <div v-loading="isGetLoading">
     <el-row justify="center" :gutter="20" >
-      <el-col :span="12" >
-        <el-form :model="problem" label-width="100px">
-          <el-row>
+
+      <el-col :span="editorSpan" >
+        <el-form :model="problem" label-width="100px" label-position="top" >
+          <el-row :gutter="20">
             <el-col :span="24">
               <el-form-item label="题目名称" prop="problem.title">
                 <el-input v-model="problem.problem.title" placeholder="请输入标签名称"/>
               </el-form-item>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="smallSpan">
               <el-form-item label="题目类型" prop="problem.type" >
                 <el-select v-model="problem.problem.type" placeholder="请选择类型" :disabled="!isAdd">
                   <el-option v-for="item of dict.problemType" :label="item.label" :value="item.value"/>
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="smallSpan">
               <el-form-item label="公开权限" prop="problem.type" >
                 <el-select v-model="problem.problem.auth" placeholder="请选择类型" >
                   <el-option v-for="item of dict.problemAuth" :label="item.label" :value="item.value"/>
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="12" v-if="isOjProblem">
+            <el-col :span="smallSpan" v-if="isOjProblem">
               <el-form-item label="难度" prop="ojProblem.difficulty" >
                 <el-select v-model="problem.ojProblem.difficulty" placeholder="请选择难度">
                   <el-option v-for="item of dict.difficulty" :label="item.label" :value="item.value"/>
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="12"  v-if="isOjProblem">
+            <el-col :span="smallSpan"  v-if="isOjProblem">
               <el-form-item label="空间限制KiB" prop="ojProblem.memoryLimit" >
                 <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.memoryLimit" placeholder="空间限制"/>
               </el-form-item>
             </el-col>
-            <el-col :span="12"  v-if="isOjProblem">
+            <el-col :span="smallSpan"  v-if="isOjProblem">
               <el-form-item label="时间限制ms" prop="ojProblem.timeLimit" >
                 <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.timeLimit" placeholder="时间限制"/>
               </el-form-item>
             </el-col>
-            <el-col :span="12" v-if="isOjProblem">
+            <el-col :span="smallSpan" v-if="isOjProblem">
               <el-form-item label="栈限制MiB" prop="ojProblem.stackLimit"  >
                 <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.stackLimit" placeholder="栈空间限制"/>
               </el-form-item>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="smallSpan">
               <el-form-item label="来源" prop="problem.source">
                 <el-input v-model="problem.problem.source" placeholder="请输入标签名称"/>
               </el-form-item>
             </el-col>
             <el-col :span="24">
               <el-form-item label="题目描述" prop="problem.description">
-                <el-input type="textarea"  v-model="problem.problem.description" placeholder="题目描述"/>
+<!--                <el-input type="textarea"  v-model="problem.problem.description" placeholder="题目描述"/>-->
+                <MarkDownEditor v-model="problem.problem.description"/>
               </el-form-item>
             </el-col>
             <el-col :span="24" v-if="isOjProblem">
               <el-form-item label="输入描述" prop="ojProblem.input">
-                <el-input type="textarea"  v-model="problem.ojProblem.input" placeholder="题目描述"/>
+<!--                <el-input type="textarea"  v-model="problem.ojProblem.input" placeholder="题目描述"/>-->
+                <MarkDownEditor v-model="problem.ojProblem.input"/>
               </el-form-item>
             </el-col>
             <el-col :span="24" v-if="isOjProblem">
               <el-form-item label="输出描述" prop="ojProblem.output">
-                <el-input type="textarea"  v-model="problem.ojProblem.output" placeholder="题目描述"/>
+<!--                <el-input type="textarea"  v-model="problem.ojProblem.output" placeholder="题目描述"/>-->
+                <MarkDownEditor v-model="problem.ojProblem.output"/>
               </el-form-item>
             </el-col>
             <el-col :span="24" v-if="isOjProblem">
               <el-form-item label="输入用例" prop="ojProblem.inputExample">
-                <el-input type="textarea"  v-model="problem.ojProblem.inputExample" placeholder="题目描述"/>
+<!--                <el-input type="textarea"  v-model="problem.ojProblem.inputExample" placeholder="题目描述"/>-->
+                <MarkDownEditor v-model="problem.ojProblem.inputExample"/>
               </el-form-item>
             </el-col>
             <el-col :span="24" v-if="isOjProblem">
               <el-form-item label="输出用例" prop="ojProblem.outputExample">
-                <el-input type="textarea"  v-model="problem.ojProblem.outputExample" placeholder="题目描述"/>
+<!--                <el-input type="textarea"  v-model="problem.ojProblem.outputExample" placeholder="题目描述"/>-->
+                <MarkDownEditor v-model="problem.ojProblem.outputExample"/>
               </el-form-item>
             </el-col>
 
             <el-col :span="24">
               <el-form-item label="提示" prop="problem.hint">
-                <el-input type="textarea" v-model="problem.problem.hint" placeholder="提示"/>
+<!--                <el-input type="textarea" v-model="problem.problem.hint" placeholder="提示"/>-->
+                <MarkDownEditor v-model="<string | undefined>problem.problem.hint"/>
               </el-form-item>
             </el-col>
 
@@ -116,7 +123,7 @@
 
             <el-col :span="24" v-if="isChoiceProblem">
               <div v-for="item of problem.choices" >
-                <el-row>
+                <el-row :gutter="20">
 
                   <el-col :span="12">
                     <el-form-item :label="numberToLetter(<number>item.blankIndex)" prop="problem.hint">
@@ -173,29 +180,40 @@
               </el-button>
             </el-col>
 
-            <el-col :span="24">
-              <el-space>
-                <el-button type="primary" @click="back">返回</el-button>
-                <el-button type="success" @click="submit" :loading="isUpdateLoading || isAddLoading">提交</el-button>
-              </el-space>
-            </el-col>
+
 
 
           </el-row>
         </el-form>
       </el-col>
 
-      <el-col :span="12">
+      <el-col :span="12" v-show="isShowPreview">
         <ProblemReviewer :problem="problem"/>
       </el-col>
 
     </el-row>
+
+
+    <el-row >
+      <el-col>
+        <el-space alignment="center">
+          <el-button type="primary" @click="back">返回</el-button>
+          <el-button type="success" @click="submit" :loading="isUpdateLoading || isAddLoading">提交</el-button>
+          <el-button type="warning" @click="isShowPreview = !isShowPreview" >显示/隐藏预览</el-button>
+        </el-space>
+      </el-col>
+
+    </el-row>
+
+
+
+
   </div>
 </template>
 
 <script setup lang="ts">
 import {useRoute, useRouter} from "vue-router";
-import {computed, reactive, type UnwrapNestedRefs, watch} from "vue";
+import {computed, reactive, ref, watch} from "vue";
 import __ from "lodash";
 import {
   type Answer, debouncedAddProblem,
@@ -204,6 +222,10 @@ import {
 } from "@/api/problem";
 import ProblemReviewer from "@/views/problem-module/problem-edit/problem-reviewer/ProblemReviewer.vue";
 import {numberToLetter} from "@/utils/stringUtils";
+import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
+
+
+
 const route = useRoute();
 
 const problemId = computed(() => {
@@ -213,6 +235,8 @@ const problemId = computed(() => {
     return undefined;
   }
 });
+
+const isShowPreview = ref(false);
 
 const problem = reactive<ProblemForm>({
   problem: {
@@ -240,6 +264,13 @@ const problem = reactive<ProblemForm>({
   cases: []
 });
 
+const editorSpan = computed(() => {
+  return isShowPreview.value ? 12 : 24
+})
+
+const smallSpan = computed(() => {
+  return isShowPreview.value ? 12 : 6
+})
 
 const isAdd = computed((): boolean => {
   return __.isUndefined(problemId.value);

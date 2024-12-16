@@ -21,6 +21,7 @@
         direction="rtl"
         size="30%"
     >
+      <DrawerContent/>
       <!-- 抽屉内容 -->
     </el-drawer>
   </div>
@@ -33,9 +34,10 @@ import {Coin} from "@element-plus/icons-vue";
 
 
 import {SseEvent, useSse} from "@/stores/useSse.ts";
+import DrawerContent from "@/components/FloatingBall/DrawerContent.vue";
 
 export default {
-  components: {Coin},
+  components: {DrawerContent, Coin},
   data() {
     return {
       sse: useSse(),
@@ -66,6 +68,7 @@ export default {
       this.startPosY = event.clientY - this.position.y;
       this.startPosX = event.clientX - this.position.x;
       document.addEventListener('mousemove', this.dragging);
+      document.addEventListener('mouseup', this.endDrag)
     },
     dragging(event) {
       if (this.isDragging) {
@@ -74,13 +77,13 @@ export default {
         this.position.y = Math.max(0, Math.min(window.innerHeight - 50, newY));
         this.position.x = Math.max(0, Math.min(window.innerWidth - 150, newX));
         this.isDragged = true
-        console.log(this.width)
       }
 
     },
     endDrag() {
       this.isDragging = false;
       document.removeEventListener('mousemove', this.dragging);
+      document.removeEventListener('mouseup', this.endDrag)
     },
     toggleDrawer() {
       if (!this.isDragged) {

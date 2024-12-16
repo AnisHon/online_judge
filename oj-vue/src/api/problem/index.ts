@@ -150,7 +150,7 @@ export interface MainProblemForm {
     source?: string,
     type?: ProblemType
     auth?: ProblemAuth,
-    hint?: string | null,
+    hint?: string | undefined | null,
 }
 
 export interface OjProblemForm {

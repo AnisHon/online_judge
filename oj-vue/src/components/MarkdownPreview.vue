@@ -1,9 +1,6 @@
 <template>
-  <div>
-    <div v-html="getRenderText" >
-    </div>
-  </div>
-
+  <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme"/>
+  <MdCatalog :editorId="id" :theme="theme" :scrollElement="scrollElement" />
 </template>
 
 <script setup lang="ts">
@@ -14,7 +11,28 @@ import mk from 'markdown-it-katex';
 
 import {computed} from "vue";
 
+import { MdPreview, MdCatalog } from 'md-editor-v3';
+// preview.css相比style.css少了编辑器那部分样式
+import 'md-editor-v3/lib/preview.css';
+import {useDark} from "@vueuse/core";
+import useConfig from "@/stores/useConfig.ts";
 
+const isDark = useDark();
+
+const config = useConfig()
+
+const id = 'preview-only';
+const scrollElement = document.documentElement;
+
+const {text = ""} = defineProps<{text?: string}>();
+
+const theme = computed(() => {
+  return isDark.value ?  "dark" : "light";
+})
+
+const previewTheme = computed(() => {
+  return config.get.previewTheme;
+})
 
 
 const md = new MarkdownIt({
@@ -25,11 +43,7 @@ const md = new MarkdownIt({
 md.use(mk)
 
 
-const {text = ""} = defineProps<{text?: string}>();
 
-const getRenderText = computed(() => {
-  return md.render(text);
-})
 
 
 
