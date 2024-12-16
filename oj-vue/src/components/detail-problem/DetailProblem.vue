@@ -94,13 +94,13 @@
               @test="submitTest"
               :loading="isLoading"
           />
-          <el-row ref="testInputRowRef" :gutter="20">
+          <el-row ref="testInputRowRef" :gutter="20" style="max-height: 100px">
             <el-col :span="12">
-              <h3>标准输入</h3>
+              <h4>标准输入</h4>
               <el-input type="textarea" v-model="stdin" />
             </el-col>
             <el-col :span="12">
-              <h3>输出</h3>
+              <h4>输出</h4>
               <p style="white-space: pre; font-family: monospace" v-if="testResult?.stdout" v-text="testResult.stdout"></p>
               <p style="white-space: pre; font-family: monospace" v-if="testResult?.stderr" v-text="testResult?.stderr"></p>
             </el-col>
@@ -147,27 +147,27 @@
 
     </el-dialog>
 
-    <el-dialog v-model="openTestDialog" append-to-body width="1000px">
-      <template #header>
-        <h2>
-          测试运行
-        </h2>
-      </template>
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <h3>标准输入</h3>
-          <el-input type="textarea" v-model="stdin" />
-        </el-col>
-        <el-col :span="12">
-          <h3>输出</h3>
-          <p style="white-space: pre; font-family: monospace" v-if="testResult?.stdout" v-text="testResult.stdout"></p>
-          <p style="white-space: pre; font-family: monospace" v-if="testResult?.stderr" v-text="testResult?.stderr"></p>
-        </el-col>
-      </el-row>
-      <div class="absoluteCenter" style="margin: 20px 0">
-        <el-button type="primary" style="width: 100px" :loading="isLoading" @click="handleTestSubmit" >提 交</el-button>
-      </div>
-    </el-dialog>
+<!--    <el-dialog v-model="openTestDialog" append-to-body width="1000px">-->
+<!--      <template #header>-->
+<!--        <h2>-->
+<!--          测试运行-->
+<!--        </h2>-->
+<!--      </template>-->
+<!--      <el-row :gutter="20">-->
+<!--        <el-col :span="12">-->
+<!--          <h3>标准输入</h3>-->
+<!--          <el-input type="textarea" v-model="stdin" />-->
+<!--        </el-col>-->
+<!--        <el-col :span="12">-->
+<!--          <h3>输出</h3>-->
+<!--          <p style="white-space: pre; font-family: monospace" v-if="testResult?.stdout" v-text="testResult.stdout"></p>-->
+<!--          <p style="white-space: pre; font-family: monospace" v-if="testResult?.stderr" v-text="testResult?.stderr"></p>-->
+<!--        </el-col>-->
+<!--      </el-row>-->
+<!--      <div class="absoluteCenter" style="margin: 20px 0">-->
+<!--        <el-button type="primary" style="width: 100px" :loading="isLoading" @click="handleTestSubmit" >提 交</el-button>-->
+<!--      </div>-->
+<!--    </el-dialog>-->
   </div>
 </template>
 

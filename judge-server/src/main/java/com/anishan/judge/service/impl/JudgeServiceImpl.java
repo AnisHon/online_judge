@@ -3,9 +3,11 @@ package com.anishan.judge.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.api.client.gojudge.domain.RunResult;
 import com.anishan.api.client.gojudge.domain.TestResult;
+import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
+import com.anishan.api.service.OjProblemCaseService;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.judge.config.LanguageConfigLoader;
 import com.anishan.judge.domain.entity.LanguageConfig;
@@ -19,6 +21,7 @@ import com.anishan.judge.service.JudgeService;
 import com.anishan.judge.util.Constants;
 import com.anishan.judge.util.JudgeUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,10 +40,44 @@ public class JudgeServiceImpl implements JudgeService {
     private final Compiler compiler;
     private final LanguageConfigLoader languageConfigLoader;
     private final SandboxRun sandboxRun;
+    private final OjProblemCaseService ojProblemCaseService;
+    private final RabbitTemplate rabbitTemplate;
 
     private LanguageConfig getLanguageConfig(JudgeMessage message) {
         return languageConfigLoader.getLanguageConfigByName(message.getLanguage());
     }
+
+    private JudgeMessage makeJudgeMessage(JudgeInfo judgeInfo, Long submitId) {
+        List<OjProblemCaseVo> caseVos = ojProblemCaseService.getByProblemId(judgeInfo.getProblemId());
+
+        BigDecimal score = BigDecimal.ZERO;
+        for (OjProblemCaseVo caseVo : caseVos) {
+            score = score.add(caseVo.getScore());
+        }
+
+
+        JudgeMessage judgeMessage = new JudgeMessage();
+        judgeMessage.setUserId(judgeInfo.getUserId());
+        judgeMessage.setContestId(judgeInfo.getContestId());
+        judgeMessage.setSubmitId(submitId);
+        judgeMessage.setLanguageId(judgeInfo.getLanguageId());
+        judgeMessage.setCode(judgeInfo.getCode());
+        judgeMessage.setLanguage(judgeInfo.getLanguage());
+        judgeMessage.setTimeLimit(judgeInfo.getTimeLimit());
+        judgeMessage.setMemoryLimit(judgeInfo.getMemoryLimit());
+        judgeMessage.setStackLimit(judgeInfo.getStackLimit());
+        judgeMessage.setCases(caseVos);
+        judgeMessage.setProblemId(judgeInfo.getProblemId());
+        judgeMessage.setScore(score);
+        return judgeMessage;
+    }
+
+    @Override
+    public JudgeScore judge(JudgeInfo info, Long submitId) throws SystemError, SubmitError {
+        JudgeMessage judgeMessage = makeJudgeMessage(info, submitId);
+        return judge(judgeMessage);
+    }
+
 
     @Override
     public String compile(LanguageConfig config, JudgeMessage message) throws CompileError, SystemError, SubmitError {
@@ -52,6 +89,7 @@ public class JudgeServiceImpl implements JudgeService {
 
         return judge.judgeAll(fileId, config, message.getMemoryLimit(), message.getTimeLimit(), message.getStackLimit(), cases);
     }
+
 
     @Override
     public void deleteFile(String fileId) {
@@ -159,6 +197,8 @@ public class JudgeServiceImpl implements JudgeService {
         return TestResult.fromTestResul(runResult, JudgeUtils.judgeToStatus(runResult.getStatus()));
     }
 
+
+
     private static BigDecimal calcScore(JudgeMessage message, JudgeScore judgeScore) {
         if (message.getContestId() == null) {
             return judgeScore.getScore();
@@ -174,6 +214,14 @@ public class JudgeServiceImpl implements JudgeService {
             score = score.divide(totalScore, 2, RoundingMode.FLOOR).multiply(message.getScore());
         }
         return score;
+    }
+
+
+
+
+    @Override
+    public void sendJudgeMessage(JudgeInfo judgeInfo) {
+        rabbitTemplate.convertAndSend("judge-exchange", "judge", judgeInfo);
     }
 
 }

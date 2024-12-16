@@ -1,6 +1,6 @@
-package com.anishan.problem.service;
+package com.anishan.api.service;
 
-import com.anishan.problem.domain.entity.OjProblemCase;
+import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 

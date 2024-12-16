@@ -8,7 +8,7 @@ import com.anishan.problem.domain.dto.ChoiceFillAnswersDto;
 import com.anishan.problem.domain.dto.DetailProblemDto;
 import com.anishan.problem.domain.dto.OjProblemDto;
 import com.anishan.problem.domain.dto.ProblemDto;
-import com.anishan.problem.domain.entity.OjProblemCase;
+import com.anishan.api.domain.entity.OjProblemCase;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

@@ -1,6 +1,7 @@
 package com.anishan.judge.mq;
 
 import com.anishan.api.client.gojudge.domain.TestResult;
+import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.problem.client.RecordClient;
@@ -81,6 +82,23 @@ public class JudgeListener {
         // 更新record
         recordClient.judgeSave(judgeScore, message.getUserId());
 
+
+
+    }
+
+
+
+
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(name = "judge-info-queue"),
+                    exchange = @Exchange(name = "judge-exchange"),
+                    key = "judge-info"
+            )
+    )
+    public void judge(JudgeInfo info) {
+
+        judgeService.judge(info, )
 
 
     }

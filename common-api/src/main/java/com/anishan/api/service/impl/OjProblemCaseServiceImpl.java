@@ -1,12 +1,12 @@
-package com.anishan.problem.service.impl;
+package com.anishan.api.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
+import com.anishan.api.service.OjProblemCaseService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.problem.domain.entity.OjProblemCase;
-import com.anishan.problem.service.OjProblemCaseService;
-import com.anishan.problem.mapper.OjProblemCaseMapper;
+import com.anishan.api.domain.entity.OjProblemCase;
+import com.anishan.api.mapper.OjProblemCaseMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,7 +19,7 @@ import java.util.List;
 */
 @Service
 public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, OjProblemCase>
-    implements OjProblemCaseService{
+    implements OjProblemCaseService {
 
     @Override
     public LocalDateTime selectTime(Long id) {
@@ -35,6 +35,8 @@ public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, O
         List<OjProblemCase> list = list(new LambdaQueryWrapper<OjProblemCase>()
                 .eq(OjProblemCase::getProblemId, problemId)
         );
+
+
         return BeanUtil.copyToList(list, OjProblemCaseVo.class);
     }
 

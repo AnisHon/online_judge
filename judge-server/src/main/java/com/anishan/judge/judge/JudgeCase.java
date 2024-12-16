@@ -1,7 +1,9 @@
 package com.anishan.judge.judge;
 
+import com.anishan.commons.enumeration.CaseFileType;
+
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Reader;
 import java.util.List;
 
 /**
@@ -9,13 +11,13 @@ import java.util.List;
  */
 public interface JudgeCase {
 
-    void setCase(Long problemId, Long caseId, String text);
+    void setCase(Long problemId, Long caseId, String input, String output);
 
-    void setCase(Long problemId, Long caseId, InputStream inputStream);
+    void setCase(Long problemId, Long caseId, InputStream input, InputStream output);
 
-    List<OutputStream> getCases(Long problemId);
+    List<Reader> getCases(Long problemId, CaseFileType fileType);
 
-    List<String> getCasesUrl(Long problemId);
+    List<String> getCaseUrls(Long problemId, CaseFileType fileType);
 
     List<String> getCasesAsText(Long problemId);
 

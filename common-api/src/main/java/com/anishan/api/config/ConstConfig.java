@@ -9,14 +9,15 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "common.config")
 public class ConstConfig {
 
-    private Long captchaCodeLifespan;
-    private Long emailCodeLifespan;
-    private Long checkInAward;
-    private Long checkMaxAward;
-    private float acProblemAwardRate;
-    private Long defaultRoleId;
+    private Long captchaCodeLifespan = 120L;
+    private Long emailCodeLifespan = 120L;
+    private Long checkInAward = 10L;
+    private Long checkMaxAward = 40L;
+    private float acProblemAwardRate = 0.5f;
+    private Long defaultRoleId = 1L;
     // todo 上线后或者用windows的时候这里需要更改
     private String fileBaseUrl = "/Users/anishan/Project/Web/temp";
 
+    private String casesFolder = "problem_case";
 
 }

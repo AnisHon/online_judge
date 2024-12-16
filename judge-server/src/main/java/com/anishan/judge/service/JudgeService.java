@@ -2,6 +2,7 @@ package com.anishan.judge.service;
 
 import com.anishan.api.client.gojudge.domain.RunResult;
 import com.anishan.api.client.gojudge.domain.TestResult;
+import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.judge.domain.entity.LanguageConfig;
@@ -12,6 +13,8 @@ import com.anishan.judge.exception.SystemError;
 import java.util.List;
 
 public interface JudgeService {
+
+    JudgeScore judge(JudgeInfo info, Long submitId) throws SystemError, SubmitError;
 
     /**
      * 编译文件
@@ -51,4 +54,6 @@ public interface JudgeService {
     JudgeScore judge(JudgeMessage message) throws SystemError, SubmitError;
 
     TestResult test(JudgeMessage message) throws SystemError, SubmitError;
+
+    void sendJudgeMessage(JudgeInfo judgeInfo);
 }
