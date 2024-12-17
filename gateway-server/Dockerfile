@@ -17,4 +17,4 @@ WORKDIR /opt
 
 COPY target/gateway-server-1.0.0-beta.jar /opt
 
-CMD ["sh", "-c", "java -jar /opt/gateway-server-1.0.0-beta.jar --spring.cloud.nacos.server-addr=${NACOS_URL}"]
+CMD ["sh", "-c", "java -jar /opt/gateway-server-1.0.0-beta.jar --spring.cloud.nacos.server-addr=${NACOS_URL} --server.port=${SERVER_PORT}"]

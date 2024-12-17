@@ -59,34 +59,6 @@ public class JudgeServiceImpl implements JudgeService {
         String languageName = sysLanguageService.getNameById(judgeRequest.getLanguageId());
         ThrowUtil.runtime(languageName == null, "不支持的语言");
 
-//        // 获取所有的cases
-//        List<OjProblemCaseVo> cases = ojProblemCaseService.getByProblemId(problem.getProblemId());
-//
-//        // 设置为排队状态，获得submitID
-//        Long submitId = submitLogService.logQueue(userId, problem.getProblemId(), languageName);
-//
-//        // 获得分数
-//        BigDecimal score = contestService.getScore(judgeRequest.getContestId(), problem.getProblemId());
-//
-//
-//        JudgeMessage judgeMessage = new JudgeMessage(
-//                userId,
-//                problem.getProblemId(),
-//                judgeRequest.getContestId(),
-//                submitId,
-//                judgeRequest.getLanguageId(),
-//                judgeRequest.getCode(),
-//                languageName,
-//                ojProblem.getTimeLimit(),
-//                ojProblem.getMemoryLimit(),
-//                ojProblem.getStackLimit(),
-//                cases,
-//                score,
-//                null
-//        );
-//        // 入队
-////        rabbitTemplate.convertAndSend("judge-exchange", "judge", judgeMessage);
-
         ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
 //        problemJudgeResult.setSubmitId(submitId);
 

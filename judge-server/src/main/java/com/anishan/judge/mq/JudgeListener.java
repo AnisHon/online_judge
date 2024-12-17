@@ -50,6 +50,7 @@ public class JudgeListener {
                     key = "judge"
             )
     )
+    // 废弃
     public void judge(JudgeMessage message) {
 
         JudgeScore judgeScore;
@@ -167,14 +168,6 @@ public class JudgeListener {
         // 判题
         JudgeScore judge = judgeService.judge(info);
 
-
-
-        // 通知完成
-        JudgeResult result = judge == null ? JudgeResult.RuntimeError : judge.getResult();
-        String stderr = judge == null ? "" : judge.getErrorMessage();
-
-        notify(info.getUuid(), result, stderr);
-
         // 记录提交日志
         logSubmit(judge, info);
 
@@ -182,6 +175,14 @@ public class JudgeListener {
         // 提交Record信息
         fillJudgeScore(judge, info);
         problemInternalClient.judgeResult(judge);
+
+        // 通知完成
+        JudgeResult result = judge == null ? JudgeResult.RuntimeError : judge.getResult();
+        String stderr = judge == null ? "" : judge.getErrorMessage();
+
+        notify(info.getUuid(), result, stderr);
+
+
 
     }
 
@@ -211,6 +212,7 @@ public class JudgeListener {
                     key = "test"
             )
     )
+    // 废弃
     public void test(JudgeMessage message) {
 
         TestResult testResult;

@@ -155,7 +155,7 @@ services:
       - "8000:80"
     environment:
       - NACOS_URL=oj-nacos:8848
-
+      - SERVER_PORT=80
     networks:
       - default
       - oj-net

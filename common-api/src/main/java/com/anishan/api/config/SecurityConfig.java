@@ -3,10 +3,14 @@ package com.anishan.api.config;
 import com.anishan.api.filter.UserAuthenticationFilter;
 import com.anishan.api.handler.AccessDeniedHandlerImpl;
 import com.anishan.api.handler.AuthenticationEntryPointImpl;
+import com.anishan.commons.config.SharedConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -19,11 +23,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import javax.annotation.Resource;
+
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan("com.anishan.api.filter")
 public class SecurityConfig {
+
+    @Resource
+    private SharedConfig sharedConfig;
 
     private static final String[] SWAGGER_API_URL = {
             "/swagger-resources/**", "/v2/**", "/v3/**", "/doc.html", "/webjars/**"
@@ -61,10 +70,17 @@ public class SecurityConfig {
                 .addFilterBefore(authenticationInterceptor, UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeHttpRequests(conf -> {
-                    // todo
+
                     conf.antMatchers(PERMIT_URI).permitAll();
-                    conf.antMatchers(SWAGGER_API_URL).permitAll();
-                    conf.anyRequest().authenticated();
+
+                    if (sharedConfig.isProduct()) {
+                        conf.antMatchers(SWAGGER_API_URL).denyAll();
+                        conf.anyRequest().authenticated();
+                    } else {
+                        conf.antMatchers(SWAGGER_API_URL).permitAll();
+                        conf.anyRequest().permitAll();
+                    }
+
 //                    conf.anyRequest().permitAll();
                 })
 

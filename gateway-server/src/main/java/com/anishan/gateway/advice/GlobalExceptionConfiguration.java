@@ -37,16 +37,12 @@ public class GlobalExceptionConfiguration implements ErrorWebExceptionHandler {
         // header set
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         if (ex instanceof ResponseStatusException) {
-            response.setStatusCode(((ResponseStatusException) ex).getStatus());
-        }
-
-        if (ex instanceof RuntimeException) {
-            response.setStatusCode(HttpStatus.BAD_REQUEST);
-        }
-
-
-        if (ex instanceof IllegalTokenException) {
+            HttpStatus status = ((ResponseStatusException) ex).getStatus();
+            response.setStatusCode(status);
+        } else if (ex instanceof IllegalTokenException) {
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
+        } else if (ex instanceof RuntimeException) {
+            response.setStatusCode(HttpStatus.BAD_REQUEST);
         }
 
 
