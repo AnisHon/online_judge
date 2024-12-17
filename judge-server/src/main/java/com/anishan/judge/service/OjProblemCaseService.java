@@ -1,5 +1,6 @@
 package com.anishan.judge.service;
 
+import com.anishan.api.client.judgeserver.domain.OjProblemCaseDto;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.anishan.api.domain.entity.OjProblemCase;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -17,4 +18,6 @@ public interface OjProblemCaseService extends IService<OjProblemCase> {
     LocalDateTime selectTime(Long id);
 
     List<OjProblemCaseVo> getByProblemId(Long problemId);
+
+    void setCases(Long problemId, List<OjProblemCase> cases);
 }

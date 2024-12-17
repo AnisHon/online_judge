@@ -1,17 +1,20 @@
 package com.anishan.judge.controller;
 
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
+import com.anishan.api.client.judgeserver.domain.OjProblemCaseDto;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
+import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
+import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.commons.domain.R;
 import com.anishan.judge.service.JudgeService;
+import com.anishan.judge.service.OjProblemCaseService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -22,6 +25,7 @@ public class InternalController {
 
 
     private final JudgeService judgeService;
+    private final OjProblemCaseService ojProblemCaseService;
 
 
 //    @ApiOperation("")
@@ -46,5 +50,11 @@ public class InternalController {
     }
 
 
+    @ApiOperation("设置Case接口")
+    @PostMapping("/set-case/{problemId}")
+    public R<Void> setCase(@PathVariable("problemId") Long problemId, @RequestBody List<OjProblemCase> cases) {
+        ojProblemCaseService.setCases(problemId, cases);
+        return R.success(null);
+    }
 
 }

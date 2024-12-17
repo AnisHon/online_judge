@@ -1,5 +1,12 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="JudgeApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+    <additionalParameters>
+      <param>
+        <option name="enabled" value="true" />
+        <option name="name" value="common.config.file-base-url" />
+        <option name="value" value="E:\cach\temp" />
+      </param>
+    </additionalParameters>
     <module name="judge-server" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.anishan.judge.JudgeApplication" />
     <extension name="coverage">

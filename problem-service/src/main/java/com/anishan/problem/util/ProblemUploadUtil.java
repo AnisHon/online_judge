@@ -38,8 +38,6 @@ public class ProblemUploadUtil {
     @PostConstruct
     public void init() {
         mdStringMapper = new HashMap<>();
-        mdStringMapper.put("\n", "\n\n");
-        mdStringMapper.put("\t", "&emsp;");
 
         // 构建正则表达式
         String regex = String.join("|", mdStringMapper.keySet());
@@ -49,16 +47,16 @@ public class ProblemUploadUtil {
     }
 
     private String formatMDString(String text) {
-        Matcher matcher = pattern.matcher(text);
+//        Matcher matcher = pattern.matcher(text);
+//
+//        // 使用 StringBuffer 进行替换操作
+//        StringBuilder sb = new StringBuilder();
+//        while (matcher.find()) {
+//            matcher.appendReplacement(sb, mdStringMapper.get(matcher.group()));
+//        }
+//        matcher.appendTail(sb);
 
-        // 使用 StringBuffer 进行替换操作
-        StringBuilder sb = new StringBuilder();
-        while (matcher.find()) {
-            matcher.appendReplacement(sb, mdStringMapper.get(matcher.group()));
-        }
-        matcher.appendTail(sb);
-
-        return sb.toString();
+        return text;
     }
 
 

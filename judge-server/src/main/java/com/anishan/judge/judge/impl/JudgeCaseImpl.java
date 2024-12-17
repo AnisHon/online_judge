@@ -62,13 +62,19 @@ public class JudgeCaseImpl implements JudgeCase {
         ThrowUtil.illegalState(file.isDirectory(), "该文件是文件夹");
 
         boolean fileAvailable = file.exists();
+        boolean parentExists = file.getParentFile().exists();
+        if (!parentExists) {
+            if (file.getParentFile().mkdirs()) {
+                log.error("严重错误，父文件夹无法创建{}", file.getAbsolutePath());
+            }
+        }
         if (!fileAvailable) {
             try {
                 if (!file.createNewFile()) {
                     throw new IOException("无法创建文件");
                 }
             } catch (IOException e) {
-                log.error("严重错误，无法创建文件", e);
+                log.error("严重错误，无法创建文件{}", file.getAbsoluteFile(),e);
                 throw new RuntimeException(e);
             }
         }

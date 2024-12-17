@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import com.anishan.api.client.judgeserver.client.JudgeClient;
 import com.anishan.problem.domain.vo.OjProblemVo;
 import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
@@ -54,6 +55,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final OjProblemCaseService ojProblemCaseService;
     private final ProblemProblemListMapper problemProblemListMapper;
     private final ProblemUploadUtil problemUploadUtil;
+    private final JudgeClient judgeClient;
 
 
     public Problem doGetProblem(Long id) {
@@ -307,7 +309,11 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                 wrapper
         );
 
-        return ojProblemCaseService.saveOrUpdateBatch(cases);
+
+
+        boolean b = ojProblemCaseService.saveOrUpdateBatch(cases);
+        judgeClient.setCase(problemId, cases);
+        return b;
     }
 
     @Override

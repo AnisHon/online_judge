@@ -1,13 +1,20 @@
 package com.anishan.judge.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.anishan.api.client.judgeserver.domain.OjProblemCaseDto;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.anishan.api.domain.entity.OjProblemCase;
+import com.anishan.judge.judge.JudgeCase;
 import com.anishan.judge.mapper.OjProblemCaseMapper;
+import com.anishan.judge.service.JudgeService;
 import com.anishan.judge.service.OjProblemCaseService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.BeanUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,8 +25,11 @@ import java.util.List;
 * @createDate 2024-10-16 22:39:16
 */
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, OjProblemCase>
     implements OjProblemCaseService {
+
+    private final JudgeCase judgeCase;
 
     @Override
     public LocalDateTime selectTime(Long id) {
@@ -39,6 +49,16 @@ public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, O
 
         return BeanUtil.copyToList(list, OjProblemCaseVo.class);
     }
+
+    @Override
+    @Transactional
+    public void setCases(Long problemId, List<OjProblemCase> cases) {
+//        this.saveOrUpdateBatch(cases);
+        for (OjProblemCase case_ : cases) {
+            judgeCase.setCase(problemId, case_.getCaseId(), case_.getInput(), case_.getOutput());
+        }
+    }
+
 
 }
 

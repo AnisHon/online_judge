@@ -1,4 +1,4 @@
-package com.anishan.problem.domain.dto;
+package com.anishan.api.client.judgeserver.domain;
 
 import com.anishan.commons.enumeration.ValidationGroup;
 import io.swagger.annotations.ApiModel;

@@ -16,7 +16,7 @@ public class ConstConfig {
     private float acProblemAwardRate = 0.5f;
     private Long defaultRoleId = 1L;
     // todo 上线后或者用windows的时候这里需要更改
-    private String fileBaseUrl = "/Users/anishan/Project/Web/temp";
+    private String fileBaseUrl = "/opt/oj_files";
 
     private String casesFolder = "problem_case";
 
