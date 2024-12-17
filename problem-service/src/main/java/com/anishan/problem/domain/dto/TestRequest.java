@@ -8,6 +8,7 @@ public class TestRequest {
     private Long languageId;
     private String code;
     private String stdin;
+    private String uuid;
 
 
 }

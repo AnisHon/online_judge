@@ -85,6 +85,9 @@ public class SseUtils {
      *
      */
     public boolean sendMessage(String uuid,String messageId, String message) {
+        if (uuid == null) {
+            return false;
+        }
         if (StrUtil.isBlank(message)) {
             log.info("参数异常id: [{}]，msg为null", uuid);
             return false;
@@ -116,6 +119,10 @@ public class SseUtils {
             SseEmitter sseEmitter = sseEmitterMap.get(uuid);
             sseEmitter.complete();
         }
+    }
+
+    public boolean sendPlainString(String uuid, SseEvent sseEvent, String message) {
+        return sendMessage(uuid, sseEvent.getEvent(), message);
     }
 
     public boolean sendMessage(String uuid, SseEvent sseEvent, Object message) {

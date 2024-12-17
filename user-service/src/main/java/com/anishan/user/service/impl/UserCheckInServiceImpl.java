@@ -98,7 +98,7 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
         boolean success = this.save(newCheckIn);
         success = success && sysUserService.addPoint(userId, rewardPoint);
 
-        ThrowUtil.businessError(success, "签到失败，发生未知错误");
+        ThrowUtil.businessError(!success, "签到失败，发生未知错误");
 
         return UserCheckInInfo.successChecked(rewardPoint, newCheckIn);
     }

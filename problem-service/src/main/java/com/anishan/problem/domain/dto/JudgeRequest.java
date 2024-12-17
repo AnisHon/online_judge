@@ -1,5 +1,6 @@
 package com.anishan.problem.domain.dto;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -27,5 +28,7 @@ public class JudgeRequest {
     @ApiModelProperty("填空选择答案")
     private List<JudgeAnswer> answers;
 
+    @ApiModelProperty("当前会话的SSE UUID")
+    private String uuid;
 
 }

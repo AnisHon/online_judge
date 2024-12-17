@@ -48,6 +48,7 @@ public class SseController {
         response.addCookie(cookie);
 
         sseUtils.sendMessage(uuid, SseEvent.UpdatePoint, point);
+        sseUtils.sendMessage(uuid, SseEvent.SetUUID, uuid);
 
         return sse;
     }

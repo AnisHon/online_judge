@@ -10,6 +10,7 @@ import lombok.Data;
 public class JudgeInfo {
 
     private Long userId;
+    private String uuid;
     private Long problemId;
     private Long contestId;
     private Long languageId;

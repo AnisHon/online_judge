@@ -94,15 +94,14 @@
               @test="submitTest"
               :loading="isLoading"
           />
-          <el-row ref="testInputRowRef" :gutter="20" style="max-height: 100px">
+          <el-row ref="testInputRowRef" :gutter="20" style="max-height: 80px">
             <el-col :span="12">
-              <h4>标准输入</h4>
+              <h4 style="margin: 0">标准输入</h4>
               <el-input type="textarea" v-model="stdin" />
             </el-col>
             <el-col :span="12">
-              <h4>输出</h4>
-              <p style="white-space: pre; font-family: monospace" v-if="testResult?.stdout" v-text="testResult.stdout"></p>
-              <p style="white-space: pre; font-family: monospace" v-if="testResult?.stderr" v-text="testResult?.stderr"></p>
+              <h4 style="margin: 0">输出</h4>
+              <p style="white-space: pre; font-family: monospace" v-text="stdout"></p>
             </el-col>
           </el-row>
 
@@ -139,35 +138,29 @@
           <el-table-column prop="memory" label="内存(MiB)"/>
         </el-table>
 
-        <div v-if="!!errMsg">
-          <h3>标准错误流输出</h3>
-          <p style="color: red; padding: 20px; font-size: 16px;white-space: pre-wrap; font-family: Inconsolata, Helvetica, sans-serif; " v-text="errMsg" ></p>
-        </div>
+
       </template>
 
     </el-dialog>
 
-<!--    <el-dialog v-model="openTestDialog" append-to-body width="1000px">-->
-<!--      <template #header>-->
-<!--        <h2>-->
-<!--          测试运行-->
-<!--        </h2>-->
-<!--      </template>-->
-<!--      <el-row :gutter="20">-->
-<!--        <el-col :span="12">-->
-<!--          <h3>标准输入</h3>-->
-<!--          <el-input type="textarea" v-model="stdin" />-->
-<!--        </el-col>-->
-<!--        <el-col :span="12">-->
-<!--          <h3>输出</h3>-->
-<!--          <p style="white-space: pre; font-family: monospace" v-if="testResult?.stdout" v-text="testResult.stdout"></p>-->
-<!--          <p style="white-space: pre; font-family: monospace" v-if="testResult?.stderr" v-text="testResult?.stderr"></p>-->
-<!--        </el-col>-->
-<!--      </el-row>-->
-<!--      <div class="absoluteCenter" style="margin: 20px 0">-->
-<!--        <el-button type="primary" style="width: 100px" :loading="isLoading" @click="handleTestSubmit" >提 交</el-button>-->
-<!--      </div>-->
-<!--    </el-dialog>-->
+    <el-dialog v-model="openErrorDialog">
+      <el-result
+          icon="error"
+          :title="errorTitle"
+          :sub-title="errorText"
+      >
+        <template #extra>
+          <div v-if="!!errMsg">
+            <h3 style="margin: 0">标准错误流输出</h3>
+            <p class="stderr"
+                v-text="errMsg" ></p>
+          </div>
+        </template>
+      </el-result>
+
+
+    </el-dialog>
+
   </div>
 </template>
 
@@ -179,7 +172,17 @@ import {
   ProblemType,
   recentSubmit,
 } from "@/api/problem";
-import {computed, onMounted, onUnmounted, reactive, type Ref, ref, watch} from "vue";
+import {
+  computed,
+  createVNode,
+  onMounted,
+  onUnmounted,
+  reactive,
+  type Ref,
+  ref,
+  type VNode,
+  watch
+} from "vue";
 import EnhancedCodeEditor from '@/components/EnhancedCodeEdior/index.vue'
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
@@ -189,10 +192,12 @@ import {
   getDebouncedJudge,
   getUserAnswer,
   type JudgeForm,
+  type JudgeMessage,
   type JudgeResponse,
   type LogSubmit,
   OJResult,
-  saveUserAnswer, sendTest,
+  saveUserAnswer,
+  sendTest,
   type TestResult,
   testStatus,
 } from "@/api/problem/judge";
@@ -204,6 +209,17 @@ import ChoiceChooseProblem from "./ChoiceChoose.vue";
 import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
 import __ from "lodash";
 import {letterToNumber} from "@/utils/stringUtils";
+import {SseEvent, useSse} from "@/stores/useSse.ts";
+import type {MessageHandler} from "element-plus";
+import CustomElMessage from "@/components/CustomElMessage.vue";
+
+const sse = useSse();
+
+const errorTitle = ref("");
+
+const errorText = ref("");
+
+const openErrorDialog = ref(false);
 
 const openTestDialog = ref(false);
 
@@ -309,80 +325,101 @@ const submitLogs = reactive<LogSubmit[]>([])
 
 const stdin = ref<string>("")
 
+const stdout = ref("");
+
 const submitTest = () => {
-  openTestDialog.value = true;
-}
-
-const testResult = ref<TestResult>()
-
-const refreshState = () => {
-  const id = setInterval(async () => {
-    const data = await testStatus();
-    if (!data) {
-      clearInterval(id);
-      finish();
-      return;
-    }
-    switch (data.judgeResult) {
-      case OJResult.ACCEPT:
-        testResult.value = data;
-        break;
-      case OJResult.COMPILE_ERROR:
-        testResult.value = data;
-        break;
-      case OJResult.RUNTIME_ERROR:
-        testResult.value = data;
-        testResult.value.stderr = "发生运行异常";
-        break;
-      case OJResult.MEMORY_LIMIT_EXCEEDED:
-        testResult.value = data;
-        testResult.value.stderr = "内存超限";
-        break;
-      case OJResult.TIME_LIMIT_EXCEEDED:
-        testResult.value = data;
-        testResult.value.stderr = "时间超限";
-        break;
-    }
-    if (!data || data.judgeResult != OJResult.QUEUE) {
-      clearInterval(id);
-      finish();
-      return;
-    }
-  }, 1000)
-
-
-
+  handleTestSubmit();
+  judgeForm.uuid = sse.getUuid();
 }
 
 const handleTestSubmit = async () => {
   loading();
-  const {code} = await sendTest({code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value});
+
+  const {code} = await sendTest({code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value, uuid: sse.getUuid()});
   if (code == 200) {
-    refreshState();
+    getOjResult(true);
   } else {
     finish();
   }
 
 }
 
-const getOjLog = (id: number) => {
-  const submitLog = {
-    submitId: 0,
-    userId: 0,
-    problemId: 0,
-    language: "",
-    status: OJResult.QUEUE,
-    time: 0,
+
+const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: MessageHandler, vnode: VNode, isTest = false) => {
+
+  if (judgeMessage.state == OJResult.COMPILING) {
+    setTimeout(() => {
+      vnode?.component?.exposed?.update("编译中")
+    }, 1000);
   }
-  submitLogs.push(submitLog);
-  fetchLog(id, (data: LogSubmit) => {
-    __.assign(submitLogs[(submitLogs.length - 1)], data);
-    errMsg.value = data.stderr;
-  });
+
+  switch (judgeMessage.state) {
+    case OJResult.ACCEPT:
+      stdout.value = judgeMessage.stdout || "";
+      if (!isTest) {
+        getLogs()
+        openOjDialog.value = true;
+      }
+      break;
+    case OJResult.RUNTIME_ERROR:
+      errorTitle.value = "RE";
+      errorText.value = "运行时错误";
+      break;
+    case OJResult.WRONG_ANSWER:
+      errorTitle.value = "WA";
+      errorText.value = "答案错误";
+
+      break;
+    case OJResult.TIME_LIMIT_EXCEEDED:
+      errorTitle.value = "TLE";
+      errorText.value = "时间超限";
+
+      break;
+    case OJResult.MEMORY_LIMIT_EXCEEDED:
+      errorTitle.value = "MLE";
+      errorText.value = "内存超限";
+      break;
+    case OJResult.COMPILE_ERROR:
+      errorTitle.value = "CE";
+      errorText.value = "编译错误";
+      errMsg.value = judgeMessage.stderr;
+      break;
+  }
+  const isFinish = judgeMessage.state != OJResult.COMPILING && judgeMessage.state != OJResult.QUEUE;
+
+  if (isFinish) {
+    sse.off(SseEvent.UPDATE_JUDGE_STATE, handler);
+    setTimeout(instance.close, 1000);
+    finish();
+    if (judgeMessage.state != OJResult.ACCEPT) {
+      openErrorDialog.value = true;
+    }
+  }
+
+
+}
+
+const getOjResult = (isTest = false) => {
+  const vnode = createVNode(CustomElMessage)
+  const el = ElMessage(
+      {
+        message: vnode,
+        duration: 0
+      }
+  )
+  vnode?.component?.exposed?.update("排队中")
+
+  const onUpdate = (judgeMessage: JudgeMessage) => {
+    onUpdateJudgeState(judgeMessage, onUpdate, el, vnode, isTest);
+  }
+
+  sse.on(SseEvent.UPDATE_JUDGE_STATE, onUpdate)
+
 }
 
 const doJudge = getDebouncedJudge(judgeForm,
     (data: JudgeResponse) => {
+
       if (!data) {
         return;
       }
@@ -393,8 +430,9 @@ const doJudge = getDebouncedJudge(judgeForm,
       judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
 
       if (problemType.value === ProblemType.OJ) {
-        openOjDialog.value = true;
-        getOjLog(<number>data.submitId);
+        // openOjDialog.value = true;
+        // getOjLog(<number>data.submitId);
+        getOjResult();
       }
     },
     undefined,
@@ -411,8 +449,10 @@ const openOjDialog = ref(false);
 
 
 const onHandleSubmit = () => {
-  loading()
+  loading();
   doJudge();
+  judgeForm.uuid = sse.getUuid();
+
 }
 
 const onHandleFullScreen = () => {
@@ -494,7 +534,11 @@ const {loading: loadingProblem, isLoading: problemIsLoading, get} =
       })
     })
 
-
+const getLogs = async () => {
+  const logs = await recentSubmit(problemId)
+  submitLogs.length = 0;
+  submitLogs.push(...logs);
+}
 
 const getProblem = async () => {
   loadingProblem()
@@ -502,8 +546,7 @@ const getProblem = async () => {
   // 取题目
   get(problemId)
 
-  const logs = await recentSubmit(problemId)
-  submitLogs.push(...logs);
+  await getLogs();
 
 }
 
@@ -575,6 +618,16 @@ onUnmounted(() => {
 
 .tags {
   margin: 5px 0;
+}
+
+.stderr {
+  color: red;
+  padding: 20px;
+  font-size: 16px;
+  white-space: pre-wrap;
+  font-family: Inconsolata, Helvetica, sans-serif;
+  font-weight: 700;
+  text-align: left
 }
 
 </style>

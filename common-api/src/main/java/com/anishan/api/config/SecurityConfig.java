@@ -35,7 +35,8 @@ public class SecurityConfig {
             "/auth/send-email-code",
             "/auth/captcha-code",
             "/version",
-            "/test"
+            "/test",
+            "/internal/**"
     };
 
     @Bean

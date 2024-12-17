@@ -6,8 +6,8 @@ import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
+import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
-import com.anishan.api.service.OjProblemCaseService;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.judge.config.LanguageConfigLoader;
 import com.anishan.judge.domain.entity.LanguageConfig;
@@ -18,9 +18,12 @@ import com.anishan.judge.judge.Compiler;
 import com.anishan.judge.judge.Judge;
 import com.anishan.judge.judge.SandboxRun;
 import com.anishan.judge.service.JudgeService;
+import com.anishan.judge.service.OjProblemCaseService;
 import com.anishan.judge.util.Constants;
+import com.anishan.judge.util.JudgeDelayUtil;
 import com.anishan.judge.util.JudgeUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +35,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class JudgeServiceImpl implements JudgeService {
@@ -42,12 +46,13 @@ public class JudgeServiceImpl implements JudgeService {
     private final SandboxRun sandboxRun;
     private final OjProblemCaseService ojProblemCaseService;
     private final RabbitTemplate rabbitTemplate;
+    private final JudgeDelayUtil judgeDelayUtil;
 
     private LanguageConfig getLanguageConfig(JudgeMessage message) {
         return languageConfigLoader.getLanguageConfigByName(message.getLanguage());
     }
 
-    private JudgeMessage makeJudgeMessage(JudgeInfo judgeInfo, Long submitId) {
+    private JudgeMessage makeJudgeMessage(JudgeInfo judgeInfo) {
         List<OjProblemCaseVo> caseVos = ojProblemCaseService.getByProblemId(judgeInfo.getProblemId());
 
         BigDecimal score = BigDecimal.ZERO;
@@ -59,7 +64,6 @@ public class JudgeServiceImpl implements JudgeService {
         JudgeMessage judgeMessage = new JudgeMessage();
         judgeMessage.setUserId(judgeInfo.getUserId());
         judgeMessage.setContestId(judgeInfo.getContestId());
-        judgeMessage.setSubmitId(submitId);
         judgeMessage.setLanguageId(judgeInfo.getLanguageId());
         judgeMessage.setCode(judgeInfo.getCode());
         judgeMessage.setLanguage(judgeInfo.getLanguage());
@@ -73,15 +77,32 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     @Override
-    public JudgeScore judge(JudgeInfo info, Long submitId) throws SystemError, SubmitError {
-        JudgeMessage judgeMessage = makeJudgeMessage(info, submitId);
-        return judge(judgeMessage);
+    public JudgeScore judge(JudgeInfo info){
+        JudgeMessage judgeMessage = makeJudgeMessage(info);
+
+        JudgeScore result = null;
+
+        try {
+            result = judge(judgeMessage);
+        } catch (SystemError | SubmitError e) {
+            log.error(e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("非法语言：{}", e.getMessage());
+        }
+
+        return result;
     }
 
 
     @Override
     public String compile(LanguageConfig config, JudgeMessage message) throws CompileError, SystemError, SubmitError {
-        return compiler.compile(config, message.getCode(), config.getLanguage(), null);
+//        return compiler.compile(config, message.getCode(), config.getLanguage(), null);
+        return compile(config, message.getCode());
+    }
+
+    @Override
+    public String compile(LanguageConfig config, String code) throws CompileError, SystemError, SubmitError {
+        return compiler.compile(config, code, config.getLanguage(), null);
     }
 
     @Override
@@ -197,6 +218,41 @@ public class JudgeServiceImpl implements JudgeService {
         return TestResult.fromTestResul(runResult, JudgeUtils.judgeToStatus(runResult.getStatus()));
     }
 
+    @Override
+    public TestResult test(RunTestInfo message) {
+        LanguageConfig languageConfig = languageConfigLoader.getLanguageConfigByName(message.getLanguage());
+        String fileId = null;
+        RunResult runResult = null;
+        try {
+            fileId = compile(languageConfig, message.getCode());
+            runResult = judge.doJudge(
+                    fileId,
+                    languageConfig,
+                    message.getStdin(),
+                    languageConfig.getMaxCpuTime(),
+                    languageConfig.getMaxMemory(),
+                    128
+            );
+        } catch (CompileError e) {
+            return TestResult.compileError(e.getStderr());
+
+        } catch (SystemError | SubmitError e) {
+          log.error(e.getMessage());
+        } finally {
+            if (fileId != null) {
+                deleteFile(fileId);
+            }
+        }
+
+
+        if (runResult != null) {
+            return TestResult.fromTestResul(runResult, JudgeUtils.judgeToStatus(runResult.getStatus()));
+        } else {
+            // 不能让用户接触服务错误，用RuntimeError应付过去
+            return TestResult.fromTestResul(runResult, JudgeResult.RuntimeError);
+        }
+    }
+
 
 
     private static BigDecimal calcScore(JudgeMessage message, JudgeScore judgeScore) {
@@ -216,12 +272,36 @@ public class JudgeServiceImpl implements JudgeService {
         return score;
     }
 
+    @Override
+    public boolean sendJudgeMessage(JudgeInfo judgeInfo) {
+        // 并发安全
+        synchronized (this) {
+            boolean available = judgeDelayUtil.isAvailable(judgeInfo.getUserId());
+            if (available) {
+                judgeDelayUtil.setDelay(judgeInfo.getUserId());
+            } else {
+                return false;
+            }
+        }
 
-
+        rabbitTemplate.convertAndSend("judge-exchange", "judge-info", judgeInfo);
+        return true;
+    }
 
     @Override
-    public void sendJudgeMessage(JudgeInfo judgeInfo) {
-        rabbitTemplate.convertAndSend("judge-exchange", "judge", judgeInfo);
+    public boolean sendTestMessage(RunTestInfo testInfo) {
+        // 并发安全
+        synchronized (this) {
+            boolean available = judgeDelayUtil.isAvailable(testInfo.getUserId());
+            if (available) {
+                judgeDelayUtil.setDelay(testInfo.getUserId());
+            } else {
+                return false;
+            }
+        }
+
+        rabbitTemplate.convertAndSend("judge-exchange", "test-info", testInfo);
+        return true;
     }
 
 }

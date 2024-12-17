@@ -2,9 +2,10 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.anishan.api.client.gojudge.domain.TestResult;
+import com.anishan.api.client.judgeserver.client.JudgeClient;
+import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
-import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
-import com.anishan.api.service.OjProblemCaseService;
+import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.util.RedisJudgeTestUtil;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.problem.domain.dto.TestRequest;
@@ -45,7 +46,7 @@ public class JudgeServiceImpl implements JudgeService {
     private final RabbitTemplate rabbitTemplate;
     private final SubmitLogService submitLogService;
     private final RedisJudgeTestUtil redisJudgeTestUtil;
-
+    private final JudgeClient judgeClient;
 
 
     private ProblemJudgeResult judgeOj(Long userId, Problem problem, JudgeRequest judgeRequest) {
@@ -58,36 +59,55 @@ public class JudgeServiceImpl implements JudgeService {
         String languageName = sysLanguageService.getNameById(judgeRequest.getLanguageId());
         ThrowUtil.runtime(languageName == null, "不支持的语言");
 
-        // 获取所有的cases
-        List<OjProblemCaseVo> cases = ojProblemCaseService.getByProblemId(problem.getProblemId());
-
-        // 设置为排队状态，获得submitID
-        Long submitId = submitLogService.logQueue(userId, problem.getProblemId(), languageName);
-
-        // 获得分数
-        BigDecimal score = contestService.getScore(judgeRequest.getContestId(), problem.getProblemId());
-
-
-        JudgeMessage judgeMessage = new JudgeMessage(
-                userId,
-                problem.getProblemId(),
-                judgeRequest.getContestId(),
-                submitId,
-                judgeRequest.getLanguageId(),
-                judgeRequest.getCode(),
-                languageName,
-                ojProblem.getTimeLimit(),
-                ojProblem.getMemoryLimit(),
-                ojProblem.getStackLimit(),
-                cases,
-                score,
-                null
-        );
-        // 入队
-        rabbitTemplate.convertAndSend("judge-exchange", "judge", judgeMessage);
+//        // 获取所有的cases
+//        List<OjProblemCaseVo> cases = ojProblemCaseService.getByProblemId(problem.getProblemId());
+//
+//        // 设置为排队状态，获得submitID
+//        Long submitId = submitLogService.logQueue(userId, problem.getProblemId(), languageName);
+//
+//        // 获得分数
+//        BigDecimal score = contestService.getScore(judgeRequest.getContestId(), problem.getProblemId());
+//
+//
+//        JudgeMessage judgeMessage = new JudgeMessage(
+//                userId,
+//                problem.getProblemId(),
+//                judgeRequest.getContestId(),
+//                submitId,
+//                judgeRequest.getLanguageId(),
+//                judgeRequest.getCode(),
+//                languageName,
+//                ojProblem.getTimeLimit(),
+//                ojProblem.getMemoryLimit(),
+//                ojProblem.getStackLimit(),
+//                cases,
+//                score,
+//                null
+//        );
+//        // 入队
+////        rabbitTemplate.convertAndSend("judge-exchange", "judge", judgeMessage);
 
         ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
-        problemJudgeResult.setSubmitId(submitId);
+//        problemJudgeResult.setSubmitId(submitId);
+
+
+        JudgeInfo info = new JudgeInfo();
+        info.setUserId(userId);
+        info.setUuid(judgeRequest.getUuid());
+        info.setProblemId(problem.getProblemId());
+        info.setContestId(judgeRequest.getContestId());
+        info.setLanguageId(judgeRequest.getLanguageId());
+        info.setCode(judgeRequest.getCode());
+        info.setLanguage(languageName);
+        info.setTimeLimit(ojProblem.getTimeLimit());
+        info.setMemoryLimit(ojProblem.getMemoryLimit());
+        info.setStackLimit(ojProblem.getStackLimit());
+
+
+        boolean isSuccess = judgeClient.judge(info).getData();
+
+        ThrowUtil.illegalState(!isSuccess, "请等待10秒后再提交");
+
 
         return problemJudgeResult;
 
@@ -399,27 +419,18 @@ public class JudgeServiceImpl implements JudgeService {
     @Override
     public void codeTest(Long userId, TestRequest testRequest) {
 
-        ThrowUtil.runtime(redisJudgeTestUtil.exists(userId), "请冷却后重试");
+        String language = sysLanguageService.getNameById(testRequest.getLanguageId());
 
-        JudgeMessage judgeMessage = new JudgeMessage();
-        judgeMessage.setCode(testRequest.getCode());
-        Long languageId = testRequest.getLanguageId();
-        String nameById = sysLanguageService.getNameById(languageId);
-        judgeMessage.setLanguage(nameById);
-        judgeMessage.setUserId(userId);
-        judgeMessage.setTestInput(testRequest.getStdin());
+        RunTestInfo runTestInfo = new RunTestInfo();
+        runTestInfo.setUuid(testRequest.getUuid());
+        runTestInfo.setUserId(userId);
+        runTestInfo.setLanguage(language);
+        runTestInfo.setCode(testRequest.getCode());
+        runTestInfo.setStdin(testRequest.getStdin());
 
-        rabbitTemplate.convertAndSend("judge-exchange", "test", judgeMessage);
+        Boolean isSuccess = judgeClient.test(runTestInfo).getData();
 
-
-        TestResult testResult = new TestResult();
-
-
-
-
-        testResult.setUserId(userId);
-        testResult.setJudgeResult(JudgeResult.Queue);
-        redisJudgeTestUtil.save(testResult, 60);
+        ThrowUtil.illegalState(!isSuccess, "请等待10秒后再提交");
     }
 
     @Override

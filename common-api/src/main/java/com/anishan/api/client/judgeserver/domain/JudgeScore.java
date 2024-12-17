@@ -24,6 +24,7 @@ public class JudgeScore {
     private Long memory;
     private String errorMessage;
 
+
     public JudgeScore runtimeSetter(RunResult runResult) {
         if (runResult != null) {
             this.runtime = runResult.getTime() / 1000 / 1000;

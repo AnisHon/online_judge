@@ -1,7 +1,8 @@
-package com.anishan.api.mapper;
+package com.anishan.judge.mapper;
 
 import com.anishan.api.domain.entity.OjProblemCase;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
 * @author happy
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-16 22:39:16
 * @Entity com.anishan.problem.entity.OjProblemCase
 */
+@Mapper
 public interface OjProblemCaseMapper extends BaseMapper<OjProblemCase> {
 
 }

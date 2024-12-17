@@ -17,6 +17,13 @@ interface Answer {
     answer: string;
 }
 
+// 更新判题状态的时候发送这个judgeMessage
+interface JudgeMessage {
+    state: OJResult;
+    stderr?: string;
+    stdout?: string;
+}
+
 
 
 interface JudgeForm {
@@ -25,6 +32,7 @@ interface JudgeForm {
     languageId?: number;
     answers: Answer[];
     code: string;
+    uuid?: string;
 
 }
 
@@ -65,6 +73,7 @@ interface TestForm {
     languageId?: number;
     stdin?: string;
     code?: string;
+    uuid?: string;
 }
 
 interface TestResult {
@@ -159,7 +168,8 @@ export type {
     JudgeResponse,
     LogSubmit,
     TestResult,
-    TestForm
+    TestForm,
+    JudgeMessage
 }
 
 export {

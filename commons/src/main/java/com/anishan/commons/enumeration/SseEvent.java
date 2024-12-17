@@ -6,6 +6,8 @@ import lombok.Getter;
 public enum SseEvent {
     UpdatePoint("update-point"),
     Ping("ping"),
+    UpdateJudgeState("update-judge-state"),
+    SetUUID("set-uuid"),
     ;
 
 

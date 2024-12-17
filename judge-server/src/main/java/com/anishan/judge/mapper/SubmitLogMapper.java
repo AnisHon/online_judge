@@ -4,6 +4,7 @@ package com.anishan.judge.mapper;
 
 import com.anishan.judge.domain.entity.SubmitLog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
 * @author happy
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-10-16 22:39:16
 * @Entity com.anishan.problem.entity.SubmitLog
 */
+@Mapper
 public interface SubmitLogMapper extends BaseMapper<SubmitLog> {
 
 }

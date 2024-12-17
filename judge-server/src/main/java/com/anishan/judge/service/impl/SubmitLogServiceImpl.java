@@ -20,7 +20,6 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
     implements SubmitLogService {
 
 
-
 }
 
 

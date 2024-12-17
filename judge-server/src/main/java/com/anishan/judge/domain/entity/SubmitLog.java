@@ -36,7 +36,7 @@ public class SubmitLog implements Serializable {
     private Long problemId;
 
     /**
-     * 使用语言的id
+     * 使用的语言
      */
     private String language;
 

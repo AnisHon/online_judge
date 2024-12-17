@@ -3,7 +3,6 @@ package com.anishan.judge.judge.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.json.JSONArray;
 import com.anishan.api.client.gojudge.domain.RunResult;
-import com.anishan.judge.config.LanguageConfigLoader;
 import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.SystemError;
 import com.anishan.judge.judge.Judge;
@@ -36,7 +35,8 @@ public class JudgeImpl implements Judge {
      * @return GO-Judge判题机的相应结果
      * @throws SystemError 无法连接的时候会抛出异常
      */
-    private RunResult doJudge(
+    @Override
+    public RunResult doJudge(
             String fileId,
             LanguageConfig languageConfig,
             String input, Long maxTime,

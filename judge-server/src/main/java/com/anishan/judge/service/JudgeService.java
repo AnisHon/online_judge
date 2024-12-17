@@ -5,6 +5,7 @@ import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
+import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.CompileError;
 import com.anishan.judge.exception.SubmitError;
@@ -14,7 +15,7 @@ import java.util.List;
 
 public interface JudgeService {
 
-    JudgeScore judge(JudgeInfo info, Long submitId) throws SystemError, SubmitError;
+    JudgeScore judge(JudgeInfo info);
 
     /**
      * 编译文件
@@ -26,6 +27,8 @@ public interface JudgeService {
      * @throws SubmitError  提交失败
      */
     String compile(LanguageConfig config, JudgeMessage message) throws CompileError, SystemError, SubmitError;
+
+    String compile(LanguageConfig config, String code) throws CompileError, SystemError, SubmitError;
 
     /**
      * 运行程序
@@ -55,5 +58,9 @@ public interface JudgeService {
 
     TestResult test(JudgeMessage message) throws SystemError, SubmitError;
 
-    void sendJudgeMessage(JudgeInfo judgeInfo);
+    TestResult test(RunTestInfo message);
+
+    boolean sendJudgeMessage(JudgeInfo judgeInfo);
+
+    boolean sendTestMessage(RunTestInfo judgeInfo);
 }

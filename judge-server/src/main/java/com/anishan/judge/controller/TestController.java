@@ -2,6 +2,9 @@ package com.anishan.judge.controller;
 
 import com.anishan.api.client.gojudge.GoJudgeClient;
 import com.anishan.api.client.gojudge.domain.GoJudgeVersion;
+import com.anishan.api.client.judgeserver.domain.JudgeInfo;
+import com.anishan.commons.enumeration.JudgeResult;
+import com.anishan.judge.domain.entity.SubmitLog;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,8 @@ public class TestController {
 
     @GetMapping("/version")
     public GoJudgeVersion version() {
+
+
         return judgeClient.version();
     }
 

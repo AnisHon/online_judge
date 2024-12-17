@@ -1,19 +1,18 @@
 package com.anishan.judge.controller;
 
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
-import com.anishan.api.client.judgeserver.domain.JudgeMessage;
-import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
+import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.commons.domain.R;
 import com.anishan.judge.service.JudgeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/internal")
@@ -22,22 +21,28 @@ import java.util.List;
 public class InternalController {
 
 
-    private final JudgeService
-            judgeService;
+    private final JudgeService judgeService;
 
 
-    @ApiOperation("")
-    @GetMapping("/getCases/{problemId}")
-    public R<List<OjProblemCaseVo>> getCases(@PathVariable Long problemId) {
-
-    }
+//    @ApiOperation("")
+//    @GetMapping("/getCases/{problemId}")
+//    public R<List<OjProblemCaseVo>> getCases(@PathVariable Long problemId) {
+//
+//    }
 
 
     @ApiOperation("判题接口")
     @PostMapping("/judge")
-    public R<Long> judge(@RequestBody JudgeInfo judgeInfo) {
-        judgeService.sendJudgeMessage(judgeInfo);
-        return R.success(null);
+    public R<Boolean> judge(@RequestBody JudgeInfo judgeInfo) {
+        boolean b = judgeService.sendJudgeMessage(judgeInfo);
+        return R.success(b);
+    }
+
+    @ApiOperation("测试代码接口")
+    @PostMapping("/test")
+    public R<Boolean> test(@RequestBody RunTestInfo runTestInfo) {
+        boolean b = judgeService.sendTestMessage(runTestInfo);
+        return R.success(b);
     }
 
 
