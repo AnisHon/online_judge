@@ -1,5 +1,6 @@
 knife4j:
-  enable: true
+  production: false
+  enabled: true
   openapi:
     title: API文档
     description: "Powered by Knife4j"

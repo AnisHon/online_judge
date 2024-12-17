@@ -1,5 +1,5 @@
 server:
-  port: 80
+  port: 800
 spring:
   application:
     name: gateway
@@ -24,15 +24,15 @@ spring:
             - Path=/problem-api/**
 
 
-      # todo 上线后需要屏蔽internal等一些接口
       default-filters:
         - StripPrefix=1
 
-
 knife4j:
   # 聚合swagger文档
+  production: ${oj.product}
   gateway:
     enabled: true
+
     # 排序规则(tag/operation排序自4.2.0版本新增)
     # 取值：alpha-默认排序规则，官方swagger-ui默认实现,order-Knife4j提供的增强排序规则，开发者可扩展x-order，根据数值来自定义排序
     tags-sorter: order
@@ -55,7 +55,21 @@ knife4j:
         service-name: problem-service
         context-path: /
         order: 2
+oj:
+  product: false
 
+  rule:
+    block-rules:
+      - "/**/internal/**"
+
+    product-env-block-rules:
+      # 这里是swagger路径
+      - "/webjars/**"
+      - "/swagger-resources/**"
+      - "/*/v2/**"
+      - "/*/v3/**"
+      - "/*/doc.html"
+      - "/*/webjars/**"
 
 
 

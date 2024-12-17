@@ -9,3 +9,5 @@ spring:
 feign:
   okhttp:
     enabled: true
+oj:
+  product: false

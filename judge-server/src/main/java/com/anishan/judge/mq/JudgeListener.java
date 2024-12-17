@@ -50,6 +50,7 @@ public class JudgeListener {
                     key = "judge"
             )
     )
+    // 废弃
     public void judge(JudgeMessage message) {
 
         JudgeScore judgeScore;
@@ -211,6 +212,7 @@ public class JudgeListener {
                     key = "test"
             )
     )
+    // 废弃
     public void test(JudgeMessage message) {
 
         TestResult testResult;

@@ -2,6 +2,7 @@ package com.anishan.api.filter;
 
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.util.AuthUtil;
+import com.anishan.commons.config.SharedConfig;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.domain.R;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,11 +23,10 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
 public class UserAuthenticationFilter extends OncePerRequestFilter {
-
-
     private final AuthUtil authUtil;
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
         String header = request.getHeader("user-id");
         if (header == null) {
             filterChain.doFilter(request, response);
