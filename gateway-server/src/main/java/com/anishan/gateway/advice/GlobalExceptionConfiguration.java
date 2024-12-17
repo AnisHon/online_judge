@@ -30,10 +30,6 @@ public class GlobalExceptionConfiguration implements ErrorWebExceptionHandler {
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, @NotNull Throwable ex) {
         ServerHttpResponse response = exchange.getResponse();
-        if (response.isCommitted()) {
-            return Mono.error(ex);
-        }
-
         // header set
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         if (ex instanceof ResponseStatusException) {

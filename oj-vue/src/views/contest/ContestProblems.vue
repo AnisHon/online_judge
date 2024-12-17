@@ -26,11 +26,11 @@
       />
       <div v-else>
         <div v-if="!!contest" style="position: relative;">
-          <div style="position: absolute;left: 50px;top:50px;font-size: 36px; color: darkred" v-if="score === 0 || !!score">
+          <div style="position: absolute;left: 50px;top:50px;font-size: 36px; color: darkred; " v-if="score === 0 || !!score">
             分数：{{ score }}
           </div>
 
-          <el-card>
+          <el-card style="max-height: 30vh">
             <div class="absoluteCenter">
               <h1 style="text-align: center">{{ contest.title }}</h1>
               <el-space wrap alignment="center">
@@ -55,7 +55,7 @@
           </el-card>
 
 
-          <div style="margin: 20px">
+          <div style="margin: 20px; overflow: auto; max-height: 65vh;">
             <markdown-preview :text="contest.description"/>
           </div>
 

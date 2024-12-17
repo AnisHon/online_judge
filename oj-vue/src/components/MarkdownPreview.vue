@@ -1,6 +1,9 @@
 <template>
-  <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme"/>
-  <MdCatalog :editorId="id" :theme="theme" :scrollElement="scrollElement" />
+  <div ref="element">
+    <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme" />
+    <MdCatalog :editorId="id" :theme="theme"/>
+  </div>
+
 </template>
 
 <script setup lang="ts">
@@ -9,7 +12,7 @@ import MarkdownIt from "markdown-it";
 // @ts-ignore
 import mk from 'markdown-it-katex';
 
-import {computed} from "vue";
+import {computed, inject, ref} from "vue";
 
 import { MdPreview, MdCatalog } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
@@ -18,11 +21,10 @@ import {useDark} from "@vueuse/core";
 import useConfig from "@/stores/useConfig.ts";
 
 const isDark = useDark();
-
+const element = ref(undefined);
 const config = useConfig()
 
 const id = 'preview-only';
-const scrollElement = document.documentElement;
 
 const {text = ""} = defineProps<{text?: string}>();
 
@@ -52,4 +54,14 @@ md.use(mk)
 <style scoped>
 @import "https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css";
 
+</style>
+
+<style>
+iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  resize: both;
+  overflow: auto;
+}
 </style>
