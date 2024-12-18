@@ -4,14 +4,25 @@
       <el-form-item label="富文本样式">
         <el-select v-model="config.previewTheme" @change="configHook.setPreviewTheme">
           <el-option label="默认" value="default"/>
-          <el-option label="github" value="github"/>
-          <el-option label="vuepress" value="vuepress"/>
-          <el-option label="清爽卡通" value="mk-cute"/>
-          <el-option label="巧蓝" value="smart-blue"/>
-          <el-option label="青紫" value="mk-cyanosis"/>
+          <el-option label="GitHub" value="github"/>
+          <el-option label="VuePress" value="vuepress"/>
+          <el-option label="可爱风" value="mk-cute"/>
+          <el-option label="智能蓝" value="smart-blue"/>
+          <el-option label="蓝调风" value="mk-cyanosis"/>
         </el-select>
       </el-form-item>
-
+      <el-form-item label="代码样式">
+        <el-select v-model="config.codeTheme" @change="configHook.setPreviewTheme">
+          <el-option label="原子" value="atom"/>
+          <el-option label="无障碍" value="a11y"/>
+          <el-option label="GitHub" value="github"/>
+          <el-option label="渐变" value="gradient"/>
+          <el-option label="金比" value="kimbie"/>
+          <el-option label="天堂" value="paraiso"/>
+          <el-option label="QT Creator" value="qtcreator"/>
+          <el-option label="stackoverflow论坛" value="stackoverflow"/>
+        </el-select>
+      </el-form-item>
 
     </el-form>
   </div>
@@ -19,16 +30,20 @@
 
 <script setup lang="ts">
 
-import {reactive} from "vue";
-import useConfig, {type UserConfig} from "@/stores/useConfig.ts";
+import {computed, } from "vue";
+import useConfig from "@/stores/useConfig.ts";
 import __ from "lodash";
 
 const configHook = useConfig();
 
-const config = reactive<UserConfig>({
-  previewTheme: "",
+const config = computed({
+  set(config) {
+    __.assign(configHook.get, config);
+  },
+  get() {
+    return configHook.readonly;
+  }
 })
-
 
 // created
 __.assign(config, configHook.get);

@@ -1,5 +1,5 @@
 <template>
-  <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme"/>
+  <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme" :codeTheme="codeTheme" style="background-color: var(--el-bg-color)"/>
   <MdCatalog :editorId="id" :theme="theme" :scrollElement="scrollElement" />
 </template>
 
@@ -31,7 +31,11 @@ const theme = computed(() => {
 })
 
 const previewTheme = computed(() => {
-  return config.get.previewTheme;
+  return config.readonly.previewTheme || "default";
+})
+
+const codeTheme = computed(() => {
+  return config.readonly.codeTheme || "atom";
 })
 
 

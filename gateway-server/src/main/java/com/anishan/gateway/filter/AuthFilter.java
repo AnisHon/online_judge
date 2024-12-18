@@ -23,10 +23,6 @@ public class AuthFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-        if (!sharedConfig.isProduct()) {
-            return chain.filter(exchange);
-        }
-
         ServerHttpRequest request = exchange.getRequest();
 
         // token
