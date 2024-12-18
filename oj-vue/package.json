@@ -25,6 +25,7 @@
     "dayjs": "^1.11.13",
     "element-plus": "^2.8.7",
     "event-source-polyfill": "^1.0.31",
+    "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "markdown-it": "^14.1.0",
     "markdown-it-katex": "^2.0.3",

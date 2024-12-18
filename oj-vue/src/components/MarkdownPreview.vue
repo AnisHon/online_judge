@@ -1,9 +1,6 @@
 <template>
-  <div ref="element">
-    <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme" />
-    <MdCatalog :editorId="id" :theme="theme"/>
-  </div>
-
+  <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme" :codeTheme="codeTheme" style="background-color: var(--el-bg-color)"/>
+  <MdCatalog :editorId="id" :theme="theme"/>
 </template>
 
 <script setup lang="ts">
@@ -12,7 +9,7 @@ import MarkdownIt from "markdown-it";
 // @ts-ignore
 import mk from 'markdown-it-katex';
 
-import {computed, inject, ref} from "vue";
+import {computed} from "vue";
 
 import { MdPreview, MdCatalog } from 'md-editor-v3';
 // preview.css相比style.css少了编辑器那部分样式
@@ -21,7 +18,7 @@ import {useDark} from "@vueuse/core";
 import useConfig from "@/stores/useConfig.ts";
 
 const isDark = useDark();
-const element = ref(undefined);
+
 const config = useConfig()
 
 const id = 'preview-only';
@@ -33,7 +30,11 @@ const theme = computed(() => {
 })
 
 const previewTheme = computed(() => {
-  return config.get.previewTheme;
+  return config.readonly.previewTheme || "default";
+})
+
+const codeTheme = computed(() => {
+  return config.readonly.codeTheme || "atom";
 })
 
 

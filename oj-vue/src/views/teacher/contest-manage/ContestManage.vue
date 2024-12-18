@@ -100,8 +100,8 @@
     />
 
     <!-- 添加或修改测试功能对话框 -->
-    <el-dialog :title="title" v-model="open" width="680px" append-to-body>
-      <el-form :model="form" :rules="rules" label-width="100px">
+    <el-dialog :title="title" v-model="open" width="1050px" append-to-body>
+      <el-form :model="form" :rules="rules" label-position="top" label-width="100px">
         <el-row>
           <el-col :span="24">
             <el-form-item label="比赛标题" prop="title">
@@ -157,7 +157,8 @@
           </el-col>
           <el-col :span="24">
             <el-form-item prop="perms" label="描述">
-              <el-input type="textarea" v-model="form.description" placeholder="请输入描述"/>
+              <MarkDownEditor v-model="form.description" />
+<!--              <el-input type="textarea" v-model="form.description" placeholder="请输入描述"/>-->
             </el-form-item>
           </el-col>
         </el-row>
@@ -214,6 +215,7 @@ import __ from "lodash";
 import type {PagedType} from "@/api/pagedType";
 import ListView from "@/components/ListView/ListView.vue";
 import {authTagType, authText} from "@/utils/contest";
+import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
 
 const openSelectList = ref(false);
 

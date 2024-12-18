@@ -1,190 +1,193 @@
 <template>
   <div v-loading="isGetLoading">
-    <el-row justify="center" :gutter="20" >
+    <el-row justify="center" :gutter="20">
 
-      <el-col :span="editorSpan" >
-        <el-form :model="problem" label-width="100px" label-position="top" >
-          <el-row :gutter="20">
-            <el-col :span="24">
-              <el-form-item label="题目名称" prop="problem.title">
-                <el-input v-model="problem.problem.title" placeholder="请输入标签名称"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="smallSpan">
-              <el-form-item label="题目类型" prop="problem.type" >
-                <el-select v-model="problem.problem.type" placeholder="请选择类型" :disabled="!isAdd">
-                  <el-option v-for="item of dict.problemType" :label="item.label" :value="item.value"/>
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="smallSpan">
-              <el-form-item label="公开权限" prop="problem.type" >
-                <el-select v-model="problem.problem.auth" placeholder="请选择类型" >
-                  <el-option v-for="item of dict.problemAuth" :label="item.label" :value="item.value"/>
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="smallSpan" v-if="isOjProblem">
-              <el-form-item label="难度" prop="ojProblem.difficulty" >
-                <el-select v-model="problem.ojProblem.difficulty" placeholder="请选择难度">
-                  <el-option v-for="item of dict.difficulty" :label="item.label" :value="item.value"/>
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="smallSpan"  v-if="isOjProblem">
-              <el-form-item label="空间限制KiB" prop="ojProblem.memoryLimit" >
-                <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.memoryLimit" placeholder="空间限制"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="smallSpan"  v-if="isOjProblem">
-              <el-form-item label="时间限制ms" prop="ojProblem.timeLimit" >
-                <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.timeLimit" placeholder="时间限制"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="smallSpan" v-if="isOjProblem">
-              <el-form-item label="栈限制MiB" prop="ojProblem.stackLimit"  >
-                <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.stackLimit" placeholder="栈空间限制"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="smallSpan">
-              <el-form-item label="来源" prop="problem.source">
-                <el-input v-model="problem.problem.source" placeholder="请输入标签名称"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="24">
-              <el-form-item label="题目描述" prop="problem.description">
-<!--                <el-input type="textarea"  v-model="problem.problem.description" placeholder="题目描述"/>-->
-                <MarkDownEditor v-model="problem.problem.description"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="24" v-if="isOjProblem">
-              <el-form-item label="输入描述" prop="ojProblem.input">
-<!--                <el-input type="textarea"  v-model="problem.ojProblem.input" placeholder="题目描述"/>-->
-                <MarkDownEditor v-model="problem.ojProblem.input"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="24" v-if="isOjProblem">
-              <el-form-item label="输出描述" prop="ojProblem.output">
-<!--                <el-input type="textarea"  v-model="problem.ojProblem.output" placeholder="题目描述"/>-->
-                <MarkDownEditor v-model="problem.ojProblem.output"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="24" v-if="isOjProblem">
-              <el-form-item label="输入用例" prop="ojProblem.inputExample">
-<!--                <el-input type="textarea"  v-model="problem.ojProblem.inputExample" placeholder="题目描述"/>-->
-                <MarkDownEditor v-model="problem.ojProblem.inputExample"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="24" v-if="isOjProblem">
-              <el-form-item label="输出用例" prop="ojProblem.outputExample">
-<!--                <el-input type="textarea"  v-model="problem.ojProblem.outputExample" placeholder="题目描述"/>-->
-                <MarkDownEditor v-model="problem.ojProblem.outputExample"/>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="24">
-              <el-form-item label="提示" prop="problem.hint">
-<!--                <el-input type="textarea" v-model="problem.problem.hint" placeholder="提示"/>-->
-                <MarkDownEditor v-model="<string | undefined>problem.problem.hint"/>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="24" v-if="isOjProblem">
-              <el-col :span="24" v-for="item of problem.cases" >
-                <el-row>
-                  <el-col :span="12">
-                    <el-form-item label="测试用例" prop="problem.hint">
-                      <el-input type="textarea" v-model="item.input" placeholder="输入用例"/>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="输出用例" prop="problem.hint">
-                      <el-input type="textarea" v-model="item.output" placeholder="输出用例"/>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-
-                <el-row>
-                  <el-col :span="12">
-                    <el-form-item label="分数" prop="problem.hint">
-                      <el-input-number :min="0" :precision="2" v-model="item.score" placeholder="分数"/>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12" style="display: flex; justify-content: center;">
-                    <el-button type="danger" @click="deleteCase(item)">删除</el-button>
-
-                  </el-col>
-
-
-
-                </el-row>
+      <el-col :span="editorSpan">
+        <div class="absoluteCenter">
+          <el-form :model="problem" label-width="100px" label-position="top" style="max-width: var(--page-max-width)">
+            <el-row :gutter="20">
+              <el-col :span="24">
+                <el-form-item label="题目名称" prop="problem.title">
+                  <el-input v-model="problem.problem.title" placeholder="请输入标签名称"/>
+                </el-form-item>
               </el-col>
-            </el-col>
+              <el-col :span="smallSpan">
+                <el-form-item label="题目类型" prop="problem.type" >
+                  <el-select v-model="problem.problem.type" placeholder="请选择类型" :disabled="!isAdd">
+                    <el-option v-for="item of dict.problemType" :label="item.label" :value="item.value"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="smallSpan">
+                <el-form-item label="公开权限" prop="problem.type" >
+                  <el-select v-model="problem.problem.auth" placeholder="请选择类型" >
+                    <el-option v-for="item of dict.problemAuth" :label="item.label" :value="item.value"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="smallSpan" v-if="isOjProblem">
+                <el-form-item label="难度" prop="ojProblem.difficulty" >
+                  <el-select v-model="problem.ojProblem.difficulty" placeholder="请选择难度">
+                    <el-option v-for="item of dict.difficulty" :label="item.label" :value="item.value"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="smallSpan"  v-if="isOjProblem">
+                <el-form-item label="空间限制KiB" prop="ojProblem.memoryLimit" >
+                  <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.memoryLimit" placeholder="空间限制"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="smallSpan"  v-if="isOjProblem">
+                <el-form-item label="时间限制ms" prop="ojProblem.timeLimit" >
+                  <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.timeLimit" placeholder="时间限制"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="smallSpan" v-if="isOjProblem">
+                <el-form-item label="栈限制MiB" prop="ojProblem.stackLimit"  >
+                  <el-input-number :min="0" :controls="false" v-model="problem.ojProblem.stackLimit" placeholder="栈空间限制"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="smallSpan">
+                <el-form-item label="来源" prop="problem.source">
+                  <el-input v-model="problem.problem.source" placeholder="请输入标签名称"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24">
+                <el-form-item label="题目描述" prop="problem.description">
+                  <!--                <el-input type="textarea"  v-model="problem.problem.description" placeholder="题目描述"/>-->
+                  <MarkDownEditor v-model="problem.problem.description"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24" v-if="isOjProblem">
+                <el-form-item label="输入描述" prop="ojProblem.input">
+                  <!--                <el-input type="textarea"  v-model="problem.ojProblem.input" placeholder="题目描述"/>-->
+                  <MarkDownEditor v-model="problem.ojProblem.input"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24" v-if="isOjProblem">
+                <el-form-item label="输出描述" prop="ojProblem.output">
+                  <!--                <el-input type="textarea"  v-model="problem.ojProblem.output" placeholder="题目描述"/>-->
+                  <MarkDownEditor v-model="problem.ojProblem.output"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24" v-if="isOjProblem">
+                <el-form-item label="输入用例" prop="ojProblem.inputExample">
+                  <!--                <el-input type="textarea"  v-model="problem.ojProblem.inputExample" placeholder="题目描述"/>-->
+                  <MarkDownEditor v-model="problem.ojProblem.inputExample"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24" v-if="isOjProblem">
+                <el-form-item label="输出用例" prop="ojProblem.outputExample">
+                  <!--                <el-input type="textarea"  v-model="problem.ojProblem.outputExample" placeholder="题目描述"/>-->
+                  <MarkDownEditor v-model="problem.ojProblem.outputExample"/>
+                </el-form-item>
+              </el-col>
 
-            <el-col :span="24" v-if="isChoiceProblem">
-              <div v-for="item of problem.choices" >
-                <el-row :gutter="20">
+              <el-col :span="24">
+                <el-form-item label="提示" prop="problem.hint">
+                  <!--                <el-input type="textarea" v-model="problem.problem.hint" placeholder="提示"/>-->
+                  <MarkDownEditor v-model="<string | undefined>problem.problem.hint"/>
+                </el-form-item>
+              </el-col>
 
-                  <el-col :span="12">
-                    <el-form-item :label="numberToLetter(<number>item.blankIndex)" prop="problem.hint">
-                      <el-input type="textarea" v-model="item.answerText" placeholder="输入用例"/>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="分数" prop="problem.hint">
-                      <el-input-number :min="0" :precision="2" v-model="item.score" placeholder="分数"/>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item prop="item.isCorrect" >
-                      <el-checkbox  v-model="item.isCorrect" label="是否是正确答案"/>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12" style="display: flex; justify-content: center;">
-                    <el-button type="danger" @click="deleteChoice(item)">删除</el-button>
-                  </el-col>
-                </el-row>
-              </div>
-            </el-col>
+              <el-col :span="24" v-if="isOjProblem">
+                <el-col :span="24" v-for="item of problem.cases" >
+                  <el-row>
+                    <el-col :span="12">
+                      <el-form-item label="测试用例" prop="problem.hint">
+                        <el-input type="textarea" v-model="item.input" placeholder="输入用例"/>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-form-item label="输出用例" prop="problem.hint">
+                        <el-input type="textarea" v-model="item.output" placeholder="输出用例"/>
+                      </el-form-item>
+                    </el-col>
+                  </el-row>
 
-            <el-col :span="24" v-if="isFillProblem">
-              <div v-for="item of problem.choices" >
-                <el-row>
+                  <el-row>
+                    <el-col :span="12">
+                      <el-form-item label="分数" prop="problem.hint">
+                        <el-input-number :min="0" :precision="2" v-model="item.score" placeholder="分数"/>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12" style="display: flex; justify-content: center;">
+                      <el-button type="danger" @click="deleteCase(item)">删除</el-button>
 
-                  <el-col :span="12">
-                    <el-form-item label="填空索引" prop="problem.hint">
-                      <el-input-number  v-model="item.blankIndex" :controls="false" />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="答案" prop="problem.hint">
-                      <el-input type="textarea" v-model="item.answerText" placeholder="输入用例"/>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="分数" prop="problem.hint">
-                      <el-input-number :min="0" v-model="item.score" :precision="2" placeholder="分数"/>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12" style="display: flex; justify-content: center;">
-                    <el-button type="danger" @click="deleteChoice(item)">删除</el-button>
-                  </el-col>
-
-                </el-row>
-              </div>
-            </el-col>
-
-            <el-col :span="24" style="display: flex; justify-content: center;">
-              <el-button type="success" @click="addMore">
-                添加新数据
-              </el-button>
-            </el-col>
+                    </el-col>
 
 
 
+                  </el-row>
+                </el-col>
+              </el-col>
 
-          </el-row>
-        </el-form>
+              <el-col :span="24" v-if="isChoiceProblem">
+                <div v-for="item of problem.choices" >
+                  <el-row :gutter="20">
+
+                    <el-col :span="12">
+                      <el-form-item :label="numberToLetter(<number>item.blankIndex)" prop="problem.hint">
+                        <el-input type="textarea" v-model="item.answerText" placeholder="输入用例"/>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-form-item label="分数" prop="problem.hint">
+                        <el-input-number :min="0" :precision="2" v-model="item.score" placeholder="分数"/>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-form-item prop="item.isCorrect" >
+                        <el-checkbox  v-model="item.isCorrect" label="是否是正确答案"/>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12" style="display: flex; justify-content: center;">
+                      <el-button type="danger" @click="deleteChoice(item)">删除</el-button>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+
+              <el-col :span="24" v-if="isFillProblem">
+                <div v-for="item of problem.choices" >
+                  <el-row>
+
+                    <el-col :span="12">
+                      <el-form-item label="填空索引" prop="problem.hint">
+                        <el-input-number  v-model="item.blankIndex" :controls="false" />
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-form-item label="答案" prop="problem.hint">
+                        <el-input type="textarea" v-model="item.answerText" placeholder="输入用例"/>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-form-item label="分数" prop="problem.hint">
+                        <el-input-number :min="0" v-model="item.score" :precision="2" placeholder="分数"/>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12" style="display: flex; justify-content: center;">
+                      <el-button type="danger" @click="deleteChoice(item)">删除</el-button>
+                    </el-col>
+
+                  </el-row>
+                </div>
+              </el-col>
+
+              <el-col :span="24" style="display: flex; justify-content: center;">
+                <el-button type="success" @click="addMore">
+                  添加新数据
+                </el-button>
+              </el-col>
+
+
+
+
+            </el-row>
+          </el-form>
+
+        </div>
       </el-col>
 
       <el-col :span="12" v-show="isShowPreview">

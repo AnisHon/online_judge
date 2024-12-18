@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <RouterView />
+    <router-view />
   </div>
 </template>
 <script setup lang="ts">
