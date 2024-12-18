@@ -57,3 +57,11 @@ md.use(mk)
 @import "https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css";
 
 </style>
+
+<style>
+
+iframe {
+  width: 100%;
+  min-height: 500px;
+}
+</style>

@@ -2,7 +2,7 @@
   <div>
     <el-form label-width="100">
       <el-form-item label="富文本样式">
-        <el-select v-model="config.previewTheme" @change="configHook.setPreviewTheme">
+        <el-select v-model="config.previewTheme">
           <el-option label="默认" value="default"/>
           <el-option label="GitHub" value="github"/>
           <el-option label="VuePress" value="vuepress"/>
@@ -12,7 +12,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="代码样式">
-        <el-select v-model="config.codeTheme" @change="configHook.setPreviewTheme">
+        <el-select v-model="config.codeTheme">
           <el-option label="原子" value="atom"/>
           <el-option label="无障碍" value="a11y"/>
           <el-option label="GitHub" value="github"/>
@@ -38,10 +38,11 @@ const configHook = useConfig();
 
 const config = computed({
   set(config) {
+    console.log(config)
     __.assign(configHook.get, config);
   },
   get() {
-    return configHook.readonly;
+    return configHook.get;
   }
 })
 

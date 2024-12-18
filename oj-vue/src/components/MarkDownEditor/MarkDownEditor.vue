@@ -1,8 +1,8 @@
 <template>
-  <MdEditor v-model="text" :theme="theme" :previewTheme="previewTheme" :codeTheme="codeTheme" />
+  <MdEditor v-model="text" :theme="theme" :previewTheme="previewTheme"  :codeTheme="codeTheme" />
 </template>
 <script setup lang="ts">
-import { MdEditor } from 'md-editor-v3';
+import {MdEditor, MdPreview} from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import {computed} from "vue";
 import {useDark} from "@vueuse/core";
@@ -30,6 +30,14 @@ const previewTheme = computed(() => {
 
 </script>
 
-<style scoped>
+<style>
+.md-editor,
+.md-editor .ͼo {
+  background-color: var(--el-bg-color);
+}
 
+iframe {
+  width: 100%;
+  min-height: 500px;
+}
 </style>

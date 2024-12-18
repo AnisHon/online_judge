@@ -4,7 +4,7 @@
       <param>
         <option name="enabled" value="true" />
         <option name="name" value="common.config.file-base-url" />
-        <option name="value" value="E:\cach\temp" />
+        <option name="value" value="$USER_HOME$/temp/oj" />
       </param>
     </additionalParameters>
     <module name="judge-server" />
