@@ -312,7 +312,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
 
         boolean b = ojProblemCaseService.saveOrUpdateBatch(cases);
-        judgeClient.setCase(problemId, cases);
+//        judgeClient.setCase(problemId, cases);
         return b;
     }
 
