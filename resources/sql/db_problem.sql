@@ -70,7 +70,9 @@ CREATE TABLE oj_problem (
     del_flag        boolean        default 0 not null      comment '删除标记(0未删除 1删除)',
     create_time     datetime       default now()           comment '创建时间',
     update_time     datetime       default now()           comment '更新时间，用于乐观锁',
-    PRIMARY KEY (problem_id)
+    PRIMARY KEY (problem_id),
+    constraint oj_problem_problem_id_fk foreign key oj_problem(problem_id)
+        references problem(problem_id)
 ) ENGINE=InnoDB auto_increment=1000 default charset=utf8 comment 'OJ题目分表';
 
 -- ----------------------------
@@ -86,7 +88,9 @@ CREATE TABLE oj_problem_case (
     del_flag    boolean default 0 not null          comment '删除标记',
     create_time datetime default now(),
     update_time datetime default now() on update now(),
-    PRIMARY KEY (case_id)
+    PRIMARY KEY (case_id),
+    constraint oj_problem_case_problem_id_fk foreign key oj_problem_case(problem_id)
+                             references problem(problem_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment 'OJ判题测试用例';
 
 create index oj_problem_case_problem_id_idx on oj_problem_case(problem_id);
@@ -106,7 +110,9 @@ CREATE TABLE choice_fill_answers (
     del_flag    boolean         default 0 not null      comment '删除标记',
     create_time datetime        default now() not null ,
     update_time datetime        default now() on update now() not null ,
-    PRIMARY KEY (answer_id)
+    PRIMARY KEY (answer_id),
+    constraint choice_fill_answers_problem_id_fk foreign key choice_fill_answers(problem_id)
+                                 references problem(problem_id)
 )ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '填空选择题答案表';
 create index choice_fill_answers_problem_id_idx on choice_fill_answers(problem_id);
 
@@ -134,7 +140,11 @@ CREATE TABLE problem_problem_list (
     problem_id      bigint(20)      not null            comment '题目id',
     problem_order   int(11)         not null            comment '题目顺序',
     score           decimal(4,2)    default 10 not null comment '每道题对应分数',
-    primary key (list_id, problem_id)
+    primary key (list_id, problem_id),
+    constraint problem_list_problem_id_fk foreign key problem_problem_list(problem_id)
+        references problem(problem_id),
+    constraint problem_list_list_id_fk foreign key problem_problem_list(list_id)
+        references problem_list(list_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题单 题目关系表';
 create index problem_problem_list_list_id_idx on problem_problem_list(list_id);
 create index problem_problem_list_problem_id_idx on problem_problem_list(problem_id);
@@ -157,7 +167,9 @@ CREATE TABLE contest (
     del_flag    boolean         default 0  not null     comment '删除标记',
     create_time datetime        default now(),
     update_time datetime        default now() on update now(),
-    primary key (contest_id)
+    primary key (contest_id),
+    constraint contest_list_id_fk foreign key contest(list_id)
+        references problem_list(list_id)
 ) ENGINE=InnoDB auto_increment=1000 default charset=utf8 comment '比赛表';
 
 
@@ -183,7 +195,11 @@ drop table if exists problem_tag;
 CREATE TABLE problem_tag (
     problem_id  bigint(20)      comment '题目id',
     tag_id      bigint(20)      comment '标签id',
-    primary key (problem_id, tag_id)
+    primary key (problem_id, tag_id),
+    constraint problem_tag_problem_id_fk foreign key problem_tag(problem_id)
+        references problem(problem_id),
+    constraint problem_tag_tag_id_fk foreign key problem_tag(tag_id)
+        references tag(tag_id)
 )ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '标签 题目关系表';
 create index problem_tag_tag_id_idx on problem_tag(tag_id);
 
@@ -201,7 +217,9 @@ CREATE TABLE submit_log (
     time        int(20)     null                    comment '耗时 单位ms',
     memory      int(20)     null                    comment '内存使用 单位kb',
     submit_time datetime    default now() not null,
-    PRIMARY KEY (submit_id)
+    PRIMARY KEY (submit_id),
+    constraint submit_log_problem_id_fk foreign key submit_log(problem_id)
+        references problem(problem_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment 'OJ判题提交记录';
 create index submit_log_problem_id on submit_log(problem_id);
 create index submit_log_user_id on submit_log(user_id);
@@ -220,7 +238,11 @@ create table folder(
     parent_id   bigint(20)  default 0 not null      comment '父文件夹名，默认0表示没有父文件夹',
     list_id     bigint(20)  null                    comment '题单，如果是D类型则应该为空',
     del_flag    boolean     default 0  not null     comment '逻辑删除',
-    primary key (folder_id)
+    primary key (folder_id),
+    constraint folder_folder_id_fk foreign key folder(parent_id)
+                   references folder(folder_id),
+    constraint folder_list_id_fk foreign key folder(list_id)
+        references problem_list(list_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '文件夹表';
 
 -- ----------------------------
@@ -235,7 +257,11 @@ create table records(
     status      boolean         not null                 comment '是否正确',
     score       DECIMAL(3, 2)   null                     comment '最终得分',
     answer      json            null                     comment '答案',
-    primary key (record_id)
+    primary key (record_id),
+    constraint folder_contest_id_fk foreign key records(contest_id)
+        references contest(contest_id),
+    constraint folder_problem_id_fk foreign key records(problem_id)
+        references problem(problem_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题目完成表';
 create index records_contest_id_idx on records(contest_id);
 create index records_user_id_idx on records(user_id);
@@ -253,7 +279,11 @@ create table contest_records(
     problem_id  bigint(20)      not null                 comment '题目id',
     status      boolean         not null                 comment '是否正确',
     score       DECIMAL(3, 2)   null                     comment '最终得分',
-    primary key (contest_id, user_id, problem_id)
+    primary key (contest_id, user_id, problem_id),
+    constraint contest_records_contest_id_fk foreign key contest_records(contest_id)
+        references contest(contest_id),
+    constraint contest_records_problem_id_fk foreign key contest_records(problem_id)
+        references problem(problem_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '比赛题目记录';
 create index contest_records_contest_id_idx on records(contest_id);
 create index contest_records_user_id_idx on records(user_id);
@@ -267,7 +297,9 @@ drop table if exists problem_complete;
 create table problem_complete(
     user_id     bigint(20)      not null                 comment '用户ID',
     problem_id  bigint(20)      not null                 comment '题目id',
-    primary key (user_id, problem_id)
+    primary key (user_id, problem_id),
+    constraint problem_complete_problem_id_fk foreign key problem_complete(problem_id)
+        references problem(problem_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题目完成表';
 
 -- ----------------------------
@@ -277,7 +309,9 @@ drop table if exists user_contest;
 create table user_contest(
     user_id bigint(20) not null comment '用户ID',
     contest_id bigint(20) not null comment '比赛ID',
-    primary key (user_id, contest_id)
+    primary key (user_id, contest_id),
+    constraint user_contest_contest_id_fk foreign key user_contest(contest_id)
+        references contest(contest_id)
 ) ENGINE=InnoDB default charset=utf8 comment '比赛参加表';
 create index user_contest_user_id_idx on user_contest(user_id);
 create index user_contest_contest_id_idx on user_contest(contest_id);
@@ -290,7 +324,9 @@ drop table if exists class_contest;
 create table class_contest(
     class_id bigint(20) not null comment '班级ID',
     contest_id bigint(20) not null comment '比赛ID',
-    primary key (class_id, contest_id)
+    primary key (class_id, contest_id),
+    constraint class_contest_contest_id_fk foreign key class_contest(contest_id)
+        references contest(contest_id)
 ) ENGINE=InnoDB default charset=utf8 comment '白名单题单关系表';
 create index class_contest_class_id_idx on class_contest(class_id);
 create index class_contest_contest_id_idx on class_contest(contest_id);
