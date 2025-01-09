@@ -6,7 +6,7 @@ import {debounce} from "lodash";
 
 
 const contestProblems = async (listId: number) => {
-    const {data} = await get<ProblemInListView[], number>("problem-api/contest/problems", listId);
+    const {data} = await get<ProblemInListView[], number>("/problem-api/contest/problems", listId);
     return data;
 }
 

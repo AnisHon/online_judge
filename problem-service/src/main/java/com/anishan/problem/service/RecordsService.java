@@ -1,8 +1,10 @@
 package com.anishan.problem.service;
 
+import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.Records;
 import com.anishan.problem.domain.vo.ScoredUser;
 import com.anishan.problem.domain.vo.ProblemStatistic;
+import com.anishan.problem.domain.vo.UserAnswer;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.math.BigDecimal;
@@ -25,4 +27,6 @@ public interface RecordsService extends IService<Records> {
     List<ScoredUser> rank(Long contestId);
 
     List<ProblemStatistic> statistic(Long contestId);
+
+    UserAnswer getAnswer(Long userId, UserAnswerRequest userAnswerRequest);
 }

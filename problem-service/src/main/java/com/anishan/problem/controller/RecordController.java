@@ -57,7 +57,7 @@ public class RecordController {
     }
 
 
-    @PostMapping("/save")
+    @PostMapping
     @ApiOperation("保存数据")
     public R<Boolean> save(
             @RequestHeader("user-id") Long userId,
@@ -87,24 +87,15 @@ public class RecordController {
         }
     }
 
-    @PostMapping("/get")
+    @GetMapping
     @ApiOperation("获取数据，用于题目答案回写")
     public R<UserAnswer> get(
             @RequestHeader("user-id") Long userId,
-            @RequestBody @Validated UserAnswerRequest userAnswerRequest) {
+            @Validated UserAnswerRequest userAnswerRequest) {
 
-        Records records = recordsService.getOne(new LambdaQueryWrapper<Records>()
-                .eq(Records::getUserId, userId)
-                .eq(userAnswerRequest.getContestId() != null, Records::getContestId, userAnswerRequest.getContestId())
-                .isNull(userAnswerRequest.getContestId() == null, Records::getContestId)
-                .eq(Records::getProblemId, userAnswerRequest.getProblemId())
-        );
+        UserAnswer userAnswer = recordsService.getAnswer(userId, userAnswerRequest);
 
-        if (records == null || records.getAnswer() == null) {
-            return R.success(null);
-        }
-
-        return R.success(records.getAnswer());
+        return R.success(userAnswer);
     }
 
     @GetMapping("/score/{contestId}")

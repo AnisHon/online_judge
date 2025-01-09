@@ -52,7 +52,7 @@ public class JudgeServiceImpl implements JudgeService {
     private ProblemJudgeResult judgeOj(Long userId, Problem problem, JudgeRequest judgeRequest) {
 
         // 获取OJ题目
-        OjProblem ojProblem = ojProblemService.getById(problem.getOjId());
+        OjProblem ojProblem = ojProblemService.getById(judgeRequest.getProblemId());
         ThrowUtil.runtime(ojProblem == null, "题目被删除或不存在");
 
         // 获取语言

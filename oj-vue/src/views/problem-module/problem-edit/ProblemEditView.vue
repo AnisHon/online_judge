@@ -60,32 +60,27 @@
               </el-col>
               <el-col :span="24" v-if="isOjProblem">
                 <el-form-item label="输入描述" prop="ojProblem.input">
-                  <!--                <el-input type="textarea"  v-model="problem.ojProblem.input" placeholder="题目描述"/>-->
                   <MarkDownEditor v-model="problem.ojProblem.input"/>
                 </el-form-item>
               </el-col>
               <el-col :span="24" v-if="isOjProblem">
                 <el-form-item label="输出描述" prop="ojProblem.output">
-                  <!--                <el-input type="textarea"  v-model="problem.ojProblem.output" placeholder="题目描述"/>-->
                   <MarkDownEditor v-model="problem.ojProblem.output"/>
                 </el-form-item>
               </el-col>
               <el-col :span="24" v-if="isOjProblem">
                 <el-form-item label="输入用例" prop="ojProblem.inputExample">
-                  <!--                <el-input type="textarea"  v-model="problem.ojProblem.inputExample" placeholder="题目描述"/>-->
                   <MarkDownEditor v-model="problem.ojProblem.inputExample"/>
                 </el-form-item>
               </el-col>
               <el-col :span="24" v-if="isOjProblem">
                 <el-form-item label="输出用例" prop="ojProblem.outputExample">
-                  <!--                <el-input type="textarea"  v-model="problem.ojProblem.outputExample" placeholder="题目描述"/>-->
                   <MarkDownEditor v-model="problem.ojProblem.outputExample"/>
                 </el-form-item>
               </el-col>
 
               <el-col :span="24">
                 <el-form-item label="提示" prop="problem.hint">
-                  <!--                <el-input type="textarea" v-model="problem.problem.hint" placeholder="提示"/>-->
                   <MarkDownEditor v-model="<string | undefined>problem.problem.hint"/>
                 </el-form-item>
               </el-col>

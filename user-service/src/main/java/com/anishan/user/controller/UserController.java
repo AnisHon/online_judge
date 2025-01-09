@@ -60,7 +60,7 @@ public class UserController {
     }
 
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("通过id获取用户")
     public R<UserVo> getUserById(@PathVariable("id") @NotNull(message = "id不能为Null") Long id) {
@@ -68,10 +68,10 @@ public class UserController {
         return R.success(user);
     }
 
-    @PostMapping("/getByRole")
+    @GetMapping("/getByRole")
     @PreAuthorize("hasAnyAuthority('user:user:list', 'user:role:list')")
     @ApiOperation("通过role获取用户")
-    public R<PagedResult<UserVo>> getUserByRole(@RequestBody @Validated PagedUserRoleQuery pagedQuery) {
+    public R<PagedResult<UserVo>> getUserByRole(@Validated PagedUserRoleQuery pagedQuery) {
         PagedResult<UserVo> userVoPagedResult = sysUserService.getUserByRoleId(pagedQuery);
         return userVoPagedResult.toR();
     }
@@ -88,20 +88,20 @@ public class UserController {
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("分页获取User")
-    public R<PagedResult<UserVo>> listUsers(@Validated @RequestBody @NotNull PagedQuery<SysUser> pagedQuery) {
+    public R<PagedResult<UserVo>> listUsers(@Validated PagedQuery<SysUser> pagedQuery) {
         PagedResult<UserVo> userVoPagedResult = sysUserService.listUsers(pagedQuery);
         return userVoPagedResult.toR();
     }
 
-    @PostMapping("/query")
+    @GetMapping("/query")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("查询User")
-    public R<PagedResult<UserVo>> queryUser(@Validated  @NotNull @RequestBody UserPagedQuery userPagedQuery) {
+    public R<PagedResult<UserVo>> queryUser(@Validated UserPagedQuery userPagedQuery) {
         PagedResult<UserVo> result = sysUserService.queryUser(userPagedQuery);
         return result.toR();
     }
 
-    @PostMapping("/update")
+    @PutMapping
     @PreAuthorize("hasAuthority('user:user:edit')")
     @ApiOperation("更新User，不能更改密码和Id和用户名")
     public R<Boolean> update(@RequestBody @Validated({ValidationGroup.Update.class}) UserDto userDto) {
@@ -109,23 +109,15 @@ public class UserController {
         return R.success(b);
     }
 
-    @GetMapping("/remove/{id}")
+    @DeleteMapping("/{ids}")
     @PreAuthorize("hasAuthority('user:user:remove')")
     @ApiOperation("删除用户，由于其破坏性较大所以已经禁止删除")
-    public R<Boolean> remove(@PathVariable @NotNull Long id) {
-//        boolean b = sysUserService.removeById(id);
+    public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
+//        boolean b = sysUserService.removeBatchByIds(ids);
         return R.success(false);
     }
 
-    @GetMapping("/removeBatch/{ids}")
-    @PreAuthorize("hasAuthority('user:user:remove')")
-    @ApiOperation("删除用户")
-    public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
-        boolean b = sysUserService.removeBatchByIds(ids);
-        return R.success(b);
-    }
-
-    @PostMapping("/add")
+    @PostMapping
     @PreAuthorize("hasAuthority('user:user:add')")
     @ApiOperation("添加用户")
     public R<String> addUser(@RequestBody @Validated(ValidationGroup.Insert.class) SysUserDto sysUserDto) {
@@ -138,13 +130,10 @@ public class UserController {
     }
 
     // change myself
-    @PostMapping("/change-myself")
+    @PutMapping("/change-myself")
     @ApiOperation("更改个人信息")
     public R<Boolean> changeMyself(@RequestBody @Validated SysUserInfoDto sysUserDto, @RequestHeader("user-id") Long userId) {
-
-
         boolean b = sysUserService.changeInfo(sysUserDto, userId);
-
         return R.success(b);
     }
 

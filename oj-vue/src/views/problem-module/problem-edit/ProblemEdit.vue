@@ -84,14 +84,11 @@
 
 <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center"/>
+      <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" />
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
-      <el-table-column label="问题描述" align="center" prop="description" v-if="columns[2].visible">
-        <template v-slot="scope">
-          <markdown-preview :text="scope.row.description"/>
-        </template>
-      </el-table-column>
+      <el-table-column label="问题描述" align="center" prop="description" v-if="columns[2].visible" show-overflow-tooltip />
+
       <el-table-column label="问题来源" align="center" prop="source" v-if="columns[3].visible" />
       <el-table-column label="问题类型" align="center" prop="type" v-if="columns[4].visible">
         <template v-slot="scope">
@@ -112,7 +109,7 @@
               type="primary"
               icon="edit"
               @click="handleUpdate(scope.row)"
-              v-has="'problem:problem:update'"
+              v-has="'problem:problem:edit'"
           >修改</el-link>
           <el-link
               size="small"
@@ -122,7 +119,7 @@
               v-has="'problem:problem:remove'"
           >删除</el-link>
           <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
-                       v-has-any="['user:user:edit'] ">
+                       v-has-any="['problem:tag:add'] ">
             <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
             <template #dropdown>
               <el-dropdown-menu>

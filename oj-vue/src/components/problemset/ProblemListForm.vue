@@ -27,10 +27,10 @@
       <div>
         <span>题目类型： </span>
         <el-radio-group v-model="queryForm.type">
-          <el-radio :value="1">OJ</el-radio>
-          <el-radio :value="2">填空</el-radio>
-          <el-radio :value="3">选择</el-radio>
-          <el-radio :value="4">多选</el-radio>
+          <el-radio value="OJ">OJ</el-radio>
+          <el-radio value="FILL">填空</el-radio>
+          <el-radio value="CHOICE">选择</el-radio>
+          <el-radio value="MULTI_CHOICE">多选</el-radio>
         </el-radio-group>
       </div>
       <el-col :span="18">

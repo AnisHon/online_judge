@@ -39,7 +39,7 @@ public class TagController {
     }
 
 
-    @PostMapping("/add")
+    @PostMapping
     @PreAuthorize("hasAuthority('problem:tag:add')")
     @ApiOperation("添加标签")
     public R<Boolean> add(@RequestBody @Validated(ValidationGroup.Insert.class) TagDto tag) {
@@ -47,22 +47,15 @@ public class TagController {
         return R.success(b);
     }
 
-    @PostMapping("/update")
-    @PreAuthorize("hasAuthority('problem:tag:update')")
+    @PutMapping
+    @PreAuthorize("hasAuthority('problem:tag:edit')")
     @ApiOperation("更改标签")
     public R<Boolean> update(@RequestBody @Validated(ValidationGroup.Update.class)  TagDto tag) {
         boolean b = tagService.updateTag(tag);
         return R.success(b);
     }
 
-    @GetMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('problem:tag:delete')")
-    @ApiOperation("删除标签")
-    public R<Boolean> delete(@PathVariable @NotNull Long id) {
-        boolean b = tagService.deleteTag(id);
-        return R.success(b);
-    }
-    @GetMapping("/deleteBatch/{ids}")
+    @DeleteMapping("/{ids}")
     @PreAuthorize("hasAuthority('problem:tag:delete')")
     @ApiOperation("批量删除标签")
     public R<Boolean> deleteBatch(@PathVariable @NotNull List<Long> ids) {

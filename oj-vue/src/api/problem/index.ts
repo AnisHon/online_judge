@@ -1,10 +1,10 @@
-import {get, post, type successCallback} from "@/utils/http"
+import {get, getWithParams, post, type successCallback} from "@/utils/http"
 import {type TagView} from "./label"
 import {ElMessage} from "element-plus";
 import type {PagedResponse, PagedType} from "@/api/pagedType";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
-import {remove, update} from "@/utils/simpleCRUD";
+import {removeAll, update} from "@/utils/simpleCRUD";
 import {type LogSubmit} from "@/api/problem/judge";
 
 
@@ -179,7 +179,7 @@ interface ProblemForm {
 
 async function getProblemsAdmin(queryProblem: AdminQueryProblem): Promise<PagedResponse<ProblemView>> {
     const {data} =
-        await post<AdminQueryProblem, PagedResponse<ProblemView>>("/problem-api/problem/listAll", queryProblem);
+        await getWithParams<PagedResponse<ProblemView>, AdminQueryProblem>("/problem-api/problem/listAll", queryProblem);
     return data;
 }
 
@@ -213,7 +213,7 @@ const debouncedAdminGetProblem = (id: number | undefined, success: successCallba
 
 
 async function removeProblems(ids: number | number[]) {
-    await remove(ids, "/problem-api/problem/batchRemove", "/problem-api/problem/remove");
+    await removeAll(ids, "/problem-api/problem");
 }
 
 async function addProblems(form: ProblemForm) {
@@ -232,7 +232,7 @@ const debouncedAddProblem = (form: ProblemForm, success: successCallback<number>
 }
 
 async function updateProblems(form: ProblemForm) {
-    await update(form, "/problem-api/problem/update");
+    await update(form, "/problem-api/problem");
 }
 
 const debouncedUpdateProblem = (form: ProblemForm, success: successCallback<void>) => {
@@ -253,14 +253,7 @@ async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
 
     try {
         const {data: { data, currentPage, pageSize, totalRecords}}
-            = await post<ProblemParam, PagedData>(
-                "/problem-api/problem/tagged-list", problemParam,
-            (msg, code) => {
-                    if (code === 400) {
-                        ElMessage.error("ID只能是数字");
-                    }
-            }
-            );
+            = await getWithParams<PagedData, ProblemParam>("/problem-api/problem/taggedList", problemParam);
         return {data, currentPage, pageSize, totalRecords};
     } catch (msg) {
         return Promise.reject(msg);
@@ -269,7 +262,7 @@ async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
 }
 
 async function getDetailProblem(id: number): Promise<ProblemDetailView> {
-    const {code, data, message} = await get("/problem-api/problem/get", id)
+    const {code, data, message} = await get("/problem-api/problem", id)
     if (code !== 200) {
         ElMessage.warning(message)
         return Promise.reject(message)
@@ -278,12 +271,12 @@ async function getDetailProblem(id: number): Promise<ProblemDetailView> {
 }
 
 const recentSubmit = async (problemId: number) => {
-    const {data} = await get<LogSubmit[], number>("/problem-api/log/recent-submit/", problemId);
+    const {data} = await get<LogSubmit[], number>("/problem-api/log/recentSubmit/", problemId);
     return data
 }
 
 const recentProblem = async (): Promise<ProblemView[]> => {
-    const {data} = await get<ProblemView[], number>("/problem-api/problem/recent-problems", 15);
+    const {data} = await get<ProblemView[], number>("/problem-api/problem/recentProblems", 15);
     return data
 }
 

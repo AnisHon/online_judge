@@ -1,7 +1,7 @@
 spring:
   rabbitmq:
     port: 5672
-    host: 8.149.133.76
+    host: localhost
     username: anishan
     password: change-this-db-password
     #这个配置是保证提供者确保消息推送到交换机中，不管成不成功，都会回调

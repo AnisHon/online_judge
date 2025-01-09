@@ -62,7 +62,7 @@ public class SubmitLogController {
         return R.success(log);
     }
 
-    @GetMapping("/recent-submit/{problemId}")
+    @GetMapping("/recentSubmit/{problemId}")
     @ApiOperation("最近提交记录")
     public R<List<SubmitLogVo>> recentSubmit(
             @NotNull @PathVariable("problemId") Long problemId,

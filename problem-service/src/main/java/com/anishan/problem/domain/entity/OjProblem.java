@@ -17,7 +17,7 @@ public class OjProblem implements Serializable {
     /**
      * 主键
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.INPUT)
     private Long problemId;
 
     /**

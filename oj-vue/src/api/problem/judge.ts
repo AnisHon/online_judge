@@ -1,4 +1,12 @@
-import {type AjaxResult, type failCallback, type finallyCallback, get, post, type successCallback} from "@/utils/http";
+import {
+    type AjaxResult,
+    type failCallback,
+    type finallyCallback,
+    get,
+    getWithParams,
+    post,
+    type successCallback
+} from "@/utils/http";
 import {debounce} from "lodash";
 
 enum OJResult {
@@ -105,12 +113,12 @@ async function fetchLog(id: number, success: successCallback<LogSubmit>) {
 }
 
 async function getUserAnswer(req: UserAnswerRequest): Promise<UserAnswer> {
-    const {data} = await post<UserAnswerRequest, UserAnswer>("/problem-api/record/get", req);
+    const {data} = await getWithParams<UserAnswer, UserAnswerRequest>("/problem-api/record", req);
     return data;
 }
 
 async function saveUserAnswer(judgeForm: JudgeForm): Promise<boolean> {
-    const {data} = await post<JudgeForm, boolean>("/problem-api/record/save", judgeForm);
+    const {data} = await post<JudgeForm, boolean>("/problem-api/record", judgeForm);
     return data;
 }
 const debouncedSave = () => {
@@ -143,8 +151,8 @@ async function judge(judgeForm: JudgeForm, fail: failCallback): Promise<JudgeRes
     return data
 }
 
-const defaultFail = (msg: string) => {
-    ElMessage.error("提交出错")
+const defaultFail = (msg: string = "提交出错") => {
+    ElMessage.error(msg)
 
 }
 

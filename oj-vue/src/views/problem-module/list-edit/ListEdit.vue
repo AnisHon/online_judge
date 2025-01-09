@@ -40,7 +40,7 @@
             size="small"
             :disabled="single"
             @click="handleUpdate()"
-            v-has="'problem:list:update'"
+            v-has="'problem:list:edit'"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -51,7 +51,7 @@
             size="small"
             :disabled="multiple"
             @click="handleDelete"
-            v-has="'problem:list:delete'"
+            v-has="'problem:list:remove'"
         >删除</el-button>
       </el-col>
       <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>

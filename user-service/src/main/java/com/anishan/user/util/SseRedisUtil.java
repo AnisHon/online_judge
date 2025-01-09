@@ -2,10 +2,12 @@ package com.anishan.user.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -19,7 +21,9 @@ public class SseRedisUtil {
 
     public void saveUserSession(Long userId, String sessionId) {
         String sseKey = getSseKey(userId);
-        redisTemplate.opsForSet().add(sseKey, sessionId);
+        SetOperations<String, String> setOp = redisTemplate.opsForSet();
+        setOp.add(sseKey, sessionId);
+        redisTemplate.expire(sseKey, 31, TimeUnit.SECONDS);
     }
 
     public Set<String> getUserSessions(Long userId) {
@@ -30,4 +34,5 @@ public class SseRedisUtil {
         String sseKey = getSseKey(userId);
         redisTemplate.opsForSet().remove(sseKey, sessionId);
     }
+
 }

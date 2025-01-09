@@ -21,10 +21,6 @@ public class Problem implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long problemId;
 
-    /**
-     * OJ题目ID
-     */
-    private Long ojId;
 
     /**
      * 题目名称

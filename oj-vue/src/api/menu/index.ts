@@ -6,7 +6,7 @@ import {
 import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, fetch, remove, update} from "@/utils/simpleCRUD";
+import {add, fetch, remove, removeAll, update} from "@/utils/simpleCRUD";
 
 interface QueryMenu extends SortedPagedType{
     menuId?: number;
@@ -35,14 +35,14 @@ const dict = {
 }
 
 const removeMenu = async (id: number | number[]) => {
-    await remove(id, "/user-api/menu/removeBatch", "/user-api/menu/remove");
+    await removeAll(id, "/user-api/menu");
 }
 
 
 
 
 const addMenu = async (form: MenuForm) => {
-    await add(form, "/user-api/menu/add");
+    await add(form, "/user-api/menu");
 }
 
 const debouncedAddMenu = (form: MenuForm, success: successCallback<void>) => {
@@ -58,7 +58,7 @@ const debouncedAddMenu = (form: MenuForm, success: successCallback<void>) => {
 
 
 const updateMenu = async (form: MenuForm) => {
-    await update(form, "/user-api/menu/update");
+    await update(form, "/user-api/menu");
 }
 
 async function getAllTreedMenu(): Promise<TreedMenu[]> {

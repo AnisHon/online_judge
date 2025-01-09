@@ -2,10 +2,10 @@ import {
     type PagedResponse, type PagedType,
     type SortedPagedType,
 } from "@/api/pagedType";
-import {get, post, type successCallback} from "@/utils/http";
+import {get, getWithParams, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, postedRemove, remove, update} from "@/utils/simpleCRUD";
+import {add, postedRemove, remove, removeAll, update} from "@/utils/simpleCRUD";
 import {ProblemType, type ProblemView} from "@/api/problem";
 
 interface ListView {
@@ -47,15 +47,15 @@ interface ProblemInListView extends ProblemView {
 
 
 const delProblemFromList = async (relations: ProblemListRelation[]) => {
-    await postedRemove(relations, '/problem-api/list/del-problem', '/problem-api/list/del-problem');
+    await postedRemove(relations, '/problem-api/list/delProblem', '/problem-api/list/del-problem');
 }
 
 const addProblemToList = async (relations: ProblemListRelation[]) => {
-    await add(relations, "/problem-api/list/add-problem");
+    await add(relations, "/problem-api/list/addProblem");
 }
 
 const updateProblemRelation = async (relation: ProblemListRelation) => {
-    await update(relation, "/problem-api/list/update-problem")
+    await update(relation, "/problem-api/list/updateProblem")
 }
 
 const debouncedAddProblemToList = (relations: ProblemListRelation[], success: successCallback<void>) => {
@@ -127,7 +127,7 @@ interface QueryList extends SortedPagedType{
 }
 
 const removeList = async (id: number | number[]) => {
-    await remove(id, "/problem-api/list/del", "/problem-api/list/del");
+    await removeAll(id, "/problem-api/list/del");
 }
 
 const addList = async (form: ListForm) => {
@@ -147,7 +147,7 @@ const debouncedAddList = (form: ListForm, success: successCallback<void>) => {
 
 
 const updateList = async (form: ListForm) => {
-    await update(form, "/problem-api/list/update");
+    await update(form, "/problem-api/list");
 }
 
 const debouncedUpdateList = (form: ListForm, success: successCallback<void>) => {
@@ -161,7 +161,7 @@ const debouncedUpdateList = (form: ListForm, success: successCallback<void>) => 
 }
 
 const getList = async (queryData: QueryList): Promise<PagedResponse<ListView>> => {
-    const {data} = await post<QueryList, PagedResponse<ListView>>("/problem-api/list/list", queryData);
+    const {data} = await getWithParams<PagedResponse<ListView>, QueryList>("/problem-api/list/list", queryData);
     return data;
 }
 

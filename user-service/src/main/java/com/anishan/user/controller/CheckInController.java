@@ -1,6 +1,7 @@
 package com.anishan.user.controller;
 
 import com.anishan.commons.domain.R;
+import com.anishan.user.domain.dto.UserCheckInDto;
 import com.anishan.user.domain.entity.UserCheckIn;
 import com.anishan.user.domain.vo.UserCheckInInfo;
 import com.anishan.user.service.AuthenticationService;
@@ -33,7 +34,7 @@ public class CheckInController {
 
     @GetMapping("/list")
     @ApiOperation("列出最近签到列表")
-    public R<List<UserCheckIn>> list() {
+    public R<List<UserCheckInDto>> list() {
         return R.success(userCheckInService.getUserCheckInList());
     }
 

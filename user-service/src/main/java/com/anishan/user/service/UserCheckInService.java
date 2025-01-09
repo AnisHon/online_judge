@@ -1,5 +1,6 @@
 package com.anishan.user.service;
 
+import com.anishan.user.domain.dto.UserCheckInDto;
 import com.anishan.user.domain.entity.UserCheckIn;
 import com.anishan.user.domain.vo.UserCheckInInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -15,7 +16,7 @@ public interface UserCheckInService extends IService<UserCheckIn> {
 
     boolean isCheckedIn(Long userId);
 
-    List<UserCheckIn> getUserCheckInList();
+    List<UserCheckInDto> getUserCheckInList();
 
     UserCheckInInfo checkIn(Long userId);
 

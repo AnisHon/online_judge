@@ -1,48 +1,29 @@
 <template>
   <el-form
       ref="formRef"
-      label-position="left"
       style="max-width: 600px"
-      :model="signUpForm"
+      :model="forgetPasswordForm"
       status-icon
       :rules="rules"
       :aria-autocomplete="false"
   >
     <el-form-item>
-      <h1 style="margin: 0; color: #303133; text-align: center; width: 100%;">注册</h1>
+      <h1 style="margin: 0; color: #303133; text-align: center; width: 100%;">忘记密码</h1>
     </el-form-item>
 
     <el-form-item prop="username">
       <el-input
-          v-model="signUpForm.username"
+          v-model="forgetPasswordForm.username"
           type="text"
           autocomplete="off"
-          placeholder="请输入用户名"
+          placeholder="请输入用户名或邮箱"
           prefix-icon="UserFilled"
       />
     </el-form-item>
 
-    <el-form-item prop="nikeName">
-      <el-input
-          v-model="signUpForm.nikeName"
-          type="text"
-          autocomplete="off"
-          placeholder="请输入昵称"
-          prefix-icon="User"
-      />
-    </el-form-item>
-    <el-form-item prop="email">
-      <el-input
-          v-model="signUpForm.email"
-          type="text"
-          autocomplete="off"
-          placeholder="请输入邮箱"
-          :prefix-icon="IconEmail"
-      />
-    </el-form-item>
     <el-form-item prop="password">
       <el-input
-          v-model="signUpForm.password"
+          v-model="forgetPasswordForm.password"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
@@ -52,7 +33,7 @@
 
     <el-form-item prop="repeatPassword">
       <el-input
-          v-model="signUpForm.repeatPassword"
+          v-model="forgetPasswordForm.repeatPassword"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
@@ -64,7 +45,7 @@
       <el-col :span="14" >
         <el-form-item prop="captchaCode">
           <el-input
-              v-model="signUpForm.captchaCode"
+              v-model="forgetPasswordForm.captchaCode"
               type="text"
               autocomplete="off"
               placeholder="请输入验证码"
@@ -90,10 +71,10 @@
       <el-col :span="14" >
         <el-form-item prop="emailCode">
           <el-input
-              v-model="signUpForm.emailCode"
+              v-model="forgetPasswordForm.emailCode"
               type="text"
               autocomplete="off"
-              placeholder="请输入邮箱验证码"
+              placeholder="请输入验证码"
               :prefix-icon="IconCaptcha"
           />
         </el-form-item>
@@ -117,12 +98,12 @@
     <el-form-item>
       <el-button
           type="primary"
-          @click="submitSignUp(formRef)"
+          @click="submitResetPassword(formRef)"
           style="width: 80%; margin: auto"
           :loading="isLoading"
           :disabled="isLoading"
       >
-        注册
+        重设密码
       </el-button>
     </el-form-item>
   </el-form>
@@ -131,18 +112,15 @@
 <script lang="ts" setup>
 import {onMounted, reactive, ref} from 'vue'
 import {type FormInstance, type FormRules} from 'element-plus'
-import getCaptcha from '@/api/auth/captchaCode'
-import {sendEmailCodePromise} from '@/api/auth/emailCode'
-import {signUp, checkAvailableUsername, checkAvailableEmail} from "@/api/auth/authentication"
-import IconEmail from "@/assets/icons/IconEmail.vue";
+import getCaptcha from '@/api/auth/captchaCode.ts'
+import {forgetPassword} from "@/api/auth/authentication.ts"
+import {sendForgetEmailCode} from "@/api/auth/emailCode.ts";
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
-
-
-const emailRe = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
+import router from "@/router";
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
-const signUpForm = reactive({
+const forgetPasswordForm = reactive({
   username: "",
   nikeName: "",
   email: "",
@@ -172,14 +150,7 @@ const validateUsername = (rule: any, value: string, callback: any) => {
   if (value === '') {
     callback(new Error("请输入用户名"))
   } else {
-    checkAvailableUsername(value)
-        .then((data) => {
-          if (data) {
-            callback()
-          } else {
-            callback(new Error("用户名不可用请重试"))
-          }
-        })
+    callback()
   }
 }
 
@@ -192,49 +163,30 @@ const validateNotEmpty = (rule: any, value: string, callback: any) => {
 }
 
 const repeatPassword = (rule: any, value: string, callback: any) => {
-  if (value !== signUpForm.password) {
+  if (value !== forgetPasswordForm.password) {
     callback(new Error("两次密码不一致"))
   } else {
     callback()
   }
 }
 
-const validateEmail = (rule: any, value: string, callback: any) => {
-  if (!emailRe.test(value)) {
-    callback(new Error("无效邮箱"))
-
-  } else {
-    checkAvailableEmail(value)
-        .then((data) => {
-          if (data) {
-            callback()
-          } else {
-            callback(new Error("邮箱不可用请重试"))
-          }
-        })
-  }
-}
-
-const rules = reactive<FormRules<typeof signUpForm>>({
+const rules = reactive<FormRules<typeof forgetPasswordForm>>({
   username: [{ validator: validateUsername, trigger: 'blur' }],
   password: [{ validator: validatePassword, trigger: 'blur' }],
-  nikeName: [{validator: validateNotEmpty, trigger: 'blur'}],
-  email: [{ validator: validateEmail, trigger: 'blur' }],
   // captchaCode: [{ validator: validateNotEmpty, trigger: 'blur' }],
   repeatPassword: [{validator: repeatPassword, trigger: 'blur' }],
   emailCode: [{ validator: validateNotEmpty, trigger: 'blur' }]
 })
 
-const doSignUp = () => {
-  signUp({
-    userName: signUpForm.username,
-    password: signUpForm.password,
-    nikeName: signUpForm.nikeName,
-    email: signUpForm.email,
-    code: signUpForm.emailCode,
+const doResetPassword = () => {
+  forgetPassword({
+    username: forgetPasswordForm.username,
+    password: forgetPasswordForm.password,
+    code: forgetPasswordForm.emailCode,
   })
       .then(()  => {
-        ElMessage.success("欢迎登录")
+        ElMessage.success("重设成功")
+        router.push({name: "login"})
       })
       .catch((msg) => {
         ElMessage.error(msg)
@@ -245,12 +197,12 @@ const doSignUp = () => {
       })
 }
 
-const submitSignUp = (formEl: FormInstance | undefined) => {
+const submitResetPassword = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.validate((valid) => {
     if (valid) {
       isLoading.value = true
-      doSignUp()
+      doResetPassword()
     } else {
       ElMessage.warning("请确认表单")
     }
@@ -258,15 +210,13 @@ const submitSignUp = (formEl: FormInstance | undefined) => {
 }
 
 const sendEmailCode = () => {
-  if (signUpForm.captchaCode === '') {
+  if (forgetPasswordForm.captchaCode === '') {
     ElMessage.error("请输入验证码")
-  } else if (!emailRe.test(signUpForm.email)) {
-    ElMessage.error("邮箱无效")
   } else {
-    sendEmailCodePromise({
-      captchaCode: signUpForm.captchaCode,
-      email: signUpForm.email,
-      captchaToken: signUpForm.token,
+    sendForgetEmailCode({
+      captchaCode: forgetPasswordForm.captchaCode,
+      username: forgetPasswordForm.username,
+      captchaToken: forgetPasswordForm.token,
     }).then(() => {
       ElMessage.success("发送成功")
     }).catch((message) => {
@@ -279,7 +229,7 @@ const sendEmailCode = () => {
 const refreshCaptchaCode = async () => {
   const {image, token} = await getCaptcha()
   imgData.value = image
-  signUpForm.token = token
+  forgetPasswordForm.token = token
 }
 
 onMounted(() => {
@@ -289,6 +239,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
-
 </style>

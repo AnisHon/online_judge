@@ -22,6 +22,11 @@ export const useSse = defineStore('sse', () => {
     const initSSE = (url: string = "/user-api/sse") => {
         return connect(`${baseURL}/${url}`);
     }
+    const closeAllConnections = () => {
+        sseMap.forEach((sseEventSource) => {
+            sseEventSource.close();
+        })
+    }
 
     const connect = (url: string) => {
 
@@ -90,7 +95,8 @@ export const useSse = defineStore('sse', () => {
         on,
         close,
         getUuid,
-        off
+        off,
+        closeAllConnections
     }
 
 })

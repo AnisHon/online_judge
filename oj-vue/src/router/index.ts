@@ -1,6 +1,6 @@
 import {createRouter, createWebHistory, type NavigationGuardNext} from 'vue-router'
 import Index from "@/views/Index.vue";
-import Layout from "@/Layout.vue";
+import Layout from "@/layout/Layout.vue";
 import Forbidden from "@/views/error/Forbidden.vue";
 import NotFound from "@/views/error/NotFound.vue";
 import {useMenuStore} from "@/stores/useMenuStore";
@@ -21,23 +21,23 @@ import __ from "lodash";
 export const constRoutes =  [
   {
     path: "/auth",
-    component: () => import('@/views/system/authentication/Auth.vue'),
+    component: () => import('@/views/authentication/Auth.vue'),
     redirect: "/auth/login",
     children: [
       {
         path: "login",
         name: "login",
-        component: () => import('@/views/system/authentication/Login.vue'),
+        component: () => import('@/views/authentication/Login.vue'),
       },
       {
         path: "sign-up",
         name: "sign-up",
-        component: () => import('@/views/system/authentication/SignUp.vue'),
+        component: () => import('@/views/authentication/SignUp.vue'),
       },
       {
         path: "forget-password",
         name: "forget-password",
-        component: () => import('@/views/system/authentication/ForgetPassword.vue'),
+        component: () => import('@/views/authentication/ForgetPassword.vue'),
       }
     ]
   },
@@ -55,7 +55,7 @@ export const constRoutes =  [
       {
         path: "problems",
         name: "problems",
-        component: () => import('@/views/system/ProblemSet.vue'),
+        component: () => import('@/views/problem/ProblemSet.vue'),
         meta: {
           keepAlive: true,
         }
@@ -63,7 +63,7 @@ export const constRoutes =  [
       {
         path: "problem/:id",
         name: "problem",
-        component: () => import('@/views/system/problem/Problem.vue')
+        component: () => import('@/views/problem/Problem.vue')
       },
       {
         path: "contest",

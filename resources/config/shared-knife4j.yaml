@@ -1,7 +1,7 @@
 knife4j:
-  production: false
-  enabled: true
+  enable: true
   openapi:
+
     title: API文档
     description: "Powered by Knife4j"
     email: 114514@gmail.com
@@ -17,5 +17,3 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - ${oj.knife4j.resource}
-
-

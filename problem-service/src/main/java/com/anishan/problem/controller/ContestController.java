@@ -31,7 +31,7 @@ public class ContestController {
 
     private final ContestService contestService;
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     @ApiOperation("通过id获取比赛")
     public R<ContestVo> getContestById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
         ContestVo clazz = contestService.getContestById(id);
@@ -45,23 +45,22 @@ public class ContestController {
         return R.success(contests);
     }
 
-    @PostMapping("/page")
+    @GetMapping("/page")
     @ApiOperation("分页获取contest,没有详细信息")
-    public R<PagedResult<ContestVo>> listContests(
-            @RequestBody @Validated PagedQuery<Contest> pagedQuery) {
+    public R<PagedResult<ContestVo>> listContests(@Validated PagedQuery<Contest> pagedQuery) {
         PagedResult<ContestVo> contestVoPagedResult = contestService.listContests(pagedQuery);
         return contestVoPagedResult.toR();
     }
 
-    @PostMapping("/admin-page")
+    @GetMapping("/adminPage")
     @ApiOperation("分页获取contest,管理用,有详细信息")
     @PreAuthorize("hasAuthority('problem:contest:list')")
-    public R<PagedResult<ContestVo>> listContestsAdmin(@RequestBody @Validated PagedQuery<Contest> pagedQuery) {
+    public R<PagedResult<ContestVo>> listContestsAdmin(@Validated PagedQuery<Contest> pagedQuery) {
         PagedResult<ContestVo> contestVoPagedResult = contestService.listContestsAdmin(pagedQuery);
         return contestVoPagedResult.toR();
     }
 
-    @PostMapping("/update")
+    @PutMapping
     @PreAuthorize("hasAuthority('problem:contest:edit')")
     @ApiOperation("更新Contest，不能更改contestId")
     public R<Boolean> update(@RequestBody @Validated({ValidationGroup.Update.class}) ContestDto contestDto) {
@@ -69,15 +68,7 @@ public class ContestController {
         return R.success(b);
     }
 
-    @GetMapping("/remove/{id}")
-    @PreAuthorize("hasAuthority('problem:contest:remove')")
-    @ApiOperation("删除Contest")
-    public R<Boolean> remove(@PathVariable @NotNull Long id) {
-        boolean b = contestService.removeById(id);
-        return R.success(b);
-    }
-
-    @GetMapping("/removeBatch/{ids}")
+    @DeleteMapping("/{ids}")
     @PreAuthorize("hasAuthority('problem:contest:remove')")
     @ApiOperation("删除contest")
     public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
@@ -85,7 +76,7 @@ public class ContestController {
         return R.success(b);
     }
 
-    @PostMapping("/add")
+    @PostMapping
     @PreAuthorize("hasAuthority('problem:contest:add')")
     @ApiOperation("添加contest")
     public R<Boolean> addContest(
@@ -98,7 +89,7 @@ public class ContestController {
 
 
 
-    @GetMapping("/is-joined/{id}")
+    @GetMapping("/isJoined/{id}")
     @ApiOperation("判断用户是否加入比赛")
     public R<Boolean> isJoined(@RequestHeader("user-id") Long userId, @NotNull @PathVariable Long id) {
         boolean b = contestService.isUserJoined(id, userId);

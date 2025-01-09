@@ -19,7 +19,7 @@
             size="small"
             :disabled="single"
             @click="handleUpdate()"
-            v-has="'problem:tag:update'"
+            v-has="'problem:tag:edit'"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -30,7 +30,7 @@
             size="small"
             :disabled="multiple"
             @click="handleDelete"
-            v-has="'problem:tag:delete'"
+            v-has="'problem:tag:remove'"
         >删除</el-button>
       </el-col>
       <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>

@@ -1,7 +1,9 @@
 import axios from 'axios';
 import {useToken} from "@/stores/useToken";
-import {ElMessage} from "element-plus";
+import {ElMessage, ElNotification} from "element-plus";
 import router from "@/router"
+import type {PagedData} from "@/api/problem";
+import type {PagedResponse} from "@/api/pagedType.ts";
 
 
 export const baseURL = "/api";
@@ -36,7 +38,7 @@ const error403 = () => {
     router.replace({name: '403'});
 };
 
-const service = axios.create({
+export const service = axios.create({
     baseURL: baseURL, // 设置基础 URL
     timeout: 60000, // 设置请求超时时间
     withCredentials: true // 携带cookie
@@ -58,15 +60,18 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     response => {
 
-        if (response.status === 200) {
+        const code = response?.data?.code || response.status;
+
+        if (code === 200) {
             return response.data;
-        }
-        if (response.status === 403) {
+        } if (code == 400) {
+            ElNotification.error(response.data.message);
+        } else if (code === 403) {
             error403();
         } else {
-            ElMessage.error(response.data.code + ":" + response.data.message);
+            ElNotification.error(response.data.code + ":" + response.data.message);
         }
-        return Promise.reject(new Error(response.data.message));
+        return Promise;
     },
     error => {
         // 处理错误
@@ -86,7 +91,7 @@ service.interceptors.response.use(
 
 const failHandler = <T>(result: ResultPromise<T>, handle: typeof defaultFail) => {
     result
-        .then(result => {
+        .catch(result => {
             if (result.code != 200) {
                 handle(result.message, result.code);
             }
@@ -101,6 +106,20 @@ const get = <R, T = any>(url: string, params: T | undefined = undefined): Result
     return service.get<T, AjaxResult<R>>(url);
 };
 
+export const getWithParams = <R, T>(url: string, params: T): ResultPromise<R> => {
+    return service.get<T, AjaxResult<R>>(url, {
+        params: params,
+    });
+};
+
+
+// 封装的 GET 方法
+export const query = <R, T>(url: string, params: T): ResultPromise<PagedResponse<R>> => {
+    return service.get<T, AjaxResult<PagedResponse<R>>>(url, {
+        params: params
+    });
+};
+
 const getWithArray = <R>(url: string, params: string[]): ResultPromise<R> => {
 
     let param = "";
@@ -111,7 +130,6 @@ const getWithArray = <R>(url: string, params: string[]): ResultPromise<R> => {
 }
 
 const defaultFail = (msg: string, code: number) => {
-    ElMessage.warning(msg);
 }
 
 const post = <T, R>(url: string, data: T, failCallback = defaultFail): ResultPromise<R> => {
@@ -120,11 +138,35 @@ const post = <T, R>(url: string, data: T, failCallback = defaultFail): ResultPro
     return promise;
 };
 
+const put = <T, R>(url: string, data: T, failCallback = defaultFail): ResultPromise<R> => {
+    const promise = service.put<T, AjaxResult<R>>(url, data);
+    failHandler(promise, failCallback);
+    return promise;
+};
+
+const pathPut = <R, T = any>(url: string, params: T | undefined = undefined): ResultPromise<R> => {
+    if (params) {
+        url = url + '/' + params.toString();
+    }
+    return service.put<T, AjaxResult<R>>(url);
+};
+
+const del = <R, T = any>(url: string, params: T | T[] | undefined = undefined): ResultPromise<R> => {
+    if (params) {
+        url = url + '/' + params.toString();
+    }
+    return service.delete<T, AjaxResult<R>>(url);
+};
+
+
 
 // 导出封装的方法
 export {
     get,
     post,
+    put,
+    pathPut,
+    del,
     type successCallback,
     type failCallback,
     type successPromiseCallback,

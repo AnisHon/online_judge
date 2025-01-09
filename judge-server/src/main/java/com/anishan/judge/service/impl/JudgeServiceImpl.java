@@ -249,6 +249,8 @@ public class JudgeServiceImpl implements JudgeService {
             return TestResult.fromTestResul(runResult, JudgeUtils.judgeToStatus(runResult.getStatus()));
         } else {
             // 不能让用户接触服务错误，用RuntimeError应付过去
+            runResult = new RunResult();
+            runResult.setFiles(new RunResult.StdIoFile());
             return TestResult.fromTestResul(runResult, JudgeResult.RuntimeError);
         }
     }

@@ -1,10 +1,10 @@
 import {
     type PagedResponse, type PagedType,
 } from "@/api/pagedType";
-import {get, post, type successCallback} from "@/utils/http";
+import {get, getWithParams, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, pagedFetch, remove, update} from "@/utils/simpleCRUD";
+import {add, pagedFetch, removeAll, update} from "@/utils/simpleCRUD";
 import type {UserView} from "@/api/user";
 
 enum ContestAuth {
@@ -102,12 +102,12 @@ const debouncedJoin = (req: JoinContestRequest, success: successCallback<JoinCon
 }
 
 const isJoined = async (contestId: number) => {
-    const {data} = await get<boolean>("/problem-api/contest/is-joined", contestId);
+    const {data} = await get<boolean>("/problem-api/contest/isJoined", contestId);
     return data;
 }
 
 const fetchContestById = async (contestId: number) => {
-    const {data} = await get<ContestView , number>("/problem-api/contest/get", contestId);
+    const {data} = await get<ContestView , number>("/problem-api/contest", contestId);
     return data;
 }
 
@@ -124,13 +124,13 @@ const debouncedIsJoined = (success: successCallback<boolean>) => {
 
 
 const removeContest = async (id: number | number[]) => {
-    await remove(id, "/problem-api/contest/removeBatch", "/problem-api/contest/remove");
+    await removeAll(id, "/problem-api/contest");
 }
 
 
 
 const addContest = async (form: ContestForm) => {
-    await add(form, "/problem-api/contest/add");
+    await add(form, "/problem-api/contest");
 }
 
 const debouncedAddContest = (form: ContestForm, success: successCallback<void>) => {
@@ -146,7 +146,7 @@ const debouncedAddContest = (form: ContestForm, success: successCallback<void>) 
 
 
 const updateContest = async (form: ContestForm) => {
-    await update(form, "/problem-api/contest/update");
+    await update(form, "/problem-api/contest");
 }
 
 const debouncedUpdateContest = (form: ContestForm, success: successCallback<void>) => {
@@ -160,7 +160,8 @@ const debouncedUpdateContest = (form: ContestForm, success: successCallback<void
 }
 
 const getContest = async (page: PagedType): Promise<PagedResponse<ContestView>> => {
-    return await pagedFetch(page, "/problem-api/contest/page");
+    const { data } = await getWithParams<PagedResponse<ContestView>, PagedType>("/problem-api/contest/page", page);
+    return data;
 }
 
 
@@ -175,7 +176,7 @@ const debouncedGetContest = (page: PagedType, success: successCallback<PagedResp
 }
 
 const getContestAdmin = async (page: PagedType): Promise<PagedResponse<ContestView>> => {
-    return await pagedFetch(page, "/problem-api/contest/admin-page");
+    return await pagedFetch(page, "/problem-api/contest/adminPage");
 }
 
 const debouncedGetContestAdmin = (page: PagedType, success: successCallback<PagedResponse<ContestView>>) => {

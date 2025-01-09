@@ -131,15 +131,13 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     // 返回OJ ID
-    private Long doAddOjProblem(DetailProblemDto problem) {
+    private void doAddOjProblem(DetailProblemDto problem, Long problemId) {
 
-        OjProblem ojEntity =
+        OjProblem entity =
                 BeanUtil.copyProperties(problem.getOjProblem(), OjProblem.class);
-
-        boolean save = ojProblemService.save(ojEntity);
+        entity.setProblemId(problemId);
+        boolean save = ojProblemService.save(entity);
         ThrowUtil.runtime(!save, "OJ题目添加失败");
-
-        return ojEntity.getProblemId();
 
 
     }
@@ -202,9 +200,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
         switch (problem.getProblem().getType()) {
             case OJ:
-                Long ojId = doAddOjProblem(problem);
-                entity.setOjId(ojId);
                 doAddProblem(entity);
+                doAddOjProblem(problem, entity.getProblemId());
                 doAddOjCases(problem, entity.getProblemId());
                 break;
             case FILL:
@@ -340,7 +337,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         switch (problem.getType()) {
             case OJ:
                 OjProblemVo ojProblemVo =
-                        ojProblemService.getOjProblemById(problem.getOjId());
+                        ojProblemService.getOjProblemById(problem.getProblemId());
                 List<OjProblemCaseVo> cases =
                         ojProblemCaseService.getByProblemId(problem.getProblemId());
 
@@ -381,7 +378,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         detailProblem.setChoices(blanks);
     }
 
-    public DetailProblem doGetDetail(ProblemVo problem, Long ojId) {
+    public DetailProblem doGetDetail(ProblemVo problem) {
         if (problem == null) {
             return null;
         }
@@ -391,7 +388,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         DetailProblem detailProblem = new DetailProblem(problem, null, null, tags);
         switch (problem.getType()) {
             case OJ:
-                OjProblemVo ojProblem = ojProblemService.getOjProblemById(ojId);
+                OjProblemVo ojProblem = ojProblemService.getOjProblemById(problem.getProblemId());
                 detailProblem.setOjProblemVo(ojProblem);
                 break;
             case FILL:
@@ -419,7 +416,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         if (problemVo == null) {
             return null;
         }
-        return doGetDetail(problemVo, problem.getOjId());
+        return doGetDetail(problemVo);
     }
 
 

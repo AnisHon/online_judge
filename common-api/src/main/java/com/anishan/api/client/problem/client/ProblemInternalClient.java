@@ -12,6 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface ProblemInternalClient {
 
     @ApiOperation("存储判题结果用的")
-    @PostMapping("/judge-result")
+    @PostMapping("/judgeResult")
     R<Void> judgeResult(@RequestBody JudgeScore judgeScore);
 }

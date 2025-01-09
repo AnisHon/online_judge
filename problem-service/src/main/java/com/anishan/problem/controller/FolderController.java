@@ -24,7 +24,7 @@ public class FolderController {
 
     private final FolderService folderService;
 
-    @GetMapping("/list-tree")
+    @GetMapping("/tree")
     @ApiOperation("获取树状Folder")
     public R<List<TreedFolder>> getTreedFolder() {
         List<TreedFolder> allFolders = folderService.getAllTreedFolders();
@@ -32,7 +32,7 @@ public class FolderController {
     }
 
 
-    @PostMapping("/add")
+    @PostMapping
     @ApiOperation("添加Folder")
     @PreAuthorize("hasAuthority('problem:folder:add')")
     public R<Boolean> addFolder(@RequestBody @Validated(ValidationGroup.Insert.class) FolderDto folderDto) {
@@ -40,41 +40,28 @@ public class FolderController {
         return R.success(b);
     }
 
-    @PostMapping("/update")
+    @PutMapping
     @ApiOperation("更改Folder")
-    @PreAuthorize("hasAuthority('problem:folder:update')")
+    @PreAuthorize("hasAuthority('problem:folder:edit')")
     public R<Boolean> updateFolder(@RequestBody @Validated(ValidationGroup.Update.class) FolderDto folderDto) {
         boolean b = folderService.updateFolder(folderDto);
         return R.success(b);
     }
 
 
-    @GetMapping("/list-all")
+    @GetMapping
     @ApiOperation("获取普通非树状Folder")
     public R<List<FolderVo>> getFolders() {
         List<FolderVo> allFolders = folderService.getAllFolders();
         return R.success(allFolders);
     }
 
-    @GetMapping("/del/{id}")
-    @PreAuthorize("hasAuthority('problem:folder:del')")
-    @ApiOperation("删除folder")
-    public R<Boolean> delFolder(@PathVariable Long id) {
-        boolean b = folderService.removeById(id);
-        return R.success(b);
-    }
-
-    @GetMapping("/batchDel/{ids}")
-    @PreAuthorize("hasAuthority('problem:folder:del')")
+    @DeleteMapping("/{ids}")
+    @PreAuthorize("hasAuthority('problem:folder:remove')")
     @ApiOperation("删除folder")
     public R<Boolean> batchDelFolder(@PathVariable List<Long> ids) {
         boolean b = folderService.removeByIds(ids);
         return R.success(b);
     }
-
-
-
-
-
 
 }

@@ -39,8 +39,8 @@ public class ListController {
         return R.success(b);
     }
 
-    @GetMapping("/del/{ids}")
-    @PreAuthorize("hasAuthority('problem:list:delete')")
+    @DeleteMapping("/{ids}")
+    @PreAuthorize("hasAuthority('problem:list:remove')")
     @ApiOperation("删除题单 使用：/del/1,2")
     public R<String> delete(@PathVariable("ids")List<Long> ids) {
         problemListService.delProblemList(ids);
@@ -49,15 +49,15 @@ public class ListController {
 
 
 
-    @PostMapping("/update")
-    @PreAuthorize("hasAuthority('problem:list:update')")
+    @PutMapping
+    @PreAuthorize("hasAuthority('problem:list:edit')")
     @ApiOperation("修改题单")
     public R<Boolean> update(@RequestBody @Validated(ValidationGroup.Update.class) ProblemListDto problemListDto) {
         boolean b = problemListService.updateProblem(problemListDto);
         return R.success(b);
     }
 
-    @PostMapping("/add-problem")
+    @PostMapping("/addProblem")
     @PreAuthorize("hasAuthority('problem:list:add-problem')")
     @ApiOperation("为题单添加题目")
     public R<Boolean> addProblem(@RequestBody List<ProblemListRelationDto> relations) {
@@ -65,7 +65,7 @@ public class ListController {
         return R.success(b);
     }
 
-    @PostMapping("/update-problem")
+    @PostMapping("/updateProblem")
     @PreAuthorize("hasAuthority('problem:list:add-problem')")
     @ApiOperation("修改题单题目顺序之类的")
     public R<Boolean> updateProblem(@RequestBody ProblemProblemListRelation relation) {
@@ -86,7 +86,7 @@ public class ListController {
         return R.success(update);
     }
 
-    @PostMapping("/del-problem")
+    @PutMapping("/delProblem")
     @PreAuthorize("hasAuthority('problem:list:del-problem')")
     @ApiOperation("为题单删除题目")
     public R<Boolean> delProblem(@RequestBody @Validated(ValidationGroup.Delete.class) List<ProblemListRelationDto> relations) {
@@ -94,7 +94,7 @@ public class ListController {
         return R.success(b);
     }
 
-    @GetMapping("/get-problems/{id}")
+    @GetMapping("/getProblems/{id}")
     @PreAuthorize("hasAuthority('problem:problem:list')")
     @ApiOperation("管理员的根据题单获取题目")
     public R<List<ProblemInListVo>> getProblems(@PathVariable("id") Long id) {
@@ -113,10 +113,10 @@ public class ListController {
         return R.success(problems);
     }
 
-    @PostMapping("/list")
+    @GetMapping("/list")
     @ApiOperation("管理员获取题单")
     @PreAuthorize("hasAuthority('problem:list:list')")
-    public R<PagedResult<ProblemListVo>> listProblems(@RequestBody @Validated PagedProblemList query) {
+    public R<PagedResult<ProblemListVo>> listProblems(@Validated PagedProblemList query) {
         PagedResult<ProblemListVo> paged = problemListService.listPage(query);
         return paged.toR();
     }

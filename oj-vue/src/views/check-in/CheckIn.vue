@@ -40,11 +40,11 @@
       </el-header>
       <el-main>
         <el-table :data="checkInRecords" style="width: 100%">
-          <el-table-column prop="id" label="id"/>
           <el-table-column prop="userId" label="用户ID"/>
+          <el-table-column prop="nikeName" label="用户昵称"/>
           <el-table-column prop="continuityDays" label="连续天数"/>
           <el-table-column prop="rewardPoint" label="奖励积分"/>
-          <el-table-column prop="currentTime" label="签到时间"/>
+          <el-table-column prop="signTime" label="签到时间"/>
         </el-table>
 
       </el-main>
@@ -74,14 +74,16 @@ import {computed, onMounted, ref} from "vue";
 import {useUserStore} from "@/stores/useUserStore";
 import {checkInFetcher, checkInList, isCheckedIn, todayCount, type UserCheckIn} from "@/api/check-in";
 import {Select} from "@element-plus/icons-vue";
-
+// 签到数据
 const checkInRecords = ref<UserCheckIn[]>([]);
-
+// 对话框显示变量
 const centerDialogVisible = ref(false);
-
+// 签到个数
 const todayCheckInCount = ref(0);
 
+// 签到对话框标题
 const dialogTitle = ref<string>("")
+// 签到对话框文字
 const dialogBodyText = ref<string>("")
 
 const nikeName = computed(() => {
@@ -105,6 +107,7 @@ const {isLoading, loading, sendCheckIn} = checkInFetcher((data) => {
 
   refresh();
 });
+
 const handleClick = () => {
   loading();
   sendCheckIn();

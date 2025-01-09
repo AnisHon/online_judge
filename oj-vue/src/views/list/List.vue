@@ -37,6 +37,7 @@
             </template>
           </el-table-column>
         </el-table>
+        <el-empty class="empty-status" v-show="tableList.length === 0" description="这里空空如野"/>
       </el-col>
 
     </el-row>
@@ -101,6 +102,12 @@ getTreedFolderView()
 
       height: var(--in-main-content-height);
       overflow: auto;
+
+      .empty-status {
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+      }
 
     }
 

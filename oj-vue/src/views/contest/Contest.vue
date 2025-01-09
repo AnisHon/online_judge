@@ -48,6 +48,7 @@
           </el-col>
         </el-row>
       </el-card>
+      <el-empty v-if="list.length === 0" description="还没有任何比赛" style="height: 500px"/>
     </div>
 
     <div class="pagination">
@@ -60,6 +61,8 @@
           @pagination="getList"
       />
     </div>
+
+
 
 
     <el-dialog v-model="open" title="请输入密码" width="800">

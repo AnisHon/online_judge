@@ -1,11 +1,16 @@
 package com.anishan.problem.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.anishan.api.client.user.client.UserClient;
 import com.anishan.api.client.user.client.UserInternalClient;
 import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.problem.config.JudgeConfig;
+import com.anishan.problem.domain.dto.UserAnswerRequest;
+import com.anishan.problem.domain.entity.ContestAnswerRecords;
+import com.anishan.problem.domain.entity.ContestRecords;
 import com.anishan.problem.domain.vo.ScoredUser;
 import com.anishan.problem.domain.vo.ProblemStatistic;
+import com.anishan.problem.domain.vo.UserAnswer;
 import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.ProblemCompleteService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -13,8 +18,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.Records;
 import com.anishan.problem.service.RecordsService;
 import com.anishan.problem.mapper.RecordsMapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,23 +104,39 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         if (records == null || records.getProblemId() == null || records.getUserId() == null) {
             return null;
         }
-        LambdaQueryWrapper<Records> wrapper = new LambdaQueryWrapper<Records>()
-                .select(Records::getRecordId, Records::isStatus)
-                .eq(records.getRecordId() != null, Records::getRecordId, records.getRecordId())
-                .eq(Records::getProblemId, records.getProblemId())
-                .eq(Records::getUserId, records.getUserId());
-        wrapper = records.getContestId() == null ?
-                wrapper.isNull(Records::getContestId)
-                :
-                wrapper.eq(Records::getContestId, records.getContestId());
 
-        Records one = this.getOne(wrapper);
+        // 最终结果
+        Records one;
+        if (records.getContestId() == null) {
+            // 不是比赛从普通记录中拿
+            LambdaQueryWrapper<Records> wrapper = new LambdaQueryWrapper<Records>()
+                    .select(Records::getRecordId, Records::isStatus)
+                    .eq(records.getRecordId() != null, Records::getRecordId, records.getRecordId())
+                    .eq(Records::getProblemId, records.getProblemId())
+                    .eq(Records::getUserId, records.getUserId())
+                    .isNull(Records::getContestId);
 
+            one = this.getOne(wrapper);
+        } else {
+            // 不是比赛从contest记录中拿
+
+
+            ContestRecords contestRecords = new ContestRecords();
+            contestRecords.setRecordId(records.getRecordId());
+            contestRecords.setContestId(records.getContestId());
+            contestRecords.setUserId(records.getUserId());
+            contestRecords.setProblemId(records.getProblemId());
+
+
+            contestRecords = Db.getOne(contestRecords);
+            one = BeanUtil.copyProperties(contestRecords, Records.class);
+        }
 
         doAddPoint(records, one);
 
         return Optional.ofNullable(one).map(Records::getRecordId).orElse(null);
     }
+
 
     /**
      * 添加一条记录，顺便会给用户加奖励分
@@ -124,16 +147,42 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     @Override
     public boolean addRecord(Records records) {
         Long recordId = addPoint(records);
+
+        records.setRecordId(recordId);
+
+
+        UserAnswer answer = records.getAnswer();
+
+        // 普通做题不存答案
+        records.setAnswer(null);
+
         boolean b;
-        if (recordId == null) {
-            b = this.save(records);
+
+        // 比赛需要加入比赛表
+        if (records.getContestId() != null) {
+            ContestRecords contestRecords = BeanUtil.copyProperties(records, ContestRecords.class);
+            b = Db.saveOrUpdate(contestRecords);
+
+
+            // 存答案
+            ContestAnswerRecords answerRecords = new ContestAnswerRecords();
+            answerRecords.setRecordId(recordId);
+            answerRecords.setAnswer(answer);
+            Db.saveOrUpdate(answerRecords);
         } else {
-            records.setRecordId(recordId);
-            b = this.updateById(records);
+
+            b = this.saveOrUpdate(records);
         }
+
+
+
+
+
 
         // 标记已完成
         problemCompleteService.finish(records.getUserId(), records.getProblemId());
+
+
 
         return b;
     }
@@ -184,6 +233,30 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     @Override
     public List<ProblemStatistic> statistic(Long contestId) {
         return recordsMapper.statistic(contestId);
+    }
+
+    @Override
+    public UserAnswer getAnswer(Long userId, UserAnswerRequest userAnswerRequest) {
+        if (userAnswerRequest.getContestId() == null) {
+            return null;
+        }
+        ContestRecords one = new ContestRecords();
+        one.setContestId(userAnswerRequest.getContestId());
+        one.setUserId(userId);
+        one.setProblemId(userAnswerRequest.getProblemId());
+        one = Db.getOne(one);
+
+        if (one == null) {
+            return null;
+        }
+
+
+        ContestAnswerRecords contestAnswerRecords = Db.getById(one.getRecordId(), ContestAnswerRecords.class);
+        if (contestAnswerRecords == null) {
+            return null;
+        }
+
+        return contestAnswerRecords.getAnswer();
     }
 }
 

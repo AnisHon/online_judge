@@ -1,5 +1,5 @@
 import {get, post, type successCallback} from "@/utils/http"
-import {add, batchAdd, fetch, postedRemove, remove} from "@/utils/simpleCRUD";
+import {add, batchAdd, fetch, postedRemove, putRemove, remove} from "@/utils/simpleCRUD";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
 import type {ProblemForm} from "@/api/problem/index";
@@ -24,15 +24,15 @@ const fetchTagByProblemId = async (problemId: number) => {
 
 
 const delTagForProblem = async (param: ProblemTagRelation | ProblemTagRelation[]) => {
-    await postedRemove(
+    await putRemove(
         param,
-        "/problem-api/problem/batch-del-tag",
-        '/problem-api/problem/del-tag'
+        "/problem-api/problem/batchDelTag",
+        '/problem-api/problem/delTag'
     );
 }
 
 const addTagForProblem = async (param: ProblemTagRelation | ProblemTagRelation[]) => {
-    await batchAdd(param, "/problem-api/problem/batch-add-tag", "/problem-api/problem/add-tag")
+    await batchAdd(param, "/problem-api/problem/batchAddTag", "/problem-api/problem/addTag")
 }
 
 const debouncedAddTagProblem = (param: ProblemTagRelation | ProblemTagRelation[], success: successCallback<void>) => {

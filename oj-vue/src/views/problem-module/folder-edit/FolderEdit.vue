@@ -11,18 +11,7 @@
             v-has="'problem:folder:add'"
         >新增</el-button>
       </el-col>
-<!--      <el-col :span="1.5">-->
-<!--        <el-button-->
-<!--            v-if="false"-->
-<!--            type="success"-->
-<!--            plain-->
-<!--            icon="edit"-->
-<!--            size="small"-->
-<!--            :disabled="single"-->
-<!--            @click="handleUpdate()"-->
-<!--            v-has="'problem:folder:update'"-->
-<!--        >修改</el-button>-->
-<!--      </el-col>-->
+
       <el-col :span="1.5">
         <el-button
             type="danger"
@@ -31,7 +20,7 @@
             size="small"
             :disabled="multiple"
             @click="handleDelete"
-            v-has="'problem:folder:del'"
+            v-has="'problem:folder:remove'"
         >删除</el-button>
       </el-col>
       <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
@@ -58,14 +47,14 @@
               type="primary"
               icon="edit"
               @click="handleUpdate(scope.row)"
-              v-has="'problem:folder:update'"
+              v-has="'problem:folder:edit'"
           >修改</el-link>
           <el-link
               size="small"
               type="primary"
               icon="delete"
               @click="handleDelete(scope.row)"
-              v-has="'problem:folder:del'"
+              v-has="'problem:folder:remove'"
           >删除</el-link>
         </template>
       </el-table-column>

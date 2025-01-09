@@ -1,7 +1,9 @@
-import type {MenuType} from "@/api/auth/menu";
-import {type Router} from "vue-router";
+import {getTreedMenu, type MenuType, type TreedMenu} from "@/api/auth/menu";
+import {type Router, type RouteRecordRaw} from "vue-router";
+import router from "@/router/index.ts";
+import LayoutBackEnd from "@/layout-backend/LayoutBackEnd.vue";
 
-const Layout = import("@/Layout.vue")
+const Layout = import("@/layout/Layout.vue")
 const Teacher = () => import("@/views/teacher/Teacher.vue");
 const HomeworkManage = () => import("@/views/teacher/homework-manage/HomeworkManage.vue");
 const ContestManage = () => import("@/views/teacher/contest-manage/ContestManage.vue");
@@ -23,12 +25,15 @@ const ProblemEditView = () => import("@/views/problem-module/problem-edit/Proble
 
 const RoleAuth = () => import("@/views/user-module/role-manage/RoleAuth.vue")
 
+const Index = () => import("@/views/backend/index/Index.vue")
+
 interface MetaType {
     name: string;
     icon?: string;
     requireAuth?: boolean;
     type?: MenuType;
     parent?: string;
+    has?: string | string[];
 
 }
 
@@ -173,6 +178,121 @@ const dynamicConst: RouterType = {
     ]
 };
 
+
+// 动态路由
+export const dynamicRouter: RouteRecordRaw = {
+    path: "/backend",
+    name: "backend",
+    redirect: "index",
+    component: LayoutBackEnd,
+    meta: {
+        name: "首页"
+    },
+    children: [
+        {
+            path: 'user-module/role-manage/role-auth/:id',
+            name: 'role-auth',
+            component: RoleAuth,
+            meta: {
+                has: ["user:role:grant", "user:role:revoke", "user:user:list"],
+                name: "用户角色",
+                parent: 'role-manage',
+            }
+        },
+        {
+            path: 'problem-module/problem-edit/edit-problem',
+            name: 'edit-problem',
+            component: ProblemEditView,
+            meta: {
+                has: ["problem:problem:list", "problem:list:add-problem", "problem:list:del-problem"],
+                name: "编辑题目",
+                parent: 'problem-edit',
+            }
+        },
+        {
+            path: 'problem-module/problem-edit/list-problem/:id',
+            name: 'list-problem',
+            component: ListProblem,
+            meta: {
+                has: ["problem:problem:add", "problem:problem:remove"],
+                name: "列表题目编辑",
+                parent: 'list-edit',
+            }
+        }
+    ]
+}
+
+
+// 构建后用于递归生成menu
+export const menuTree: RouteRecordRaw[] = [
+    {
+        path: "",
+        name: "backend-index",
+        component: Index,
+        meta: {
+            name: "首页",
+            icon: ""
+        }
+    },
+]
+
+
+const buildRouterRaw = (treedMenu: TreedMenu): RouteRecordRaw => {
+    const menu = treedMenu.menu;
+    const routerRecordRaw: RouteRecordRaw = {
+        path: menu.router,
+        name: menu.router,
+        component: () => import(menu.component),
+        meta: {
+            name: menu.menuName,
+            icon: menu.icon,
+        }
+    }
+    if (treedMenu.children && treedMenu.children.length > 0) {
+        // @ts-ignore
+        routerRecordRaw.redirect = treedMenu.children[0].menu.router;
+    }
+    return routerRecordRaw;
+}
+
+
+const recursiveSetRouters = (treedMenus: TreedMenu[]): RouteRecordRaw[] => {
+    if (!treedMenus || treedMenus.length === 0) {
+        return [];
+    }
+
+    // 最终结果集合
+    const routers: RouteRecordRaw[] = []
+
+    for (const treedMenu of treedMenus) {
+
+        // 将当前树节点构建成 RouterRecordRaw
+        const routerRaw = buildRouterRaw(treedMenu);
+
+        // 递归得到子路由
+        routerRaw.children = recursiveSetRouters(treedMenu.children);
+
+        // 存入
+        routers.push(routerRaw);
+    }
+
+    return routers;
+}
+
+
+// 加载最终menu
+export const loadDynamicRouters = async () => {
+    const treedMenus = await getTreedMenu();
+
+    menuTree.push(...recursiveSetRouters(treedMenus));
+
+    dynamicRouter.children.push(...menuTree);
+
+    router.addRoute(dynamicRouter);
+}
+
+
+
 const additional: RouterType[] = [
     {
         path: 'role-auth/:id',
@@ -197,6 +317,7 @@ const additional: RouterType[] = [
         name: 'list-problem',
         component: ListProblem,
         meta: {
+            has: ["problem:problem:add", "problem:problem:add"],
             name: "列表题目编辑",
             parent: 'list-edit',
         }
@@ -219,6 +340,18 @@ const addAdditional =  (router: Router) => {
         }
     })
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 export {
     type RouterType,

@@ -3,11 +3,10 @@ import {get} from "@/utils/http";
 import useLoading from "@/hooks/useLoading";
 
 interface UserCheckIn {
-    id: number;
     userId: number;
+    nikeName: string;
     continuityDays: number;
     rewardPoint: number;
-    currentTime: Date;
     signTime: Date;
 }
 

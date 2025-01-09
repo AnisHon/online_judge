@@ -1,7 +1,9 @@
 package com.anishan.user.service.impl;
 
+import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.user.config.UserConfig;
+import com.anishan.user.domain.dto.UserCheckInDto;
 import com.anishan.user.domain.entity.UserCheckIn;
 import com.anishan.user.domain.vo.UserCheckInInfo;
 import com.anishan.user.mapper.UserCheckInMapper;
@@ -9,7 +11,9 @@ import com.anishan.user.service.SysUserService;
 import com.anishan.user.service.UserCheckInService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +34,7 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
 
     private final UserConfig config;
     private final SysUserService sysUserService;
+    private final UserCheckInMapper userCheckInMapper;
 
     @Override
     public boolean isCheckedIn(Long userId) {
@@ -40,13 +45,18 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
         );
     }
 
+    /**
+     * 获取用户签到信息
+     */
     @Override
-    public List<UserCheckIn> getUserCheckInList() {
-        return this.list(
-                new LambdaUpdateWrapper<UserCheckIn>()
-                        .orderByDesc(UserCheckIn::getCurrentTime)
-                        .last("limit 30")
-        );
+    public List<UserCheckInDto> getUserCheckInList() {
+        MPJLambdaWrapper<UserCheckIn> wrapper = new MPJLambdaWrapper<UserCheckIn>()
+                .selectAll(UserCheckIn.class)
+                .select(SysUser::getNikeName)
+                .leftJoin(SysUser.class, SysUser::getUserId, UserCheckIn::getUserId)
+                .last("limit 30");
+
+        return userCheckInMapper.selectJoinList(UserCheckInDto.class, wrapper);
     }
 
     private Integer continueDays(Long userId) {
@@ -63,9 +73,6 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
     private UserCheckIn getNewCheckIn(Integer continuityDays, Long userId) {
         final Long checkInAward = config.getCheckInAward();
         final Long checkMaxAward = config.getCheckMaxAward();
-
-
-
 
         long temp = checkInAward + continuityDays;
         BigDecimal award = BigDecimal.valueOf(temp > checkMaxAward ? checkMaxAward : temp);
@@ -90,8 +97,6 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
 
         Integer days = continueDays(userId);
         UserCheckIn newCheckIn = getNewCheckIn(days == null ? 0 : days, userId);
-
-
 
         BigDecimal rewardPoint = newCheckIn.getRewardPoint();
 

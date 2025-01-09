@@ -41,7 +41,7 @@ services:
       - "5672:5672"
     restart: always
     environment:
-      - RABBITMQ_DEFAULT_VHOST=/
+      - RABBITMQ_DEFAULT_VHOST=/judge
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=admin
     networks:
@@ -65,7 +65,7 @@ services:
       - MODE=standalone
       - SPRING_DATASOURCE_PLATFORM=mysql
 #      todo
-      - MYSQL_SERVICE_HOST=8.149.133.76
+      - MYSQL_SERVICE_HOST=oj-mysql
       - MYSQL_SERVICE_DB_NAME=nacos
       - MYSQL_SERVICE_PORT=3306
       - MYSQL_SERVICE_USER=root

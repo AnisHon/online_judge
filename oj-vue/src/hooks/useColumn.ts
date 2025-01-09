@@ -12,7 +12,6 @@ const useColumn = (labels: string[]) => {
     for (let [index, item] of labels.entries()) {
         columns.push({key: index, label: item, visible: true});
     }
-    columns[2].visible=false;
 
     return {columns}
 }

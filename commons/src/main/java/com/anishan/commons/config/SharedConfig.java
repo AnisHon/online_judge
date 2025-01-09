@@ -16,8 +16,8 @@ public class SharedConfig {
 
     public void setProduct(boolean product) {
         this.product = product;
-        environment.getSystemProperties().put("knife4j.production", product);
-        environment.getSystemProperties().put("knife4j.enabled", !product);
-        environment.getSystemProperties().put("knife4j.gateway.enabled", !product);
+//        environment.getSystemProperties().put("knife4j.production", product);
+//        environment.getSystemProperties().put("knife4j.enabled", !product);
+//        environment.getSystemProperties().put("knife4j.gateway.enabled", !product);
     }
 }

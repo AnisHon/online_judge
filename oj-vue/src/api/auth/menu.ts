@@ -1,5 +1,5 @@
 import {get, type successCallback} from "@/utils/http";
-import {add, postedRemove} from "@/utils/simpleCRUD";
+import {add, postedRemove, putRemove} from "@/utils/simpleCRUD";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
 
@@ -13,14 +13,16 @@ interface MenuRoleRelation {
     roleId?: number;
 }
 
+
 interface MenuView {
     menuId: number;
     menuName: string;
     menuType: MenuType;
     parentId: number;
     icon: string;
-    perms: string;
-    router: string;
+    perms: string;                  // 权限子段
+    router: string;                 // 路由路径
+    component: string;              // 组件路径
     orderNum: number;
     createTime: Date;
     remark: string;
@@ -70,7 +72,7 @@ const debouncedGrant = (relations: MenuRoleRelation[], success: successCallback<
 
 
 async function revoke(relations: MenuRoleRelation[]): Promise<void> {
-    await postedRemove(relations, "/user-api/menu/batchRevoke", "/user-api/menu/batchRevoke");
+    await putRemove(relations, "/user-api/menu/batchRevoke", "/user-api/menu/batchRevoke");
 }
 const debouncedRevoke = (relations: MenuRoleRelation[], success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading();

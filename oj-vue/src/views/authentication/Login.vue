@@ -74,9 +74,9 @@
 <script lang="ts" setup>
 import {onMounted, reactive, ref} from 'vue'
 import {type FormInstance, type FormRules} from 'element-plus'
-import getCaptcha from '@/api/auth/captchaCode'
-import {login} from "@/api/auth/authentication"
-import {type LoginForm} from "@/api/auth/authentication"
+import getCaptcha from '@/api/auth/captchaCode.ts'
+import {login} from "@/api/auth/authentication.ts"
+import {type LoginForm} from "@/api/auth/authentication.ts"
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
 
 const formRef = ref<FormInstance>()

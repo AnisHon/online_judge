@@ -1,7 +1,7 @@
 import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, remove, update} from "@/utils/simpleCRUD";
+import {add, remove, removeAll, update} from "@/utils/simpleCRUD";
 
 interface TagView {
     tagId: number;
@@ -18,11 +18,11 @@ interface TagForm {
 
 
 const removeTag = async (id: number | number[]) => {
-    await remove(id, "/problem-api/tag/deleteBatch", "/problem-api/tag/delete");
+    await removeAll(id, "/problem-api/tag");
 }
 
 const addTag = async (form: TagForm) => {
-    await add(form, "/problem-api/tag/add");
+    await add(form, "/problem-api/tag");
 }
 
 const debouncedAddTag = (form: TagForm, success: successCallback<void>) => {
@@ -38,7 +38,7 @@ const debouncedAddTag = (form: TagForm, success: successCallback<void>) => {
 
 
 const updateTag = async (form: TagForm) => {
-    await update(form, "/problem-api/tag/update");
+    await update(form, "/problem-api/tag");
 }
 
 const debouncedUpdateTag = (form: TagForm, success: successCallback<void>) => {

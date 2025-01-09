@@ -1,5 +1,7 @@
 package com.anishan.user.util;
 
+import ch.qos.logback.core.util.TimeUtil;
+import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.enumeration.SseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +27,25 @@ public class SseUtils {
     private final ObjectMapper objectMapper;
 
     private static final Map<String, SseEmitter> sseEmitterMap = new ConcurrentHashMap<>();
-    private final SseRedisUtil sseRedisUtil;
+    private static final Map<Long, ConcurrentHashSet<String>> userTokenMap = new ConcurrentHashMap<>();
+
+    public synchronized void saveUserSession(Long userId, String token) {
+        if (!userTokenMap.containsKey(userId)) {
+             userTokenMap.put(userId, new ConcurrentHashSet<>());
+        }
+
+        userTokenMap.get(userId).add(token);
+    }
+
+    public synchronized void removeUserSession(Long userId, String token) {
+        if (userTokenMap.containsKey(userId)) {
+            userTokenMap.get(userId).remove(token);
+        }
+    }
+
+    private Set<String> getUserSessions(Long userId) {
+        return userTokenMap.get(userId);
+    }
 
 
     public SseEmitter reconnect(String uuid) {
@@ -43,14 +65,14 @@ public class SseUtils {
         }
 
         // session与用户Id关联
-        sseRedisUtil.saveUserSession(userId, uuid);
+        saveUserSession(userId, uuid);
 
         SseEmitter sseEmitter = new SseEmitter(0L);
 
         //完成后回调
         sseEmitter.onCompletion(() -> {
             sseEmitterMap.remove(uuid);
-            sseRedisUtil.removeUserSession(userId, uuid);
+            removeUserSession(userId, uuid);
             log.info("[{}]销毁sse连接", uuid);
         });
         //异常回调
@@ -77,6 +99,9 @@ public class SseUtils {
         }
         sseEmitterMap.put(uuid, sseEmitter);
         log.info("[{}]创建sse连接成功！", uuid);
+
+
+
         return sseEmitter;
     }
 
@@ -142,11 +167,12 @@ public class SseUtils {
      * @param message 消息
      */
     public void sendMessage(Long userId, SseEvent sseEvent, Object message) {
-        Set<String> userSessions = sseRedisUtil.getUserSessions(userId);
+        Set<String> userSessions = getUserSessions(userId);
         for (String userSession : userSessions) {
             sendMessage(userSession, sseEvent, message);
         }
     }
+
 
     /**
      * 全体广播消息
@@ -164,8 +190,19 @@ public class SseUtils {
     @Scheduled(cron = "0/30 * * * * ? ")
     private void heartbeat() {
         log.info("定时清理");
-        for (String s : sseEmitterMap.keySet()) {
-            sendMessage(s, SseEvent.Ping, "ping");
+
+        ArrayList<Long> delete = new ArrayList<>();
+        for (Long userId : userTokenMap.keySet()) {
+            ConcurrentHashSet<String> value = userTokenMap.get(userId);
+            if (value == null || value.isEmpty()) {
+                delete.add(userId);
+                continue;
+            }
+
+            for (String s : value) {
+                sendMessage(s, SseEvent.Ping, "ping");
+            }
         }
+        delete.forEach(userTokenMap::remove);
     }
 }

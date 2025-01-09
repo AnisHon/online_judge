@@ -34,7 +34,7 @@ public class ClassController {
     }
 
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("通过id获取班级")
     public R<ClassVo> getClassById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
@@ -50,18 +50,18 @@ public class ClassController {
         return R.success(classes);
     }
 
-    @PostMapping("/page")
+    @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("分页获取class")
-    public R<PagedResult<ClassVo>> listClasses(@RequestBody @Validated PagedQuery<SysClass> pagedQuery) {
+    public R<PagedResult<ClassVo>> listClasses(@Validated PagedQuery<SysClass> pagedQuery) {
         PagedResult<ClassVo> classVoPagedResult = sysClassService.listClasses(pagedQuery);
         return classVoPagedResult.toR();
     }
 
-    @PostMapping("/query")
+    @GetMapping("/query")
     @PreAuthorize("hasAuthority('user:class:list')")
     @ApiOperation("查询class")
-    public R<PagedResult<ClassVo>> queryUser(@RequestBody @Validated ClassPagedQuery classPagedQuery) {
+    public R<PagedResult<ClassVo>> queryUser(@Validated ClassPagedQuery classPagedQuery) {
 
         PagedResult<ClassVo> result = sysClassService.queryClass(classPagedQuery);
 
@@ -69,7 +69,7 @@ public class ClassController {
     }
 
 
-    @PostMapping("/update")
+    @PutMapping
     @PreAuthorize("hasAuthority('user:class:edit')")
     @ApiOperation("更新Class，不能更改classId")
     public R<Boolean> update(@RequestBody @Validated({ValidationGroup.Update.class}) ClassDto classDto) {
@@ -77,15 +77,8 @@ public class ClassController {
         return R.success(b);
     }
 
-    @GetMapping("/remove/{id}")
-    @PreAuthorize("hasAuthority('user:class:remove')")
-    @ApiOperation("删除Class")
-    public R<Boolean> remove(@PathVariable @NotNull Long id) {
-        boolean b = sysClassService.removeById(id);
-        return R.success(b);
-    }
 
-    @GetMapping("/removeBatch/{ids}")
+    @DeleteMapping("/{ids}")
     @PreAuthorize("hasAuthority('user:class:remove')")
     @ApiOperation("删除class")
     public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
@@ -106,7 +99,7 @@ public class ClassController {
         return R.success(true);
     }
 
-    @PostMapping("/student")
+    @GetMapping("/student")
     @PreAuthorize("hasAuthority('user:user:list')")
     @ApiOperation("根据班级列出学生，管理员专用")
     public R<PagedResult<UserVo>> listStudent(@RequestBody @Validated UserClassQuery query) {

@@ -1,8 +1,8 @@
 import type {PagedResponse, SortedPagedType,} from "@/api/pagedType";
-import {get, type successCallback} from "@/utils/http";
+import {del, get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, fetch, postedRemove, remove, update} from "@/utils/simpleCRUD";
+import {add, fetch, postedRemove, putRemove, remove, removeAll, update} from "@/utils/simpleCRUD";
 
 enum RoleStatus {
     NORMAL,
@@ -50,18 +50,18 @@ const dict = {
 };
 
 const removeRole = async (id: number | number[]) => {
-    await remove(id, "/user-api/role/removeBatch", "/user-api/role/remove");
+    await removeAll(id, "/user-api/role");
 }
 
 
 const refresh = async () => {
-    await get("/user-api/role/refresh")
+    await del("/user-api/role/refresh")
         .then(() => ElMessage.success("刷新成功"))
-        .catch(() => ElMessage.warning("刷新失败，请联系开发者"));
+        .catch(() => ElMessage.warning("刷新失败"));
 }
 
 const addRole = async (form: RoleForm) => {
-    await add(form, "/user-api/role/add");
+    await add(form, "/user-api/role");
 }
 
 const debouncedAddRole = (form: RoleForm, success: successCallback<void>) => {
@@ -77,7 +77,7 @@ const debouncedAddRole = (form: RoleForm, success: successCallback<void>) => {
 
 
 const updateRole = async (form: RoleForm) => {
-    await update(form, "/user-api/role/update");
+    await update(form, "/user-api/role");
 }
 
 const debouncedUpdateRole = (form: RoleForm, success: successCallback<void>) => {
@@ -105,7 +105,7 @@ const debouncedGetRole = (queryData: QueryRole, success: successCallback<PagedRe
 }
 
 const revoke = async (form: UserRoleRelation | UserRoleRelation[]) => {
-    await postedRemove(form, "/user-api/role/batchRevoke", "/user-api/role/revoke");
+    await putRemove(form, "/user-api/role/batchRevoke", "/user-api/role/revoke");
 }
 
 const grant = async (form: UserRoleRelation[]) => {

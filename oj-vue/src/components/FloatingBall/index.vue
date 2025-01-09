@@ -92,6 +92,10 @@ export default {
       this.isDragged = false;
 
     },
+    handleBeforeUnload(event) {
+      this.sse.closeAllConnections();
+      return "123"; // 旧版浏览器
+    }
 
   },
   mounted() {
@@ -99,10 +103,20 @@ export default {
     this.sse.on(SseEvent.UPDATE_POINT, (data) => {
      this.point = data.point
     })
+    window.addEventListener('beforeunload', this.handleBeforeUnload);
   },
   unmounted() {
     this.sse.close("/user-api/sse")
-  }
+  },
+  beforeDestroy() {
+    window.removeEventListener('beforeunload', this.handleBeforeUnload);
+
+  },
+
+
+
+
+
 };
 </script>
 

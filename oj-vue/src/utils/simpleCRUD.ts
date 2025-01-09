@@ -1,4 +1,4 @@
-import {get, post} from "@/utils/http";
+import {del, get, getWithParams, post, put, query} from "@/utils/http";
 import {
     onlyPagedData,
     type PagedResponse,
@@ -31,6 +31,17 @@ const remove = async (id: number | number[], batchUrl: string, singleUrl: string
     }
 };
 
+export const removeAll = async (id: number | number[], url: string) => {
+
+    const {data} = await del<boolean, number>(url, id);
+
+    if (!data) {
+        ElMessage.warning("删除失败");
+    } else {
+        ElMessage.success("删除成功");
+    }
+};
+
 const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: string) => {
 
     let success;
@@ -39,6 +50,22 @@ const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: strin
         success = data;
     } else {
         const {data} = await post <T, boolean>(singleUrl, id);
+        success = data;
+    }
+    if (!success) {
+        ElMessage.warning("删除失败");
+    } else {
+        ElMessage.success("删除成功");
+    }
+};
+export const putRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: string) => {
+
+    let success;
+    if (id instanceof Array) {
+        const {data} = await put<T[], boolean>(batchUrl, id);
+        success = data;
+    } else {
+        const {data} = await put <T, boolean>(singleUrl, id);
         success = data;
     }
     if (!success) {
@@ -86,7 +113,7 @@ const batchAdd = async <T> (form: T| T[], batchUrl: string, singleUrl: string) =
  * @param url 更新的URL
  */
 const update = async <T> (form: T, url: string) => {
-    const {data} = await post<T, boolean>(url, form);
+    const {data} = await put<T, boolean>(url, form);
     if (!data) {
         ElMessage.warning("更改失败");
     } else {
@@ -104,16 +131,16 @@ const update = async <T> (form: T, url: string) => {
  */
 const fetch =  async <T extends SortedPagedType, R> (queryData: T, simpleUrl: string, queryUrl: string) => {
     if (onlyPagedData(queryData)) {
-        const {data} = await post<PagedType, PagedResponse<R>>(simpleUrl, toPagedQueryData(queryData));
+        const {data} = await query<R, PagedType>(simpleUrl, toPagedQueryData(queryData));
         return data;
     }
-    const {data} = await post<T, PagedResponse<R>>(queryUrl, queryData);
+    const {data} = await query<R, T>(queryUrl, queryData);
     return data;
 }
 
 const pagedFetch =  async <T extends PagedType, R> (queryData: T, simpleUrl: string) => {
 
-    const {data} = await post<PagedType, PagedResponse<R>>(simpleUrl, toPagedQueryData(queryData));
+    const {data} = await getWithParams<PagedResponse<R>, PagedType>(simpleUrl, queryData);
     return data;
 
 }

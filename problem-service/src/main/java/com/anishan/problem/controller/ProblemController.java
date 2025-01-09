@@ -49,7 +49,7 @@ public class ProblemController {
         return R.success(b);
     }
 
-    @GetMapping("/recent-problems/{limit}")
+    @GetMapping("/recentProblems/{limit}")
     @ApiOperation("最近题目，最多50个")
     public R<List<ProblemVo>> getRecentProblems(@NotNull @PathVariable Integer limit) {
         limit = Math.min(limit, 50);
@@ -66,21 +66,21 @@ public class ProblemController {
         return R.success(problemVos);
     }
 
-    @PostMapping("/list")
+    @GetMapping("/list")
     @ApiOperation("条件分页查询题目，这个接口不带标签，无法获取比赛题目")
-    public R<PagedResult<ProblemVo>> getProblems(@RequestBody @Validated PagedProblem pagedProblem) {
+    public R<PagedResult<ProblemVo>> getProblems(@Validated PagedProblem pagedProblem) {
         PagedResult<ProblemVo> problems = problemService.getProblems(pagedProblem);
         return problems.toR();
     }
 
-    @PostMapping("/tagged-list")
+    @GetMapping("/taggedList")
     @ApiOperation("条件分页查询题目，这个接口带标签，题目页面用这个就好，无法获取比赛题目")
-    public R<PagedResult<TaggedProblemVo>> getTaggedProblems(@RequestBody @Validated PagedProblem pagedProblem) {
+    public R<PagedResult<TaggedProblemVo>> getTaggedProblems(@Validated PagedProblem pagedProblem) {
         PagedResult<TaggedProblemVo> problems = problemService.listTaggerProblems(pagedProblem);
         return problems.toR();
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     @ApiOperation("通过ID得到详细题目（用于进入题目）")
     public R<DetailProblem> getProblemById(@PathVariable("id") @NotNull Long id) {
         DetailProblem detailProblem = problemService.getDetailProblem(id);
@@ -88,15 +88,9 @@ public class ProblemController {
     }
 
 
-    @PostMapping("/add-tag")
-    @PreAuthorize("hasAuthority('problem:problem:add-tag')")
-    @ApiOperation("给题目添加标签")
-    public R<Boolean> addTag(@RequestBody @Validated(ValidationGroup.Insert.class) ProblemTagDto problemTagDto) {
-        boolean b = tagService.addTagForProblem(problemTagDto);
-        return R.success(b);
-    }
 
-    @PostMapping("/del-tag")
+
+    @PutMapping("/delTag")
     @PreAuthorize("hasAuthority('problem:problem:del-tag')")
     @ApiOperation("删除某个题目的标签")
     public R<Boolean> delTag(@RequestBody @Validated(ValidationGroup.Delete.class) ProblemTagDto problemTagDto) {
@@ -104,15 +98,7 @@ public class ProblemController {
         return R.success(b);
     }
 
-    @PostMapping("/batch-add-tag")
-    @PreAuthorize("hasAuthority('problem:problem:add-tag')")
-    @ApiOperation("给题目添加标签")
-    public R<Boolean> batchAddTag(@RequestBody @NotEmpty List<ProblemTagDto> relations) {
-        boolean b = tagService.batchAddTagsForProblem(relations);
-        return R.success(b);
-    }
-
-    @PostMapping("/batch-del-tag")
+    @PutMapping("/batchDelTag")
     @PreAuthorize("hasAuthority('problem:problem:del-tag')")
     @ApiOperation("删除某个题目的标签")
     public R<Boolean> batchDelTag(@RequestBody @NotEmpty List<ProblemTagDto> relations) {
@@ -120,11 +106,29 @@ public class ProblemController {
         return R.success(b);
     }
 
+    @PostMapping("/addTag")
+    @PreAuthorize("hasAuthority('problem:problem:add-tag')")
+    @ApiOperation("给题目添加标签")
+    public R<Boolean> addTag(@RequestBody @Validated(ValidationGroup.Insert.class) ProblemTagDto problemTagDto) {
+        boolean b = tagService.addTagForProblem(problemTagDto);
+        return R.success(b);
+    }
 
-    @PostMapping("/listAll")
+    @PostMapping("/batchAddTag")
+    @PreAuthorize("hasAuthority('problem:problem:add-tag')")
+    @ApiOperation("给题目添加标签")
+    public R<Boolean> batchAddTag(@RequestBody @NotEmpty List<ProblemTagDto> relations) {
+        boolean b = tagService.batchAddTagsForProblem(relations);
+        return R.success(b);
+    }
+
+
+
+
+    @GetMapping("/listAll")
     @ApiOperation("管理员查询接口")
     @PreAuthorize("hasAuthority('problem:problem:list')")
-    public R<PagedResult<ProblemVo>> getAll(@RequestBody @Validated PagedProblem pagedProblem) {
+    public R<PagedResult<ProblemVo>> getAll(@Validated PagedProblem pagedProblem) {
         PagedResult<ProblemVo> problems = problemService.getPagedAll(pagedProblem);
         return problems.toR();
     }
@@ -145,15 +149,7 @@ public class ProblemController {
         return R.success(b);
     }
 
-    @GetMapping("/remove/{id}")
-    @ApiOperation("删除题目")
-    @PreAuthorize("hasAuthority('problem:problem:remove')")
-    public R<Boolean> removeProblem(@PathVariable @NotNull Long id) {
-        boolean b = problemService.removeById(id);
-        return R.success(b);
-    }
-
-    @GetMapping("/batchRemove/{ids}")
+    @DeleteMapping("/{ids}")
     @ApiOperation("批量删除题目")
     @PreAuthorize("hasAuthority('problem:problem:remove')")
     public R<Boolean> removeBatchProblem(@PathVariable @NotEmpty List<Long> ids) {
@@ -161,9 +157,9 @@ public class ProblemController {
         return R.success(b);
     }
 
-    @PostMapping("/update")
+    @PutMapping
     @ApiOperation("更新某个题目")
-    @PreAuthorize("hasAuthority('problem:problem:update')")
+    @PreAuthorize("hasAuthority('problem:problem:edit')")
     public R<Boolean> updateProblem(@RequestBody @Validated(ValidationGroup.Update.class) DetailProblemDto problem) {
 
         boolean b = problemService.updateProblem(problem);

@@ -1,5 +1,5 @@
 import type {PagedResponse, PagedType, SortedPagedType,} from "@/api/pagedType";
-import {get, post, type successCallback} from "@/utils/http";
+import {get, getWithParams, post, type successCallback} from "@/utils/http";
 import __, {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, simpleGet, update} from "@/utils/simpleCRUD";
@@ -103,7 +103,7 @@ const debouncedReset = (id: Ref<number>, success: successCallback<void>) => {
 
 
 const addUser = async (form: UserAddForm) => {
-    await add(form, "/user-api/user/add");
+    await add(form, "/user-api/user");
 }
 
 const debouncedAddUser = (form: UserAddForm, success: successCallback<void>) => {
@@ -119,7 +119,7 @@ const debouncedAddUser = (form: UserAddForm, success: successCallback<void>) => 
 
 
 const updateUser = async (form: UserUpdateForm) => {
-    await update(form, "/user-api/user/update");
+    await update(form, "/user-api/user");
 }
 
 const debouncedUpdateUser = (form: UserUpdateForm, success: successCallback<void>) => {
@@ -152,7 +152,7 @@ const debouncedGetUser = (queryData: QueryUser, success: successCallback<PagedRe
 
 
 const getRoleUser = async (queryData: QueryRoleUser): Promise<PagedResponse<UserView>> => {
-    const {data} = await post<QueryRoleUser, PagedResponse<UserView>>("/user-api/user/getByRole", queryData);
+    const {data} = await getWithParams<PagedResponse<UserView>, QueryRoleUser>("/user-api/user/getByRole", queryData);
     return data;
 }
 

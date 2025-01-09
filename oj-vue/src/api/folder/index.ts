@@ -1,7 +1,7 @@
 import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, remove, update} from "@/utils/simpleCRUD";
+import {add, remove, removeAll, update} from "@/utils/simpleCRUD";
 
 
 enum FolderType {
@@ -34,7 +34,7 @@ interface TreedFolderView {
 }
 
 const getTreedFolderView = async () => {
-    const {data} = await get<TreedFolderView[]>("/problem-api/folder/list-tree");
+    const {data} = await get<TreedFolderView[]>("/problem-api/folder/tree");
     return data;
 }
 
@@ -59,11 +59,11 @@ const dict = {
 }
 
 const removeFolder = async (id: number | number[]) => {
-    await remove(id, "/problem-api/folder/batchDel", "/problem-api/folder/del");
+    await removeAll(id, "/problem-api/folder");
 }
 
 const addFolder = async (form: FolderForm) => {
-    await add(form, "/problem-api/folder/add");
+    await add(form, "/problem-api/folder");
 }
 
 const debouncedAddFolder = (form: FolderForm, success: successCallback<void>) => {
@@ -79,7 +79,7 @@ const debouncedAddFolder = (form: FolderForm, success: successCallback<void>) =>
 
 
 const updateFolder = async (form: FolderForm) => {
-    await update(form, "/problem-api/folder/update");
+    await update(form, "/problem-api/folder");
 }
 
 const debouncedUpdateFolder = (form: FolderForm, success: successCallback<void>) => {
@@ -93,7 +93,7 @@ const debouncedUpdateFolder = (form: FolderForm, success: successCallback<void>)
 }
 
 const getFolder = async (): Promise<FolderView[]> => {
-    const {data} =  await get<FolderView[]>("/problem-api/folder/list-all");
+    const {data} =  await get<FolderView[]>("/problem-api/folder");
     return data;
 }
 

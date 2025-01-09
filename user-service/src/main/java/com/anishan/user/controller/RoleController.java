@@ -32,7 +32,7 @@ public class RoleController {
     private final SysRoleService sysRoleService;
     private final SysUserRoleService sysUserRoleService;
     private final RoleUtil roleUtil;
-    @GetMapping("/refresh")
+    @DeleteMapping("/refresh")
     @PreAuthorize("hasAuthority('user:role:list')")
     @ApiOperation("刷新角色缓存")
     public R<String> refresh() {
@@ -49,7 +49,7 @@ public class RoleController {
     }
 
 
-    @GetMapping("/list/{ids}")
+    @GetMapping("/{ids}")
     @PreAuthorize("hasAuthority('user:role:list')")
     @ApiOperation("通过多个id获取role，id之间用','隔开")
     public R<List<RoleVo>> listRole(@PathVariable("ids") List<Long> ids) {
@@ -57,18 +57,18 @@ public class RoleController {
         return R.success(roles);
     }
 
-    @PostMapping("/page")
+    @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:role:list')")
     @ApiOperation("分页获取role")
-    public R<PagedResult<RoleVo>> listRoles(@RequestBody @Validated PagedQuery<SysRole> pagedQuery) {
+    public R<PagedResult<RoleVo>> listRoles(@Validated PagedQuery<SysRole> pagedQuery) {
         PagedResult<RoleVo> roleVoPagedResult = sysRoleService.listRolesByPage(pagedQuery);
         return roleVoPagedResult.toR();
     }
 
-    @PostMapping("/query")
+    @GetMapping("/query")
     @PreAuthorize("hasAuthority('user:role:list')")
     @ApiOperation("查询role")
-    public R<PagedResult<RoleVo>> queryUser(@RequestBody @Validated  RolePagedQuery rolePagedQuery) {
+    public R<PagedResult<RoleVo>> queryUser(@Validated  RolePagedQuery rolePagedQuery) {
         if (rolePagedQuery == null) {
             rolePagedQuery = new RolePagedQuery();
         }
@@ -79,7 +79,7 @@ public class RoleController {
     }
 
 
-    @PostMapping("/update")
+    @PutMapping
     @PreAuthorize("hasAuthority('user:role:edit')")
     @ApiOperation("更新Role，不能更改roleId")
     public R<Boolean> update(@RequestBody RoleDto roleDto) {
@@ -87,15 +87,7 @@ public class RoleController {
         return R.success(b);
     }
 
-    @GetMapping("/remove/{id}")
-    @PreAuthorize("hasAuthority('user:role:remove')")
-    @ApiOperation("删除Role")
-    public R<Boolean> remove(@PathVariable @NotNull Long id) {
-        boolean b = sysRoleService.removeById(id);
-        return R.success(b);
-    }
-
-    @GetMapping("/removeBatch/{ids}")
+    @DeleteMapping("/{ids}")
     @PreAuthorize("hasAuthority('user:role:remove')")
     @ApiOperation("删除role")
     public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
@@ -103,7 +95,7 @@ public class RoleController {
         return R.success(b);
     }
 
-    @PostMapping("/add")
+    @PostMapping
     @PreAuthorize("hasAuthority('user:role:add')")
     @ApiOperation("添加role")
     public R<Boolean> addRole(@RequestBody @Validated(ValidationGroup.Update.class) RoleDto roleDto) {
@@ -117,7 +109,7 @@ public class RoleController {
         return R.success(b);
     }
 
-    @PostMapping("/revoke")
+    @PutMapping("/revoke")
     @PreAuthorize("hasAuthority('user:role:revoke')")
     @ApiOperation("撤销授予的角色")
     public R<Boolean> revoke(@RequestBody @Validated(ValidationGroup.Delete.class)UserRoleRelationDto relation) {
@@ -128,7 +120,7 @@ public class RoleController {
         return R.success(remove);
     }
 
-    @PostMapping("/batchRevoke")
+    @PutMapping("/batchRevoke")
     @PreAuthorize("hasAuthority('user:role:revoke')")
     @ApiOperation("批量撤销授予的角色")
     public R<Boolean> batchRevoke(

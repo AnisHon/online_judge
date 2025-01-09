@@ -24,7 +24,7 @@ public class InternalController {
     private final RecordsService recordsService;
 
     @ApiOperation("存储判题结果用的")
-    @PostMapping("/judge-result")
+    @PostMapping("/judgeResult")
     public R<Void> judgeResult(@RequestBody JudgeScore judgeScore) {
 
         UserAnswer userAnswer = new UserAnswer();
