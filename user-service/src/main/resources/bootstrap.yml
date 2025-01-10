@@ -3,15 +3,15 @@ spring:
     name: user-service # 服务名称
   cloud:
     nacos:
-      server-addr: 8.149.133.76:8848
+      server-addr: 127.0.0.1:8848
       config:
-        server-addr: 8.149.133.76:8848
+        server-addr: 127.0.0.1:8848
         file-extension: yaml
         shared-configs:
           - data-id: shared-jdbc.yaml  # 共享mybatis配置
-          - data-id: shared_logging.yaml
-          - data-id: shared_knife4j.yaml
+          - data-id: shared-logging.yaml
+          - data-id: shared-knife4j.yaml
           - data-id: shared-redis.yaml
-          - data-id: shared_common.yaml
+          - data-id: shared-common.yaml
 
 

@@ -5,7 +5,7 @@ import {
 import {get, getWithParams, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, postedRemove, remove, removeAll, update} from "@/utils/simpleCRUD";
+import {add, postedRemove, remove, update} from "@/utils/simpleCRUD";
 import {ProblemType, type ProblemView} from "@/api/problem";
 
 interface ListView {
@@ -127,7 +127,7 @@ interface QueryList extends SortedPagedType{
 }
 
 const removeList = async (id: number | number[]) => {
-    await removeAll(id, "/problem-api/list/del");
+    await remove(id, "/problem-api/list/del");
 }
 
 const addList = async (form: ListForm) => {

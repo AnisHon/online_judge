@@ -5,7 +5,7 @@ import {
 import {type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, fetch, remove, removeAll, update} from "@/utils/simpleCRUD";
+import {add, fetch, remove, update} from "@/utils/simpleCRUD";
 
 interface ClassView {
     classId: number;
@@ -26,7 +26,7 @@ interface QueryClass extends SortedPagedType{
 }
 
 const removeClass = async (id: number | number[]) => {
-    await removeAll(id, "/user-api/class/remove");
+    await remove(id, "/user-api/class");
 }
 
 const addClass = async (form: ClassForm) => {

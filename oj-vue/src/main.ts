@@ -1,4 +1,5 @@
 import '@/assets/common.css';
+import '@/assets/transition.css';
 import 'normalize.css';
 import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';

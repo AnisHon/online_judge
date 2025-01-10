@@ -239,8 +239,6 @@ create table folder(
     list_id     bigint(20)  null                    comment '题单，如果是D类型则应该为空',
     del_flag    boolean     default 0  not null     comment '逻辑删除',
     primary key (folder_id),
-    constraint folder_folder_id_fk foreign key folder(parent_id)
-                   references folder(folder_id),
     constraint folder_list_id_fk foreign key folder(list_id)
         references problem_list(list_id)
 ) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '文件夹表';
@@ -251,7 +249,7 @@ create table folder(
 drop table if exists records;
 create table records(
     record_id   bigint(20)      not null auto_increment,
-    contest_id  bigint(20)      null                     comment '比赛ID，非比赛可不填',
+    contest_id  bigint(20)      null                     comment '比赛ID，非比赛可不填，已废弃后续删除',
     user_id     bigint(20)      not null                 comment '用户ID',
     problem_id  bigint(20)      not null                 comment '题目id',
     status      boolean         not null                 comment '是否正确',
@@ -269,17 +267,21 @@ create index records_problem_id_idx on records(problem_id);
 create index records_problem_id_user_id_idx on records(problem_id, user_id);
 
 
+
+
 -- ----------------------------
 -- 13、比赛完成表-2 后期预留表
 -- ----------------------------
 drop table if exists contest_records;
 create table contest_records(
+    record_id   bigint(20)      not null auto_increment,
     contest_id  bigint(20)      not null                 comment '比赛ID',
     user_id     bigint(20)      not null                 comment '用户ID',
     problem_id  bigint(20)      not null                 comment '题目id',
     status      boolean         not null                 comment '是否正确',
     score       DECIMAL(3, 2)   null                     comment '最终得分',
-    primary key (contest_id, user_id, problem_id),
+    primary key (record_id),
+    unique key (record_id, user_id, problem_id),
     constraint contest_records_contest_id_fk foreign key contest_records(contest_id)
         references contest(contest_id),
     constraint contest_records_problem_id_fk foreign key contest_records(problem_id)
@@ -288,6 +290,18 @@ create table contest_records(
 create index contest_records_contest_id_idx on records(contest_id);
 create index contest_records_user_id_idx on records(user_id);
 create index contest_records_problem_id_idx on records(problem_id);
+
+-- ----------------------------
+-- 13、比赛完成记录表，分表专门用于存储答案-3 后期预留表
+-- ----------------------------
+drop table if exists contest_answer_records;
+create table contest_answer_records(
+    record_id   bigint(20)      not null auto_increment,
+    answer      json            null                     comment '答案',
+    primary key (record_id),
+    constraint contest_answer_records_id_fk foreign key contest_answer_records(record_id)
+    references contest_records(record_id)
+) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '比赛完成记录表，分表专门用于存储答案';
 
 
 -- ----------------------------

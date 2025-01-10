@@ -3,13 +3,12 @@ import {getTreedMenu, type MenuView, type TreedMenu} from "@/api/auth/menu";
 import {getAuth} from "@/api/auth/menu"
 import {ref} from "vue";
 import __ from "lodash";
-import {flattenMenuTree, getDynamicRecursion, setDefault} from "@/utils/router/dynamicRouter";
-import {dynamicConst, type RouterType} from "@/router/dynamic";
+import type {RouteRecordRaw} from "vue-router";
 
 export const useMenuStore = defineStore('menuStore', () => {
     const auths = ref<MenuView[]>();
     const menuTrees = ref<TreedMenu[]>();
-    const dynamicRouters = ref<RouterType[]>()
+    const menu = ref<RouteRecordRaw[]>()
 
     const exist = (): boolean => {
         return __.has(auths, 'value');
@@ -24,50 +23,59 @@ export const useMenuStore = defineStore('menuStore', () => {
     }
 
     const getMenuTrees = async () => {
-
         if (!exist()) {
             menuTrees.value = await getTreedMenu();
         }
         return menuTrees.value;
     }
 
-    const getFlatten = async () => {
-        if (!exist()) {
-            await getMenuTrees()
-        }
-        return flattenMenuTree(menuTrees.value as TreedMenu[])
-    }
-
     const isDynamicReady = () => {
-        return !__.isUndefined(dynamicRouters.value);
+        return !__.isUndefined(menu.value);
     }
 
-    const getDynamicRouters = async () => {
-        const routers = dynamicConst.children;
-        const flatten = await getFlatten();
 
-        if (!isDynamicReady()) {
-            const dynamicRecursion = getDynamicRecursion(<RouterType[]>routers, flatten);
-            setDefault(dynamicRecursion);
-            dynamicRouters.value = dynamicRecursion;
-        }
-        await loadAuths()
-        return <RouterType[]>dynamicRouters.value;
-    }
+    // const getDynamicRouters = async () => {
+        // const routers = dynamicConst.children;
+        // const flatten = await getFlatten();
+
+        // if (!isDynamicReady()) {
+            // const dynamicRecursion = getDynamicRecursion(<RouterType[]>routers, flatten);
+            // setDefault(dynamicRecursion);
+            // dynamicRouters.value = dynamicRecursion;
+
+        // }
+        // await loadAuths()
+        // return <RouterType[]>dynamicRouters.value;
+    // }
 
     const clear = () => {
         auths.value = undefined;
         menuTrees.value = undefined;
-        dynamicRouters.value = undefined;
+        menu.value = undefined;
+    }
+
+
+    const getTree = async () => {
+        const data = await getMenuTrees();
+        await loadAuths();
+        return data || [];
+    };
+
+    const setMenu = (raw: RouteRecordRaw[]) => {
+        menu.value = raw;
+    }
+
+    const getMenu = (): RouteRecordRaw[] => {
+        return menu.value as RouteRecordRaw[];
     }
 
     return  {
         getAuths,
-        getTreedMenu,
-        getFlatten,
-        getDynamicRouters,
         isDynamicReady,
-        clear
+        clear,
+        getTree,
+        setMenu,
+        getMenu
     }
 
 }, {persist: false})

@@ -6,39 +6,22 @@ import {
     type SortedPagedType,
     toPagedQueryData
 } from "@/api/pagedType";
+import {ElNotification} from "element-plus";
 
 /**
  * 通用删除
  * @param id 删除的ID可以使array或者单纯的number
- * @param batchUrl 批量删除的URL
- * @param singleUrl 单独删除的URL
+ * @param url 删除的URL
  */
 
-const remove = async (id: number | number[], batchUrl: string, singleUrl: string) => {
-
-    let success;
-    if (id instanceof Array) {
-        const {data} = await get<boolean, number[]>(batchUrl, id);
-        success = data;
-    } else {
-        const {data} = await get<boolean, number>(singleUrl, id);
-        success = data;
-    }
-    if (!success) {
-        ElMessage.warning("删除失败");
-    } else {
-        ElMessage.success("删除成功");
-    }
-};
-
-export const removeAll = async (id: number | number[], url: string) => {
+export const remove = async (id: number | number[], url: string) => {
 
     const {data} = await del<boolean, number>(url, id);
 
     if (!data) {
-        ElMessage.warning("删除失败");
+        ElNotification.warning("删除失败");
     } else {
-        ElMessage.success("删除成功");
+        ElNotification.success("删除成功");
     }
 };
 
@@ -53,9 +36,9 @@ const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: strin
         success = data;
     }
     if (!success) {
-        ElMessage.warning("删除失败");
+        ElNotification.warning("删除失败");
     } else {
-        ElMessage.success("删除成功");
+        ElNotification.success("删除成功");
     }
 };
 export const putRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: string) => {
@@ -69,9 +52,9 @@ export const putRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: s
         success = data;
     }
     if (!success) {
-        ElMessage.warning("删除失败");
+        ElNotification.warning("删除失败");
     } else {
-        ElMessage.success("删除成功");
+        ElNotification.success("删除成功");
     }
 };
 
@@ -84,9 +67,9 @@ const add = async <T> (form: T, url: string) => {
     const {data} = await post<T, boolean>(url, form);
 
     if (!data) {
-        ElMessage.warning("添加失败");
+        ElNotification.warning("添加失败");
     } else {
-        ElMessage.success("添加成功");
+        ElNotification.success("添加成功");
     }
 };
 
@@ -101,9 +84,9 @@ const batchAdd = async <T> (form: T| T[], batchUrl: string, singleUrl: string) =
         success = data;
     }
     if (!success) {
-        ElMessage.warning("添加失败");
+        ElNotification.warning("添加失败");
     } else {
-        ElMessage.success("添加成功");
+        ElNotification.success("添加成功");
     }
 };
 
@@ -115,9 +98,9 @@ const batchAdd = async <T> (form: T| T[], batchUrl: string, singleUrl: string) =
 const update = async <T> (form: T, url: string) => {
     const {data} = await put<T, boolean>(url, form);
     if (!data) {
-        ElMessage.warning("更改失败");
+        ElNotification.warning("更改失败");
     } else {
-        ElMessage.success("更改成功");
+        ElNotification.success("更改成功");
     }
 };
 
@@ -150,9 +133,9 @@ const pagedFetch =  async <T extends PagedType, R> (queryData: T, simpleUrl: str
 const simpleGet = async <T> (data: T, url: string, successMsg = "成功", fail = "失败") => {
     const {data: success} = await get<boolean, T>(url, data);
     if (success) {
-        ElMessage.success(successMsg);
+        ElNotification.success(successMsg);
     } else {
-        ElMessage.warning(fail);
+        ElNotification.warning(fail);
     }
 
 }
@@ -160,7 +143,6 @@ const simpleGet = async <T> (data: T, url: string, successMsg = "成功", fail =
 export {
     add,
     batchAdd,
-    remove,
     update,
     fetch,
     postedRemove,

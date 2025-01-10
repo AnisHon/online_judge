@@ -4,7 +4,7 @@ import {ElMessage} from "element-plus";
 import type {PagedResponse, PagedType} from "@/api/pagedType";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
-import {removeAll, update} from "@/utils/simpleCRUD";
+import {remove, update} from "@/utils/simpleCRUD";
 import {type LogSubmit} from "@/api/problem/judge";
 
 
@@ -213,7 +213,7 @@ const debouncedAdminGetProblem = (id: number | undefined, success: successCallba
 
 
 async function removeProblems(ids: number | number[]) {
-    await removeAll(ids, "/problem-api/problem");
+    await remove(ids, "/problem-api/problem");
 }
 
 async function addProblems(form: ProblemForm) {

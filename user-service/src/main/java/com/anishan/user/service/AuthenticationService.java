@@ -40,7 +40,7 @@ public interface AuthenticationService {
     CaptchaCodeVo sendCaptchaCode();
 
     // 封禁
-    String ban(Long id);
+    String ban(@NotNull List<Long> id);
 
     // 解封
     String unban(Long id);

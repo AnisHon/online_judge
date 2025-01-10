@@ -28,7 +28,7 @@ export const useUserStore = defineStore('user', () => {
     }
 
     const getAuths = (): string[] => {
-        if (!user) {
+        if (!user.value) {
             return []
         }
         return (<LoginUser>user.value).auths

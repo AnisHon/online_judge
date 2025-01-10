@@ -1,4 +1,4 @@
-import {get, post} from '@/utils/http'
+import {get, post, put} from '@/utils/http'
 import {type LoginUser} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
 import router from '@/router'
@@ -38,7 +38,7 @@ export interface ForgetPasswordResponse {
 
 
 async function checkAvailableEmail(email: string) {
-    const {data} = await get("/user-api/user/email", email);
+    const {data} = await put("/user-api/user/email", email);
     return data;
 }
 
@@ -95,7 +95,7 @@ async function forgetPassword(data: ForgetPasswordForm) {
 async function resetPassword(data: {code: string, password: string}) {
     const param = {code: data.code, password: data.password};
     const {data: r} =
-        await post<typeof param, Boolean>('/user-api/auth/reset-pass', param);
+        await put<typeof param, Boolean>('/user-api/auth/reset-pass', param);
     return r;
 }
 

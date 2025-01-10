@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -55,6 +56,11 @@ public class SysMenu implements Serializable {
      * 菜单图标
      */
     private String icon;
+
+    /**
+     * 组件路径
+     */
+    private String component;
 
     /**
      * 创建时间

@@ -2,7 +2,6 @@ import axios from 'axios';
 import {useToken} from "@/stores/useToken";
 import {ElMessage, ElNotification} from "element-plus";
 import router from "@/router"
-import type {PagedData} from "@/api/problem";
 import type {PagedResponse} from "@/api/pagedType.ts";
 
 
@@ -27,14 +26,14 @@ type ResultPromise<T> = Promise<AjaxResult<T>>;
 const error401 = () => {
     const token = useToken();
     token.clearToken();
-    ElMessage.warning("令牌过期，请重新登录");
+    ElNotification.warning("令牌过期，请重新登录");
     router.replace({name: 'login'});
 };
 
 const error403 = () => {
     const token = useToken();
     token.clearToken();
-    ElMessage.error("拒绝访问");
+    ElNotification.error("拒绝访问");
     router.replace({name: '403'});
 };
 
@@ -79,11 +78,11 @@ service.interceptors.response.use(
         if (error.status == 401) {
             error401();
         } else if (error.status == 400) {
-            ElMessage.error(error.response.data.message);
+            ElNotification.error(error.response.data.message);
         } else if (error.status == 404) {
-            ElMessage.error("接口404 : " + error.config.url)
+            ElNotification.error("接口404 : " + error.config.url)
         } else {
-            ElMessage.error(error.response.data.message);
+            ElNotification.error(error.response.data.message);
         }
         return error;
     }

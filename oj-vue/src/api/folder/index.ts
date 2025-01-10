@@ -1,7 +1,7 @@
 import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, remove, removeAll, update} from "@/utils/simpleCRUD";
+import {add, remove, update} from "@/utils/simpleCRUD";
 
 
 enum FolderType {
@@ -59,7 +59,7 @@ const dict = {
 }
 
 const removeFolder = async (id: number | number[]) => {
-    await removeAll(id, "/problem-api/folder");
+    await remove(id, "/problem-api/folder");
 }
 
 const addFolder = async (form: FolderForm) => {

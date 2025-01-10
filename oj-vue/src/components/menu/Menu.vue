@@ -32,26 +32,22 @@
       <template #title><span>每日签到</span></template>
     </el-menu-item>
 
-    <sub-menu-item v-for="item of routers" :router="item"/>
-<!--      <template #title><el-icon><Setting/></el-icon>您好，<strong>{{ nikeName }}</strong></template>-->
-
-<!--    <el-menu-item class="user-options">-->
+<!--    <sub-menu-item v-for="item of routers" :router="item"/>-->
     <div class="left-item">
       <el-space>
-        <el-switch v-model="isDark" size="large" active-action-icon="Moon" inactive-action-icon="Sunny" style="--el-switch-on-color: #2C2C2C; --el-switch-off-color: #F2F2F2;"/>
+<!--        <el-switch v-model="isDark" size="large" active-action-icon="Moon" inactive-action-icon="Sunny" style="&#45;&#45;el-switch-on-color: #2C2C2C; &#45;&#45;el-switch-off-color: #F2F2F2;"/>-->
+        <theme-trigger/>
         <el-dropdown size="large" style="height: 100%;" @command="handleCommand">
           <span class="el-dropdown-link" style="height: 100%; display: flex; justify-content: center; align-items: center;">
-             <span>
-              {{ nikeName }}
-              <el-icon class="el-icon--right">
-                <UserFilled />
-              </el-icon>
-             </span>
-
+<!--             <span>-->
+<!--              {{ nikeName }}-->
+<!--             </span>-->
+              <el-avatar :icon="UserFilled"/>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="setting">账号设置</el-dropdown-item>
+                <el-dropdown-item v-if="hasAccessToBackend" command="backend">进入后台</el-dropdown-item>
                 <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -60,59 +56,70 @@
       </el-space>
 
     </div>
-
-<!--    </el-menu-item>-->
-<!--      <el-menu-item index="$logout">-->
-<!--        <template #title><el-icon><CloseBold/></el-icon>退出登录</template>-->
-<!--      </el-menu-item>-->
-
   </el-menu>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import {computed, ref} from 'vue'
 import {useMenuStore} from "@/stores/useMenuStore";
 import {useRoute, useRouter} from "vue-router";
-import type {RouterType} from "@/router/dynamic";
-import SubMenuItem from "@/components/menu/SubFormItem.vue";
 import {UserFilled} from "@element-plus/icons-vue";
 import {logout} from "@/api/auth/authentication";
 import {useUserStore} from "@/stores/useUserStore";
-import { useToggle } from '@vueuse/shared'
 import { useDark } from "@vueuse/core";
+import ThemeTrigger from "@/components/ThemeTrigger/ThemeTrigger.vue";
 
 const isDark = useDark()
 
 const router = useRouter();
+
 const route = useRoute();
-const activeIndex = ref(route.name)
+
+const menuStore = useMenuStore();
+
+
 const user = useUserStore()
+
+// menu
+const activeIndex = computed(() => {
+  return route.name;
+});
+
+// 导航栏名称
 const nikeName = ref("");
+
+const hasAccessToBackend = computed(() => {
+  return !!menuStore.getAuths() && menuStore.getAuths().length > 0;
+});
+
+//
+// menu.getDynamicRouters()
+//     .then((dynamicRouters) => {
+//       dynamicRouters.forEach((dynamicRouter ) => {
+//         routers.value = dynamicRouters;
+//       })
+//     });
+
+
 const handleSelect = (key: string) => {
   router.push({name: key});
 }
-
-const menu = useMenuStore();
-
-const routers = ref<RouterType[]>([]);
-
-menu.getDynamicRouters()
-    .then((dynamicRouters) => {
-      dynamicRouters.forEach((dynamicRouter ) => {
-        routers.value = dynamicRouters;
-      })
-    });
-
-user.getUser().then((data) => {nikeName.value = data.nikeName})
 
 const handleCommand = (key: string) => {
   if (key === 'logout') {
     logout();
   } else if (key === 'setting') {
     router.push({name: 'setting'});
+  } else if (key === 'backend') {
+    router.push({name: 'backend'});
   }
 }
 
+
+user.getUser()
+    .then((data) => {
+      nikeName.value = data.nikeName
+    })
 
 </script>
 

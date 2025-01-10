@@ -6,7 +6,7 @@ import {
 import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, fetch, remove, removeAll, update} from "@/utils/simpleCRUD";
+import {add, fetch, remove, update} from "@/utils/simpleCRUD";
 
 interface QueryMenu extends SortedPagedType{
     menuId?: number;
@@ -35,7 +35,7 @@ const dict = {
 }
 
 const removeMenu = async (id: number | number[]) => {
-    await removeAll(id, "/user-api/menu");
+    await remove(id, "/user-api/menu");
 }
 
 

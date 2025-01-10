@@ -9,9 +9,10 @@ spring:
     #保证交换机能把消息推送到队列中
     publisher-returns: true
     virtual-host: /judge
-    #这个配置是保证消费者会消费消息，手动确认
+    #这个配置是保证消费者会消费消息，手动确认，但是感觉没什么用，所以关掉了
     listener:
       simple:
-        acknowledge-mode: manual
+        # acknowledge-mode: manual
+        prefetch: 1
     template:
       mandatory: true

@@ -3,6 +3,7 @@ package com.anishan.user.service.impl;
 import cn.hutool.captcha.AbstractCaptcha;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
+import com.anishan.api.client.gojudge.enumeration.Status;
 import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.enumeration.UserState;
@@ -17,7 +18,9 @@ import com.anishan.user.service.*;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.user.util.EmailSender;
 import com.anishan.user.util.RoleUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -341,17 +345,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public String ban(Long id) {
+    public String ban(@NotNull List<Long> id) {
 
-        SysUser user = new SysUser();
-        user.setUserId(id);
-        user.setStatus(UserState.BANNED);
+        LambdaUpdateWrapper<SysUser> wrapper = new LambdaUpdateWrapper<SysUser>()
+                .set(SysUser::getStatus, UserState.BANNED)
+                .in(SysUser::getUserId, id);
 
-        boolean update = sysUserService.save(user);
-
-        if (update) {
-            logout(id);
-        }
+        boolean update = sysUserService.update(wrapper);
 
         return update ? "封禁成功" : "封禁失败";
     }

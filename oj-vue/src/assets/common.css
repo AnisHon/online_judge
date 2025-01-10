@@ -15,14 +15,29 @@ a {
     text-decoration: none;
 }
 :root {
-    --page-max-width: 1280px;
-    --color-tag-text: white;
-    --menu-height: 60px;
-    --main-padding: 20px;
-    --content-height: calc(100vh - var(--menu-height));
-    --in-main-content-height: calc(var(--content-height) - 2 * var(--main-padding));
+    --page-max-width: 1280px;           /* 最大页宽 */
+    --color-tag-text: white;            /* 题库标签的文字颜色 */
+    --menu-height: 60px;                /* 用户页面的菜单高度 */
+    --main-padding: 20px;               /* 用户页面main的padding大小 */
+    --content-height: calc(100vh - var(--menu-height));     /* 用户页面去除menu高度后剩下的高度 */
+    --in-main-content-height: calc(var(--content-height) - 2 * var(--main-padding)); /* 用户页面去除menu和main padding大小后剩下的高度 */
 
+
+
+    --vertical-menu-expand-width: 300px;            /* 后台垂直菜单展开宽度 */
+    --vertical-menu-collapse-width: 63px;           /* 后台垂直菜单折叠宽度 */
+    --vertical-menu-text-color: rgb(191, 203, 217); /* menu文字颜色 */
+    --vertical-menu-color: rgb(48, 65, 86);         /* menu背景色 */
+    --vertical-menu-hover-color: rgb(38, 52, 69);           /* menu hover属性的背景色 */
+    --vertical-menu-submenu-color: #1f2d3d;         /* submenu展开后的背景色 */
+    --vertical-menu-submenu-hover-color: #001528;   /* submenu展开后hover的背景色 */
+
+
+    --header-bar-height: 50px;
+    --tab-height: 30px;
+    --backend-header-height: calc(var(--header-bar-height) + var(--tab-height));
 }
+
 
 .common-max-width-page {
     max-width: var(--page-max-width);
@@ -42,3 +57,32 @@ a {
 .el-dropdown-link:focus {
     outline: none;
 }
+
+
+.vertical-menu-expand {
+    width: var(--vertical-menu-expand-width);
+}
+
+.vertical-menu-collapse {
+    width: var(--vertical-menu-collapse-width);
+}
+
+.vertical-menu-animation {
+    transition: width 0.4s ease;
+}
+
+.unselectable {
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* 标准语法 */
+    /*cursor: default;*/
+}
+
+
+
+
+
+
+
+

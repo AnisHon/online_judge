@@ -1,8 +1,7 @@
-import {get, post, type successCallback} from "@/utils/http"
-import {add, batchAdd, fetch, postedRemove, putRemove, remove} from "@/utils/simpleCRUD";
+import {get, type successCallback} from "@/utils/http"
+import {batchAdd, putRemove} from "@/utils/simpleCRUD";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
-import type {ProblemForm} from "@/api/problem/index";
 
 export interface TagView {
 

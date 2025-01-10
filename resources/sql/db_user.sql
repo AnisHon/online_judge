@@ -26,10 +26,10 @@ create table sys_user (
     comment '用户表' auto_increment = 100;
 create unique index unique_user_email on sys_user(email);
 # 默认密码：www.github.com
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (1, 'test_teacher', null, '测试教师', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (2, 'test_student', null, '测试学生', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (3, 'test_admin', null, '测试管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
-insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (4, 'test_super_admin', null, '超级管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (1, 'teacher', null, '测试教师', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (2, 'student', null, '测试学生', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (3, 'admin', null, '测试管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
+insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (4, 'super_admin', null, '超级管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
 
 
 -- ----------------------------
@@ -79,9 +79,13 @@ create table sys_class (
 -- ----------------------------
 drop table if exists student_class;
 create table student_class (
-   student_id   bigint(20) not null comment '学生ID(user_id)',
-   class_id     bigint(20) not null comment '班级ID',
-   primary key(student_id, class_id)
+    student_id   bigint(20) not null comment '学生ID(user_id)',
+    class_id     bigint(20) not null comment '班级ID',
+    primary key(student_id, class_id),
+    constraint class_student_id_pk foreign key student_class(student_id)
+        references sys_user(user_id),
+    constraint class_class_id_pk foreign key sys_class(class_id)
+        references sys_class(class_id)
 ) engine=innodb comment = '学生班级关系表';
 
 -- ----------------------------
@@ -92,43 +96,46 @@ create table sys_menu (
     menu_id           bigint(20)      not null auto_increment    comment '菜单ID',
     menu_name         varchar(50)     not null                   comment '菜单名称',
     order_num         int(4)          not null                   comment '菜单顺序',
-    parent_id         bigint(20)      default 0                  comment '父菜单ID',
+    parent_id         bigint(20)      default null               comment '父菜单ID',
     router            varchar(200)    default '#'                comment '路由路径',
     menu_type         char(1)         default 'M'                comment '菜单类型（I菜单项item M菜单栏MenuBar B按钮）',
     perms             varchar(100)    default '#'                comment '权限Security标识',
     icon              varchar(100)    default '#'                comment '菜单图标',
+    component         varchar(255)    default null               comment '组件路径',
     create_time       datetime        default now()              comment '创建时间',
     update_time       datetime        default now()              comment '更新时间',
     del_flag          boolean         default 0                  comment '删除标志（0未删除 1删除）',
     remark            varchar(500)    default ''                 comment '备注',
-    primary key (menu_id)
+    primary key (menu_id),
+    constraint menu_menu_id_pk foreign key sys_menu(parent_id)
+                      references sys_menu(menu_id)
 ) engine=innodb auto_increment=2000 comment = '菜单权限表';
 
 # 一级菜单
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1, '题目模块', 1, 0, 'problem-module', 'M', '#', 'Files');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (2, '用户模块', 2, 0, 'user-module', 'M', '#', 'UserFilled');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (3, '教师功能', 0, 0, 'teacher', 'M', '#', 'Notebook');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (1, '题目模块', 1, null, 'problem-module', 'M', '#', 'Files', null);
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (2, '用户模块', 2, null, 'user-module', 'M', '#', 'UserFilled', null);
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (3, '教师功能', 0, null, 'teacher', 'M', '#', 'Notebook', null);
 
 # 二集菜单
 # menu_id 1 题目模块
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (10, '题目编辑', 1, 1, 'problem-edit', 'I', '#', 'Management');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (11, '标签编辑', 2, 1, 'tag-edit', 'I', '#', 'CollectionTag');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (12, '题单编辑', 3, 1, 'list-edit', 'I', '#', 'List');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (13, '目录编辑', 4, 1, 'folder-edit', 'I', '#', 'Folder');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (10, '题目编辑', 1, 1, 'problem-edit', 'I', '#', 'Management', 'backend/problem-module/problem-edit/ProblemEdit');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (11, '标签编辑', 2, 1, 'tag-edit', 'I', '#', 'CollectionTag', 'backend/problem-module/tag-edit/TagEdit');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (12, '题单编辑', 3, 1, 'list-edit', 'I', '#', 'List', 'backend/problem-module/list-edit/ListEdit');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (13, '目录编辑', 4, 1, 'folder-edit', 'I', '#', 'Folder', 'backend/problem-module/folder-edit/FolderEdit');
 
 # 二集菜单
 # menu_id 2 用户模块
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (20, '用户管理', 1, 2, 'user-manage', 'I', '#', 'Avatar');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (21, '班级管理', 2, 2, 'class-manage', 'I', '#', 'DataBoard');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (22, '权限管理', 3, 2, 'auth-manage', 'I', '#', 'WarnTriangleFilled');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (23, '角色管理', 4, 2, 'role-manage', 'I', '#', 'WarningFilled');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (20, '用户管理', 1, 2, 'user-manage', 'I', '#', 'Avatar', 'backend/user-module/user-manage/UserManage');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (21, '班级管理', 2, 2, 'class-manage', 'I', '#', 'DataBoard', 'backend/user-module/class-manage/ClassManage');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (22, '权限管理', 3, 2, 'auth-manage', 'I', '#', 'WarnTriangleFilled', 'backend/user-module/auth-manage/AuthManage');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (23, '角色管理', 4, 2, 'role-manage', 'I', '#', 'WarningFilled', 'backend/user-module/role-manage/RoleManage');
 
 
 # 二级菜单
 # menu_id 3 教师功能 teacher
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (30, '用户组', 1, 3, 'my-class', 'I', '#', 'School');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (31, '作业管理', 2, 3, 'homework-manage', 'I', '#', 'Histogram');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (32, '竞赛管理', 3, 3, 'contest-manage', 'I', '#', 'Flag');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (30, '用户组', 1, 3, 'my-class', 'I', '#', 'School', 'backend/teacher/my-class/MyClass');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (31, '作业管理', 2, 3, 'homework-manage', 'I', '#', 'Histogram', 'backend/teacher/homework-manage/HomeworkManage');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (32, '竞赛管理', 3, 3, 'contest-manage', 'I', '#', 'Flag', 'backend/teacher/contest-manage/ContestManage');
 
 
 # menu_id 10 题目编辑
@@ -137,25 +144,25 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (103, '列出题目', 3, 10, '#', 'B', 'problem:problem:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (104, '添加题目', 4, 10, '#', 'B', 'problem:problem:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (105, '删除题目', 5, 10, '#', 'B', 'problem:problem:remove', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (106, '更改题目', 6, 10, '#', 'B', 'problem:problem:update', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (106, '更改题目', 6, 10, '#', 'B', 'problem:problem:edit', '#');
 
 # menu_id 11 标签编辑
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (110, '添加标签', 1, 11, '#', 'B', 'problem:tag:add', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (111, '删除标签', 2, 11, '#', 'B', 'problem:tag:delete', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (112, '更改标签', 3, 11, '#', 'B', 'problem:tag:update', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (111, '删除标签', 2, 11, '#', 'B', 'problem:tag:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (112, '更改标签', 3, 11, '#', 'B', 'problem:tag:edit', '#');
 
 # menu_id 12 题单编辑
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (120, '添加题单', 1, 12, '#', 'B', 'problem:list:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (121, '添加题目', 2, 12, '#', 'B', 'problem:list:add-problem', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (122, '删除题目', 3, 12, '#', 'B', 'problem:list:del-problem', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (123, '删除题单', 4, 12, '#', 'B', 'problem:list:delete', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (124, '修改题单', 5, 12, '#', 'B', 'problem:list:update', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (123, '删除题单', 4, 12, '#', 'B', 'problem:list:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (124, '修改题单', 5, 12, '#', 'B', 'problem:list:edit', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (125, '列出题单', 5, 12, '#', 'B', 'problem:list:list', '#');
 
 # menu_id 13 目录编辑
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (130, '添加目录', 1, 13, '#', 'B', 'problem:folder:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (131, '删除目录', 2, 13, '#', 'B', 'problem:folder:del', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (132, '修改目录', 3, 13, '#', 'B', 'problem:folder:update', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (132, '修改目录', 3, 13, '#', 'B', 'problem:folder:edit', '#');
 
 # menu_id 20
 # 用户管理
@@ -204,13 +211,17 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 
 
 -- ----------------------------
--- 7、用户和角色关联表  用户N-1角色
+-- 7、用户和角色关联表  用户 N-1 角色
 -- ----------------------------
 drop table if exists sys_user_role;
 create table sys_user_role (
     user_id   bigint(20) not null comment '用户ID',
     role_id   bigint(20) not null comment '角色ID',
-    primary key(user_id, role_id)
+    primary key(user_id, role_id),
+    constraint user_role_user_id_pk foreign key sys_user_role(user_id)
+                           references sys_user(user_id),
+    constraint user_role_role_id_pk foreign key sys_user_role(role_id)
+                           references sys_role(role_id)
 ) engine=innodb comment = '用户和角色关联表';
 
 -- ----------------------------
@@ -228,7 +239,12 @@ drop table if exists sys_role_menu;
 create table sys_role_menu (
     role_id   bigint(20) not null comment '角色ID',
     menu_id   bigint(20) not null comment '菜单ID',
-    primary key(role_id, menu_id)
+    primary key(role_id, menu_id),
+    constraint role_menu_menu_id_pk foreign key sys_role_menu(role_id)
+        references sys_role(role_id),
+    constraint role_menu_role_id_pk foreign key sys_role_menu(menu_id)
+        references sys_menu(menu_id)
+
 ) engine=innodb comment = '角色和菜单关联表';
 
 # 超级管理员
@@ -275,7 +291,9 @@ create table user_check_in (
     sign_time       date                   not null,
     current_time_   datetime default now() not null comment '签到当时时间',
     continuity_days int                    not null comment '连续签到天数',
-    unique (user_id, sign_time)
+    unique (user_id, sign_time),
+    constraint check_in_user_id_pk foreign key user_check_in(user_id)
+                           references sys_user(user_id)
 ) engine=innodb comment = '签到记录表';
 
 

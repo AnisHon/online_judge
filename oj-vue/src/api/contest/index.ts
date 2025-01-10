@@ -4,7 +4,7 @@ import {
 import {get, getWithParams, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, pagedFetch, removeAll, update} from "@/utils/simpleCRUD";
+import {add, pagedFetch, remove, update} from "@/utils/simpleCRUD";
 import type {UserView} from "@/api/user";
 
 enum ContestAuth {
@@ -124,7 +124,7 @@ const debouncedIsJoined = (success: successCallback<boolean>) => {
 
 
 const removeContest = async (id: number | number[]) => {
-    await removeAll(id, "/problem-api/contest");
+    await remove(id, "/problem-api/contest");
 }
 
 

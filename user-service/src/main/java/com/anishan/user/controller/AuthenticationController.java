@@ -33,7 +33,7 @@ public class AuthenticationController {
     private final SysUserService sysUserService;
 
 
-    @GetMapping("/reset-to-default/{id}")
+    @PutMapping("/resetToDefault/{id}")
     @ApiOperation("重制用户密码")
     @PreAuthorize("hasAuthority('user:user:edit')")
     public R<Boolean> reset(@PathVariable @NotNull Long id) {
@@ -86,7 +86,7 @@ public class AuthenticationController {
     }
 
 
-    @PostMapping("/reset-pass")
+    @PutMapping("/reset-pass")
     @ApiOperation("重制密码，重新设置密码")
     public R<AuthResultVo> resetPass(@RequestBody @Validated PasswordResetRequest passwordResetRequest) {
         AuthResultVo authResultVo = authenticationService.resetPassword(
@@ -115,7 +115,7 @@ public class AuthenticationController {
     }
 
 
-    @PostMapping("/reset-email")
+    @PutMapping("/reset-email")
     @ApiOperation("重制邮箱")
     public R<AuthResultVo> resetEmail(@RequestBody @Validated EmailResetRequest emailResetRequest) {
         AuthResultVo authResultVo = authenticationService.resetEmail(
@@ -158,15 +158,15 @@ public class AuthenticationController {
         return R.success(captchaCodeVo);
     }
 
-    @GetMapping("/ban/{id}")
+    @PutMapping("/ban/{ids}")
     @ApiOperation("封禁用户")
     @PreAuthorize("hasAuthority('user:auth:ban')")
-    public R<String> ban(@PathVariable @NotNull @ApiParam(value = "用户id", required = true) Long id) {
-        String ban = authenticationService.ban(id);
+    public R<String> ban(@PathVariable @NotNull @ApiParam(value = "用户id", required = true) List<Long> ids) {
+        String ban = authenticationService.ban(ids);
         return R.success(ban);
     }
 
-    @GetMapping("/unban/{id}")
+    @PutMapping("/unban/{id}")
     @ApiOperation("解封用户")
     @PreAuthorize("hasAuthority('user:auth:unban')")
     public R<String> unban(@PathVariable @NotNull @ApiParam(value = "用户id", required = true) Long id) {

@@ -1,10 +1,11 @@
 import type {PagedResponse, PagedType, SortedPagedType,} from "@/api/pagedType";
-import {get, getWithParams, post, type successCallback} from "@/utils/http";
+import {get, getWithParams, post, put, type successCallback} from "@/utils/http";
 import __, {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, simpleGet, update} from "@/utils/simpleCRUD";
 import type {Ref} from "vue";
 import {useUserStore} from "@/stores/useUserStore";
+import {ElNotification} from "element-plus";
 
 enum UserStatus {
     NORMAL,
@@ -67,11 +68,11 @@ interface QueryRoleUser extends PagedType{
 const dict = {
     userStatus: [
         {
-            value: 0,
+            value: UserStatus.NORMAL,
             label: "正常"
         },
         {
-            value: 1,
+            value: UserStatus.BANNED,
             label: "封禁"
         }
     ],
@@ -82,22 +83,37 @@ const rank = async (limit: number) => {
     return data;
 }
 
+
+
 const removeUser = async (id: number | number[]) => {
-    await remove(id, "/user-api/user/removeBatch", "/user-api/user/remove");
+    await remove(id,  "/user-api/user");
 }
 
-const resetToDefault = async (id: number) => {
-    await simpleGet(id, "/user-api/auth/reset-to-default", "重制成功", "重制失败");
+export const banUser = async (id: number | number[]) => {
+    const {data} = await put("/user-api/auth/ban/" + id, undefined);
+    if (data) {
+        ElNotification.success("封禁成功")
+    } else {
+        ElNotification.warning("封禁失败")
+    }
 }
 
-const debouncedReset = (id: Ref<number>, success: successCallback<void>) => {
-    const {loading, isLoading, finish} = useLoading()
-    const add = debounce(() => {
-        resetToDefault(id.value)
-            .then(success)
-            .finally(finish);
-    }, 1000);
-    return {loading, isLoading, add};
+export const unbanUser = async (id: number) => {
+    const {data} = await put("/user-api/auth/unban/" + id, undefined);
+    if (data) {
+        ElNotification.success("解封成功")
+    } else {
+        ElNotification.warning("解封失败")
+    }
+}
+
+export const resetToDefault = async (id: number) => {
+    const {data} = await put("/user-api/auth/resetToDefault/" + id, undefined);
+    if (data) {
+        ElNotification.success("重置成功")
+    } else {
+        ElNotification.warning("重置失败")
+    }
 }
 
 
@@ -195,7 +211,6 @@ export {
     debouncedUpdateUser,
     getRoleUser,
     debouncedGetRoleUser,
-    debouncedReset,
     UserStatus,
     rank,
     change,

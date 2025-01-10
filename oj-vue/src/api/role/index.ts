@@ -1,8 +1,9 @@
 import type {PagedResponse, SortedPagedType,} from "@/api/pagedType";
-import {del, get, type successCallback} from "@/utils/http";
+import {del, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, fetch, postedRemove, putRemove, remove, removeAll, update} from "@/utils/simpleCRUD";
+import {add, fetch, putRemove, remove, update} from "@/utils/simpleCRUD";
+import {ElNotification} from "element-plus";
 
 enum RoleStatus {
     NORMAL,
@@ -50,14 +51,14 @@ const dict = {
 };
 
 const removeRole = async (id: number | number[]) => {
-    await removeAll(id, "/user-api/role");
+    await remove(id, "/user-api/role");
 }
 
 
-const refresh = async () => {
+const refreshRoleCache = async () => {
     await del("/user-api/role/refresh")
-        .then(() => ElMessage.success("刷新成功"))
-        .catch(() => ElMessage.warning("刷新失败"));
+        .then(() => ElNotification.success("刷新成功"))
+        .catch(() => ElNotification.warning("刷新失败"));
 }
 
 const addRole = async (form: RoleForm) => {
@@ -140,7 +141,7 @@ export {
     debouncedUpdateRole,
     debouncedGrant,
     RoleStatus,
-    refresh,
+    refreshRoleCache,
     revoke,
     dict
 }

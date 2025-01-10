@@ -40,6 +40,9 @@ public class MenuVo {
     @ApiModelProperty("菜单图标")
     private String icon;
 
+    @ApiModelProperty("组件路径")
+    private String component;
+
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @ApiModelProperty("创建时间")

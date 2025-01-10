@@ -30,6 +30,9 @@ public class MenuDto {
     @ApiModelProperty("路由路径")
     private String router;
 
+    @ApiModelProperty("组件路径")
+    private String component;
+
     @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("菜单类型（I菜单项item M菜单栏MenuBar B按钮）")
     private MenuType menuType;

@@ -38,7 +38,8 @@
             menu.menu_id as menu_id,
             menu_name, parent_id, order_num,
             router, menu_type, perms,
-            icon, create_time, update_time,
+            icon, component,
+            create_time, update_time,
             remark
         from (select
              menu_id
@@ -60,8 +61,8 @@
         menu.menu_id as menu_id,
         menu_name, parent_id, order_num,
         router, menu_type, perms,
-        icon, create_time, update_time,
-        remark
+        component, icon, create_time,
+        update_time, remark
         from (select
         menu_id
         from sys_role_menu
