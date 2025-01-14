@@ -16,7 +16,7 @@
           <router-view>
             <template v-slot="{Component}">
               <transition name="fade-transform" mode="out-in">
-                <keep-alive :max="10">
+                <keep-alive :max="10" :include="includeRoutes" :exclude="excludeRoutes">
                   <component :is="Component" />
                 </keep-alive>
               </transition>
@@ -36,14 +36,32 @@
 
 <script setup lang="ts">
 import BackendMenu from "@/components/BackendMenu/BackendMenu.vue";
-import {provide, ref} from "vue";
+import {computed, provide, ref} from "vue";
 import HeaderBar from "@/components/HeaderBar/HeaderBar.vue";
 import type {ElMain} from "element-plus";
 import CustomTab from "@/components/CustomTab/CustomTab.vue";
+import {useTabStore} from "@/stores/useTabStore.ts";
+import {useRouter} from "vue-router";
+
+const router = useRouter();
+
+const tabStore = useTabStore();
 
 const collapse = ref(true);
 
+const includeRoutes = computed(() => {
+  return tabStore.getTabs().value.map(tab => tab.component).filter(tab => tab);
+});
+
+const excludeRoutes = computed((): string[] => {
+  return <string[]>router
+      .getRoutes()
+      .filter(route => !!route.meta?.noKeepAlive)
+      .map(route => route.meta.component);
+})
+
 const elMainRef = ref<InstanceType<typeof ElMain>>();
+
 provide('elMain', {elMainRef: elMainRef});
 
 

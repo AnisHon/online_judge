@@ -3,7 +3,6 @@ package com.anishan.user.service.impl;
 import cn.hutool.captcha.AbstractCaptcha;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
-import com.anishan.api.client.gojudge.enumeration.Status;
 import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.enumeration.UserState;
@@ -18,9 +17,7 @@ import com.anishan.user.service.*;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.user.util.EmailSender;
 import com.anishan.user.util.RoleUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.toolkit.Db;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,8 +79,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         authUtil.cacheLoginUser(loginUser);
         String token = AuthUtil.createToken(loginUser.getUser().getUserId());
         // todo 后期用于白名单
-        authUtil.cacheToken(loginUser.getUser().getUserId(), token);
-
+        authUtil.cacheToken(token);
         return token;
     }
 
@@ -369,14 +365,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(Long id) {
-        authUtil.removeUser(id);
-    }
-
-    @Override
-    public void logout() {
-        Long userId = me().getUserId();
-        logout(userId);
+    public void logout(Long id, String token) {
+        authUtil.removeUser(id, token);
     }
 
     private List<Long> getRoleIdsByUserId(Long userId) {

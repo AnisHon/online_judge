@@ -32,15 +32,13 @@
 //@ts-nocheck
 import {Coin} from "@element-plus/icons-vue";
 
-
-import {SseEvent, useSse} from "@/stores/useSse.ts";
 import DrawerContent from "@/components/FloatingBall/DrawerContent.vue";
+import {initSSE, onSse, SseEvent} from "@/utils/sse";
 
 export default {
   components: {DrawerContent, Coin},
   data() {
     return {
-      sse: useSse(),
       position: { x: window.innerWidth - 150, y: window.innerHeight / 2 },
       drawerVisible: false,
       isDragging: false,
@@ -92,25 +90,14 @@ export default {
       this.isDragged = false;
 
     },
-    handleBeforeUnload(event) {
-      this.sse.closeAllConnections();
-      return "123"; // 旧版浏览器
+    changePoint(point) {
+      this.point = point.point;
     }
 
   },
   mounted() {
-    this.sse.initSSE("/user-api/sse")
-    this.sse.on(SseEvent.UPDATE_POINT, (data) => {
-     this.point = data.point
-    })
-    window.addEventListener('beforeunload', this.handleBeforeUnload);
-  },
-  unmounted() {
-    this.sse.close("/user-api/sse")
-  },
-  beforeDestroy() {
-    window.removeEventListener('beforeunload', this.handleBeforeUnload);
-
+    initSSE("/user-api/sse")
+    onSse(SseEvent.UPDATE_POINT, this.changePoint)
   },
 
 

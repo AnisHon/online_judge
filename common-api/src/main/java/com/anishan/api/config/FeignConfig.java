@@ -18,12 +18,10 @@ public class FeignConfig {
         return Logger.Level.FULL;
     }
 
-
-
-
     @Bean
     public RequestInterceptor userInfoRequestInterceptor(){
         return template -> {
+
             // 获取登录用户
             LoginUser loginUser = AuthUtil.getNonThrowUser();
 

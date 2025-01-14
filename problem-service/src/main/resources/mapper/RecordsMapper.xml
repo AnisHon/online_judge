@@ -21,10 +21,7 @@
         <result property="wrongNum" column="wrong_num"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        record_id,contest_id,user_id,
-        problem_id,score,answer
-    </sql>
+
     <select id="statistic" resultMap="statisticResultMap">
         select p.problem_id              as problem_id,
                p.title                   as title,

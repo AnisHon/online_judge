@@ -1,0 +1,21 @@
+server:
+  port: 8088
+spring:
+  config:
+    name: content-service
+
+
+
+
+oj:
+  db:
+    database: db_content
+
+  knife4j:
+    resource: com.anishan.content
+
+  minio:
+    url: http://localhost:9000
+    access-key: change-this-object-storage-access-key
+    secret-key: change-this-object-storage-password
+    bucket-name: uploads

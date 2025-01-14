@@ -5,8 +5,6 @@ spring:
     name: problem-service
 
 
-
-
 oj:
   db:
     database: db_problem

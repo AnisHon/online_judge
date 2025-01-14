@@ -101,7 +101,7 @@ const debouncedGetRole = (queryData: QueryRole, success: successCallback<PagedRe
         getRole(queryData)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 

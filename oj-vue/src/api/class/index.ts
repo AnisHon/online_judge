@@ -69,7 +69,7 @@ const debouncedGetClass = (queryData: QueryClass, success: successCallback<Paged
         getClass(queryData)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 

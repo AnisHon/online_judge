@@ -62,7 +62,7 @@ const debouncedGetTag = (success: successCallback<TagView[]>) => {
         getTag()
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 

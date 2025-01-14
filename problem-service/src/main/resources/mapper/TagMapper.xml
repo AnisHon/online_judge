@@ -13,8 +13,4 @@
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        tag_id,tag_name,tag_color,
-        create_time,update_time,del_flag
-    </sql>
 </mapper>

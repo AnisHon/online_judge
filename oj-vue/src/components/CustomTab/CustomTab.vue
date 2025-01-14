@@ -4,7 +4,8 @@
         v-model="editableTabsValue"
         type="card"
         class="tabs"
-        @tab-remove="tabStore.removeTab"
+        @tab-remove="onTabRemove"
+        @tab-change="onTabChange"
     >
       <el-tab-pane
           v-for="item in editableTabs"
@@ -14,6 +15,8 @@
           :closable="item.closable"
           lazy
       />
+
+
     </el-tabs>
   </div>
 
@@ -41,14 +44,17 @@ const setTabs = () => {
   tabStore.open(name, title);
 }
 
-// const onTabChange = (targetName: string) => {
-//   router.push({name: targetName})
-// }
+const onTabRemove = (targetName: string) => {
+  const active = tabStore.removeTab(targetName);
+  onTabChange(active);
+}
 
-watch(() => route.name, setTabs, { immediate: true });
-watch(editableTabsValue, () => {
-  router.push({name: editableTabsValue.value})
-}, {immediate: true})
+const onTabChange = (targetName: string) => {
+  router.push({name: targetName})
+}
+
+watch(route, setTabs, { immediate: true });
+
 </script>
 
 <style scoped>

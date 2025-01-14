@@ -17,11 +17,7 @@ import java.util.Map;
 @ApiModel("查询获取问题列表")
 @Data
 public class PagedProblemList extends SortedPagedQuery<ProblemList> {
-    private static final Map<String, String> KEY_MAPPING;
 
-    static {
-        KEY_MAPPING = MysqlMappingUtils.mapColumn(PagedProblemList.class);
-    }
     @ApiModelProperty("主键")
     @NotNull(groups = ValidationGroup.Update.class)
     @ConditionColumn(value = "eq")
@@ -32,18 +28,4 @@ public class PagedProblemList extends SortedPagedQuery<ProblemList> {
     @ConditionColumn
     private String listName;
 
-    @Override
-    protected Class<ProblemList> extendedClass() {
-        return ProblemList.class;
-    }
-
-    @Override
-    protected Object extendedObject() {
-        return this;
-    }
-
-    @Override
-    protected Map<String, String> extendedKeyMapping() {
-        return KEY_MAPPING;
-    }
 }

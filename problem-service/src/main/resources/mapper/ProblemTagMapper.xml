@@ -9,7 +9,5 @@
             <id property="tagId" column="tag_id" jdbcType="BIGINT"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        problem_id,tag_id
-    </sql>
+
 </mapper>

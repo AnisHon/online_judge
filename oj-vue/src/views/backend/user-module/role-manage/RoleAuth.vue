@@ -130,7 +130,7 @@ import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {ElMessageBox} from "element-plus";
 import {useRoute, useRouter} from "vue-router";
-import UserViwer from "@/views/user-module/role-manage/user-viewer/UserViwer.vue";
+import UserViwer from "@/views/backend/user-module/role-manage/user-viewer/UserViwer.vue";
 import {debouncedGrant, revoke, type UserRoleRelation} from "@/api/role";
 
 const grantSelectedIds = reactive<number[]>([])

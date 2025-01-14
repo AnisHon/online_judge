@@ -1,6 +1,7 @@
 package com.anishan.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -9,6 +10,7 @@ import com.anishan.api.domain.LoginUser;
 import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.api.util.AuthUtil;
+import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -41,8 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -368,6 +369,23 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     }
 
+    @Override
+    public Map<Long, String> getNikeNameToMap(List<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return Map.of();
+        }
+
+        List<SysUser> sysUsers = this.list(
+                new LambdaQueryWrapper<SysUser>()
+                        .select(SysUser::getUserId, SysUser::getNikeName)
+                        .in(SysUser::getUserId, ids));
+
+        HashMap<Long, String> map = new HashMap<>();
+        for (SysUser sysUser : sysUsers) {
+            map.put(sysUser.getUserId(), sysUser.getNikeName());
+        }
+        return map;
+    }
 
 
 }

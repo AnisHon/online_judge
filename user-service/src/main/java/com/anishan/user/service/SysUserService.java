@@ -11,6 +11,7 @@ import com.anishan.api.client.user.domain.vo.UserVo;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
 * @author anishan
@@ -58,4 +59,6 @@ public interface SysUserService extends IService<SysUser> {
     boolean changeInfo(SysUserInfoDto sysUserDto, Long userId);
 
     UserPoint getPoint(Long userId);
+
+    Map<Long, String> getNikeNameToMap(List<Long> ids);
 }

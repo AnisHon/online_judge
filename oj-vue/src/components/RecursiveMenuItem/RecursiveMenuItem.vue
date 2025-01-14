@@ -10,7 +10,7 @@
   </el-sub-menu>
 
   <el-menu-item v-else :index="route.meta?.path">
-    <el-icon><Component :is="route.meta?.icon"/></el-icon>
+    <el-icon v-if="route.meta?.icon"><Component :is="route.meta?.icon"/></el-icon>
     <span>{{ route.meta?.name }}</span>
   </el-menu-item>
 

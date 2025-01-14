@@ -1,9 +1,11 @@
 <template>
   <div class="app-container">
-    <router-view/>
+    <SetEmail />
+    <router-view />
   </div>
 </template>
 <script setup lang="ts">
+import SetEmail from "@/components/SetEmail/SetEmail.vue";
 </script>
 
 <style scoped>

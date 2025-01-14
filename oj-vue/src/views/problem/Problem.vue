@@ -99,7 +99,7 @@
 
 import {useRoute} from "vue-router";
 import {computed} from "vue";
-import DetailProblem from "@/components/detail-problem/DetailProblem.vue";
+import DetailProblem from "@/components/DetailProblem/DetailProblem.vue";
 
 
 

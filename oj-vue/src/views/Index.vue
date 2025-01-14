@@ -1,6 +1,5 @@
 <template>
   <div class="index">
-
     <el-carousel class="carousel" autoplay height="607px">
       <el-carousel-item v-for="item of data">
         <div class="carousel-content">

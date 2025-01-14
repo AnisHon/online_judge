@@ -111,7 +111,7 @@
 
 <script lang="ts" setup>
 import {onMounted, reactive, ref} from 'vue'
-import {type FormInstance, type FormRules} from 'element-plus'
+import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode.ts'
 import {forgetPassword} from "@/api/auth/authentication.ts"
 import {sendForgetEmailCode} from "@/api/auth/emailCode.ts";
@@ -185,11 +185,11 @@ const doResetPassword = () => {
     code: forgetPasswordForm.emailCode,
   })
       .then(()  => {
-        ElMessage.success("重设成功")
+        ElNotification.success("重设成功")
         router.push({name: "login"})
       })
       .catch((msg) => {
-        ElMessage.error(msg)
+        ElNotification.error(msg)
         refreshCaptchaCode()
       })
       .finally(() => {
@@ -204,24 +204,24 @@ const submitResetPassword = (formEl: FormInstance | undefined) => {
       isLoading.value = true
       doResetPassword()
     } else {
-      ElMessage.warning("请确认表单")
+      ElNotification.warning("请确认表单")
     }
   })
 }
 
 const sendEmailCode = () => {
   if (forgetPasswordForm.captchaCode === '') {
-    ElMessage.error("请输入验证码")
+    ElNotification.error("请输入验证码")
   } else {
     sendForgetEmailCode({
       captchaCode: forgetPasswordForm.captchaCode,
       username: forgetPasswordForm.username,
       captchaToken: forgetPasswordForm.token,
     }).then(() => {
-      ElMessage.success("发送成功")
+      ElNotification.success("发送成功")
     }).catch((message) => {
       refreshCaptchaCode()
-      ElMessage.warning(message)
+      ElNotification.warning(message)
     })
   }
 }

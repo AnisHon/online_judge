@@ -11,10 +11,6 @@
             <result property="score" column="score" jdbcType="DECIMAL"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        list_id,problem_id,problem_order,
-        score
-    </sql>
     <delete id="deleteBatch">
         delete from problem_problem_list
         where (problem_id, list_id) in

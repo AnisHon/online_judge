@@ -11,12 +11,102 @@ import 'nprogress/nprogress.css'
 import {useToken} from "@/stores/useToken";
 import Home from "@/views/Home.vue";
 import __ from "lodash";
-import {useTabStore} from "@/stores/useTabStore.ts";
 
 // index不是home
 // index不是home
 // index不是home
-
+export const constMenu = [
+  {
+    path: "home",
+    name: "home",
+    component: Home,
+    meta: {
+      name: "首页",
+      icon: "HomeFilled",
+      path: "/home"
+    }
+  },
+  {
+    path: "problems",
+    name: "problems",
+    component: () => import('@/views/problem/ProblemSet.vue'),
+    meta: {
+      name: "题库",
+      icon: "Document",
+      path: "/problems"
+    }
+  },
+  {
+    path: "contest",
+    name: "contest",
+    component: () => import('@/views/contest/Contest.vue'),
+    meta: {
+      name: "比赛",
+      icon: "DataBoard",
+      path: "/contest"
+    }
+  },
+  {
+    path: "list",
+    name: "list",
+    component: () => import('@/views/list/List.vue'),
+    meta: {
+      name: "题单",
+      icon: "List",
+      path: "/list"
+    }
+  },
+  {
+    path: "homework",
+    name: "homework",
+    component: () => import('@/views/homework/Homework.vue'),
+    meta: {
+      name: "作业",
+      icon: "Notebook",
+      path: "/homework"
+    }
+  },
+  {
+    path: "solutions",
+    name: "solutions",
+    component: () => import('@/views/solutions/solutions.vue'),
+    meta: {
+      name: "题解",
+      icon: "EditPen",
+      path: "/solutions"
+    }
+  },
+  {
+    path: "check-in",
+    name: "check-in",
+    component: () => import('@/views/check-in/CheckIn.vue'),
+    meta: {
+      name: "签到",
+      icon: "CircleCheckFilled",
+      path: "/check-in"
+    }
+  },
+  {
+    path: "notification",
+    name: "notification",
+    component: () => import('@/views/notification/Notification.vue'),
+    meta: {
+      name: "公告",
+      icon: "Notification",
+      path: "/notification"
+    }
+  },
+  {
+    path: "materials",
+    name: "materials",
+    component: () => import('@/views/materials/Materials.vue'),
+    meta: {
+      name: "资料",
+      icon: "FolderOpened",
+      path: "/materials"
+    }
+  }
+]
 
 // 固定公共路由
 export const constRoutes =  [
@@ -62,67 +152,11 @@ export const constRoutes =  [
     },
     children: [
       {
-        path: "home",
-        name: "home",
-        component: Home,
-        meta: {
-          name: "首页",
-        }
-      },
-      {
-        path: "problems",
-        name: "problems",
-        component: () => import('@/views/problem/ProblemSet.vue'),
-        meta: {
-          name: "题库"
-        }
-      },
-      {
         path: "problem/:id",
         name: "problem",
         component: () => import('@/views/problem/Problem.vue'),
         meta: {
-          name: "题目详情"
-        }
-      },
-      {
-        path: "contest",
-        name: "contest",
-        component: () => import('@/views/contest/Contest.vue'),
-        meta: {
-          name: "比赛"
-        }
-      },
-      {
-        path: "contest-problems/:id",
-        name: "contest-problems",
-        component: () => import('@/views/contest/ContestProblems.vue'),
-        meta: {
-          name: "进入"
-        }
-      },
-      {
-        path: "list",
-        name: "list",
-        component: () => import('@/views/list/List.vue'),
-        meta: {
-          name: "列表"
-        }
-      },
-      {
-        path: "homework",
-        name: "homework",
-        component: () => import('@/views/homework/Homework.vue'),
-        meta: {
-          name: "作业"
-        }
-      },
-      {
-        path: "check-in",
-        name: "check-in",
-        component: () => import('@/views/check-in/CheckIn.vue'),
-        meta: {
-          name: "签到"
+          name: "题目详情",
         }
       },
       {
@@ -132,7 +166,32 @@ export const constRoutes =  [
         meta: {
           name: "设置"
         }
-      }
+      },
+      {
+        path: "contest/problems/:id",
+        name: "contest-problems",
+        component: () => import('@/views/contest/ContestProblems.vue'),
+        meta: {
+          name: "比赛中"
+        }
+      },
+      {
+        path: "solution/:id",
+        name: "solution",
+        component: () => import('@/views/solutions/solution/solution.vue'),
+        meta: {
+          name: "题解详情"
+        }
+      },
+      {
+        path: "solution/edit",
+        name: "solution_edit",
+        component: () => import('@/views/solutions/edit-solution/EditSolution.vue'),
+        meta: {
+          name: "题解编辑"
+        }
+      },
+      ...constMenu
     ]
   },
   {
@@ -173,13 +232,13 @@ const router = createRouter({
 
 
 
-const loginGuard = (isMatched: boolean, needLogin: boolean, isLoginAccess: boolean, next: NavigationGuardNext) => {
+const loginGuard = (isMatched: boolean, needLogin: boolean, isLoginAccess: boolean, next: NavigationGuardNext, to: RouteLocationNormalizedGeneric) => {
   if (!isMatched) {
     next({name: '404', replace: true})
   } else if (!needLogin && !isLoginAccess) {
     next({name: '403', replace: true})
   } else {
-    next()
+    next();
   }
 }
 
@@ -198,13 +257,14 @@ router.beforeEach((to, from, next) => {
   if (token.hasToken()) {
     // 已经登陆
     if (!menu.isDynamicReady()) {
+
       // 动态路由没有加载成功，加载路由
       loadDynamicRoutes().then(() => {
         next({ ...to, replace: true })
       })
 
     } else {
-      loginGuard(isMatched, needLogin, isLoginAccess, next);
+      loginGuard(isMatched, needLogin, isLoginAccess, next, to);
     }
 
   } else {
@@ -218,7 +278,10 @@ router.beforeEach((to, from, next) => {
 
 });
 
-router.afterEach(() => {
+router.afterEach((to) => {
+
+  document.title = <string>to.meta?.name || "OJ平台"
+
   try {
     NProgress.done();
   } catch (ignore) {}

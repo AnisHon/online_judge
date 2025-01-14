@@ -13,9 +13,5 @@
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        list_id,list_name,description,
-        create_time,update_time,del_flag
-    </sql>
 
 </mapper>

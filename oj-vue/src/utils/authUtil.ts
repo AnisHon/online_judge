@@ -18,3 +18,14 @@ export const hasPerm = (perm: string | string[] | undefined): boolean => {
 
     return result;
 }
+
+
+export const isUserIdEqual = (id: number | undefined): boolean => {
+    const userStore = useUserStore();
+
+    if (id === null || !userStore.user?.userId) {
+        return false;
+    }
+
+    return userStore.user.userId === id;
+}

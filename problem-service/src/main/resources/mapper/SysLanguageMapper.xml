@@ -14,9 +14,5 @@
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        language_id,language_name,compile_command,
-        seq,gmt_create,gmt_modified,
-        del_flag
-    </sql>
+
 </mapper>

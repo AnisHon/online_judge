@@ -7,8 +7,12 @@
       <el-main ref="elMainRef" id="main-box" style="box-sizing: border-box; height: var(--content-height);">
         <div>
           <router-view v-slot="{Component}">
+
             <transition name="el-zoom-in-top" mode="out-in">
-              <component :is="Component" />
+              <keep-alive include="Home,ProblemSet,Contest,List,Homework,Solution">
+                <component :is="Component" />
+              </keep-alive>
+
             </transition>
 
           </router-view>

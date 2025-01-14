@@ -44,7 +44,7 @@ const debouncedGetTreedFolder = (success: successCallback<TreedFolderView[]>) =>
         getTreedFolderView()
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 
@@ -103,7 +103,8 @@ const debouncedGetFolder = (success: successCallback<FolderView[]>) => {
         getFolder()
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500
+    );
     return {loading, isLoading, get};
 }
 

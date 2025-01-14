@@ -73,11 +73,12 @@
 
 <script lang="ts" setup>
 import {onMounted, reactive, ref} from 'vue'
-import {type FormInstance, type FormRules} from 'element-plus'
+import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode.ts'
 import {login} from "@/api/auth/authentication.ts"
 import {type LoginForm} from "@/api/auth/authentication.ts"
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
+import router from "@/router";
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
@@ -120,10 +121,10 @@ const rules = reactive<FormRules<typeof loginForm>>({
 const doLogin = () => {
   login(loginForm)
       .then(()  => {
-        ElMessage.success("欢迎登录")
+        ElNotification.success("欢迎登录")
       })
       .catch((msg) => {
-        ElMessage.error(msg)
+        ElNotification.error(msg)
         refreshCaptchaCode()
       })
       .finally(() => {
@@ -138,7 +139,7 @@ const submitLogin = (formEl: FormInstance | undefined) => {
       isLoading.value = true
       doLogin()
     } else {
-      ElMessage.warning("请确认表单")
+      ElNotification.warning("请确认表单")
     }
   })
 }

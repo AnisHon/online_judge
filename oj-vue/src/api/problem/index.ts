@@ -177,6 +177,11 @@ interface ProblemForm {
     cases: OjCase[];
 }
 
+export const countProblems = async (): Promise<number> => {
+    const {data} = await get<number>("/problem-api/problem/count")
+    return data
+}
+
 async function getProblemsAdmin(queryProblem: AdminQueryProblem): Promise<PagedResponse<ProblemView>> {
     const {data} =
         await getWithParams<PagedResponse<ProblemView>, AdminQueryProblem>("/problem-api/problem/listAll", queryProblem);
@@ -189,7 +194,7 @@ const debouncedGetProblem = (queryData: AdminQueryProblem, success: successCallb
         getProblemsAdmin(queryData)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 

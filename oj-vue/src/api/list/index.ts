@@ -86,7 +86,7 @@ const debouncedFetchProblemsNotInList = (problemParam: ListProblemQuery, success
 
 async function getProblemsAdmin(listId: number) {
     const {data} =
-        await get<ProblemView[], number>("/problem-api/list/get-problems", listId);
+        await get<ProblemView[], number>("/problem-api/list/getProblems", listId);
     return data;
 }
 
@@ -117,7 +117,7 @@ const debouncedGetProblem = (listId: number, success: successCallback<ProblemVie
         getProblemsAdmin(listId)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 
@@ -171,7 +171,7 @@ const debouncedGetList = (queryData: QueryList, success: successCallback<PagedRe
         getList(queryData)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 

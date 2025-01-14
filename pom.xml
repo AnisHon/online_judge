@@ -15,6 +15,7 @@
         <module>common-api</module>
         <module>problem-service</module>
         <module>judge-server</module>
+        <module>content-service</module>
     </modules>
 
     <parent>
@@ -35,23 +36,33 @@
         <spring-cloud.version>2021.0.3</spring-cloud.version>
         <spring-cloud-alibaba.version>2021.0.4.0</spring-cloud-alibaba.version>
         <jakarta.mail-api>2.1.2</jakarta.mail-api>
-        <openfeign.okhttp.version>13.2.1</openfeign.okhttp.version>
+        <openfeign.okhttp.version>11.10</openfeign.okhttp.version>
         <skipTests>true</skipTests>
+        <minio.version>8.5.2</minio.version>
+        <com.squareup.okhttp.version>4.12.0</com.squareup.okhttp.version>
     </properties>
-
-
-
-
 
     <dependencyManagement>
         <dependencies>
+            <!-- https://mvnrepository.com/artifact/io.minio/minio -->
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-starter-openfeign</artifactId>
                 <version>3.1.3</version>
             </dependency>
-            <!--        openFeign-->
+
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${com.squareup.okhttp.version}</version>
+            </dependency>
+
             <!--负载均衡器-->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -63,7 +74,7 @@
             <dependency>
                 <groupId>io.github.openfeign</groupId>
                 <artifactId>feign-okhttp</artifactId>
-                <version>11.10</version>
+                <version>${openfeign.okhttp.version}</version>
             </dependency>
 
             <dependency>

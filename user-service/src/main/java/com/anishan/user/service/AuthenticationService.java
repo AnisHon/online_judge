@@ -45,10 +45,7 @@ public interface AuthenticationService {
     // 解封
     String unban(Long id);
 
-
-    void logout(Long id);
-
-    void logout();
+    void logout(Long userId, String token);
 
     List<MenuVo> getAuths();
 

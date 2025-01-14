@@ -13,8 +13,5 @@
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        folder_id,folder_name,folder_type,
-        parent_id,list_id,del_flag
-    </sql>
+
 </mapper>

@@ -218,13 +218,15 @@ import {
   debouncedAdminGetProblem, debouncedUpdateProblem, dict, type OjCase,
   type ProblemForm, ProblemType,
 } from "@/api/problem";
-import ProblemReviewer from "@/views/problem-module/problem-edit/problem-reviewer/ProblemReviewer.vue";
+import ProblemReviewer from "@/views/backend/problem-module/problem-edit/problem-reviewer/ProblemReviewer.vue";
 import {numberToLetter} from "@/utils/stringUtils";
 import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
-
-
+import {useTabStore} from "@/stores/useTabStore.ts";
 
 const route = useRoute();
+const router = useRouter();
+const tabStore = useTabStore();
+
 
 const problemId = computed(() => {
   if (route.query.id) {
@@ -292,9 +294,11 @@ const isFillProblem = computed(() => {
 
 
 
-const router = useRouter();
-const back = () => {
-  router.push({name: "problem-edit"});
+
+const back = async () => {
+  const name = <string>route.name;
+  await router.push({name: "problem-edit"});
+  tabStore.removeTab(name)
 }
 
 const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateProblem(problem, () => {})
@@ -396,11 +400,6 @@ if (isAdd.value) {
     problem.choices.length = 0;
   })
 }
-
-
-
-
-
 </script>
 
 

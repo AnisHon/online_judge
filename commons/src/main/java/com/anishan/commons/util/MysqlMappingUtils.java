@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+
 
 public class MysqlMappingUtils {
     /**
@@ -58,21 +58,25 @@ public class MysqlMappingUtils {
     /**
      * 生成Wrapper，专门用于多条件查询，查找非Null，只会针对有ConditionColumn注解的成员
      * @param t 参数类对象
-     * @param type 用与获取实体类类型
      * @return 返回一个构建好的Wrapper
      * @param <T> 参数的类类型
      * @param <K> 最终结果的实体类类型
      */
-    public static <T, K> Wrapper<K> buildWrapper(T t, Class<K> type) {
+    public static <T, K> Wrapper<K> buildWrapper(T t, QueryWrapper<K> queryWrapper) {
 
         Class<?> clazz = t.getClass();
         Field[] declaredFields = clazz.getDeclaredFields();
 
-        return doBuildWrapper(declaredFields, t);
+        if (queryWrapper == null) {
+            queryWrapper = new QueryWrapper<>();
+        }
+
+
+        return doBuildWrapper(declaredFields, t, queryWrapper);
     }
 
-    private static <T> Wrapper<T> doBuildWrapper(Field[] declaredFields, Object obj) {
-        QueryWrapper<T> queryWrapper = new QueryWrapper<>();
+    private static <T> Wrapper<T> doBuildWrapper(Field[] declaredFields, Object obj,  QueryWrapper<T> queryWrapper) {
+
         // 遍历成员
         for (Field declaredField : declaredFields) {
             declaredField.setAccessible(true);

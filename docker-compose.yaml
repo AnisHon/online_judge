@@ -48,6 +48,23 @@ services:
       - default
       - oj-net
 
+  oj-minio:
+    image: minio/minio
+    container_name: oj-minio
+    command: server /data --console-address ":9090"
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - /opt/minio/data:/data
+      - /opt/minio/config:/root/.minio
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=change-this-object-storage-password
+    restart: always
+    networks:
+      - default
+      - oj-net
 
   oj-nacos:
     image: nacos/nacos-server
@@ -64,13 +81,31 @@ services:
       - PREFER_HOST_MODE=hostname
       - MODE=standalone
       - SPRING_DATASOURCE_PLATFORM=mysql
-#      todo
       - MYSQL_SERVICE_HOST=oj-mysql
       - MYSQL_SERVICE_DB_NAME=nacos
       - MYSQL_SERVICE_PORT=3306
       - MYSQL_SERVICE_USER=root
       - MYSQL_SERVICE_PASSWORD=change-this-db-password
     restart: always
+    privileged: true
+    networks:
+      - default
+      - oj-net
+
+  oj-sandbox:
+    build:
+      context: resources/sandbox
+      dockerfile: Dockerfile
+      network: host
+    command:
+      - "--addr-http=0.0.0.0:5050"
+    container_name: oj-sandbox
+#    depends_on:
+#      - oj-minio
+    privileged: true
+    shm_size: 256
+    ports:
+      - "5050:5050"
     networks:
       - default
       - oj-net
@@ -80,14 +115,14 @@ services:
       context: judge-server
       dockerfile: Dockerfile
     container_name: judge-server
-    ports:
-      - "5050:5050"
     depends_on:
       - oj-nacos
       - oj-redis
+      - oj-sandbox
     restart: always
     privileged: true
     environment:
+      - JUDGE_URL=oj-sandbox:5050
       - NACOS_URL=oj-nacos:8848
       - DB_HOST=oj-mysql
       - REDIS_HOST=oj-redis
@@ -98,7 +133,6 @@ services:
       - MQ_CONCURRENCY=6
       - MQ_MAX_CONCURRENCY=12
       - GIN_MODE=release
-
     networks:
       - default
       - oj-net

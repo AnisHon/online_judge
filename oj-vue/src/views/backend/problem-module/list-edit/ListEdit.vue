@@ -69,14 +69,14 @@
               type="primary"
               icon="edit"
               @click="handleUpdate(scope.row)"
-              v-has="'problem:list:update'"
+              v-has="'problem:list:edit'"
           >修改</el-link>
           <el-link
               size="small"
               type="primary"
               icon="delete"
               @click="handleDelete(scope.row)"
-              v-has="'problem:list:delete'"
+              v-has="'problem:list:remove'"
           >删除</el-link>
           <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
                        v-has-any="['problem:list:add-problem', 'problem:list:del-problem', 'problem:problem:list'] ">

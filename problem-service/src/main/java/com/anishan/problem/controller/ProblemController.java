@@ -176,6 +176,13 @@ public class ProblemController {
         return paged.toR();
     }
 
+    @GetMapping("/count")
+    @ApiOperation("当前题目总数")
+    @PreAuthorize("hasAuthority('problem:problem:list')")
+    public R<Long> count() {
+        return R.success(problemService.count());
+    }
+
 
 
 

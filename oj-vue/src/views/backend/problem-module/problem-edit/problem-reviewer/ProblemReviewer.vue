@@ -61,9 +61,9 @@ import {computed, reactive} from "vue";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {type JudgeForm} from "@/api/problem/judge";
 import OnlineJudgeProblemReviewer
-  from "@/views/problem-module/problem-edit/problem-reviewer/OnlineJudgeProblemReviewer.vue";
-import FillBlankReviewer from "@/views/problem-module/problem-edit/problem-reviewer/FillBlankReviewer.vue";
-import ChoiceChooseReviewer from "@/views/problem-module/problem-edit/problem-reviewer/ChoiceChooseReviewer.vue";
+  from "@/views/backend/problem-module/problem-edit/problem-reviewer/OnlineJudgeProblemReviewer.vue";
+import FillBlankReviewer from "@/views/backend/problem-module/problem-edit/problem-reviewer/FillBlankReviewer.vue";
+import ChoiceChooseReviewer from "@/views/backend/problem-module/problem-edit/problem-reviewer/ChoiceChooseReviewer.vue";
 
 const route = useRoute();
 

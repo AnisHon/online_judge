@@ -78,11 +78,11 @@ service.interceptors.response.use(
         if (error.status == 401) {
             error401();
         } else if (error.status == 400) {
-            ElNotification.error(error.response.data.message);
+            ElNotification.error(error.response?.data?.message);
         } else if (error.status == 404) {
             ElNotification.error("接口404 : " + error.config.url)
         } else {
-            ElNotification.error(error.response.data.message);
+            ElNotification.error(error?.response?.data?.message);
         }
         return error;
     }

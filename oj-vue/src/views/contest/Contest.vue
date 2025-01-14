@@ -96,6 +96,7 @@ import {Calendar, Clock} from "@element-plus/icons-vue";
 import {authTagType, authText, differ, isContestOver, isNotStart} from "@/utils/contest";
 import {useRouter} from "vue-router";
 import {formatDate} from "compatx";
+import {ElNotification} from "element-plus";
 
 
 const router = useRouter();
@@ -132,10 +133,10 @@ const currentContest = ref<ContestView>();
 
 const {post: join} = debouncedJoin(form, (data) => {
   if (data.success) {
-    ElMessage.success("加入成功");
+    ElNotification.success("加入成功");
     enter(currentContest.value!.contestId);
   } else {
-    ElMessage.error(data.message);
+    ElNotification.error(data.message);
   }
   open.value = false;
   enter(currentContest.value!.contestId);
@@ -148,13 +149,13 @@ const submit = () => {
 const {isLoading: isJoinedLoading, loading: joinedLoading, get: joinedGet} = debouncedIsJoined((success) => {
   // 比赛结束且未参加，不允许进入
   if (isContestOver(currentContest.value!.endTime) && !success) {
-    ElMessage.warning("您未参加该场比赛");
+    ElNotification.warning("您未参加该场比赛");
     return;
   }
 
   // 无论是否结束已经参加，直接进入
   if (success) {
-    ElMessage.success("已加入，进入比赛");
+    ElNotification.success("已加入，进入比赛");
     enter(currentContest.value!.contestId);
     return;
   }
@@ -167,7 +168,7 @@ const {isLoading: isJoinedLoading, loading: joinedLoading, get: joinedGet} = deb
     // 私有比赛输入密码
     open.value = true;
   } else {
-    ElMessage.warning("白名单赛制，无法参加")
+    ElNotification.warning("白名单赛制，无法参加")
   }
 
 })

@@ -1,147 +1,170 @@
 <template>
   <div v-loading="problemIsLoading">
-    <transition name="el-zoom-in-top">
-      <el-row justify="center" v-if="problem !== undefined" :gutter="20">
-        <el-col class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
-          <div class="header">
-            <h1>{{ problem?.problemVo.title }}</h1>
-            <div class="tags">
-              <el-space v-if="problemType === ProblemType.OJ">
-                <el-tag type="danger">
-                  难度: {{ difficulty }}
-                </el-tag>
-                <el-tag type="info">
-                  空间限制: {{ memoryLimit }}MiB
-                </el-tag>
-                <el-tag type="info">
-                  时间限制: {{ timeLimit }}ms
-                </el-tag>
-                <el-tag type="info">
-                  栈空间限制: {{ stackLimit }}MiB
-                </el-tag>
-              </el-space>
-            </div>
-            <div class="tags">
-              <el-space>
-                <el-tag>
-                  {{ problem?.problemVo.source }}
-                </el-tag>
-                <el-tag>
-                  {{ stringProblemType }}
-                </el-tag>
-                <el-tag v-for="item of problem?.tagVo" :key="item.tagId" :color="item.tagColor">
-                  <span class="common-tag-text-color">
-                    {{ item.tagName }}
-                  </span>
-                </el-tag>
-              </el-space>
-            </div>
-
+    <el-row justify="center" v-if="problem !== undefined" :gutter="20">
+      <el-col class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
+        <div class="header">
+          <h1>{{ problem?.problemVo.title }}</h1>
+          <div class="tags">
+            <el-space v-if="problemType === ProblemType.OJ">
+              <el-tag type="danger">
+                难度: {{ difficulty }}
+              </el-tag>
+              <el-tag type="info">
+                空间限制: {{ memoryLimit }}MiB
+              </el-tag>
+              <el-tag type="info">
+                时间限制: {{ timeLimit }}ms
+              </el-tag>
+              <el-tag type="info">
+                栈空间限制: {{ stackLimit }}MiB
+              </el-tag>
+            </el-space>
+          </div>
+          <div class="tags">
+            <el-space>
+              <el-tag>
+                {{ problem?.problemVo.source }}
+              </el-tag>
+              <el-tag>
+                {{ stringProblemType }}
+              </el-tag>
+              <el-tag v-for="item of problem?.tagVo" :key="item.tagId" :color="item.tagColor">
+                <span class="common-tag-text-color">
+                  {{ item.tagName }}
+                </span>
+              </el-tag>
+            </el-space>
           </div>
 
-          <el-divider/>
-
-          <div class="content">
-            <h2>题目描述</h2>
-            <p class="description">
-              <markdown-preview :text="description" />
-            </p>
-
-            <div class="detail-problem">
-              <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
-              <fill-blank-problem v-model="judgeForm"  v-else-if="isFillProblem" />
-              <choice-choose-problem :problem-view="problem" v-model="judgeForm" v-else-if="isChoiceProblem" />
-            </div>
-
-            <div v-if="!isOjProblem">
-              <div class="submit">
-                <el-button type="success" :disabled="isShowResult || disableSubmit" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
-              </div>
-
-
-
-            </div>
-
-
-            <div class="hint" v-if="hint">
-              <h2>提示</h2>
-              <div>
-                <markdown-preview :text="hint" />
-              </div>
-            </div>
-
-            <div class="result" v-if="isShowResult && !isOjProblem">
-              <ProblemResult :type="problemType" :result="judgeResult"/>
-            </div>
-
-          </div>
-
-        </el-col>
-
-        <el-col
-            :span="codeSpan"
-            v-if="isShowCodeEditor"
-            style="padding: 0 20px"
+        </div>
+        <el-tabs
+            v-model="currentTab"
+            type="card"
+            class="demo-tabs"
         >
-          <enhanced-code-editor
-              :disable-submit="disableSubmit"
-              v-model="judgeForm"
-              :heightProp="height"
-              @submit="onHandleSubmit"
-              @full-screen="onHandleFullScreen"
-              @on-ready="onEditorReady"
-              @open-log="openOjDialog = true"
-              @test="submitTest"
-              :loading="isLoading"
-          />
-          <el-row ref="testInputRowRef" :gutter="20" style="max-height: 80px">
-            <el-col :span="12">
-              <h4 style="margin: 0">标准输入</h4>
-              <el-input type="textarea" v-model="stdin" />
-            </el-col>
-            <el-col :span="12">
-              <h4 style="margin: 0">输出</h4>
-              <p style="white-space: pre; font-family: monospace" v-text="stdout"></p>
-            </el-col>
-          </el-row>
-
-        </el-col>
-
-      </el-row>
-    </transition>
-
-
-
-    <el-dialog v-model="openOjDialog">
-      <template #header>
-        <h2>
-          运行结果
-        </h2>
-      </template>
-      <template #default>
-        <el-table :data="submitLogs">
-          <el-table-column prop="submitId" label="提交ID"/>
-          <el-table-column prop="userId" label="用户ID"/>
-          <el-table-column prop="problemId" label="问题ID"/>
-          <el-table-column prop="language" label="语言"/>
-          <el-table-column prop="status" label="结果">
-            <template v-slot="scope">
-              <el-tooltip content="AC 通过 WA 答案错误 CE 编译错误 RE 运行时错误 TLE 超时 MLE 内存过限">
-                <el-tag type="info" v-if="scope.row.status === OJResult.QUEUE">排队中</el-tag>
-                <el-tag type="primary" v-else-if="scope.row.status === OJResult.COMPILING">编译中</el-tag>
-                <el-tag type="success" v-else-if="scope.row.status === OJResult.ACCEPT">AC</el-tag>
-                <el-tag type="danger" v-else>{{ scope.row.status }}</el-tag>
-              </el-tooltip>
+          <el-tab-pane
+              name="detail"
+          >
+            <template #label>
+              <el-icon><Document /></el-icon>
+              <span>&nbsp;题目</span>
             </template>
-          </el-table-column >
-          <el-table-column prop="time" label="时间(ms)"/>
-          <el-table-column prop="memory" label="内存(MiB)"/>
-        </el-table>
+            <div class="content">
+              <h2>题目描述</h2>
+              <p class="description">
+                <markdown-preview :text="description" />
+              </p>
+
+              <div class="detail-problem">
+                <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
+                <fill-blank-problem v-model="judgeForm"  v-else-if="isFillProblem" />
+                <choice-choose-problem :problem-view="problem" v-model="judgeForm" v-else-if="isChoiceProblem" />
+              </div>
+
+              <div v-if="!isOjProblem">
+                <div class="submit">
+                  <el-button type="success" :disabled="isShowResult || disableSubmit" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
+                </div>
 
 
-      </template>
 
-    </el-dialog>
+              </div>
+
+
+              <div class="hint" v-if="hint">
+                <h2>提示</h2>
+                <div>
+                  <markdown-preview :text="hint" />
+                </div>
+              </div>
+
+              <div class="result" v-if="isShowResult && !isOjProblem">
+                <ProblemResult :type="problemType" :result="judgeResult"/>
+              </div>
+
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane
+              name="log"
+              v-if="isOjProblem"
+          >
+            <template #label>
+              <el-icon><ChatLineSquare /></el-icon>
+              <span>&nbsp;提交记录</span>
+            </template>
+            <el-table :data="submitLogs">
+              <el-table-column prop="submitId" label="提交ID"/>
+              <el-table-column prop="userId" label="用户ID"/>
+              <el-table-column prop="problemId" label="题目ID"/>
+              <el-table-column prop="language" label="语言"/>
+              <el-table-column prop="status" label="结果">
+                <template v-slot="scope">
+                  <el-tooltip content="AC 通过 WA 答案错误 CE 编译错误 RE 运行时错误 TLE 超时 MLE 内存过限">
+                    <el-tag type="info" v-if="scope.row.status === OJResult.QUEUE">排队中</el-tag>
+                    <el-tag type="primary" v-else-if="scope.row.status === OJResult.COMPILING">编译中</el-tag>
+                    <el-tag type="success" v-else-if="scope.row.status === OJResult.ACCEPT">AC</el-tag>
+                    <el-tag type="danger" v-else>{{ scope.row.status }}</el-tag>
+                  </el-tooltip>
+                </template>
+              </el-table-column >
+              <el-table-column prop="time" label="时间(ms)"/>
+              <el-table-column prop="memory" label="内存(MiB)"/>
+            </el-table>
+          </el-tab-pane>
+
+          <el-tab-pane
+              name="solution"
+              v-if="!contestId"
+              lazy
+          >
+            <template #label>
+              <el-icon><Notebook /></el-icon>
+              <span>&nbsp;题解</span>
+            </template>
+
+            <solutions
+                v-model:param="solutionParam"
+                :scroll-element="contentRef?.$el"
+            />
+
+          </el-tab-pane>
+
+        </el-tabs>
+
+      </el-col>
+
+
+      <el-col
+          :span="codeSpan"
+          v-if="isShowCodeEditor"
+          style="padding: 0 20px"
+      >
+        <enhanced-code-editor
+            :disable-submit="disableSubmit"
+            v-model="judgeForm"
+            :heightProp="height"
+            @submit="onHandleSubmit"
+            @full-screen="onHandleFullScreen"
+            @on-ready="onEditorReady"
+            @open-log="openLog"
+            @test="submitTest"
+            :loading="isLoading"
+        />
+        <el-row ref="testInputRowRef" :gutter="20" style="max-height: 80px">
+          <el-col :span="12">
+            <h4 style="margin: 0">标准输入</h4>
+            <el-input type="textarea" v-model="stdin" />
+          </el-col>
+          <el-col :span="12">
+            <h4 style="margin: 0">输出</h4>
+            <p style="white-space: pre; font-family: monospace" v-text="stdout"></p>
+          </el-col>
+        </el-row>
+
+      </el-col>
+
+    </el-row>
 
     <el-dialog v-model="openErrorDialog">
       <el-result
@@ -188,7 +211,6 @@ import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {
   type Answer,
-  fetchLog,
   getDebouncedJudge,
   getUserAnswer,
   type JudgeForm,
@@ -198,8 +220,6 @@ import {
   OJResult,
   saveUserAnswer,
   sendTest,
-  type TestResult,
-  testStatus,
 } from "@/api/problem/judge";
 import {debounce} from "@/utils/debounce";
 import useLoading from "@/hooks/useLoading";
@@ -209,11 +229,12 @@ import ChoiceChooseProblem from "./ChoiceChoose.vue";
 import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
 import __ from "lodash";
 import {letterToNumber} from "@/utils/stringUtils";
-import {SseEvent, useSse} from "@/stores/useSse.ts";
-import type {MessageHandler} from "element-plus";
+import {ElMessage, type MessageHandler} from "element-plus";
 import CustomElMessage from "@/components/CustomElMessage.vue";
-
-const sse = useSse();
+import {ChatLineSquare, Document, Notebook} from "@element-plus/icons-vue";
+import Solutions from "@/components/SolutionsComponent/SolutionsComponent.vue";
+import type {QuerySolution} from "@/api/solution";
+import {closeSse, getUuid, initSSE, offSse, onSse, SseEvent} from "@/utils/sse";
 
 const errorTitle = ref("");
 
@@ -221,8 +242,10 @@ const errorText = ref("");
 
 const openErrorDialog = ref(false);
 
-const openTestDialog = ref(false);
+// 当前tab
+const currentTab = ref("detail")
 
+// 题目对象
 const problem = ref<ProblemDetailView>();
 
 // 代码编辑器是否全屏
@@ -233,6 +256,14 @@ const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 
 // 传入题目组件
 const {problemId, contestId, disableSubmit = false} = defineProps<{problemId: number, contestId?: number, disableSubmit?: boolean}>()
+
+const solutionParam = reactive<QuerySolution>({
+  asc: true,
+  pageSize: 20,
+  currentPage: 1,
+  problemId: problemId,
+  userId: undefined,
+})
 
 const {loading, finish, isLoading} = useLoading()
 
@@ -279,12 +310,16 @@ const timeLimit = computed(() => ojProblem.value.timeLimit);
 // mb
 const stackLimit = computed(() => ojProblem.value.stackLimit)
 
+// 问题类型，但是转换成字符串
 const stringProblemType = computed(() => problemTypeToString(<ProblemType>problemType.value));
 
+// 题目描述
 const description = computed(() => problem.value?.problemVo.description || "")
 
+// 判题结果
 const judgeResult = ref<JudgeResponse>();
 
+// 是否显示判题结果
 const isShowResult = computed(() => {
   if (contestId) {
     return false;
@@ -306,12 +341,15 @@ const codeSpan = computed(() => {
 
 })
 
+// 判题的表单
 const judgeForm = reactive<JudgeForm>({
   contestId: contestId,
   problemId: problemId,
   answers: [],
   code: ""
 });
+
+// 判题的表单的副本，用于比对
 const judgeFormCopy = reactive<JudgeForm>({
   contestId: undefined,
   problemId: problemId,
@@ -319,24 +357,39 @@ const judgeFormCopy = reactive<JudgeForm>({
   code: ""
 });
 
-
+// RE CE时的消息
 const errMsg = ref<string>();
+
+// 所有提交日志
 const submitLogs = reactive<LogSubmit[]>([])
 
+// 测试的标准输入
 const stdin = ref<string>("")
 
+// 测试的标准输出
 const stdout = ref("");
 
-const submitTest = () => {
-  handleTestSubmit();
-  judgeForm.uuid = sse.getUuid();
+const openLog = () => {
+  currentTab.value = "log";
 }
 
+// 发送OJ测试
+const submitTest = () => {
+  handleTestSubmit();
+  judgeForm.uuid = getUuid();
+}
+
+
+
+// 发送OJ测试
 const handleTestSubmit = async () => {
+  stdout.value = "";
+  errMsg.value = undefined;
   loading();
 
-  const {code} = await sendTest({code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value, uuid: sse.getUuid()});
-  if (code == 200) {
+  const testForm = {code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value, uuid: getUuid()};
+  const {code} = await sendTest(testForm);
+  if (code === 200) {
     getOjResult(true);
   } else {
     finish();
@@ -344,7 +397,7 @@ const handleTestSubmit = async () => {
 
 }
 
-
+// SSE的变换状态的回调
 const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: MessageHandler, vnode: VNode, isTest = false) => {
 
   if (judgeMessage.state == OJResult.COMPILING) {
@@ -358,7 +411,7 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
       stdout.value = judgeMessage.stdout || "";
       if (!isTest) {
         getLogs()
-        openOjDialog.value = true;
+        openLog();
       }
       break;
     case OJResult.RUNTIME_ERROR:
@@ -368,12 +421,10 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
     case OJResult.WRONG_ANSWER:
       errorTitle.value = "WA";
       errorText.value = "答案错误";
-
       break;
     case OJResult.TIME_LIMIT_EXCEEDED:
       errorTitle.value = "TLE";
       errorText.value = "时间超限";
-
       break;
     case OJResult.MEMORY_LIMIT_EXCEEDED:
       errorTitle.value = "MLE";
@@ -388,7 +439,7 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
   const isFinish = judgeMessage.state != OJResult.COMPILING && judgeMessage.state != OJResult.QUEUE;
 
   if (isFinish) {
-    sse.off(SseEvent.UPDATE_JUDGE_STATE, handler);
+    offSse(SseEvent.UPDATE_JUDGE_STATE, handler);
     setTimeout(instance.close, 1000);
     finish();
     if (judgeMessage.state != OJResult.ACCEPT) {
@@ -399,12 +450,13 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
 
 }
 
+//
 const getOjResult = (isTest = false) => {
   const vnode = createVNode(CustomElMessage)
   const el = ElMessage(
       {
         message: vnode,
-        duration: 0
+        duration: 60000
       }
   )
   vnode?.component?.exposed?.update("排队中")
@@ -413,10 +465,10 @@ const getOjResult = (isTest = false) => {
     onUpdateJudgeState(judgeMessage, onUpdate, el, vnode, isTest);
   }
 
-  sse.on(SseEvent.UPDATE_JUDGE_STATE, onUpdate)
-
+  onSse(SseEvent.UPDATE_JUDGE_STATE, onUpdate)
 }
 
+// 发送判题
 const doJudge = getDebouncedJudge(judgeForm,
     (data: JudgeResponse) => {
 
@@ -430,8 +482,6 @@ const doJudge = getDebouncedJudge(judgeForm,
       judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
 
       if (problemType.value === ProblemType.OJ) {
-        // openOjDialog.value = true;
-        // getOjLog(<number>data.submitId);
         getOjResult();
       }
     },
@@ -440,21 +490,21 @@ const doJudge = getDebouncedJudge(judgeForm,
 );
 
 
-
+// 显示答案
 const showAnswers = ref(false);
 
-const openOjDialog = ref(false);
-
-
-
-
+// 提交答案
 const onHandleSubmit = () => {
+  stdout.value = "";
+  errMsg.value = undefined;
+
   loading();
   doJudge();
-  judgeForm.uuid = sse.getUuid();
+  judgeForm.uuid = getUuid();
 
 }
 
+// 全屏
 const onHandleFullScreen = () => {
   isFullScreen.value = !isFullScreen.value;
 }
@@ -571,7 +621,6 @@ const saveAnswer = async () => {
 
 }
 
-
 // created
 getProblem();
 
@@ -581,7 +630,6 @@ watch(() => problemId, async () => {
   }
   reset();
   await getProblem();
-
 })
 
 
@@ -589,16 +637,22 @@ watch(() => problemId, async () => {
 defineExpose<{isProblemLoading: Ref<boolean>}>({isProblemLoading: problemIsLoading})
 
 onMounted(() => {
-
   const debounceFunc = debounce(getHeight, 100, false);
   window.onresize = () => {
     debounceFunc()
   }
+
+
 })
 
 onUnmounted(() => {
   window.onreset = null;
+
 })
+
+
+
+initSSE();
 </script>
 
 

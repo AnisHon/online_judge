@@ -33,21 +33,6 @@ export const useMenuStore = defineStore('menuStore', () => {
         return !__.isUndefined(menu.value);
     }
 
-
-    // const getDynamicRouters = async () => {
-        // const routers = dynamicConst.children;
-        // const flatten = await getFlatten();
-
-        // if (!isDynamicReady()) {
-            // const dynamicRecursion = getDynamicRecursion(<RouterType[]>routers, flatten);
-            // setDefault(dynamicRecursion);
-            // dynamicRouters.value = dynamicRecursion;
-
-        // }
-        // await loadAuths()
-        // return <RouterType[]>dynamicRouters.value;
-    // }
-
     const clear = () => {
         auths.value = undefined;
         menuTrees.value = undefined;
@@ -56,6 +41,9 @@ export const useMenuStore = defineStore('menuStore', () => {
 
 
     const getTree = async () => {
+        if (isDynamicReady()) {
+            return <TreedMenu[]>menuTrees.value;
+        }
         const data = await getMenuTrees();
         await loadAuths();
         return data || [];

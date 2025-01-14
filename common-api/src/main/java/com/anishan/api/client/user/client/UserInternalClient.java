@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
+import java.util.Map;
+
 @FeignClient(value = "user-service", contextId = "user-internal", path = "internal", configuration = FeignDecoderConfig.class)
 public interface UserInternalClient {
     @GetMapping("/add-point/{userId}/{point}")
@@ -19,4 +22,9 @@ public interface UserInternalClient {
     @PostMapping("/send-message")
     @ApiOperation("给用户发送信息，通过SSE")
     R<Boolean>  sendMessage(@RequestBody SseMessage message);
+
+    @GetMapping("/nikeName/{ids}")
+    @ApiOperation("通过ID获取用户名")
+    R<Map<Long, String>> nikeName(@PathVariable("ids") List<Long> ids);
+
 }

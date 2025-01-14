@@ -171,7 +171,7 @@ const debouncedGetContest = (page: PagedType, success: successCallback<PagedResp
         getContest(page)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 
@@ -185,7 +185,7 @@ const debouncedGetContestAdmin = (page: PagedType, success: successCallback<Page
         getContestAdmin(page)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 

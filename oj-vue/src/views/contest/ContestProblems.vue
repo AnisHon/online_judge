@@ -74,7 +74,7 @@ import {type ComponentInstance, computed, onMounted, onUnmounted, reactive, ref}
 import type {ProblemInListView} from "@/api/list";
 import {debouncedGetProblems} from "@/api/list/problem";
 import {useRoute} from "vue-router";
-import DetailProblem from "@/components/detail-problem/DetailProblem.vue";
+import DetailProblem from "@/components/DetailProblem/DetailProblem.vue";
 import {ElTable} from "element-plus";
 import {type ContestView, fetchContestById, getScore} from "@/api/contest";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";

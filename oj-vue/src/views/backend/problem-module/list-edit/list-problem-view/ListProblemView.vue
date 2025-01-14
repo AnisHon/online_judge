@@ -1,7 +1,5 @@
 <template>
-  <div class="problem-container">
-
-
+  <div class="app-container">
     <el-row  class="mb8">
       <el-col v-show="showSearch">
         <ListProblemViewForm :list-id="listId" v-model="queryParams" @query="getList"/>
@@ -53,7 +51,7 @@ import {useStatuesColumn} from "@/hooks/useColumn";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {debouncedFetchProblemsNotInList, type ListProblemQuery} from "@/api/list";
-import ListProblemViewForm from "@/views/problem-module/list-edit/list-problem-view/ListProblemViewForm.vue";
+import ListProblemViewForm from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemViewForm.vue";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 
@@ -129,7 +127,7 @@ getList();
 </style>
 
 <style>
-.problem-container {
+.app-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;

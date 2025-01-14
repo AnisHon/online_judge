@@ -25,16 +25,21 @@ export const dynamicRoute: RouteRecordRaw = {
                 has: ["user:role:grant", "user:role:revoke", "user:user:list"],
                 name: "用户角色",
                 parent: 'role-manage',
+                component: 'RoleAuth',
             }
         },
         {
             path: 'problem-module/problem-edit/edit-problem',
             name: 'edit-problem',
+            strict: true,
+            sensitive: true,
             component: () => import("@/views/backend/problem-module/problem-edit/ProblemEditView.vue"),
             meta: {
                 has: ["problem:problem:list", "problem:list:add-problem", "problem:list:del-problem"],
                 name: "编辑题目",
                 parent: 'problem-edit',
+                component: 'ProblemEditView',
+                noKeepAlive: true,
             }
         },
         {
@@ -45,6 +50,7 @@ export const dynamicRoute: RouteRecordRaw = {
                 has: ["problem:problem:add", "problem:problem:remove"],
                 name: "列表题目编辑",
                 parent: 'list-edit',
+                component: 'ListProblem',
             }
         }
     ]
@@ -65,16 +71,14 @@ export const menuTree: RouteRecordRaw[] = [
     },
 ]
 
+const len = menuTree.length;
+
 // import对象用于加载路由
 const modules = import.meta.glob('../views/**/*.vue')
 
 // 构建RouterRaw对象
 const buildRouteRaw = (treedMenu: TreedMenu, path: string): RouteRecordRaw => {
-
     const menu = treedMenu.menu;
-
-
-
     const routerRecordRaw: RouteRecordRaw = {
         path: menu.router,
         name: menu.router,
@@ -93,8 +97,11 @@ const buildRouteRaw = (treedMenu: TreedMenu, path: string): RouteRecordRaw => {
     if (!menu.component) {
         // @ts-ignore
         routerRecordRaw.component = undefined;
-
+    } else {
+        const pattens = menu.component.split("/");
+        routerRecordRaw.meta!.component = pattens[pattens.length - 1];
     }
+    // console.log(menu.component, modules[`../views/${menu.component}.vue`],)
     return routerRecordRaw;
 }
 
@@ -137,20 +144,18 @@ export const filterDynamic = async () => {
 
 // 加载最终menu
 export const loadDynamicRoutes = async () => {
+
     const menuStore = useMenuStore();
 
     await filterDynamic();
 
     const treedMenus = await menuStore.getTree();
 
-    menuTree.push(...recursiveBuildRoutes(treedMenus, "/backend"));
-
-    dynamicRoute.children.push(...menuTree);
-
-    router.addRoute(dynamicRoute);
-
-    // console.log(menuTree);
-
+    if (len == menuTree.length) {
+        menuTree.push(...recursiveBuildRoutes(treedMenus, "/backend"));
+        dynamicRoute.children.push(...menuTree);
+        router.addRoute(dynamicRoute);
+    }
     menuStore.setMenu(menuTree);
 }
 

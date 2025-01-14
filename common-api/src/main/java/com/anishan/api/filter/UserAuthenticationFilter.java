@@ -27,6 +27,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        String token = request.getHeader("token");
+
         String header = request.getHeader("user-id");
         if (header == null) {
             filterChain.doFilter(request, response);
@@ -34,9 +36,10 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         Long userId = Long.parseLong(header);
-        if (!authUtil.isUserExisted(userId)) {
+        if (!authUtil.isUserExisted(userId) || !authUtil.existToken(token)) {
             throw new IllegalTokenException("令牌过期");
         }
+
         LoginUser loginUser = authUtil.getLoginUser(userId);
 
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =

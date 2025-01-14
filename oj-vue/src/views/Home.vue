@@ -3,18 +3,17 @@
 
 
     <el-row :gutter="20">
-      <el-col :span="16">
-        <el-space direction="vertical" alignment="stretch" style="width: 100%">
+      <el-col class="cards-wrapper" :span="16">
 
-          <custom-card icon="Notification" title="公告">
+          <custom-card class="card" icon="Notification" title="公告" more @show-more="notificationShowMore">
             <p v-for="i in 4" :key="i"><el-link type="primary">item {{i}}</el-link> </p>
           </custom-card>
 
-          <custom-card icon="Notification" title="公告">
+          <custom-card  class="card"  icon="EditPen" title="最近题解" more @show-more="solutionShowMore">
             <p v-for="i in 4" :key="i">item {{i}}</p>
           </custom-card>
 
-          <custom-card icon="Notification" title="最近题目" more @show-more="handleShowMore">
+          <custom-card  class="card"  icon="Notification" title="最近题目" more @show-more="problemShowMore">
             <el-table :show-header="false" :data="problems">
               <el-table-column label="题目ID" prop="problemId"/>
               <el-table-column prop="title" label="题目">
@@ -31,7 +30,6 @@
             </el-table>
           </custom-card>
 
-        </el-space>
 
       </el-col>
       <el-col :span="8">
@@ -75,12 +73,32 @@ recentProblem().then((data) => {
   problems.value = data;
 })
 
-const handleShowMore = () => {
+const problemShowMore = () => {
   router.push({name: "problems"})
+}
+
+const notificationShowMore = () => {
+  router.push({name: "notification"})
+}
+
+const solutionShowMore = () => {
+  router.push({name: "solutions"})
 }
 
 </script>
 
 <style scoped>
+.cards-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.card {
+  flex-grow: 1;
+  margin-bottom: 20px;
+}
+
+.cards-wrapper .card:last-child {
+  margin-bottom: 0;
+}
 
 </style>

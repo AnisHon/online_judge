@@ -1,6 +1,6 @@
 <template>
   <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme" :codeTheme="codeTheme" style="background-color: var(--el-bg-color)"/>
-  <MdCatalog :editorId="id" :theme="theme"/>
+<!--  <MdCatalog :editorId="id" :theme="theme"/>-->
 </template>
 
 <script setup lang="ts">

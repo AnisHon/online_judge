@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 
-import {computed, ref} from "vue";
+import {computed,} from "vue";
 import RecursiveMenuItem from "@/components/RecursiveMenuItem/RecursiveMenuItem.vue";
 import {useMenuStore} from "@/stores/useMenuStore.ts";
 import {useRoute} from "vue-router";

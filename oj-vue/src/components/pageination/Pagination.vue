@@ -58,6 +58,10 @@ export default {
       type: Boolean,
       default: true
     },
+    scrollElement: {
+      type: HTMLElement,
+      default: undefined,
+    },
     hidden: {
       type: Boolean,
       default: false
@@ -83,7 +87,7 @@ export default {
       set(val: any) {
         this.$emit('update:limit', val)
       }
-    }
+    },
   },
   inject: ['elMain'],
   methods: {
@@ -94,14 +98,16 @@ export default {
       this.$emit('pagination', { page: this.currentPage, limit: val });
       if (this.autoScroll) {
         // @ts-ignore
-        scrollTo(0, 800, undefined, this.elMain?.elMainRef.value?.$el);
+        const scoreElement = !!this.scrollElement ? this.scrollElement : this.elMain?.elMainRef.value?.$el;
+        scrollTo(0, 800, undefined, scoreElement);
       }
     },
     handleCurrentChange(val: any) {
       this.$emit('pagination', { page: val, limit: this.pageSize });
       if (this.autoScroll) {
         // @ts-ignore
-        scrollTo(0, 800, undefined, this.elMain?.elMainRef.value?.$el);
+        const scoreElement = !!this.scrollElement ? this.scrollElement : this.elMain?.elMainRef.value?.$el;
+        scrollTo(0, 800, undefined, scoreElement);
       }
     }
   },

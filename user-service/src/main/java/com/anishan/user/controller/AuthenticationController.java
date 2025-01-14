@@ -2,22 +2,23 @@ package com.anishan.user.controller;
 
 
 import com.anishan.api.domain.entity.SysUser;
+import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.R;
 import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.SysUserService;
-import com.anishan.user.util.RoleUtil;
+import com.anishan.user.util.UserUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.security.PermitAll;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +32,7 @@ public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
     private final SysUserService sysUserService;
+    private final AuthUtil authUtil;
 
 
     @PutMapping("/resetToDefault/{id}")
@@ -39,6 +41,14 @@ public class AuthenticationController {
     public R<Boolean> reset(@PathVariable @NotNull Long id) {
         boolean b = authenticationService.resetDefault(id);
         return R.success(b);
+    }
+
+    @GetMapping("/count")
+    @ApiOperation("查看在线人数")
+    @PreAuthorize("hasAuthority('user:user:list')")
+    public R<Long> countOnline() {
+        Long count = authUtil.countUser();
+        return R.success(count);
     }
 
     @GetMapping("/me")
@@ -66,8 +76,9 @@ public class AuthenticationController {
 
     @GetMapping("/logout")
     @ApiOperation("登出")
-    public R<String> logout() {
-        authenticationService.logout();
+    public R<String> logout(@RequestHeader("token") String token) {
+        Long userId = UserUtil.getUserId();
+        authenticationService.logout(userId, token);
         return R.success();
     }
 

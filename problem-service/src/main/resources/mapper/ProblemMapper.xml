@@ -35,12 +35,6 @@
         </collection>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        problem_id,title,type_id,
-        source,description,hint,
-        auth,del_flag,create_time,
-        update_time
-    </sql>
 <!--    List<Problem> selectAllByProblemIdAndTagId(Wrapper<Problem> wrapper);-->
     <select id="selectAllByProblemIdAndTagId" resultType="com.anishan.problem.domain.entity.Problem">
         select

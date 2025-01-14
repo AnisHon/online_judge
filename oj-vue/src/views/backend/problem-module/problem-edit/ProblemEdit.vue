@@ -1,5 +1,5 @@
 <template>
-  <div class="problem-container">
+  <div class="app-container">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="题目" prop="problemName">
         <el-input
@@ -54,7 +54,7 @@
             size="small"
             :disabled="single"
             @click="handleUpdate"
-            v-has="'problem:problem:update'"
+            v-has="'problem:problem:edit'"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -192,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
+import {reactive, ref} from "vue";
 import {
   type AdminQueryProblem,
   debouncedGetProblem,
@@ -206,7 +206,6 @@ import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {ElDialog, ElMessageBox, type UploadInstance} from "element-plus";
 import {problemTypeToString} from "@/utils/problem";
-import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {
   debouncedAddTagProblem, delTagForProblem,
   fetchTagByProblemId,
@@ -215,12 +214,11 @@ import {
   type TagView
 } from "@/api/problem/label";
 import __ from "lodash";
-import {useRoute, useRouter} from "vue-router";
+import {useRouter} from "vue-router";
 import {UploadFilled} from "@element-plus/icons-vue";
 import type {UploadAjaxError} from "element-plus/es/components/upload/src/ajax";
 import type {AjaxResult} from "@/utils/http";
 
-const route = useRoute();
 const router = useRouter();
 
 // 查询需要的表单数据
@@ -352,14 +350,13 @@ const handleAdd = () => {
   router.push({name: "edit-problem"});
 }
 const handleUpdate = (data: ProblemView) => {
-  const userId = data?.problemId || ids.value[0];
-  router.push({name: "edit-problem", query: {id: userId}});
+  const problemId = data?.problemId || ids.value[0];
+  router.push({name: "edit-problem", query: {id: problemId}});
 }
 
 const getAuthText = (auth: ProblemAuth) => {
   return auth === ProblemAuth.CONTEST ? "比赛题目" : "普通题目";
 }
-
 const getAuthCardType = (auth: ProblemAuth) => {
   return auth === ProblemAuth.CONTEST ? "danger" : "success";
 }
@@ -417,6 +414,7 @@ const submit = () => {
 }
 
 const manageTag = (id: number) => {
+  getTag();
   open.value = true;
   loadingCard.value = true
   fetchTagByProblemId(id)
@@ -437,15 +435,17 @@ const handleCommand = (command: string, row: ProblemView) => {
   }
 }
 
-
+const getTag = () => {
+  getAllTags()
+      .then((data) => {
+        allCards.value = data;
+        data.forEach(() => status.push(false));
+      } )
+}
 
 // created -> 获取列表
 getList();
-getAllTags()
-    .then((data) => {
-      allCards.value = data;
-      data.forEach(() => status.push(false));
-    } )
+getTag();
 
 
 
@@ -456,7 +456,7 @@ getAllTags()
 </style>
 
 <style>
-.problem-container {
+.app-container {
   .inline-form {
     .el-input {
       --el-input-width: 220px;

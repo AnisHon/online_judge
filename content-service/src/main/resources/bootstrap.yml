@@ -1,0 +1,20 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: content-service # 服务名称
+  profiles:
+    active: server
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+      config:
+        file-extension: yaml
+        shared-configs:
+          - data-id: shared-jdbc.yaml  # 共享mybatis配置
+          - data-id: shared-logging.yaml
+          - data-id: shared-knife4j.yaml
+          - data-id: shared-redis.yaml
+          - data-id: shared-common.yaml
+#          - data-id: shared-rabbit.yaml
+

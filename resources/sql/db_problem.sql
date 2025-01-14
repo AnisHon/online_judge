@@ -1,3 +1,7 @@
+-- ----------------------------
+-- 题目服务的数据库
+-- ----------------------------
+
 create database db_problem character set utf8mb4;
 use db_problem;
 
@@ -21,17 +25,17 @@ insert into
     sys_language(language_name, compile_command, seq)
 values
     ('C++', '/usr/bin/g++', 1),
-    ('C++ With O2', '/usr/bin/g++', 1),
-    ('C++ 17', '/usr/bin/g++', 1),
-    ('C++ 17 With O2', '/usr/bin/g++', 1),
-    ('C++ 20', '/usr/bin/g++', 1),
-    ('C++ 20 With O2', '/usr/bin/g++', 1),
-    ('C', '/usr/bin/g++', 2),
-    ('C With O2', '/usr/bin/g++', 2),
-    ('Java', '/usr/bin/javac', 3),
-#     ('Python2', '/usr/bin/python', 4),
-    ('Python3', '/usr/bin/python', 4),
-    ('Golang', '/usr/bin/python', 4);
+    ('C++ With O2', '/usr/bin/g++', 2),
+    ('C++ 17', '/usr/bin/g++', 3),
+    ('C++ 17 With O2', '/usr/bin/g++', 4),
+    ('C++ 20', '/usr/bin/g++', 5),
+    ('C++ 20 With O2', '/usr/bin/g++', 6),
+    ('C', '/usr/bin/g++', 7),
+    ('C With O2', '/usr/bin/g++', 8),
+    ('Java', '/usr/bin/javac', 9),
+#     ('Python2', '/usr/bin/python', 10),
+    ('Python3', '/usr/bin/python', 11),
+    ('Golang', '/usr/bin/python', 12);
 
 
 -- ----------------------------
@@ -346,4 +350,31 @@ create index class_contest_class_id_idx on class_contest(class_id);
 create index class_contest_contest_id_idx on class_contest(contest_id);
 
 
+-- ----------------------------
+-- 16.题解表
+-- ----------------------------
+drop table if exists solution_explanation;
+create table solution_explanation (
+    solution_id bigint(20)      not null auto_increment comment '主键',
+    title       varchar(255)    not null                comment '题解标题',
+    problem_id  bigint(20)      not null                comment '对应题目',
+    user_id     bigint(20)      not null                comment '发送者ID',
+    top_up      boolean         not null default false  comment '是否置顶',
+    private     boolean         not null default false  comment '是否尽自己可见',
+    create_time datetime        not null default current_timestamp,
+    update_time datetime        not null default current_timestamp,
+    primary key solution_explanation(solution_id),
+    constraint solution_explanation_problem_id_fk foreign key solution_explanation(problem_id)
+        references problem(problem_id)
+) ENGINE=InnoDB default charset=utf8 auto_increment=1 comment '文件信息表';
 
+-- ----------------------------
+-- 17.题解-内容表
+-- ----------------------------
+drop table if exists solution_explanation_content;
+create table solution_explanation_content (
+    solution_id bigint(20)      not null primary key    comment '主键',
+    content     text            not null                comment '内容',
+    constraint solution_explanation_content_id_fk foreign key solution_explanation_content(solution_id)
+      references solution_explanation(solution_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8 comment '题解-内容表';

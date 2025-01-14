@@ -8,18 +8,24 @@ import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.enumeration.CaptchaCodeType;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.util.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.el.parser.Token;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 @DependsOn("constConfig")
 public class AuthUtil {
@@ -49,8 +55,8 @@ public class AuthUtil {
     private static String getLoginKey(@NotNull Long id) {
         return "user-service:userId:" + id;
     }
-    private static String getTokenKey(@NotNull Long id) {
-        return "user-service:token:userId:" + id;
+    private static String getAllLoginKey() {
+        return "user-service:userId:*";
     }
 
     private static LoginUser getLoginUser() {
@@ -75,11 +81,10 @@ public class AuthUtil {
         return "user-service:captcha:" + captchaToken;
     }
 
+    private static final String WHITE_LIST_KEY = "user-service:token:whiteList";
+
     @NotNull
     @Contract(pure = true)
-
-
-
     public static AbstractCaptcha generateCaptchaCode(CaptchaCodeType captchaType) {
         AbstractCaptcha captcha = null;
         final int width = 150, height = 75;
@@ -143,10 +148,22 @@ public class AuthUtil {
         redisTemplate.opsForValue().set(loginKey, user, JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
     }
 
-    public void cacheToken(Long userId, @NotNull String token) {
-        String tokenKey = getTokenKey(userId);
-        redisTemplate.opsForValue().set(tokenKey, token, JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
+    public void cacheToken(@NotNull String token) {
+        stringRedisTemplate.opsForSet().add(WHITE_LIST_KEY, token);
+
     }
+    public void removeToken(@NotNull String token) {
+        log.info("删除token: {}", token);
+        stringRedisTemplate.opsForSet().remove(WHITE_LIST_KEY, token);
+    }
+
+    public boolean existToken(String token) {
+        if (token == null) {
+            return true;
+        }
+        return Boolean.TRUE.equals(stringRedisTemplate.opsForSet().isMember(WHITE_LIST_KEY, token));
+    }
+
 
     public LoginUser getLoginUser(Long userId) {
         String loginKey = getLoginKey(userId);
@@ -180,12 +197,12 @@ public class AuthUtil {
     }
 
 
-    public void removeUser(Long id) {
+    @Transactional()
+    public void removeUser(Long id, String token) {
         String loginKey = getLoginKey(id);
-        String tokenKey = getTokenKey(id);
 
         redisTemplate.delete(loginKey);
-        redisTemplate.delete(tokenKey);
+        removeToken(token);
 
     }
 
@@ -220,4 +237,18 @@ public class AuthUtil {
 
     }
 
+    public Long countUser() {
+        String key = getAllLoginKey();
+        long count = 0;
+        ScanOptions scanOptions = ScanOptions.scanOptions().match(key).build();
+
+        Cursor<byte[]> cursor = redisTemplate.executeWithStickyConnection(connection -> connection.scan(scanOptions));
+
+        while (cursor.hasNext()) {
+            cursor.next();
+            count++;  // 每扫描一个 key，计数增加
+        }
+
+        return count;
+    }
 }

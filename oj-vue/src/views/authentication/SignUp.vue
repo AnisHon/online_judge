@@ -130,7 +130,7 @@
 
 <script lang="ts" setup>
 import {onMounted, reactive, ref} from 'vue'
-import {type FormInstance, type FormRules} from 'element-plus'
+import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode.ts'
 import {sendEmailCodePromise} from '@/api/auth/emailCode.ts'
 import {signUp, checkAvailableUsername, checkAvailableEmail} from "@/api/auth/authentication.ts"
@@ -234,10 +234,10 @@ const doSignUp = () => {
     code: signUpForm.emailCode,
   })
       .then(()  => {
-        ElMessage.success("欢迎登录")
+        ElNotification.success("欢迎登录")
       })
       .catch((msg) => {
-        ElMessage.error(msg)
+        ElNotification.error(msg)
         refreshCaptchaCode()
       })
       .finally(() => {
@@ -252,26 +252,26 @@ const submitSignUp = (formEl: FormInstance | undefined) => {
       isLoading.value = true
       doSignUp()
     } else {
-      ElMessage.warning("请确认表单")
+      ElNotification.warning("请确认表单")
     }
   })
 }
 
 const sendEmailCode = () => {
   if (signUpForm.captchaCode === '') {
-    ElMessage.error("请输入验证码")
+    ElNotification.error("请输入验证码")
   } else if (!emailRe.test(signUpForm.email)) {
-    ElMessage.error("邮箱无效")
+    ElNotification.error("邮箱无效")
   } else {
     sendEmailCodePromise({
       captchaCode: signUpForm.captchaCode,
       email: signUpForm.email,
       captchaToken: signUpForm.token,
     }).then(() => {
-      ElMessage.success("发送成功")
+      ElNotification.success("发送成功")
     }).catch((message) => {
       refreshCaptchaCode()
-      ElMessage.warning(message)
+      ElNotification.warning(message)
     })
   }
 }

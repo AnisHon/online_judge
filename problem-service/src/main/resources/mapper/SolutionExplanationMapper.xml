@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.SolutionExplanationMapper">
+
+
+    <delete id="deleteBatch">
+        <foreach collection="ids" item="id" separator=";">
+            delete from solution_explanation
+            where solution_id = #{id} and user_id = #{userId}
+        </foreach>
+    </delete>
+</mapper>

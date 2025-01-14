@@ -8,12 +8,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -24,21 +26,38 @@ public abstract class SortedPagedQuery<T> extends PagedQuery<T> {
     @ApiModelProperty("是否是生序，默认true")
     protected boolean asc = true;
 
-    protected abstract Class<T> extendedClass();
+    private final ConcurrentHashMap<String, Map<String, String>> orderMap = new ConcurrentHashMap<>();
 
-    protected abstract Object extendedObject();
+    @SuppressWarnings("all")
+    protected Class<T> extendedClass() {
+        return (Class<T>) this.getClass();
+    }
 
-    protected abstract Map<String, String> extendedKeyMapping();
+    protected Object extendedObject() {
+        return this;
+    }
+
+    protected synchronized Map<String, String> extendedKeyMapping() {
+        Class<T> clazz = extendedClass();
+        Map<String, String> keyMapping;
+        String fullClassName = clazz.getName();
+        if (orderMap.containsKey(fullClassName)) {
+            keyMapping = MysqlMappingUtils.mapColumn(clazz);
+            orderMap.put(fullClassName, keyMapping);
+        } else {
+            keyMapping = orderMap.get(fullClassName);
+        }
+        return keyMapping;
+    }
 
     public Wrapper<T> wrapper() {
-        return MysqlMappingUtils.buildWrapper(extendedObject(), extendedClass());
-//        return new LambdaQueryWrapper<SysUser>()
-//                .eq(userId != null, SysUser::getUserId, userId)
-//                .like(userName != null, SysUser::getUserName, userName)
-//                .like(email != null, SysUser::getEmail, email)
-//                .like(nikeName != null, SysUser::getNikeName, nikeName)
-//                .eq(status != null, SysUser::getStatus, status);
+       return wrapper(null);
     }
+
+    public Wrapper<T> wrapper(QueryWrapper<T> queryWrapper) {
+        return MysqlMappingUtils.buildWrapper(extendedObject(), queryWrapper);
+    }
+
 
     public QueryWrapper<T> queryWrapper() {
         return (QueryWrapper<T>) wrapper();

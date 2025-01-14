@@ -4,7 +4,7 @@ import {getMe} from "@/api/auth/authentication";
 
 
 export interface LoginUser {
-    id: string;
+    userId: number;
     userName: string;
     nikeName: string;
     email: string;

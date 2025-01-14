@@ -86,7 +86,7 @@ const debouncedGetMenu = (queryData: QueryMenu, success: successCallback<PagedRe
         getMenu(queryData)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 

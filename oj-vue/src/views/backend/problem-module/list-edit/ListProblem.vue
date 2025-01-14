@@ -1,5 +1,5 @@
 <template>
-  <div class="list-problem-container">
+  <div class="app-container">
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
@@ -133,7 +133,7 @@ import {
   type ListProblemQuery, type ProblemInListView,
   type ProblemListRelation, updateProblemRelation
 } from "@/api/list";
-import ListProblemView from "@/views/problem-module/list-edit/list-problem-view/ListProblemView.vue";
+import ListProblemView from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemView.vue";
 
 const route = useRoute();
 const router = useRouter();

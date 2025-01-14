@@ -1,3 +1,7 @@
+-- ----------------------------
+-- 用户服务的数据库
+-- ----------------------------
+drop database if exists db_user;
 create database db_user character set utf8mb4;
 use db_user;
 
@@ -122,6 +126,7 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (11, '标签编辑', 2, 1, 'tag-edit', 'I', '#', 'CollectionTag', 'backend/problem-module/tag-edit/TagEdit');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (12, '题单编辑', 3, 1, 'list-edit', 'I', '#', 'List', 'backend/problem-module/list-edit/ListEdit');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (13, '目录编辑', 4, 1, 'folder-edit', 'I', '#', 'Folder', 'backend/problem-module/folder-edit/FolderEdit');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (14, '题解编辑', 5, 1, 'solution-edit', 'I', '#', 'EditPen', 'backend/problem-module/solution-edit/SolutionEdit');
 
 # 二集菜单
 # menu_id 2 用户模块
@@ -161,8 +166,14 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 
 # menu_id 13 目录编辑
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (130, '添加目录', 1, 13, '#', 'B', 'problem:folder:add', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (131, '删除目录', 2, 13, '#', 'B', 'problem:folder:del', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (131, '删除目录', 2, 13, '#', 'B', 'problem:folder:remove', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (132, '修改目录', 3, 13, '#', 'B', 'problem:folder:edit', '#');
+
+# menu_id 14 题解编辑
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (140, '修改题解', 1, 14, '#', 'B', 'problem:solution:edit', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (141, '查看题解', 2, 14, '#', 'B', 'problem:solution:list', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (142, '修改题解', 3, 14, '#', 'B', 'problem:solution:add', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (143, '删除题解', 4, 14, '#', 'B', 'problem:solution:remove', '#');
 
 # menu_id 20
 # 用户管理
@@ -208,6 +219,11 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (323, '删除比赛', 3, 32, '#', 'B', 'problem:contest:remove', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (324, '统计', 4, 32, '#', 'B', 'problem:contest:statistic', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (325, '排名', 5, 32, '#', 'B', 'problem:contest:rank', '#');
+
+
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1001, '添加文件', 0, null, '#', 'B', 'content:file:add', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1002, '删除文件', 1, null, '#', 'B', 'content:file:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1003, '更改文件名', 2, null, '#', 'B', 'content:file:edit', '#');
 
 
 -- ----------------------------

@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import {type ProblemForm, ProblemType} from "@/api/problem";
 import {computed, ref} from "vue";
-import ProblemRadioGroupViewer from "@/views/problem-module/problem-edit/radio-group-viewer/RadioGroupViewer.vue";
+import ProblemRadioGroupViewer from "@/views/backend/problem-module/problem-edit/radio-group-viewer/RadioGroupViewer.vue";
 
 const {problemView} = defineProps<{
   problemView: ProblemForm,

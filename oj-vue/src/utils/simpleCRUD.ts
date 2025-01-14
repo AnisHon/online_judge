@@ -14,9 +14,9 @@ import {ElNotification} from "element-plus";
  * @param url 删除的URL
  */
 
-export const remove = async (id: number | number[], url: string) => {
+export const remove = async (id: number | number[] | string | string[], url: string) => {
 
-    const {data} = await del<boolean, number>(url, id);
+    const {data} = await del<boolean, number | number[] | string | string[]>(url, id);
 
     if (!data) {
         ElNotification.warning("删除失败");

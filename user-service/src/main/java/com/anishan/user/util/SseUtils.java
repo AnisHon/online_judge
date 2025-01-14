@@ -1,6 +1,5 @@
 package com.anishan.user.util;
 
-import ch.qos.logback.core.util.TimeUtil;
 import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.enumeration.SseEvent;
@@ -14,7 +13,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -123,7 +121,7 @@ public class SseUtils {
             return false;
         }
         try {
-            sseEmitter.send(SseEmitter.event().id(messageId).reconnectTime(60 * 1000L).data(message));
+            sseEmitter.send(SseEmitter.event().id(messageId).reconnectTime(30 * 1000L).data(message));
             return true;
         }catch (Exception e) {
             sseEmitterMap.remove(uuid);
@@ -150,13 +148,12 @@ public class SseUtils {
         return sendMessage(uuid, sseEvent.getEvent(), message);
     }
 
-    public boolean sendMessage(String uuid, SseEvent sseEvent, Object message) {
+    public void sendMessage(String uuid, SseEvent sseEvent, Object message) {
         try {
             String s = objectMapper.writeValueAsString(message);
-            return sendMessage(uuid, sseEvent.getEvent(), s);
+            sendMessage(uuid, sseEvent.getEvent(), s);
         } catch (JsonProcessingException e) {
             log.error("消息序列化失败", e);
-            return false;
         }
     }
 
@@ -186,6 +183,18 @@ public class SseUtils {
     }
 
 
+    public synchronized void close(String uuid) {
+        if (sseEmitterMap.containsKey(uuid)) {
+            SseEmitter sseEmitter = sseEmitterMap.get(uuid);
+            if (sseEmitter != null) {
+                log.info("{} 关闭了一个链接", uuid);
+                sseEmitter.complete();
+            }
+        }
+
+    }
+
+
 
     @Scheduled(cron = "0/30 * * * * ? ")
     private void heartbeat() {
@@ -200,7 +209,7 @@ public class SseUtils {
             }
 
             for (String s : value) {
-                sendMessage(s, SseEvent.Ping, "ping");
+                sendPlainString(s, SseEvent.Ping, "30000");
             }
         }
         delete.forEach(userTokenMap::remove);

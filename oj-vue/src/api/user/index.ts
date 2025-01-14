@@ -2,8 +2,7 @@ import type {PagedResponse, PagedType, SortedPagedType,} from "@/api/pagedType";
 import {get, getWithParams, post, put, type successCallback} from "@/utils/http";
 import __, {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, fetch, remove, simpleGet, update} from "@/utils/simpleCRUD";
-import type {Ref} from "vue";
+import {add, fetch, remove, update} from "@/utils/simpleCRUD";
 import {useUserStore} from "@/stores/useUserStore";
 import {ElNotification} from "element-plus";
 
@@ -89,6 +88,11 @@ const removeUser = async (id: number | number[]) => {
     await remove(id,  "/user-api/user");
 }
 
+export const countOnline = async (): Promise<number> => {
+    const {data} = await get<number>("/user-api/auth/count");
+    return data;
+}
+
 export const banUser = async (id: number | number[]) => {
     const {data} = await put("/user-api/auth/ban/" + id, undefined);
     if (data) {
@@ -162,7 +166,7 @@ const debouncedGetUser = (queryData: QueryUser, success: successCallback<PagedRe
         getUser(queryData)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 
@@ -179,7 +183,7 @@ const debouncedGetRoleUser = (queryData: QueryRoleUser, success: successCallback
         getRoleUser(queryData)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }, 500);
     return {loading, isLoading, get};
 }
 

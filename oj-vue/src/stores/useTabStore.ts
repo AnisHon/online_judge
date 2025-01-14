@@ -1,11 +1,13 @@
 import {defineStore} from "pinia";
 import {readonly, ref} from "vue";
 import __ from "lodash";
+import router from "@/router";
 
 export interface TabStoreType {
     title: string;
     name: string;
     closable: boolean;
+    component: string;
 }
 
 export const useTabStore = defineStore("tabStore", () => {
@@ -13,7 +15,8 @@ export const useTabStore = defineStore("tabStore", () => {
     const tabs = ref<TabStoreType[]>([{
         title: '首页',
         name: 'backend-index',
-        closable: false
+        closable: false,
+        component: 'Index',
     }]);
 
     const currentTab = ref("backend-index");
@@ -44,18 +47,21 @@ export const useTabStore = defineStore("tabStore", () => {
             })
         }
 
-        currentTab.value = activeName
+        // currentTab.value = activeName
         tabs.value = tabs_.filter((tab) => tab.name !== targetName);
+        return activeName;
     }
 
 
     const open = (name: string, title: string) => {
+        const find = router.getRoutes().find((route) => route.name === name);
         const index = indexOf(name);
         if (index === -1) {
             tabs.value.push({
                 name: name,
                 title: title,
-                closable: true
+                closable: true,
+                component: <string>find?.meta?.component
             })
         }
 
