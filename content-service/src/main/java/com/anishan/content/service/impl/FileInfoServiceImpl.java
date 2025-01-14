@@ -1,5 +1,7 @@
 package com.anishan.content.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import com.anishan.api.client.content.domain.LinkReferenceCount;
 import com.anishan.content.domain.entity.FileInfo;
 import com.anishan.content.mapper.FileInfoMapper;
 import com.anishan.content.service.FileInfoService;
@@ -9,7 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -22,6 +26,11 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper, FileInfo> implements FileInfoService {
+
+
+
+
+    private final FileInfoMapper fileInfoMapper;
 
     /**
      * 判断相同
@@ -39,5 +48,28 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper, FileInfo> i
         List<FileInfo> list = this.list(wrapper);
 
         return list.stream().findFirst().orElse(null);
+    }
+
+    @Override
+    public void updateReference(Map<String, Long> map) {
+        List<LinkReferenceCount> referenceCount = new ArrayList<>(map.size());
+        map.forEach((k, v) -> {
+            if (!k.startsWith("/api/")) {
+                return;
+            }
+            String path = k.substring("/api/".length());
+            referenceCount.add(
+                    new LinkReferenceCount()
+                            .setPath(path)
+                            .setCount(v)
+            );
+        });
+
+
+        if (CollUtil.isEmpty(referenceCount)) {
+            return;
+        }
+
+
     }
 }

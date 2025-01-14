@@ -1,7 +1,7 @@
 package com.anishan.content.file;
 
-import com.anishan.api.client.content.OSSFileInfo;
-import com.anishan.api.client.content.OssFileInputStream;
+import com.anishan.api.client.content.domain.OSSFileInfo;
+import com.anishan.api.client.content.domain.OssFileInputStream;
 
 import java.io.InputStream;
 import java.util.List;

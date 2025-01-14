@@ -10,6 +10,13 @@
         <result column="file_size" property="fileSize" />
         <result column="upload_time" property="uploadTime" />
     </resultMap>
+    <update id="updateReferenceByFilePath">
+        <foreach collection="rc" item="item" separator=";">
+            update file_info
+                set reference = reference + #{rc.count}
+            where file_path = #{rc.path}
+        </foreach>
+    </update>
 
     <select id="selectByFileMd5AndFileSizeAndFileType" resultType="com.anishan.content.domain.entity.FileInfo">
         select

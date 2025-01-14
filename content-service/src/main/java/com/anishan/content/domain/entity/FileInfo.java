@@ -44,6 +44,9 @@ public class FileInfo implements Serializable {
     @ApiModelProperty("MD5值")
     private String fileMd5;
 
+    @ApiModelProperty(value = "引用计数")
+    private String reference;
+
     @ApiModelProperty("文件类型")
     private String fileType;
 

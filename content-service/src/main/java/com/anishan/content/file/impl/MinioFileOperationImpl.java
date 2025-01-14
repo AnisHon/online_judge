@@ -1,8 +1,8 @@
 package com.anishan.content.file.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.anishan.api.client.content.OSSFileInfo;
-import com.anishan.api.client.content.OssFileInputStream;
+import com.anishan.api.client.content.domain.OSSFileInfo;
+import com.anishan.api.client.content.domain.OssFileInputStream;
 import com.anishan.content.file.FileOperation;
 import io.minio.*;
 import io.minio.errors.*;
@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;

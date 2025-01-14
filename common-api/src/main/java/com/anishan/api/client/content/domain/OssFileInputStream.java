@@ -1,6 +1,5 @@
-package com.anishan.api.client.content;
+package com.anishan.api.client.content.domain;
 
-import lombok.Data;
 import lombok.Getter;
 import okhttp3.Headers;
 

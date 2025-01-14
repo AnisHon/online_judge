@@ -22,7 +22,7 @@
 
           <div class="author">
             <div style="margin-right: 5px">
-              <el-avatar class="portrait" icon="UserFilled"/>
+              <el-avatar class="portrait" :src="getAvatarPath(solution.userId)"/>
             </div>
 
             <div style="flex-grow: 1">
@@ -118,6 +118,7 @@ import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {isUserIdEqual} from "@/utils/authUtil.ts";
 import {ElMessageBox, ElNotification} from "element-plus";
 import useLoading from "@/hooks/useLoading.ts";
+import {getAvatarPath} from "@/api/file";
 
 const router = useRouter();
 

@@ -2,6 +2,8 @@ import {getWithParams, post, service} from "@/utils/http.ts";
 import {ElNotification} from "element-plus";
 import __ from "lodash";
 import {remove} from "@/utils/simpleCRUD.ts";
+import {useUserStore} from "@/stores/useUserStore.ts";
+import {computed} from "vue";
 
 export interface CloudFile {
     cloudFileId: string;
@@ -37,9 +39,32 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
     const form = new FormData();
 
     files.forEach(file => form.append("images", file))
-    // form.append("images", files[0]);
+
     const {data} = await service<string[]>({
         url: "/image",
+        method: "POST",
+        data: form
+    });
+    return data;
+}
+
+export const myAvatarPath = computed(() => {
+    const userStore = useUserStore();
+    const userId = userStore?.user?.userId || 0
+    return getAvatarPath(userId);
+})
+
+export const getAvatarPath = (userId: number) => {
+
+
+    return `/api/avatar/${userId}`;
+}
+
+export const uploadAvatar = async (file: File): Promise<string> => {
+    const form = new FormData();
+    form.append("avatar", file);
+    const {data} = await service<string>({
+        url: "/avatar",
         method: "POST",
         data: form
     });

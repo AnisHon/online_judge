@@ -3,6 +3,8 @@ package com.anishan.content.service;
 import com.anishan.content.domain.entity.FileInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Map;
+
 /**
  * <p>
  * 文件信息表 服务类
@@ -15,5 +17,9 @@ public interface FileInfoService extends IService<FileInfo> {
 
 
     FileInfo exists(FileInfo fileInfo);
+
+
+    void updateReference(Map<String, Long> map);
+
 
 }

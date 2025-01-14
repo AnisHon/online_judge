@@ -14,6 +14,7 @@ import piniaPluginPersistedState from 'pinia-plugin-persistedstate'; //引入持
 import App from '@/App.vue';
 import router from './router';
 import {has, hasAny} from "@/utils/hasAuth";
+import {initSSE} from "@/utils/sse";
 
 
 const app = createApp(App)
@@ -34,3 +35,5 @@ app.directive('hasAny', hasAny)
 
 // router.isReady().then(() => app.mount('#app')
 app.mount('#app')
+
+initSSE();

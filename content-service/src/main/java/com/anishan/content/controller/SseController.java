@@ -1,12 +1,9 @@
-package com.anishan.user.controller;
+package com.anishan.content.controller;
 
 import cn.hutool.core.util.IdUtil;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.enumeration.SseEvent;
-import com.anishan.user.domain.dto.UserPoint;
-import com.anishan.user.service.SysUserService;
-import com.anishan.user.util.SseUtils;
-import com.anishan.user.util.UserUtil;
+import com.anishan.content.service.SseService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -21,27 +18,21 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/sse")
 public class SseController {
 
-    private final SseUtils sseUtils;
-    private final SysUserService userService;
-
+    private final SseService sseService;
 
     @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @ApiOperation("sse接口")
-    public SseEmitter streamEvents(@RequestParam String uuid) {
+    public SseEmitter streamEvents(@RequestHeader("user-id") Long userId, @RequestParam String uuid) {
 
-        SseEmitter reconnect = sseUtils.reconnect(uuid);
+        SseEmitter reconnect = sseService.reconnect(uuid);
         if (reconnect != null) {
             return reconnect;
         }
 
-        Long userId = UserUtil.getUserId();
-
         uuid = IdUtil.fastSimpleUUID();
-        SseEmitter sse = sseUtils.createSse(uuid, userId);
-        UserPoint point = userService.getPoint(userId);
+        SseEmitter sse = sseService.createSse(uuid, userId);
 
-        sseUtils.sendMessage(uuid, SseEvent.UpdatePoint, point);
-        sseUtils.sendMessage(uuid, SseEvent.SetUUID, uuid);
+        sseService.sendMessage(uuid, SseEvent.SetUUID, uuid);
 
         return sse;
     }
@@ -50,7 +41,7 @@ public class SseController {
     @ResponseBody
     @DeleteMapping("/close/{uuid}")
     public R<Void> close(@PathVariable String uuid) {
-        sseUtils.close(uuid);
+        sseService.close(uuid);
         return R.success(null);
     }
 

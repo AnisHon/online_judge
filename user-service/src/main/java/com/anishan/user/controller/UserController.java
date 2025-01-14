@@ -12,6 +12,7 @@ import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.SysUserInfoDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.user.service.SysUserService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -21,6 +22,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -57,6 +59,18 @@ public class UserController {
     public R<Boolean> availableEmail(@PathVariable("email") @NotNull String email) {
         boolean b = sysUserService.existsEmail(email);
         return R.success(!b);
+    }
+
+    @GetMapping("/point")
+    @ApiOperation("获取自己的point")
+    public R<BigDecimal> getUserPoint(@RequestHeader("user-id") String userId) {
+        BigDecimal point = sysUserService.getObj(
+                new LambdaQueryWrapper<SysUser>()
+                        .select(SysUser::getPoints)
+                        .eq(SysUser::getUserId, userId),
+                x -> (BigDecimal) x
+        );
+        return R.success(point);
     }
 
 

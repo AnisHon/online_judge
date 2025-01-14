@@ -15,6 +15,7 @@ create table file_info (
     file_path   varchar(512)    not null unique         comment '文件路径',
     file_size   bigint          not null default 0      comment '文件大小默认0，单位byte',
     file_md5    char(32)        not null                comment '文件MD5值',
+    reference   bigint          not null default 0      comment '引用计数',
     file_type   varchar(32)     not null                comment '文件类型',
     upload_time datetime        not null default current_timestamp
 ) ENGINE=InnoDB default charset=utf8 comment '文件信息表';

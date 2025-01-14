@@ -1,3 +1,19 @@
+<template>
+  <el-dropdown size="large" style="height: 100%;" @command="handleCommand">
+          <span class="el-dropdown-link" style="height: 100%; display: flex; justify-content: center; align-items: center;">
+              <el-avatar :src="myAvatarPath"/>
+            </span>
+    <template #dropdown>
+      <el-dropdown-menu>
+        <el-dropdown-item command="setting">账号设置</el-dropdown-item>
+        <el-dropdown-item v-if="hasAccessToBackend" command="backend">进入后台</el-dropdown-item>
+        <el-dropdown-item v-if="returnToUserPage" command="frontend">返回前台</el-dropdown-item>
+        <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+      </el-dropdown-menu>
+    </template>
+  </el-dropdown>
+</template>
+
 <script setup lang="ts">
 
 import {UserFilled} from "@element-plus/icons-vue";
@@ -5,6 +21,7 @@ import {logout} from "@/api/auth/authentication.ts";
 import {computed} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {useMenuStore} from "@/stores/useMenuStore.ts";
+import {myAvatarPath} from "@/api/file";
 const router = useRouter();
 
 const route = useRoute();
@@ -33,24 +50,7 @@ const returnToUserPage = computed(() => {
 
 </script>
 
-<template>
-  <el-dropdown size="large" style="height: 100%;" @command="handleCommand">
-          <span class="el-dropdown-link" style="height: 100%; display: flex; justify-content: center; align-items: center;">
-<!--             <span>-->
-            <!--              {{ nikeName }}-->
-            <!--             </span>-->
-              <el-avatar :icon="UserFilled"/>
-            </span>
-    <template #dropdown>
-      <el-dropdown-menu>
-        <el-dropdown-item command="setting">账号设置</el-dropdown-item>
-        <el-dropdown-item v-if="hasAccessToBackend" command="backend">进入后台</el-dropdown-item>
-        <el-dropdown-item v-if="returnToUserPage" command="frontend">返回前台</el-dropdown-item>
-        <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
-      </el-dropdown-menu>
-    </template>
-  </el-dropdown>
-</template>
+
 
 <style scoped>
 

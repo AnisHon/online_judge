@@ -1,36 +1,24 @@
 package com.anishan.judge.mq;
 
+import com.anishan.api.client.content.client.ContentInternalClient;
 import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
-import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.client.problem.client.ProblemInternalClient;
-import com.anishan.api.client.problem.client.RecordClient;
-import com.anishan.api.client.problem.client.SubmitLogClient;
-import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
-import com.anishan.api.client.user.client.UserInternalClient;
 import com.anishan.api.client.user.domain.SseMessage;
-import com.anishan.api.util.RedisJudgeTestUtil;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.commons.enumeration.SseEvent;
 import com.anishan.judge.domain.entity.SubmitLog;
-import com.anishan.judge.exception.SubmitError;
-import com.anishan.judge.exception.SystemError;
 import com.anishan.judge.service.JudgeService;
 import com.anishan.judge.service.SubmitLogService;
-import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.MessageListener;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -41,70 +29,9 @@ import java.util.HashMap;
 public class JudgeListener {
 
     private final JudgeService judgeService;
-    private final SubmitLogClient submitLogClient;
-    private final RecordClient recordClient;
-    private final RedisJudgeTestUtil redisJudgeTestUtil;
     private final SubmitLogService submitLogService;
-    private final UserInternalClient userInternalClient;
+    private final ContentInternalClient clientInternalClient;
     private final ProblemInternalClient problemInternalClient;
-
-//    @RabbitListener(
-//            bindings = @QueueBinding(
-//                    value = @Queue(name = "judge-queue"),
-//                    exchange = @Exchange(name = "judge-exchange"),
-//                    key = "judge"
-//            )
-//    )
-//    // 废弃
-//    public void judge(JudgeMessage message) {
-//
-//
-//
-//        JudgeScore judgeScore;
-//
-//        submitLogClient.changeStatus(
-//                new SubmitLogDto()
-//                        .setSubmitId(message.getSubmitId())
-//                        .setStatus(JudgeResult.Compiling),
-//                message.getUserId()
-//                );
-//
-//        try {
-//            judgeScore = judgeService.judge(message);
-//            judgeScore.setCode(message.getCode());
-//            judgeScore.setLanguageId(message.getLanguageId());
-//        } catch (SystemError | SubmitError e) {
-//           log.error("判题机出错");
-//           log.error(e.getMessage(), e);
-//           return;
-//        } catch (RuntimeException e) {
-//            log.error("判题机收到非法语言：{}", e.getMessage());
-//            return;
-//        }
-//
-//
-//
-//        SubmitLogDto submitLogDto =
-//                new SubmitLogDto()
-//                        .setSubmitId(message.getSubmitId())
-//                        .setUserId(message.getUserId())
-//                        .setProblemId(message.getProblemId())
-//                        .setStatus(judgeScore.getResult())
-//                        .setTime(judgeScore.getRuntime())
-//                        .setMemory(judgeScore.getMemory())
-//                        .setStderr(judgeScore.getErrorMessage())
-//                        .setLanguage(message.getLanguage());
-//
-//
-//        // 更新日志状态
-//        submitLogClient.update(submitLogDto, message.getUserId());
-//
-//        // 更新record
-//        recordClient.judgeSave(judgeScore, message.getUserId());
-//
-//
-//
-//    }
 
 
     private void logSubmit(JudgeScore judge, JudgeInfo judgeInfo) {
@@ -144,7 +71,7 @@ public class JudgeListener {
         map.put("stdout", stdout);
 
         SseMessage sseMessage = SseMessage.create(uuid, SseEvent.UpdateJudgeState, map);
-        userInternalClient.sendMessage(sseMessage);
+        clientInternalClient.sendMessage(sseMessage);
     }
 
     private void fillJudgeScore(JudgeScore judgeScore, JudgeInfo judgeInfo) {
@@ -216,38 +143,6 @@ public class JudgeListener {
 
         log.debug("用户ID:{} 测试结束", info.getUserId());
     }
-
-
-//    @RabbitListener(
-//            bindings = @QueueBinding(
-//                    value = @Queue(name = "test-queue"),
-//                    exchange = @Exchange(name = "judge-exchange"),
-//                    key = "test"
-//            )
-//    )
-//    // 废弃
-//    public void test(JudgeMessage message) {
-//
-//        TestResult testResult;
-//        message.setTimeLimit(9999999999999999L);
-//        message.setMemoryLimit(9999999999999999L);
-//        message.setStackLimit(999999999);
-//        try {
-//            testResult = judgeService.test(message);
-//        } catch (SystemError | SubmitError e) {
-//            log.error("判题机出错");
-//            log.error(e.getMessage(), e);
-//            return;
-//        } catch (RuntimeException e) {
-//            log.error("判题机收到非法语言：{}", e.getMessage());
-//            return;
-//        }
-//
-//        testResult.setUserId(message.getUserId());
-//
-//        redisJudgeTestUtil.save(testResult, 10);
-//
-//    }
 
 
 }

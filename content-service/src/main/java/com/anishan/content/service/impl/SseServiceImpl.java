@@ -1,8 +1,9 @@
-package com.anishan.user.util;
+package com.anishan.content.service.impl;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.enumeration.SseEvent;
+import com.anishan.content.service.SseService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class SseUtils {
+public class SseServiceImpl implements SseService {
 
     private final ObjectMapper objectMapper;
 
@@ -46,6 +47,7 @@ public class SseUtils {
     }
 
 
+    @Override
     public SseEmitter reconnect(String uuid) {
         if (uuid == null) {
             return null;
@@ -57,6 +59,7 @@ public class SseUtils {
     /**
      * 创建连接
      */
+    @Override
     public SseEmitter createSse(String uuid, Long userId) {
         if (uuid == null) {
             return null;
@@ -107,7 +110,8 @@ public class SseUtils {
      * 给指定用户发送消息
      *
      */
-    public boolean sendMessage(String uuid,String messageId, String message) {
+    @Override
+    public boolean sendMessage(String uuid, String messageId, String message) {
         if (uuid == null) {
             return false;
         }
@@ -137,6 +141,7 @@ public class SseUtils {
      * @param uuid session ID
      * @param userId 用户Id
      */
+    @Override
     public void closeSse(String uuid, Long userId){
         if (sseEmitterMap.containsKey(uuid)) {
             SseEmitter sseEmitter = sseEmitterMap.get(uuid);
@@ -144,10 +149,26 @@ public class SseUtils {
         }
     }
 
+    @Override
     public boolean sendPlainString(String uuid, SseEvent sseEvent, String message) {
         return sendMessage(uuid, sseEvent.getEvent(), message);
     }
 
+    /**
+     * 发送SSE消息，不进行对象类型转换
+     * @param userId 用户ID
+     * @param sseEvent 事件类型
+     * @param message 消息
+     */
+    @Override
+    public void sendPlainString(Long userId, SseEvent sseEvent, String message) {
+        Set<String> userSessions = getUserSessions(userId);
+        for (String userSession : userSessions) {
+            sendMessage(userSession, sseEvent.getEvent(), message);
+        }
+    }
+
+    @Override
     public void sendMessage(String uuid, SseEvent sseEvent, Object message) {
         try {
             String s = objectMapper.writeValueAsString(message);
@@ -163,6 +184,7 @@ public class SseUtils {
      * @param sseEvent sse消息事件
      * @param message 消息
      */
+    @Override
     public void sendMessage(Long userId, SseEvent sseEvent, Object message) {
         Set<String> userSessions = getUserSessions(userId);
         for (String userSession : userSessions) {
@@ -176,6 +198,7 @@ public class SseUtils {
      * @param sseEvent 消息事件
      * @param message 消息
      */
+    @Override
     public void sendMessage(SseEvent sseEvent, Object message) {
         for (String s : sseEmitterMap.keySet()) {
             sendMessage(s, sseEvent, message);
@@ -183,6 +206,7 @@ public class SseUtils {
     }
 
 
+    @Override
     public synchronized void close(String uuid) {
         if (sseEmitterMap.containsKey(uuid)) {
             SseEmitter sseEmitter = sseEmitterMap.get(uuid);
@@ -193,7 +217,6 @@ public class SseUtils {
         }
 
     }
-
 
 
     @Scheduled(cron = "0/30 * * * * ? ")

@@ -1,7 +1,6 @@
 package com.anishan.content.service;
 
-import com.anishan.api.client.content.OssFileInputStream;
-import com.anishan.content.domain.dto.CloudFileDto;
+import com.anishan.api.client.content.domain.OssFileInputStream;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;

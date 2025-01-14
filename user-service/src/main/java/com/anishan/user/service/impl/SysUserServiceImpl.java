@@ -5,12 +5,13 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.anishan.api.client.content.client.ContentInternalClient;
+import com.anishan.api.client.user.domain.SseMessage;
 import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.api.util.AuthUtil;
-import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -27,14 +28,15 @@ import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysRoleService;
 import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.service.SysUserService;
-import com.anishan.user.util.SseUtils;
 import com.anishan.user.util.UserUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,11 +58,6 @@ import java.util.stream.Collectors;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     implements SysUserService{
 
-    private final String baseString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-                                      "abcdefghijklmnopqrstuvwxyz" +
-                                      "0123456789";
-
-
     private final SysUserMapper sysUserMapper;
     private final SysRoleService sysRoleService;
     private final SysUserRoleService sysUserRoleService;
@@ -68,12 +65,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     private final UserConfig config;
     private final SysMenuService sysMenuService;
     private final AuthUtil authUtil;
-    private final SseUtils sseUtils;
+    private final ContentInternalClient contentInternalClient;
     private final UserConfig userConfig;
-
-
-
-
 
     @Override
     public UserVo getUserById(Long id) {
@@ -83,13 +76,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
 
     // +=操作使用事务
+    @SneakyThrows
     @Transactional
     @Override
     public boolean addPoint(Long userId, BigDecimal point) {
 
         boolean b = sysUserMapper.addPoints(userId, point) > 0;
+
         UserPoint userPoint = getPoint(userId);
-        sseUtils.sendMessage(userId, SseEvent.UpdatePoint, userPoint);
+
+        SseMessage message = SseMessage.create(userId, SseEvent.UpdatePoint, userPoint);
+
+        contentInternalClient.sendMessage(message);
         return b;
     }
 
@@ -329,7 +327,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
 
     private SysUser doSaveUser(SysUserDto sysUserDto) {
-        sysUserDto = doFillEmptyProperties(sysUserDto);
+        doFillEmptyProperties(sysUserDto);
         SysUser sysUser = BeanUtil.copyProperties(sysUserDto, SysUser.class, "role");
         boolean save = this.save(sysUser);
 
@@ -338,10 +336,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         return sysUser;
     }
 
-    private SysUserDto doFillEmptyProperties(SysUserDto sysUserDto) {
+    private void doFillEmptyProperties(SysUserDto sysUserDto) {
         // 如果nike name没有就生成随机的
         if (StrUtil.isBlank(sysUserDto.getNikeName())) {
-            sysUserDto.setNikeName(RandomUtil.randomString(baseString, 10));
+            sysUserDto.setNikeName(RandomUtil.randomString(10));
         }
         if (StrUtil.isBlank(sysUserDto.getEmail())) {
             sysUserDto.setEmail(sysUserDto.getUserName() + "@" + sysUserDto.getRole() + ".com");
@@ -351,7 +349,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         }
 
         sysUserDto.setPassword(passwordEncoder.encode(sysUserDto.getPassword()));
-        return sysUserDto;
     }
 
 

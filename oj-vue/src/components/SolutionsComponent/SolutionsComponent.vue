@@ -31,7 +31,7 @@
     >
       <el-row :gutter="20">
         <el-col :span="2">
-          <el-avatar class="portrait" icon="UserFilled"/>
+          <el-avatar class="portrait" :src="getAvatarPath(item.userId)" />
         </el-col>
 
         <el-col class="main-content" :span=22>
@@ -50,17 +50,19 @@
             <el-text line-clamp="1" type="info">{{ item.content }}</el-text>
           </div>
           <div class="footer">
-            <el-tag type="info">
-              发布日期: {{ item.createTime }}
-            </el-tag>
+            <el-space>
+              <el-tag type="info">
+                发布日期: {{ item.createTime }}
+              </el-tag>
 
-            <el-tag type="info">
-              {{ item.private_ ? "私有" : "公开" }}
-            </el-tag>
+              <el-tag type="info">
+                {{ item.private_ ? "私有" : "公开" }}
+              </el-tag>
 
-            <el-tag type="info">
-              题目: {{ item.problemTitle }}
-            </el-tag>
+              <el-tag type="info">
+                题目: {{ item.problemTitle }}
+              </el-tag>
+            </el-space>
           </div>
         </el-col>
 
@@ -85,6 +87,7 @@ import Pagination from "@/components/pageination/Pagination.vue";
 import {listSolution, type QuerySolution, type Solution} from "@/api/solution";
 import {DocumentAdd} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
+import {getAvatarPath} from "@/api/file";
 
 const router = useRouter();
 

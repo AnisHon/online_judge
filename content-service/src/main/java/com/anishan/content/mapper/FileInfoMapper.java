@@ -1,6 +1,7 @@
 package com.anishan.content.mapper;
 
 
+import com.anishan.api.client.content.domain.LinkReferenceCount;
 import com.anishan.content.domain.entity.FileInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
@@ -18,4 +19,6 @@ import java.util.List;
 public interface FileInfoMapper extends BaseMapper<FileInfo> {
 
     List<FileInfo> selectByFileMd5AndFileSizeAndFileType(@Param("fileInfos") List<FileInfo> fileInfos);
+
+    void updateReferenceByFilePath(List<LinkReferenceCount> rc);
 }

@@ -1,4 +1,4 @@
-package com.anishan.api.client.content;
+package com.anishan.api.client.content.domain;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

@@ -88,6 +88,11 @@ const removeUser = async (id: number | number[]) => {
     await remove(id,  "/user-api/user");
 }
 
+export const getMyPoint = async (): Promise<string> => {
+    const {data} = await get<string>("/user-api/user/point");
+    return data;
+}
+
 export const countOnline = async (): Promise<number> => {
     const {data} = await get<number>("/user-api/auth/count");
     return data;

@@ -4,7 +4,7 @@ import cn.hutool.core.io.FileTypeUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
-import com.anishan.api.client.content.OssFileInputStream;
+import com.anishan.api.client.content.domain.OssFileInputStream;
 import com.anishan.content.domain.entity.FileInfo;
 import com.anishan.content.file.FileOperation;
 import com.anishan.content.service.FileInfoService;

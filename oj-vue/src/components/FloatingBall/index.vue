@@ -33,7 +33,8 @@
 import {Coin} from "@element-plus/icons-vue";
 
 import DrawerContent from "@/components/FloatingBall/DrawerContent.vue";
-import {initSSE, onSse, SseEvent} from "@/utils/sse";
+import {onSse, SseEvent} from "@/utils/sse";
+import {getMyPoint} from "@/api/user/index.ts";
 
 export default {
   components: {DrawerContent, Coin},
@@ -96,8 +97,14 @@ export default {
 
   },
   mounted() {
-    initSSE("/user-api/sse")
+    // initSSE("/user-api/sse")
     onSse(SseEvent.UPDATE_POINT, this.changePoint)
+
+
+    getMyPoint()
+        .then((point) => {
+          this.point = point;
+        })
   },
 
 

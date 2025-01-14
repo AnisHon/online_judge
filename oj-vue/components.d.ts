@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AccountMenu: typeof import('./src/components/AccountMenu/AccountMenu.vue')['default']
+    AvatarCutter: typeof import('./src/components/AvatarCutter/AvatarCutter.vue')['default']
     BackendMenu: typeof import('./src/components/BackendMenu/BackendMenu.vue')['default']
     ChoiceChoose: typeof import('./src/components/DetailProblem/ChoiceChoose.vue')['default']
     CodeEditor: typeof import('./src/components/CodeEditor/CodeEditor.vue')['default']

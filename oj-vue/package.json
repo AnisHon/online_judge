@@ -38,6 +38,7 @@
     "splitpanes": "^3.1.5",
     "vite-plugin-svg-icons": "^2.0.1",
     "vue": "^3.5.12",
+    "vue-img-cutter": "^3.0.5",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {

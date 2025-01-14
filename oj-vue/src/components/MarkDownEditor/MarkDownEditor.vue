@@ -1,5 +1,11 @@
 <template>
-  <MdEditor v-model="text" :theme="theme" :previewTheme="previewTheme"  :codeTheme="codeTheme" @on-upload-img="onUploadImg" />
+  <MdEditor
+      v-model="text"
+      :theme="theme"
+      :previewTheme="previewTheme"
+      :codeTheme="codeTheme"
+      @on-upload-img="onUploadImg"
+  />
 </template>
 <script setup lang="ts">
 import {MdEditor} from 'md-editor-v3';
@@ -52,6 +58,7 @@ const onUploadImg = async (files: File[], callback: UploadImgCallBack) => {
 
   callback(callbackUrls);
 }
+
 
 </script>
 

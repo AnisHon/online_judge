@@ -16,7 +16,10 @@ const sseMap = new Map<String, EventSourcePolyfill>;
 const emitter = ref(mitt())
 const uuid = ref<string>();
 
-export const initSSE = (url: string = "/user-api/sse") => {
+export const SSE_URL = "/content-api/sse";
+export const CLOSE_SSE_URL = "/contest-api/sse/close";
+
+export const initSSE = (url: string = SSE_URL) => {
     if (!sseMap.has(url)) {
         sseMap.set(url, connectSse(`${baseURL}/${url}`));
     }
@@ -75,7 +78,7 @@ export const offSse = <T> (event: string, callback: Handler<T>) => {
     emitter.value.off(event, callback)
 }
 
-window.addEventListener('beforeunload', () => closeSse("/user-api/sse"));
+window.addEventListener('beforeunload', () => closeSse(SSE_URL));
 export const closeSse = (url: string | undefined) => {
     if (!url) {
         return;
@@ -84,7 +87,8 @@ export const closeSse = (url: string | undefined) => {
     if (sse) {
         sse.close();
         sseMap.delete(url);
-        del<string>("/user-api/sse/close", uuid.value)
+
+        del<string>(CLOSE_SSE_URL, uuid.value)
     }
 }
 

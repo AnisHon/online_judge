@@ -2,13 +2,12 @@ package com.anishan.content.controller;
 
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.http.HttpStatus;
-import com.anishan.api.client.content.OssFileInputStream;
+import com.anishan.api.client.content.domain.OssFileInputStream;
 import com.anishan.commons.domain.R;
 import com.anishan.content.domain.dto.CloudFileDto;
 import com.anishan.content.domain.dto.QueryCloudFile;
 import com.anishan.content.domain.vo.CloudFilesVo;
 import com.anishan.content.file.FileOperation;
-import com.anishan.content.service.FileInfoService;
 import com.anishan.content.service.FileService;
 import com.anishan.content.service.CloudFilesService;
 import io.swagger.annotations.Api;
