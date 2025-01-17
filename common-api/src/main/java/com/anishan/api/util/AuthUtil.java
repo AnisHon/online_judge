@@ -9,7 +9,6 @@ import com.anishan.commons.enumeration.CaptchaCodeType;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.el.parser.Token;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.DependsOn;

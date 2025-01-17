@@ -3,13 +3,10 @@ package com.anishan.problem.domain.entity;
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.enumeration.ProblemType;
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import lombok.Data;
 
 /**
  * 题目主表，OJ题目有分表，非OJ不需要继续分表

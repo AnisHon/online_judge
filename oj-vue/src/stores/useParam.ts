@@ -1,6 +1,4 @@
 import {defineStore} from "pinia";
-import {ref} from "vue";
-import mitt from "mitt";
 
 export const useParamStore = defineStore('param',() =>{
 

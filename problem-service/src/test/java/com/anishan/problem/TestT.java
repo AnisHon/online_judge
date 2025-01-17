@@ -1,13 +1,7 @@
 package com.anishan.problem;
 
 
-import cn.hutool.core.bean.BeanUtil;
-import com.anishan.api.util.MDUtil;
 import com.anishan.problem.domain.entity.Problem;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;

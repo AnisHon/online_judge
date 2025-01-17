@@ -1,5 +1,6 @@
 package com.anishan.problem.util;
 
+import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.commons.enumeration.Difficulty;
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.enumeration.ProblemType;
@@ -8,7 +9,6 @@ import com.anishan.problem.domain.dto.ChoiceFillAnswersDto;
 import com.anishan.problem.domain.dto.DetailProblemDto;
 import com.anishan.problem.domain.dto.OjProblemDto;
 import com.anishan.problem.domain.dto.ProblemDto;
-import com.anishan.api.domain.entity.OjProblemCase;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component

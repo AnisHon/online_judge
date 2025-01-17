@@ -1,6 +1,5 @@
 package com.anishan.api.aspect;
 
-import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.anishan.api.annotation.EnableCache;

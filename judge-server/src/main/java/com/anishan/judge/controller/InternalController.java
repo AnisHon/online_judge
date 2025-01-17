@@ -1,20 +1,17 @@
 package com.anishan.judge.controller;
 
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
-import com.anishan.api.client.judgeserver.domain.OjProblemCaseDto;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
-import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
-import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.commons.domain.R;
 import com.anishan.judge.service.JudgeService;
-import com.anishan.judge.service.OjProblemCaseService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController

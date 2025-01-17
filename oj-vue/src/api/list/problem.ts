@@ -1,4 +1,3 @@
-import {fetch} from "@/utils/simpleCRUD";
 import {get, type successCallback} from "@/utils/http";
 import type {ProblemInListView} from "@/api/list/index";
 import useLoading from "@/hooks/useLoading";

@@ -70,7 +70,7 @@ watch(route, setTabs, { immediate: true });
 }
 </style>
 
-<style>
+<style lang="scss">
 .tabs,
 .el-tabs__header,
 .el-tabs__nav-scroll {

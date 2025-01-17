@@ -65,7 +65,7 @@ import {useRoute, useRouter} from "vue-router";
 import {computed, ref} from "vue";
 import type {IdType} from "@/api/common.ts";
 import {getProblemScore, type ProblemScore, type ProblemStatistic} from "@/api/record"
-import __, {round} from "lodash";
+import {round} from "lodash";
 import {isNullObj} from "@/utils/valueutil.ts";
 import {useParamStore} from "@/stores/useParam.ts";
 

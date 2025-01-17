@@ -144,12 +144,10 @@
 </template>
 
 <script setup lang="ts">
-import IconLinux from "@/assets/icons/IconLinux.vue";
 import {computed, ref} from "vue";
 import {type CloudFile, debouncedAddDir, deleteFile, listFiles, type QueryCloudFile} from "@/api/file";
 import __ from "lodash";
 import {ElMessageBox, ElNotification} from "element-plus";
-import {removeList} from "@/api/list";
 import IconFolder from "@/assets/icons/IconFolder.vue";
 import IconLoader from "@/components/IconLoader/IconLoader.vue";
 

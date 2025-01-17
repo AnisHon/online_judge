@@ -1,23 +1,17 @@
 package com.anishan.problem.controller;
 
-import cn.hutool.core.bean.BeanUtil;
-import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.problem.domain.dto.DetailProblemDto;
 import com.anishan.problem.domain.dto.PagedProblem;
 import com.anishan.problem.domain.dto.ProblemTagDto;
-import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.vo.AdminDetailProblem;
 import com.anishan.problem.domain.vo.DetailProblem;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.service.TagService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;

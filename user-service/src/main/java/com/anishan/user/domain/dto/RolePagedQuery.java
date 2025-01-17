@@ -1,18 +1,15 @@
 package com.anishan.user.domain.dto;
 
+import com.anishan.api.domain.entity.SysRole;
 import com.anishan.commons.annotation.ConditionColumn;
 import com.anishan.commons.annotation.SortedColumn;
 import com.anishan.commons.domain.dto.SortedPagedQuery;
-import com.anishan.commons.util.MysqlMappingUtils;
-import com.anishan.api.domain.entity.SysRole;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

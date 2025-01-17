@@ -204,8 +204,7 @@ import {
   debouncedAddContest,
   debouncedGetContestAdmin,
   debouncedUpdateContest,
-  dict, rank,
-  removeContest, type ScoredUser, statistic, type StatisticProblem
+  dict, removeContest, type ScoredUser, type StatisticProblem
 } from "@/api/contest";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
@@ -400,7 +399,7 @@ getList();
 
 </style>
 
-<style>
+<style lang="scss">
 .contest-container {
   .inline-form {
     .el-input {

@@ -12,7 +12,6 @@ import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.service.ContestService;
-import com.anishan.problem.service.RecordsService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;

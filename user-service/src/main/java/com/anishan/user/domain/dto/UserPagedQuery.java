@@ -49,19 +49,4 @@ public class UserPagedQuery extends SortedPagedQuery<SysUser> {
     @ApiModelProperty("用户状态(0 1封禁)")
     private UserState status;
 
-
-    @Override
-    protected Class<SysUser> extendedClass() {
-        return SysUser.class;
-    }
-
-    @Override
-    protected Object extendedObject() {
-        return this;
-    }
-
-    @Override
-    protected Map<String, String> extendedKeyMapping() {
-        return KEY_MAPPING;
-    }
 }

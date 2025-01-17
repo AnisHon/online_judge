@@ -5,17 +5,15 @@ import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import 'element-plus/theme-chalk/dark/css-vars.css';
 
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import { ElCollapseTransition } from 'element-plus';
+import {createApp} from 'vue';
+import {createPinia} from 'pinia';
+import {ElCollapseTransition} from 'element-plus';
 
 import piniaPluginPersistedState from 'pinia-plugin-persistedstate'; //引入持久化插件
-
 import App from '@/App.vue';
 import router from './router';
 import {has, hasAny} from "@/utils/hasAuth";
 import {initSSE} from "@/utils/sse";
-import {useToken} from "@/stores/useToken.ts";
 
 
 const app = createApp(App)

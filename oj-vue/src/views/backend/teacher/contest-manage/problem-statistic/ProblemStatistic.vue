@@ -101,7 +101,7 @@ import {useRoute, useRouter} from "vue-router";
 import {computed, ref} from "vue";
 import type {IdType} from "@/api/common.ts";
 import {getProblemStatistic, type ProblemStatistic} from "@/api/record"
-import __, {round} from "lodash";
+import {round} from "lodash";
 import {useParamStore} from "@/stores/useParam.ts";
 
 const route = useRoute();
