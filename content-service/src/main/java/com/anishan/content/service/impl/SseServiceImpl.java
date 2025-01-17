@@ -38,7 +38,11 @@ public class SseServiceImpl implements SseService {
 
     public synchronized void removeUserSession(Long userId, String token) {
         if (userTokenMap.containsKey(userId)) {
-            userTokenMap.get(userId).remove(token);
+            ConcurrentHashSet<String> set = userTokenMap.get(userId);
+            set.remove(token);
+            if (set.isEmpty()) {
+                userTokenMap.remove(userId);
+            }
         }
     }
 
@@ -46,6 +50,10 @@ public class SseServiceImpl implements SseService {
         return userTokenMap.get(userId);
     }
 
+    @Override
+    public long count() {
+        return userTokenMap.size();
+    }
 
     @Override
     public SseEmitter reconnect(String uuid) {
@@ -82,7 +90,7 @@ public class SseServiceImpl implements SseService {
                     try {
                         log.info("[{}]连接异常,{}", uuid, throwable.toString());
                         sseEmitter.send(SseEmitter.event()
-                                .id(uuid.toString())
+                                .id(uuid)
                                 .name("发生异常！")
                                 .data("发生异常请重试！")
                                 .reconnectTime(3000));
@@ -135,20 +143,6 @@ public class SseServiceImpl implements SseService {
         }
     }
 
-    /**
-     * 断开
-     *
-     * @param uuid session ID
-     * @param userId 用户Id
-     */
-    @Override
-    public void closeSse(String uuid, Long userId){
-        if (sseEmitterMap.containsKey(uuid)) {
-            SseEmitter sseEmitter = sseEmitterMap.get(uuid);
-            sseEmitter.complete();
-        }
-    }
-
     @Override
     public boolean sendPlainString(String uuid, SseEvent sseEvent, String message) {
         return sendMessage(uuid, sseEvent.getEvent(), message);
@@ -163,6 +157,9 @@ public class SseServiceImpl implements SseService {
     @Override
     public void sendPlainString(Long userId, SseEvent sseEvent, String message) {
         Set<String> userSessions = getUserSessions(userId);
+        if (userSessions == null) {
+            return;
+        }
         for (String userSession : userSessions) {
             sendMessage(userSession, sseEvent.getEvent(), message);
         }
@@ -177,34 +174,6 @@ public class SseServiceImpl implements SseService {
             log.error("消息序列化失败", e);
         }
     }
-
-    /**
-     * 向某个User广播消息
-     * @param userId 用户ID
-     * @param sseEvent sse消息事件
-     * @param message 消息
-     */
-    @Override
-    public void sendMessage(Long userId, SseEvent sseEvent, Object message) {
-        Set<String> userSessions = getUserSessions(userId);
-        for (String userSession : userSessions) {
-            sendMessage(userSession, sseEvent, message);
-        }
-    }
-
-
-    /**
-     * 全体广播消息
-     * @param sseEvent 消息事件
-     * @param message 消息
-     */
-    @Override
-    public void sendMessage(SseEvent sseEvent, Object message) {
-        for (String s : sseEmitterMap.keySet()) {
-            sendMessage(s, sseEvent, message);
-        }
-    }
-
 
     @Override
     public synchronized void close(String uuid) {

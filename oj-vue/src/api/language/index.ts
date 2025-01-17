@@ -1,8 +1,9 @@
 import {get} from "@/utils/http";
+import type {IdType} from "@/api/common.ts";
 
 interface LanguageView {
     gmtCreate: Date;
-    languageId: number;
+    languageId: IdType;
     languageName: string;
     seq: number;
     compileCommand: string;

@@ -1,6 +1,8 @@
 package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.enumeration.ValidationGroup;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -23,10 +25,12 @@ public class ProblemListRelationDto {
 
     @NotNull(groups = {ValidationGroup.Insert.class, ValidationGroup.Delete.class, ValidationGroup.Update.class})
     @ApiModelProperty("题单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long listId;
 
     @NotNull(groups = {ValidationGroup.Insert.class, ValidationGroup.Delete.class, ValidationGroup.Update.class})
     @ApiModelProperty("题目ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
     @NotNull(groups = ValidationGroup.Insert.class)

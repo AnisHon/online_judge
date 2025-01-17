@@ -1,9 +1,7 @@
 package com.anishan.user.service.impl;
 
-import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.domain.entity.SysUser;
-import com.anishan.user.config.UserConfig;
 import com.anishan.user.service.SysMenuService;
 import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.service.SysUserService;
@@ -25,7 +23,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final SysUserService sysUserService;
     private final SysUserRoleService sysUserRoleService;
     private final SysMenuService sysMenuService;
-    private final UserConfig userConfig;
+
 
 
     private LoginUser loadByUsername(String username) throws UsernameNotFoundException {

@@ -37,7 +37,6 @@ export const dynamicRoute: RouteRecordRaw = {
             meta: {
                 has: ["problem:problem:list", "problem:list:add-problem", "problem:list:del-problem"],
                 name: "编辑题目",
-                parent: 'problem-edit',
                 component: 'ProblemEditView',
                 noKeepAlive: true,
             }
@@ -49,8 +48,63 @@ export const dynamicRoute: RouteRecordRaw = {
             meta: {
                 has: ["problem:problem:add", "problem:problem:remove"],
                 name: "列表题目编辑",
-                parent: 'list-edit',
                 component: 'ListProblem',
+                noKeepAlive: true,
+            }
+        },
+        {
+            path: 'teacher/contest-manage/problem-statistic/:contestId',
+            name: 'problem-statistic',
+            component: () => import("@/views/backend/teacher/contest-manage/problem-statistic/ProblemStatistic.vue"),
+            meta: {
+                has: ['problem:contest:statistic'],
+                name: "题目统计",
+                component: 'ProblemStatistic',
+                noKeepAlive: true,
+            }
+        },
+        {
+            path: 'teacher/contest-manage/problem-scores/:contestId/:problemId',
+            name: 'problem-scores',
+            component: () => import("@/views/backend/teacher/contest-manage/problem-scores/ProblemScores.vue"),
+            meta: {
+                has: ['problem:contest:statistic'],
+                name: "题目分数",
+                component: 'ProblemScores',
+                noKeepAlive: true,
+            }
+        },
+        {
+            path: 'teacher/contest-manage/user-statistic/:contestId',
+            name: 'user-statistic',
+            component: () => import("@/views/backend/teacher/contest-manage/user-statistic/UserStatistic.vue"),
+            meta: {
+                has: ['problem:contest:statistic'],
+                name: "用户统计",
+                component: 'UserStatistic',
+                noKeepAlive: true,
+            }
+        },
+        {
+            path: 'teacher/contest-manage/user-scores/:contestId/:userId',
+            name: 'user-scores',
+            component: () => import("@/views/backend/teacher/contest-manage/user-scores/UserScores.vue"),
+            meta: {
+                has: ['problem:contest:statistic'],
+                name: "用户分数",
+                component: 'UserScores',
+                noKeepAlive: true,
+            }
+        },
+        {
+            path: 'teacher/contest-manage/user-answer/:contestId/:userId/:problemId',
+            name: 'user-answer',
+            component: () => import("@/views/backend/teacher/contest-manage/user-answer/ProblemAnswer.vue"),
+            meta: {
+                has: ['problem:contest:statistic'],
+                name: "用户答案",
+                component: 'ProblemAnswer',
+                noKeepAlive: true,
             }
         }
     ]

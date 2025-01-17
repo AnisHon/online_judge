@@ -9,10 +9,7 @@ import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.Records;
 import com.anishan.problem.domain.entity.UserContestRelation;
-import com.anishan.problem.domain.vo.ContestVo;
-import com.anishan.problem.domain.vo.ProblemStatistic;
-import com.anishan.problem.domain.vo.ScoredUser;
-import com.anishan.problem.domain.vo.UserAnswer;
+import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.JudgeService;
 import com.anishan.problem.service.RecordsService;
@@ -20,13 +17,16 @@ import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -112,21 +112,59 @@ public class RecordController {
     }
 
 
-    @GetMapping("/rank/{contestId}")
-    @PreAuthorize("hasAuthority('problem:contest:rank')")
-    @ApiOperation("排名")
-    public R<List<ScoredUser>> rank(@PathVariable("contestId") Long contestId) {
-        List<ScoredUser> users = recordsService.rank(contestId);
+    @GetMapping("/statistic/user/{contestId}")
+    @PreAuthorize("hasAuthority('problem:contest:statistic')")
+    @ApiOperation("用户分数对错统计")
+    public R<List<UserStatistic>> userStatistic(@ApiParam("比赛ID") @PathVariable("contestId") Long contestId) {
+        List<UserStatistic> users = recordsService.getUserStatistic(contestId);
         return R.success(users);
     }
 
 
-    @GetMapping("/statistic/{contestId}")
+    @GetMapping("/statistic/problem/{contestId}")
     @PreAuthorize("hasAuthority('problem:contest:statistic')")
     @ApiOperation("统计题目对错情况")
-    public R<List<ProblemStatistic>> statistic(@PathVariable("contestId") Long contestId) {
-        List<ProblemStatistic> statistic = recordsService.statistic(contestId);
+    public R<List<ProblemStatistic>> problemStatistic(@ApiParam("比赛ID") @PathVariable("contestId") Long contestId) {
+        List<ProblemStatistic> statistic = recordsService.getProblemStatistic(contestId);
         return R.success(statistic);
+    }
+
+    @GetMapping("/score/problem")
+    @PreAuthorize("hasAuthority('problem:contest:statistic')")
+    @ApiOperation("查看比赛的题目分数")
+    public R<List<ProblemScore>> problemScores(
+            @ApiParam("题目ID") @NotNull Long problemId,
+            @ApiParam("比赛ID") @NotNull Long contestId
+    ) {
+        List<ProblemScore> statistic = recordsService.getProblemScores(problemId, contestId);
+        return R.success(statistic);
+    }
+
+    @GetMapping("/score/user")
+    @PreAuthorize("hasAuthority('problem:contest:statistic')")
+    @ApiOperation("查看比赛的用户分数")
+    public R<List<UserScore>> userScores(
+            @ApiParam("用户ID") @NotNull Long userId,
+            @ApiParam("比赛ID") @NotNull Long contestId
+    ) {
+        List<UserScore> statistic = recordsService.getUserScores(userId, contestId);
+        return R.success(statistic);
+    }
+
+    @GetMapping("/admin/answer")
+    @ApiOperation("管理员获取用户答案")
+    @PreAuthorize("hasAuthority('problem:contest:statistic')")
+    public R<UserAnswer> getAdminAnwer(
+            @NotNull Long userId,
+            @NotNull Long contestId,
+            @NotNull Long problemId
+    ) {
+        UserAnswerRequest userAnswerRequest = new UserAnswerRequest();
+        userAnswerRequest.setContestId(contestId);
+        userAnswerRequest.setProblemId(problemId);
+
+        UserAnswer userAnswer = recordsService.getAnswer(userId, userAnswerRequest);
+        return R.success(userAnswer);
     }
 
     @GetMapping("/join-number/{contestId}")

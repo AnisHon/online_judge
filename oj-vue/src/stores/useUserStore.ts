@@ -1,10 +1,11 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
 import {getMe} from "@/api/auth/authentication";
+import type {IdType} from "@/api/common.ts";
 
 
 export interface LoginUser {
-    userId: number;
+    userId: IdType;
     userName: string;
     nikeName: string;
     email: string;

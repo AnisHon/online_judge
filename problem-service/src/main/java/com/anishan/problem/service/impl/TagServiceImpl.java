@@ -35,12 +35,6 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
 
     private final ProblemTagService problemTagService;
 
-    private boolean doCheckName(String name) {
-        return this.exists(new LambdaQueryWrapper<Tag>()
-                .eq(Tag::getTagName, name)
-        );
-    }
-
     public LocalDateTime getUpdateTime(Long tagId) {
         return this.getObj(new LambdaQueryWrapper<Tag>()
                         .select(Tag::getUpdateTime)
@@ -55,12 +49,6 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
         return this.updateById(tag);
     }
 
-    public boolean doCheckIdExists(Long id) {
-       return this.exists(new LambdaQueryWrapper<Tag>()
-                .eq(Tag::getTagId, id)
-        );
-    }
-
     public void doCheckName(TagDto tagDto) {
         boolean exists = this.exists(new LambdaQueryWrapper<Tag>()
                 .eq(Tag::getTagName, tagDto.getTagName())
@@ -68,17 +56,6 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
         if (exists) {
             throw new RuntimeException("标签名字重复");
         }
-    }
-
-    public void doCheckBeforeUpdate(TagDto tagDto) {
-        doCheckIdAndThrow(tagDto.getTagId());
-        boolean exists = doCheckName(tagDto.getTagName());
-        if (!exists) {
-            throw new RuntimeException("标签名字已经存在");
-        }
-
-
-        doCheckName(tagDto);
     }
 
     @Override
@@ -97,30 +74,20 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
 
     @Override
     public boolean updateTag(TagDto tagDto) {
-//        doCheckBeforeUpdate(tagDto);
-        Tag tag = BeanUtil.copyProperties(tagDto, Tag.class);
+        Tag tag = this.getById(tagDto.getTagId());
+        BeanUtil.copyProperties(tagDto, tag);
         return doUpdate(tag);
     }
 
     @Override
     public boolean deleteTag(Long id) {
-//        boolean b = doCheckIdExists(id);
-//        if (!b) {
-//            throw new RuntimeException("删除标签不存在");
-//        }
-        return this.removeById(id);
-    }
 
-    public void doCheckIdAndThrow(Long id) {
-        boolean b = doCheckIdExists(id);
-        if (!b) {
-            throw new RuntimeException("ID不存在");
-        }
+        return this.removeById(id);
     }
 
     @Override
     public boolean addTagForProblem(ProblemTagDto problemTagDto) {
-        doCheckIdExists(problemTagDto.getTagId());
+
         ProblemTagRelation problemTagRelation = BeanUtil.copyProperties(problemTagDto, ProblemTagRelation.class);
         return problemTagService.save(problemTagRelation);
     }

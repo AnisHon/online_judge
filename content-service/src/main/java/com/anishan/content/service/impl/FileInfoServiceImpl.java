@@ -69,6 +69,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper, FileInfo> i
         if (CollUtil.isEmpty(referenceCount)) {
             return;
         }
+        fileInfoMapper.updateReferenceByFilePath(referenceCount);
 
 
     }

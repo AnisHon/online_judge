@@ -3,15 +3,16 @@ import {type finallyCallback, get, post, put, query, type successCallback} from 
 import {remove} from "@/utils/simpleCRUD.ts";
 import {ElNotification} from "element-plus";
 import __ from "lodash";
+import type {IdType} from "@/api/common.ts";
 
 export interface Solution {
-    solutionId: number;
+    solutionId: IdType;
     title: string;
     topUp: boolean;
-    userId: number;
+    userId: IdType;
     nikeName: string;
     private_: boolean;
-    problemId: number;
+    problemId: IdType;
     problemTitle: string;
     content: string;
     createTime: Date;
@@ -19,8 +20,8 @@ export interface Solution {
 }
 
 export interface SolutionForm {
-    solutionId?: number;
-    problemId?: number;
+    solutionId?: IdType;
+    problemId?: IdType;
     topUp?: boolean;
     title: string;
     private_: boolean;
@@ -29,8 +30,8 @@ export interface SolutionForm {
 
 
 export interface QuerySolution extends SortedPagedType {
-    problemId?: number;
-    userId?: number;
+    problemId?: IdType;
+    userId?: IdType;
 }
 
 export const getSolution = async (id: number): Promise<Solution> => {
@@ -126,27 +127,27 @@ const editSolutionAdmin = async (form: SolutionForm) => {
 }
 
 export const debouncedDeleteSolution = (final: finallyCallback) => {
-    return __.debounce((id: number | number[]) => {
+    return __.debounce((id: IdType | IdType[]) => {
         deleteSolution(id)
             .finally(final)
     }, 1000);
 }
 
-const deleteSolution = async (ids: number[] | number) => {
+const deleteSolution = async (ids: IdType[] | IdType) => {
     await remove(ids, "/problem-api/solution");
 
 }
 
-export const deleteSolutionAdmin = async (ids: number[] | number) => {
+export const deleteSolutionAdmin = async (ids: IdType[] | IdType) => {
     await remove(ids, "/problem-api/solution/admin");
 }
 
-export const topUp = async (id: number): Promise<boolean> => {
+export const topUp = async (id: IdType): Promise<boolean> => {
     const {data} = await put<undefined, boolean>("/problem-api/solution/admin/topUp/" + id, undefined);
     return data;
 }
 
-export const lowDown = async (id: number): Promise<boolean> => {
+export const lowDown = async (id: IdType): Promise<boolean> => {
     const {data} = await put<undefined, boolean>("/problem-api/solution/admin/lowDown/" + id, undefined);
     return data;
 }

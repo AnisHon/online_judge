@@ -5,6 +5,8 @@ import com.anishan.commons.annotation.SortedColumn;
 import com.anishan.commons.domain.dto.SortedPagedQuery;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.api.domain.entity.SysRole;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -17,30 +19,10 @@ import java.util.Map;
 @ApiModel("角色分页类")
 public class RolePagedQuery extends SortedPagedQuery<SysRole> {
 
-    public static final Map<String, String> KEY_MAPPING;
-
-    static {
-        KEY_MAPPING = MysqlMappingUtils.mapColumn(RolePagedQuery.class);
-    }
-
-    @Override
-    protected Class<SysRole> extendedClass() {
-        return SysRole.class;
-    }
-
-    @Override
-    protected Object extendedObject() {
-        return this;
-    }
-
-    @Override
-    protected Map<String, String> extendedKeyMapping() {
-        return KEY_MAPPING;
-    }
-
     @ConditionColumn("eq")
     @SortedColumn
     @ApiModelProperty("角色ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long roleId;
 
     @ConditionColumn

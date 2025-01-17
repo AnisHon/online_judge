@@ -2,22 +2,23 @@ import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, remove, update} from "@/utils/simpleCRUD";
+import type {IdType} from "@/api/common.ts";
 
 interface TagView {
-    tagId: number;
+    tagId: IdType;
     tagName: string;
     tagColor: string;
     createTime: Date;
 }
 
 interface TagForm {
-    tagId?: number;
+    tagId?: IdType;
     tagName?: string;
     tagColor?: string;
 }
 
 
-const removeTag = async (id: number | number[]) => {
+const removeTag = async (id: IdType | IdType[]) => {
     await remove(id, "/problem-api/tag");
 }
 

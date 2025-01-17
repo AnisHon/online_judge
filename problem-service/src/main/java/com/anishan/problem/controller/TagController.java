@@ -1,5 +1,6 @@
 package com.anishan.problem.controller;
 
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.commons.domain.R;
 
@@ -26,6 +27,7 @@ public class TagController {
 
     @GetMapping("/getAll")
     @ApiOperation("获取所有标签")
+    @EnableCache(name = "get-tag")
     public R<List<TagVo>> getAll() {
         List<TagVo> list = tagService.getAll();
         return R.success(list);

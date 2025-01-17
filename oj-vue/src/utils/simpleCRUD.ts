@@ -7,6 +7,7 @@ import {
     toPagedQueryData
 } from "@/api/pagedType";
 import {ElNotification} from "element-plus";
+import type {IdType} from "@/api/common.ts";
 
 /**
  * 通用删除
@@ -14,7 +15,7 @@ import {ElNotification} from "element-plus";
  * @param url 删除的URL
  */
 
-export const remove = async (id: number | number[] | string | string[], url: string) => {
+export const remove = async (id: IdType | IdType[] | string | string[], url: string) => {
 
     const {data} = await del<boolean, number | number[] | string | string[]>(url, id);
 

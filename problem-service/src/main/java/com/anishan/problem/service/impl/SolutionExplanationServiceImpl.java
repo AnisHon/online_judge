@@ -180,6 +180,7 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
     }
 
     @Override
+    @Transactional
     public boolean update(Long userId, DetailSolutionDto detailSolutionDto) {
 
         SolutionExplanation solutionExplanation = BeanUtil.copyProperties(detailSolutionDto, SolutionExplanation.class);
@@ -204,6 +205,7 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
     }
 
     @Override
+    @Transactional
     public boolean adminUpdate(DetailSolutionDto detailSolutionDto) {
         return saveOrUpdateSolution(null, detailSolutionDto);
     }
@@ -216,9 +218,11 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
     }
 
     @Override
+    @Transactional
     public boolean adminAdd(Long userId, DetailSolutionDto detailSolutionDto) {
         return saveOrUpdateSolution(userId, detailSolutionDto);
     }
+
 
     private boolean saveOrUpdateSolution(Long userId, DetailSolutionDto detailSolutionDto) {
         SolutionExplanation solutionExplanation = BeanUtil.copyProperties(detailSolutionDto, SolutionExplanation.class);

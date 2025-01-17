@@ -3,6 +3,7 @@ import {type LoginUser} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
 import router from '@/router'
 import {useMenuStore} from "@/stores/useMenuStore";
+import {closeSse, initSSE, SSE_URL} from "@/utils/sse";
 
 export interface LoginForm {
     captchaCode: string;
@@ -62,7 +63,8 @@ async function login(data: LoginForm) {
 
     if (success) {
         await tokenStore.setToken(token);
-        toHome()
+        initSSE();
+        toHome();
     } else {
         throw message;
     }
@@ -100,10 +102,9 @@ async function resetPassword(data: {code: string, password: string}) {
 }
 
 async function logout() {
+    closeSse(SSE_URL);
     await get("/user-api/auth/logout");
     // const router = useRouter();
-
-
     useToken().clearToken();
     useMenuStore().clear();
     router.replace({name: "login"});

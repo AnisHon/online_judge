@@ -72,10 +72,6 @@ public class FileController {
     public void getAvatar(@PathVariable Long userId, HttpServletResponse response) {
         String avatarPath = fileService.getAvatarPath(userId);
         responseFile(avatarPath, response);
-
-
-
-
     }
 
 

@@ -1,6 +1,8 @@
 package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.enumeration.ValidationGroup;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,6 +20,7 @@ public class ProblemListDto {
 
     @ApiModelProperty("主键")
     @NotNull(groups = ValidationGroup.Update.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long listId;
 
     @ApiModelProperty("题单名字，必须唯一")

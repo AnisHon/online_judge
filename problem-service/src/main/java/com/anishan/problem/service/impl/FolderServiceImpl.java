@@ -92,34 +92,17 @@ public class FolderServiceImpl extends ServiceImpl<FolderMapper, Folder>
         );
     }
 
-    private void notExistIdAndThrow(Long id) {
-        if (id != 0 && !existFolder(id)) {
-            throw new RuntimeException("不存在id:" + id);
-        }
-    }
-
-    private void doAddCheck(FolderDto folderDto) {
-        notExistIdAndThrow(folderDto.getParentId());
-        if (existFolder(folderDto.getFolderName())) {
-            throw new RuntimeException("已经存在同名Folder");
-        }
-    }
-
     @Override
     public boolean addFolder(FolderDto folderDto) {
-        doAddCheck(folderDto);
         Folder folder = BeanUtil.copyProperties(folderDto, Folder.class, "folderId");
         return this.save(folder);
     }
 
-    private void doCheckUpdate(FolderDto folderDto) {
-        notExistIdAndThrow(folderDto.getFolderId());
-    }
 
     @Override
     public boolean updateFolder(FolderDto folderDto) {
-        doCheckUpdate(folderDto);
-        Folder folder = BeanUtil.copyProperties(folderDto, Folder.class);
+        Folder folder = this.getById(folderDto.getFolderId());
+        BeanUtil.copyProperties(folderDto, folder);
         return this.updateById(folder);
     }
 

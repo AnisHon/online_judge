@@ -2,6 +2,7 @@ import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, remove, update} from "@/utils/simpleCRUD";
+import type {IdType} from "@/api/common.ts";
 
 
 enum FolderType {
@@ -11,23 +12,23 @@ enum FolderType {
 }
 
 interface FolderView {
-    folderId: number;
+    folderId: IdType;
     folderName: string;
     folderType: FolderType;
-    listId: number;
-    parentId: number;
+    listId: IdType;
+    parentId: IdType;
 }
 
 interface FolderForm {
-    folderId?: number;
+    folderId?: IdType;
     folderName?: string;
     folderType?: FolderType;
-    listId?: number;
-    parentId?: number;
+    listId?: IdType;
+    parentId?: IdType;
 }
 
 interface TreedFolderView {
-    id?: number;
+    id?: IdType;
     folder: FolderView;
     children: TreedFolderView[];
     file: boolean;
@@ -58,7 +59,7 @@ const dict = {
 
 }
 
-const removeFolder = async (id: number | number[]) => {
+const removeFolder = async (id: IdType | IdType[]) => {
     await remove(id, "/problem-api/folder");
 }
 

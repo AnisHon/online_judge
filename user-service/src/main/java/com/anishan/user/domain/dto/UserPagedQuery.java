@@ -23,11 +23,6 @@ public class UserPagedQuery extends SortedPagedQuery<SysUser> {
     static {
 
         KEY_MAPPING = MysqlMappingUtils.mapColumn(UserPagedQuery.class);
-//        KEY_MAPPING = new HashMap<>();
-//        KEY_MAPPING.put("userId", "user_id");
-//        KEY_MAPPING.put("userName", "user_name");
-//        KEY_MAPPING.put("email", "email");
-//        KEY_MAPPING.put("nikeName", "nike_name");
     }
 
     @SortedColumn

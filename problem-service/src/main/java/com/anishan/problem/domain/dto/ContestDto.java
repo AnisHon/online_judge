@@ -2,6 +2,8 @@ package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.enumeration.ContestAuth;
 import com.anishan.commons.enumeration.ValidationGroup;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -15,15 +17,18 @@ public class ContestDto {
 
     @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("比赛ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long contestId;
 
     @ApiModelProperty("比赛创建者id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @ApiModelProperty("比赛标题")
     private String title;
 
     @ApiModelProperty("题单id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long listId;
 
     @ApiModelProperty("比赛说明")

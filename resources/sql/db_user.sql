@@ -1,7 +1,7 @@
 -- ----------------------------
 -- 用户服务的数据库
 -- ----------------------------
-drop database if exists db_user;
+# drop database if exists db_user;
 create database db_user character set utf8mb4;
 use db_user;
 
@@ -220,10 +220,13 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (324, '统计', 4, 32, '#', 'B', 'problem:contest:statistic', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (325, '排名', 5, 32, '#', 'B', 'problem:contest:rank', '#');
 
-
+# 文件上传下载删除
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1001, '添加文件', 0, null, '#', 'B', 'content:file:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1002, '删除文件', 1, null, '#', 'B', 'content:file:remove', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1003, '更改文件名', 2, null, '#', 'B', 'content:file:edit', '#');
+
+# 信息展示
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1100, '信息查看', 1, null, '#', 'B', 'content:info', '#');
 
 
 -- ----------------------------
@@ -280,7 +283,11 @@ values
     (2, 322),
     (2, 323),
     (2, 324),
-    (2, 325);
+    (2, 325),
+    (2, 1001),
+    (2, 1002),
+    (2, 1003),
+    (2, 1100);
 
 # 管理员，没有权限相关操作，权限操作危险，可能会毁坏网站
 delete from sys_role_menu where role_id = 3;
@@ -290,8 +297,6 @@ insert into sys_role_menu(role_id, menu_id)
         from sys_menu
         where
             menu_id not in (select menu_id from sys_role_menu where role_id = 2)
-          and
-            menu_id not in (220, 221, 222, 223, 230, 231, 233, 234, 235, 22, 23, 324, 325)
     );
 
 

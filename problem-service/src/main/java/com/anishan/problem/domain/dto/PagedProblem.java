@@ -3,6 +3,8 @@ package com.anishan.problem.domain.dto;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.enumeration.ProblemType;
 import com.anishan.problem.domain.entity.Problem;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -17,6 +19,7 @@ import java.util.List;
 public class PagedProblem extends PagedQuery<Problem> {
 
     @ApiModelProperty("题目ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
     @ApiModelProperty("名字")

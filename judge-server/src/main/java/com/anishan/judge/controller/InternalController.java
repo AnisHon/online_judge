@@ -25,15 +25,6 @@ public class InternalController {
 
 
     private final JudgeService judgeService;
-    private final OjProblemCaseService ojProblemCaseService;
-
-
-//    @ApiOperation("")
-//    @GetMapping("/getCases/{problemId}")
-//    public R<List<OjProblemCaseVo>> getCases(@PathVariable Long problemId) {
-//
-//    }
-
 
     @ApiOperation("判题接口")
     @PostMapping("/judge")
@@ -50,11 +41,5 @@ public class InternalController {
     }
 
 
-    @ApiOperation("设置Case接口")
-    @PostMapping("/set-case/{problemId}")
-    public R<Void> setCase(@PathVariable("problemId") Long problemId, @RequestBody List<OjProblemCase> cases) {
-        ojProblemCaseService.setCases(problemId, cases);
-        return R.success(null);
-    }
 
 }

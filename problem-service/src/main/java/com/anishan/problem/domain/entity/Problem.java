@@ -6,6 +6,9 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 /**
@@ -18,7 +21,7 @@ public class Problem implements Serializable {
     /**
      * 主键
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long problemId;
 
 
@@ -63,12 +66,14 @@ public class Problem implements Serializable {
     /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     /**
      * 更新时间，用于乐观锁
      */
     @Version
+    @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
 
     @TableField(exist = false)

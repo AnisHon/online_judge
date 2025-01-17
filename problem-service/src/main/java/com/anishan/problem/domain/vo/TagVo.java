@@ -1,6 +1,8 @@
 package com.anishan.problem.domain.vo;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -15,6 +17,7 @@ import java.util.Date;
 public class TagVo {
 
     @ApiModelProperty("主键")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long tagId;
 
     @ApiModelProperty("题目标签")

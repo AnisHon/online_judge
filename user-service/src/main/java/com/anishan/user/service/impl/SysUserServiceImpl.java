@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.api.client.content.client.ContentInternalClient;
 import com.anishan.api.client.user.domain.SseMessage;
 import com.anishan.api.client.user.domain.vo.UserVo;
@@ -33,7 +34,6 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -129,7 +129,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     @Override
     public boolean updateUser(UserDto userDto) {
-        SysUser sysUser = BeanUtil.copyProperties(userDto, SysUser.class);
+        SysUser sysUser = this.getById(userDto.getUserId());
+        BeanUtil.copyProperties(userDto, sysUser);
         return updateUser(sysUser);
     }
 
@@ -237,6 +238,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     }
 
     @Override
+    @EnableCache(name = "rank", expire = 6 * 60 * 60 * 1000)
     public List<UserVo> rank(Integer limit) {
         Page<SysUser> page = Page.of(1, limit);
         List<SysUser> users = this.list(
@@ -260,19 +262,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         List<SysMenu> menus = sysMenuService.list();
         List<String> authority = menus.stream().map(SysMenu::getPerms).collect(Collectors.toList());
 
-
-
         String password = passwordEncoder.encode(userConfig.getRootPassword());
 
         // magic number id 0 -> root
-        SysUser sysUser = new SysUser();
-        sysUser.setUserId(0L);
-        sysUser.setUserName("root");
-        sysUser.setPassword(password);
-        sysUser.setNikeName("ROOT");
-        sysUser.setEmail("root@example.invalid");
-        sysUser.setStatus(UserState.NORMAL);
-
+        SysUser sysUser = new SysUser()
+                .setUserId(0L)
+                .setUserName("root")
+                .setPassword(password)
+                .setNikeName("ROOT")
+                .setEmail("root@example.invalid")
+                .setStatus(UserState.NORMAL);
 
         LoginUser loginUser = new LoginUser();
         loginUser.setUser(sysUser);
@@ -281,6 +280,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         return loginUser;
     }
 
+
+
+    // 因为循环引用所以没有依赖注入
     @NotNull
     public static LoginUser getLoginUser(SysUser sysUser, SysUserRoleService sysUserRoleService, SysMenuService sysMenuService) {
         List<SysRole> roles;

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.thymeleaf.util.SetUtils;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -33,19 +34,12 @@ public class FileServiceImpl implements FileService {
     private static final Digester md5 = new Digester(DigestAlgorithm.MD5);
 
     static {
-        imageTypes = new HashSet<>();
-        imageTypes.addAll(List.of(
-                "jpg",
-                "jpeg",
-                "png",
-                "xbm",
-                "tif",
-                "jfif",
-                "ico", "tiff", "gif", "svg", "jpeg", "svgz", "webp", "bmp", "pjp", "apng", "pjpeg", "avif"));
+        imageTypes = Set.of(  "jpg", "jpeg", "png", "xbm",
+                "tif", "jfif", "ico", "tiff", "gif",
+                "svg", "svgz", "webp", "bmp",
+                "pjp", "apng", "pjpeg", "avif"
+        );
     }
-
-
-
 
 
     @Override

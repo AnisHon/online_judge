@@ -2,6 +2,7 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.problem.domain.dto.PagedProblemList;
@@ -44,15 +45,6 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     private final ProblemListMapper problemListMapper;
     private final ProblemProblemListMapper problemProblemListMapper;
 
-    public boolean isExistId(Long id) {
-        return this.exists(new LambdaQueryWrapper<ProblemList>()
-                .eq(ProblemList::getListId, id)
-        );
-    }
-
-
-
-
     @Override
     public List<ProblemVo> getProblemListByListId(Long id) {
         MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
@@ -66,6 +58,7 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
     @Override
+    @Transactional
     public boolean addProblemList(ProblemListDto pl) {
         ProblemList problemList = BeanUtil.copyProperties(pl, ProblemList.class);
         return this.save(problemList);
@@ -94,7 +87,8 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
     @Override
-    public boolean updateProblem(ProblemListDto problemListDto) {
+    @Transactional
+    public boolean updateProblemList(ProblemListDto problemListDto) {
         LocalDateTime dataTime = getDataTime(problemListDto.getListId());
         ProblemList problemList = BeanUtil.copyProperties(problemListDto, ProblemList.class);
         problemList.setUpdateTime(dataTime);
@@ -102,15 +96,13 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
         return this.updateById(problemList);
     }
 
-
     @Override
-    public boolean addProblem(List<ProblemListRelationDto> relations) {
+    public boolean addProblemList(List<ProblemListRelationDto> relations) {
         List<ProblemProblemListRelation> list = BeanUtil.copyToList(relations, ProblemProblemListRelation.class);
 
         return problemProblemListService.saveBatch(list);
 
     }
-
 
     @Override
     public boolean delProblem(List<ProblemListRelationDto> relations) {
@@ -143,22 +135,19 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
         return PagedResult.build(page, ProblemListVo.class);
     }
 
-
     @Override
-    public List<ProblemInListVo> getProblemsForUser(Long id) {
+    @EnableCache(name = "get-contest-problems")
+    public List<ProblemInListVo> getProblemsForUser(Long listId) {
         MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
                 .selectAll(Problem.class)
                 .select(ProblemProblemListRelation::getProblemOrder, ProblemProblemListRelation::getScore)
                 .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
                 .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
-                .eq(ProblemList::getListId, id)
+                .eq(ProblemList::getListId, listId)
                 .eq(Problem::getAuth, ProblemAuth.Public)
                 .isNotNull(Problem::getProblemId);
         return problemListMapper.selectJoinList(ProblemInListVo.class, wrapper);
-
     }
-
-
 }
 
 

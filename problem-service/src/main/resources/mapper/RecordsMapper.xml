@@ -13,25 +13,60 @@
 
     </resultMap>
 
+    <select id="selectProblemStatistic" resultType="com.anishan.problem.domain.vo.ProblemStatistic">
+        select
+            ppl.problem_id                  as problem_id,
+            p.title                         as title,
+            ppl.score                       as score,
+            sum(IF(status = 1, 1, 0))       as right_num,
+            sum(IF(status = 1, 0, 1))       as wrong_num,
+            sum(IF(ISNULL(status), 1, 0))   as absent_num,
+            avg(r.score)                    as average
+        from problem_problem_list ppl
+        left join contest c on c.list_id = ppl.list_id
+            and c.del_flag = 0
+        left join contest_records r on r.problem_id = ppl.problem_id
+        left join problem p on p.problem_id = ppl.problem_id
+            and p.del_flag = 0
+        where
+          c.contest_id = #{contestId}
+        group by ppl.problem_id
+    </select>
 
-    <resultMap id="statisticResultMap" type="com.anishan.problem.domain.vo.ProblemStatistic">
-        <id property="problemId" column="problem_id"/>
-        <result property="title" column="title"/>
-        <result property="rightNum" column="right_num"/>
-        <result property="wrongNum" column="wrong_num"/>
-    </resultMap>
+    <select id="selectUserStatistic" resultType="com.anishan.problem.domain.vo.UserStatistic">
+        select
+            uc.user_id                      as user_id,
+            sum(IF(status = 1, 1, 0))       as right_num,
+            sum(IF(status = 1, 0, 1))       as wrong_num,
+            sum(IF(ISNULL(status), 1, 0))   as absent_num,
+            sum(cr.score)                   as score
 
-
-    <select id="statistic" resultMap="statisticResultMap">
-        select p.problem_id              as problem_id,
-               p.title                   as title,
-               sum(IF(status = 1, 1, 0)) AS right_num
-        from contest c
-                 right join problem_problem_list ppl on ppl.list_id = c.list_id
-                 left join records r on r.problem_id = ppl.problem_id and r.contest_id = #{contestId}
-                 left join problem p on p.problem_id = ppl.problem_id
-        where c.contest_id = #{contestId}
-        group by p.problem_id
-
+        from user_contest uc
+        left join contest_records cr on uc.contest_id = cr.contest_id
+        where
+            uc.contest_id = #{contestId}
+        group by uc.user_id
+    </select>
+    <select id="selectProblemScore" resultType="com.anishan.problem.domain.vo.ProblemScore">
+        select
+            c.user_id           as userId,
+            cr.status           as correct,
+            cr.score            as score
+        from user_contest c
+        left join contest_records cr on cr.user_id = c.user_id
+           and cr.problem_id = ${problemId}
+           and c.contest_id = #{contestId}
+    </select>
+    <select id="selectUserScore" resultType="com.anishan.problem.domain.vo.UserScore">
+        select
+            ppl.problem_id      as problemId,
+            p.title             as title,
+            cr.status           as correct,
+            cr.score            as score
+        from problem_problem_list ppl
+        left join db_problem.problem p on ppl.problem_id = p.problem_id
+        left join contest_records cr on p.problem_id = cr.problem_id
+            and cr.contest_id = #{contestId}
+            and cr.user_id = #{userId}
     </select>
 </mapper>

@@ -5,6 +5,8 @@ import com.anishan.commons.annotation.SortedColumn;
 import com.anishan.commons.domain.dto.SortedPagedQuery;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.user.domain.entity.SysClass;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,32 +18,14 @@ import java.util.Map;
 @ApiModel("class分页")
 public class ClassPagedQuery extends SortedPagedQuery<SysClass> {
 
-    private static final Map<String, String> KEY_MAPPING;
-
-    static {
-        KEY_MAPPING = MysqlMappingUtils.mapColumn(ClassPagedQuery.class);
-    }
-
 
     @SortedColumn
     @ConditionColumn("eq")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long classId;
     @SortedColumn
     @ConditionColumn
     private String className;
 
-    @Override
-    protected Class<SysClass> extendedClass() {
-        return SysClass.class;
-    }
 
-    @Override
-    protected Object extendedObject() {
-        return this;
-    }
-
-    @Override
-    protected Map<String, String> extendedKeyMapping() {
-        return KEY_MAPPING;
-    }
 }

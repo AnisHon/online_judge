@@ -5,6 +5,7 @@ import com.anishan.commons.enumeration.ValidationGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Email;
@@ -13,12 +14,14 @@ import javax.validation.constraints.Pattern;
 import java.math.BigDecimal;
 
 @Data
+@ToString(exclude = "password")
 @ApiModel("用于添加用户，拥有几乎所有属性，有权限和密码，密码自动加密。不同于UserDto")
 public class SysUserDto {
     @NotNull(groups = ValidationGroup.Update.class)
     @Pattern(regexp = "^[a-zA-Z0-9_-]{4,16}$", groups = ValidationGroup.Insert.class)
     @ApiModelProperty(value = "用户名，唯一，可用于登陆", required = true)
     private String userName;
+
     @NotNull()
     @ApiModelProperty(value = "roleId", required = true)
     private Long role;

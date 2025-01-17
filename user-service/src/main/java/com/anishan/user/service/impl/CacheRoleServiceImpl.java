@@ -1,15 +1,15 @@
-package com.anishan.user.util;
+package com.anishan.user.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.user.domain.vo.MenuVo;
 import com.anishan.user.domain.vo.TreedMenuVo;
+import com.anishan.user.service.CacheRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class RoleUtil {
+public class CacheRoleServiceImpl implements CacheRoleService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final String userMenu = "user:menu:";
@@ -31,12 +31,14 @@ public class RoleUtil {
         return userTreedMenu + roleId;
     }
 
+    @Override
     public void cacheMenus(Long roleId, List<MenuVo> menus) {
         String menuKey = getMenuKey(roleId);
         redisTemplate.opsForValue().set(menuKey, menus);
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public boolean isExist(Long roleId) {
         String menuKey = getMenuKey(roleId);
         boolean exist = Boolean.TRUE.equals(redisTemplate.hasKey(menuKey));
@@ -50,8 +52,8 @@ public class RoleUtil {
         return exist;
     }
 
-
     @SuppressWarnings("unchecked")
+    @Override
     public List<MenuVo> getMenus(List<Long> roleIds) {
         List<MenuVo> menus = new ArrayList<>();
         for (Long roleId : roleIds) {
@@ -69,8 +71,8 @@ public class RoleUtil {
         }
         return menus;
     }
-
     @SuppressWarnings("unchecked")
+    @Override
     public boolean isExistTreedMenu(Long roleId) {
         String menuKey = getTreedMenuKey(roleId);
         boolean exist = Boolean.TRUE.equals(redisTemplate.hasKey(menuKey));
@@ -84,12 +86,14 @@ public class RoleUtil {
         return exist;
     }
 
+    @Override
     public void cacheTreedMenus(Long roleId, List<TreedMenuVo> menus) {
         String menuKey = getTreedMenuKey(roleId);
         redisTemplate.opsForValue().set(menuKey, menus);
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public List<TreedMenuVo> getTreedMenus(List<Long> roleIds) {
         List<TreedMenuVo> menus = new ArrayList<>();
         for (Long roleId : roleIds) {
@@ -106,6 +110,7 @@ public class RoleUtil {
         return menus;
     }
 
+    @Override
     public void refresh() {
         Set<String> keys = redisTemplate.keys(userTreedMenu + '*');
         Set<String> keys1 = redisTemplate.keys(userMenu + '*');

@@ -1,6 +1,6 @@
 package com.anishan.user.aspect;
 
-import com.anishan.user.util.RoleUtil;
+import com.anishan.user.service.CacheRoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class RoleMenuAspect {
 
 
-    private final RoleUtil roleUtil;
+    private final CacheRoleService cacheRoleService;
 
     @Pointcut(
             "execution(* com.anishan.user.service.SysMenuService.grant(..)) ||" +
@@ -37,12 +37,14 @@ public class RoleMenuAspect {
 
     @AfterReturning("updateOrDeleteMethods()")
     public void beforeUpdateOrDelete() {
-        roleUtil.refresh();
+        cacheRoleService.refresh();
 
         log.info("---------------------------------");
         log.info("注意！！菜单权限或角色发生改变！刷新缓存");
         log.info("---------------------------------");
     }
+
+
 
 
 }

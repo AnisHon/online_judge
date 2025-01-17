@@ -1,5 +1,7 @@
 package com.anishan.content.domain.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -11,12 +13,14 @@ import java.time.LocalDateTime;
 public class CloudFilesVo {
 
     @ApiModelProperty("云文件ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long cloudFileId;
 
     @ApiModelProperty("文件名")
     private String fileName;
 
     @ApiModelProperty("file info文件ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long fileId;
 
     @ApiModelProperty("文件MD5")
@@ -29,12 +33,14 @@ public class CloudFilesVo {
     private Long fileSize;
 
     @ApiModelProperty("上传用户ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @ApiModelProperty("上传用户名")
     private String nikeName;
 
     @ApiModelProperty("父文件ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;
 
     @ApiModelProperty("是否是文件夹")

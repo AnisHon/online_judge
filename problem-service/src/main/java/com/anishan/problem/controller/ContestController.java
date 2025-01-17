@@ -1,5 +1,6 @@
 package com.anishan.problem.controller;
 
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -107,6 +108,7 @@ public class ContestController {
 
     @GetMapping("/problems/{id}")
     @ApiOperation("用户获取比赛题目接口")
+    @EnableCache(name = "get-problem")
     public R<List<ProblemInListVo>> getContestProblems(
             @RequestHeader("user-id") Long userId,
             @PathVariable @NotNull Long id

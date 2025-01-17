@@ -1,5 +1,7 @@
 package com.anishan.problem.domain.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -12,18 +14,21 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 public class SolutionVo {
     @ApiModelProperty(value = "主键")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long solutionId;
 
     @ApiModelProperty(value = "题解标题")
     private String title;
 
     @ApiModelProperty(value = "对应题目")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
     @ApiModelProperty(value = "题目标题")
     private String problemTitle;
 
     @ApiModelProperty(value = "发送者ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @ApiModelProperty(value = "发送者昵称")

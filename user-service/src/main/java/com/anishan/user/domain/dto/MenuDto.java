@@ -2,6 +2,8 @@ package com.anishan.user.domain.dto;
 
 import com.anishan.commons.enumeration.MenuType;
 import com.anishan.commons.enumeration.ValidationGroup;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -14,6 +16,8 @@ public class MenuDto {
 
     @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("菜单ID，插入时不管用，不用设置")
+    @JsonSerialize(using = ToStringSerializer.class)
+
     private Long menuId;
 
     @NotNull(groups = ValidationGroup.Update.class)
@@ -25,6 +29,8 @@ public class MenuDto {
     private Integer orderNum;
 
     @ApiModelProperty("父菜单ID, 0表示没有父菜单")
+    @JsonSerialize(using = ToStringSerializer.class)
+
     private Long parentId;
 
     @ApiModelProperty("路由路径")

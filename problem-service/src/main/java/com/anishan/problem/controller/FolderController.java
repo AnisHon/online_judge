@@ -1,5 +1,6 @@
 package com.anishan.problem.controller;
 
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.commons.domain.R;
 import com.anishan.problem.domain.dto.FolderDto;
@@ -26,11 +27,11 @@ public class FolderController {
 
     @GetMapping("/tree")
     @ApiOperation("获取树状Folder")
+    @EnableCache(name = "get-folder", expire = 60 * 1000)
     public R<List<TreedFolder>> getTreedFolder() {
         List<TreedFolder> allFolders = folderService.getAllTreedFolders();
         return R.success(allFolders);
     }
-
 
     @PostMapping
     @ApiOperation("添加Folder")
@@ -47,7 +48,6 @@ public class FolderController {
         boolean b = folderService.updateFolder(folderDto);
         return R.success(b);
     }
-
 
     @GetMapping
     @ApiOperation("获取普通非树状Folder")

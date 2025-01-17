@@ -1,5 +1,6 @@
 package com.anishan.user.controller;
 
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.domain.R;
 import com.anishan.user.domain.dto.UserCheckInDto;
 import com.anishan.user.domain.entity.UserCheckIn;
@@ -25,7 +26,7 @@ public class CheckInController {
 
     private final UserCheckInService userCheckInService;
     private final AuthenticationService authenticationService;
-    @GetMapping("")
+    @GetMapping
     @ApiOperation("签到")
     public R<UserCheckInInfo> checkIn() {
         UserCheckInInfo data = userCheckInService.checkIn(authenticationService.myId());
@@ -34,6 +35,7 @@ public class CheckInController {
 
     @GetMapping("/list")
     @ApiOperation("列出最近签到列表")
+    @EnableCache(name = "check-in-list", expire = 60 * 1000)
     public R<List<UserCheckInDto>> list() {
         return R.success(userCheckInService.getUserCheckInList());
     }

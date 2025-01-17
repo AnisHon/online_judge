@@ -4,6 +4,7 @@ import com.anishan.commons.enumeration.MenuType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import io.swagger.annotations.ApiModel;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 public class MenuVo {
 
     @ApiModelProperty("菜单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long menuId;
 
     @ApiModelProperty("菜单名称")
@@ -26,6 +28,7 @@ public class MenuVo {
     private Integer orderNum;
 
     @ApiModelProperty("父菜单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;
 
     @ApiModelProperty("路由路径")

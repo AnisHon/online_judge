@@ -34,6 +34,7 @@ const router = useRouter();
 const editableTabsValue = tabStore.getCurrentTab();
 const editableTabs = tabStore.getTabs();
 
+
 const setTabs = () => {
   if (!route.fullPath.startsWith("/backend")) {
     return;
@@ -41,7 +42,7 @@ const setTabs = () => {
 
   const name = <string>route.name
   const title = <string>route?.meta?.name || "";
-  tabStore.open(name, title);
+  tabStore.open(name, title, route.fullPath);
 }
 
 const onTabRemove = (targetName: string) => {
@@ -50,7 +51,13 @@ const onTabRemove = (targetName: string) => {
 }
 
 const onTabChange = (targetName: string) => {
-  router.push({name: targetName})
+  const path = tabStore.getUrl(targetName);
+  try {
+    router.push({path: path});
+  } catch (e) {
+    console.log(e)
+  }
+
 }
 
 watch(route, setTabs, { immediate: true });

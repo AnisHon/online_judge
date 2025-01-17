@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
-import com.anishan.api.client.judgeserver.client.JudgeClient;
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.problem.domain.vo.OjProblemVo;
 import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
@@ -55,7 +55,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final OjProblemCaseService ojProblemCaseService;
     private final ProblemProblemListMapper problemProblemListMapper;
     private final ProblemUploadUtil problemUploadUtil;
-    private final JudgeClient judgeClient;
 
 
     public Problem doGetProblem(Long id) {
@@ -120,13 +119,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                         pagedProblem.getTitle(),
                         type
                 );
-//        Long l = problemMapper.selectTaggedProblemCountByProblemIdAndTagId(
-//                pagedProblem.getProblemId(),
-//                pagedProblem.getTagIds(),
-//                pagedProblem.getTitle(),
-//                type
-//        );
-
         return PagedResult.fromPage(page, taggedProblemVos, page.getTotal());
     }
 
@@ -306,11 +298,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                 wrapper
         );
 
-
-
-        boolean b = ojProblemCaseService.saveOrUpdateBatch(cases);
-//        judgeClient.setCase(problemId, cases);
-        return b;
+        //        judgeClient.setCase(problemId, cases);
+        return ojProblemCaseService.saveOrUpdateBatch(cases);
     }
 
     @Override
@@ -324,7 +313,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
         return b && decidedUpdateProblem(problem, entity);
     }
-
 
     public AdminDetailProblem decidedGetProblem(Problem problem) {
 
@@ -357,7 +345,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
     }
 
-
     @Override
     public AdminDetailProblem getAdminDetail(Long id) {
         boolean existed = this.isExisted(id);
@@ -365,7 +352,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         Problem problem = this.getById(id);
         return decidedGetProblem(problem);
     }
-
 
     public void getFillAnswers(DetailProblem detailProblem, Long problemId) {
 
@@ -404,10 +390,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         return detailProblem;
     }
 
-
-
-
-
     @Override
     public DetailProblem getDetailProblem(Long id) {
         Problem problem = doGetProblem(id);
@@ -418,8 +400,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         }
         return doGetDetail(problemVo);
     }
-
-
 
     @Override
     public List<ProblemVo> getBatchByIds(List<Long> pIds) {
@@ -438,7 +418,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                         .eq(Problem::getProblemId, problemId)
         );
     }
-
 
     @Override
     public PagedResult<ProblemVo> listProblemNotInList(Long listId, PagedProblem query) {
@@ -515,6 +494,22 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         return saveListProblems(objs);
     }
 
+    @Override
+    @EnableCache(name = "recentProblems")
+    public List<ProblemVo> recentProblems(Integer limit) {
+        limit = Math.min(limit, 50);
+
+        Page<Problem> page = Page.of(1, limit);
+        List<Problem> list = this.list(
+                page,
+                new LambdaQueryWrapper<Problem>()
+                        .select(Problem::getProblemId, Problem::getTitle, Problem::getType, Problem::getSource)
+                        .eq(Problem::getAuth, ProblemAuth.Public)
+                        .orderByDesc(Problem::getCreateTime)
+        );
+
+        return BeanUtil.copyToList(list, ProblemVo.class);
+    }
 
 }
 

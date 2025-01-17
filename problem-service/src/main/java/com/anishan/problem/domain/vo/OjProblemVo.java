@@ -2,6 +2,8 @@ package com.anishan.problem.domain.vo;
 
 import com.anishan.commons.enumeration.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -19,15 +21,18 @@ public class OjProblemVo {
 
     @TableId(type = IdType.AUTO)
     @ApiModelProperty("主键")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
     @ApiModelProperty("时间限制单位ms")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long timeLimit;
 
     @ApiModelProperty("难度 (0 未分类, 1 简单, 2 中等, 3 困难)")
     private Difficulty difficulty;
 
     @ApiModelProperty("内存限制单位kb")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long memoryLimit;
 
     @ApiModelProperty("堆栈内存限制单位mb")

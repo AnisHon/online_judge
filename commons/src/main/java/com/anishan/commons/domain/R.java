@@ -24,11 +24,13 @@ public class R<T> {
     @ApiModelProperty("返回数据的")
     private T data;
 
+    public R() {}
+
     public static <T> R<T> success(T data) {
         return new R<>(HTTP_OK, "success", data);
     }
 
-    public static R<Map<String, Object>> withMap() {
+    public static <T> R<Map<String, T>> withMap() {
         return success(new HashMap<>());
     }
 

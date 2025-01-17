@@ -2,6 +2,8 @@ package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.enumeration.ProblemType;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -17,6 +19,7 @@ public class ProblemDto {
     /**
      * 主键
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
     /**

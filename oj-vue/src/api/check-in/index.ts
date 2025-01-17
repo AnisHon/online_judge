@@ -1,9 +1,10 @@
 import {debounce} from "@/utils/debounce";
 import {get} from "@/utils/http";
 import useLoading from "@/hooks/useLoading";
+import type {IdType} from "@/api/common.ts";
 
 interface UserCheckIn {
-    userId: number;
+    userId: IdType;
     nikeName: string;
     continuityDays: number;
     rewardPoint: number;

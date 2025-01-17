@@ -6,6 +6,7 @@ import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, pagedFetch, remove, update} from "@/utils/simpleCRUD";
 import type {UserView} from "@/api/user";
+import type {IdType} from "@/api/common.ts";
 
 enum ContestAuth {
     PUBLIC,
@@ -14,31 +15,31 @@ enum ContestAuth {
 }
 
 interface ContestView {
-    contestId: number;
+    contestId: IdType;
     title: string;
     auth: ContestAuth;
     startTime: string;
     endTime: string;
     joinedNumber?: number;
-    problemId?: number;
+    problemId?: IdType;
     pwd?: string;
-    listId?: number;
+    listId?: IdType;
     description?: string;
 }
 
 interface ContestForm {
-    contestId?: number;
+    contestId?: IdType;
     title?: string;
     auth?: ContestAuth;
     startTime?: Date;
     endTime?: Date;
     pwd?: string;
-    listId?: number;
+    listId?: IdType;
     description?: string;
 }
 
 interface JoinContestRequest {
-    contestId: number;
+    contestId: IdType;
     password?: string;
 }
 
@@ -53,7 +54,7 @@ interface ScoredUser {
 }
 
 interface StatisticProblem {
-    problemId: number;
+    problemId: IdType;
     title: string;
     rightNum: number;
     wrongNum: number;
@@ -123,7 +124,7 @@ const debouncedIsJoined = (success: successCallback<boolean>) => {
 }
 
 
-const removeContest = async (id: number | number[]) => {
+const removeContest = async (id: IdType | IdType[]) => {
     await remove(id, "/problem-api/contest");
 }
 
@@ -189,8 +190,8 @@ const debouncedGetContestAdmin = (page: PagedType, success: successCallback<Page
     return {loading, isLoading, get};
 }
 
-const getScore = async (contestId: number) => {
-    const {data} = await get<number | null>("/problem-api/record/score", contestId);
+const getScore = async (contestId: IdType) => {
+    const {data} = await get<IdType | null>("/problem-api/record/score", contestId);
     return data;
 }
 

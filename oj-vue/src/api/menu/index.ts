@@ -7,12 +7,13 @@ import {get, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, update} from "@/utils/simpleCRUD";
+import type {IdType} from "@/api/common.ts";
 
 interface QueryMenu extends SortedPagedType{
-    menuId?: number;
+    menuId?: IdType;
     menuName?: string;
     menuType?: MenuType;
-    parentId?: number;
+    parentId?: IdType;
     icon?: string;
     perms?: string;
     router?: string;
@@ -34,7 +35,7 @@ const dict = {
     ],
 }
 
-const removeMenu = async (id: number | number[]) => {
+const removeMenu = async (id: IdType | IdType[]) => {
     await remove(id, "/user-api/menu");
 }
 

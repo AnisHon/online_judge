@@ -32,30 +32,14 @@ public class ProblemUploadUtil {
 
 
     private final ObjectMapper objectMapper;
-    private Pattern pattern;
     Map<String, String> mdStringMapper;
 
     @PostConstruct
     public void init() {
         mdStringMapper = new HashMap<>();
-
-        // 构建正则表达式
-        String regex = String.join("|", mdStringMapper.keySet());
-        pattern = Pattern.compile(regex);
-
-
     }
 
     private String formatMDString(String text) {
-//        Matcher matcher = pattern.matcher(text);
-//
-//        // 使用 StringBuffer 进行替换操作
-//        StringBuilder sb = new StringBuilder();
-//        while (matcher.find()) {
-//            matcher.appendReplacement(sb, mdStringMapper.get(matcher.group()));
-//        }
-//        matcher.appendTail(sb);
-
         return text;
     }
 

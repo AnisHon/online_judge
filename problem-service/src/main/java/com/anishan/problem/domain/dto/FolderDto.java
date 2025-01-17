@@ -3,6 +3,8 @@ package com.anishan.problem.domain.dto;
 import com.anishan.commons.enumeration.FolderType;
 import com.anishan.commons.enumeration.ValidationGroup;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,6 +24,7 @@ public class FolderDto implements Serializable {
 
     @ApiModelProperty("文件夹ID，不存在ID为0的文件夹")
     @NotNull(groups = ValidationGroup.Update.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long folderId;
 
     @ApiModelProperty("唯一文件夹名")
@@ -33,9 +36,11 @@ public class FolderDto implements Serializable {
 
     @NotNull(groups = ValidationGroup.Insert.class, message = "不可以为空")
     @ApiModelProperty("父文件夹名，默认0表示没有父文件夹")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;
 
     @ApiModelProperty("题单，如果是D类型则应该为空")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long listId;
 
 }

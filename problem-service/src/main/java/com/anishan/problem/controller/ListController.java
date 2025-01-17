@@ -47,13 +47,11 @@ public class ListController {
         return R.success();
     }
 
-
-
     @PutMapping
     @PreAuthorize("hasAuthority('problem:list:edit')")
     @ApiOperation("修改题单")
     public R<Boolean> update(@RequestBody @Validated(ValidationGroup.Update.class) ProblemListDto problemListDto) {
-        boolean b = problemListService.updateProblem(problemListDto);
+        boolean b = problemListService.updateProblemList(problemListDto);
         return R.success(b);
     }
 
@@ -61,7 +59,7 @@ public class ListController {
     @PreAuthorize("hasAuthority('problem:list:add-problem')")
     @ApiOperation("为题单添加题目")
     public R<Boolean> addProblem(@RequestBody List<ProblemListRelationDto> relations) {
-        boolean b = problemListService.addProblem(relations);
+        boolean b = problemListService.addProblemList(relations);
         return R.success(b);
     }
 

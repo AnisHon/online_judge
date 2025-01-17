@@ -6,6 +6,7 @@ import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
 import {remove, update} from "@/utils/simpleCRUD";
 import {type LogSubmit} from "@/api/problem/judge";
+import type {IdType} from "@/api/common.ts";
 
 
 // 1 OJ, 2 FILL, 3 CHOICE
@@ -34,7 +35,7 @@ export enum Difficulty {
 }
 
 export interface ProblemView {
-    problemId: number,
+    problemId: IdType,
     title: string,
     description: string,
     source: string,
@@ -79,7 +80,7 @@ export interface ProblemParam {
     currentPage: number;
     pageSize: number;
     problemId?: string | null;
-    tagIds?: number[] | null;
+    tagIds?: IdType[] | null;
     title?: string;
     type?: ProblemType;
 }
@@ -91,7 +92,7 @@ export interface ChoiceProblemView {
 }
 
 export interface OjProblemView {
-    problemId: number,
+    problemId: IdType,
     difficulty: Difficulty,
     memoryLimit: number,
     stackLimit: number,
@@ -121,7 +122,7 @@ export interface PagedData {
 }
 
 interface AdminQueryProblem extends PagedType{
-    problemId?: number;
+    problemId?: IdType;
     title?: string;
     type?: ProblemType;
 }
@@ -129,7 +130,7 @@ interface AdminQueryProblem extends PagedType{
 
 
 interface Answer {
-    answerId?: number;
+    answerId?: IdType;
     answerText?: string;
     isCorrect?: boolean;
     blankIndex?: number;
@@ -137,14 +138,14 @@ interface Answer {
 }
 
 interface OjCase {
-    caseId?: number;
+    caseId?: IdType;
     input?: string;
     output?: string;
     score?: number;
 }
 
 export interface MainProblemForm {
-    problemId?: number,
+    problemId?: IdType,
     title?: string,
     description?: string,
     source?: string,
@@ -154,7 +155,7 @@ export interface MainProblemForm {
 }
 
 export interface OjProblemForm {
-    problemId?: number,
+    problemId?: IdType,
     difficulty?: Difficulty,
     memoryLimit?: number,
     stackLimit?: number,
@@ -198,15 +199,15 @@ const debouncedGetProblem = (queryData: AdminQueryProblem, success: successCallb
     return {loading, isLoading, get};
 }
 
-async function getAdminDetailProblem(id: number | undefined): Promise<ProblemForm> {
-    const {code, data, message} = await get<ProblemForm, number>("/problem-api/problem/detail", id)
+async function getAdminDetailProblem(id: IdType | undefined): Promise<ProblemForm> {
+    const {code, data, message} = await get<ProblemForm, IdType>("/problem-api/problem/detail", id)
     if (code !== 200) {
         ElMessage.warning(message)
     }
     return data;
 }
 
-const debouncedAdminGetProblem = (id: number | undefined, success: successCallback<ProblemForm>) => {
+const debouncedAdminGetProblem = (id: IdType | undefined, success: successCallback<ProblemForm>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce(() => {
         getAdminDetailProblem(id)
@@ -217,7 +218,7 @@ const debouncedAdminGetProblem = (id: number | undefined, success: successCallba
 }
 
 
-async function removeProblems(ids: number | number[]) {
+async function removeProblems(ids: IdType | IdType[]) {
     await remove(ids, "/problem-api/problem");
 }
 
@@ -266,7 +267,7 @@ async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
 
 }
 
-async function getDetailProblem(id: number): Promise<ProblemDetailView> {
+export async function getDetailProblem(id: IdType): Promise<ProblemDetailView> {
     const {code, data, message} = await get("/problem-api/problem", id)
     if (code !== 200) {
         ElMessage.warning(message)
@@ -275,8 +276,8 @@ async function getDetailProblem(id: number): Promise<ProblemDetailView> {
     return <ProblemDetailView>data
 }
 
-const recentSubmit = async (problemId: number) => {
-    const {data} = await get<LogSubmit[], number>("/problem-api/log/recentSubmit/", problemId);
+const recentSubmit = async (problemId: IdType) => {
+    const {data} = await get<LogSubmit[], IdType>("/problem-api/log/recentSubmit/", problemId);
     return data
 }
 
@@ -305,7 +306,6 @@ export type {
 
 export {
     getProblems,
-    getDetailProblem,
     debouncedGetProblem,
     removeProblems,
     ProblemAuth,

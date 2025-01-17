@@ -37,7 +37,7 @@ spring:
         - id: content-resource
           uri: lb://content-service
           predicates:
-            - Path=/image/**, /avatar/**, /file/**
+            - Path=/image/**, /avatar/**, /file/**, /sse/**
 
 
 knife4j:

@@ -1,6 +1,8 @@
 package com.anishan.user.domain.dto;
 
 import com.anishan.commons.enumeration.ValidationGroup;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -19,6 +21,7 @@ public class UserRoleRelationDto {
      */
     @NotNull(groups = {ValidationGroup.Insert.class, ValidationGroup.Delete.class})
     @ApiModelProperty("用户ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     /**
@@ -26,6 +29,7 @@ public class UserRoleRelationDto {
      */
     @NotNull(groups = {ValidationGroup.Insert.class, ValidationGroup.Delete.class})
     @ApiModelProperty("角色ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long roleId;
 
 

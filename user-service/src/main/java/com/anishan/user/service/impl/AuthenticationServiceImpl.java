@@ -15,9 +15,8 @@ import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.*;
 import com.anishan.api.util.AuthUtil;
-import com.anishan.user.util.EmailSender;
-import com.anishan.user.util.RoleUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,16 +37,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class AuthenticationServiceImpl implements AuthenticationService {
 
+    private final EmailService emailService;
     private final SysUserService sysUserService;
     private final SysUserRoleService sysUserRoleService;
     private final SysMenuService sysMenuService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final SysRoleService sysRoleService;
     private final SysRoleMenuService sysRoleMenuService;
     private final UserConfig config;
     private final AuthUtil authUtil;
-    private final RoleUtil roleUtil;
+    private final CacheRoleService cacheRoleService;
     private final UserConfig userConfig;
 
     // 默认就是student
@@ -87,11 +86,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public Authentication doCheckLogin(LoginForm loginForm) {
 
 
-        ThrowUtil.illegalArgument(
-                authUtil.checkAndRemoveCaptchaCode(loginForm.getToken(), loginForm.getCaptchaCode()),
-                "验证码错误"
-        );
-
+        captchaCheck(loginForm.getToken(), loginForm.getCaptchaCode());
 
 
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
@@ -137,6 +132,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         LoginVo loginVo = new LoginVo();
         loginVo.setSuccess(false);
 
+
         if (!doCheckEmailCode(registrationForm.getEmail(), registrationForm.getCode())) {
             loginVo.setMessage("邮箱验证码错误");
         } else if (sysUserService.existsUsername(registrationForm.getUserName())) {
@@ -170,7 +166,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         List<Long> roleIds = List.of(roleId);
         List<String> authorities = sysMenuService.getAuthorities(roleIds);
-        List<SysRole> sysRoles = sysRoleService.listByIds(roleIds);
+        List<SysRole> sysRoles = Db.listByIds(roleIds, SysRole.class);
 
         loginUser.setUser(sysUser);
         loginUser.setAuths(authorities);
@@ -295,10 +291,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return authResultVo;
     }
 
+    private void captchaCheck(String captchaToken, String captchaCode) {
+        ThrowUtil.businessError(!authUtil.hasCaptchaKey(captchaToken), "验证码已过期");
+        ThrowUtil.businessError(authUtil.checkAndRemoveCaptchaCode(captchaToken, captchaCode), "验证码错误");
+    }
+
     private void doSendEmailCheck(String email, String captchaToken, String captchaCode) {
-        ThrowUtil.illegalState(email == null, "未设置邮箱");
-        ThrowUtil.illegalArgument(authUtil.hasEmailKey(email), "请勿重复发送验证码");
-        ThrowUtil.illegalArgument(authUtil.checkAndRemoveCaptchaCode(captchaToken, captchaCode), "验证码错误");
+        ThrowUtil.businessError(email == null, "未设置邮箱");
+        ThrowUtil.businessError(authUtil.hasEmailKey(email), "请勿重复发送验证码");
+
+        captchaCheck(captchaToken, captchaCode);
 
     }
 
@@ -316,7 +318,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return authResultVo;
         }
 
-        String code = EmailSender.sendEmailCodeAsync(email);
+        String code = emailService.sendEmailCode(email);
 
         authUtil.cacheEmailCode(email, code);
 
@@ -382,16 +384,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private List<MenuVo> useCache(List<Long> roleIds) {
         for (Long roleId : roleIds) {
-            boolean exist = roleUtil.isExist(roleId);
+            boolean exist = cacheRoleService.isExist(roleId);
 
             if (!exist) {
                 List<SysMenu> menus = sysRoleMenuService.getAuthorityMenu(List.of(roleId));
                 List<MenuVo> menuVos = BeanUtil.copyToList(menus, MenuVo.class);
-                roleUtil.cacheMenus(roleId, menuVos);
+                cacheRoleService.cacheMenus(roleId, menuVos);
             }
         }
 
-        return roleUtil.getMenus(roleIds);
+        return cacheRoleService.getMenus(roleIds);
 
     }
 
@@ -412,23 +414,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public List<TreedMenuVo> useTreedMenuCache(List<Long> roleIds) {
         for (Long roleId : roleIds) {
             synchronized (this) {
-                boolean exist = roleUtil.isExistTreedMenu(roleId);
+                boolean exist = cacheRoleService.isExistTreedMenu(roleId);
                 if (!exist) {
                     List<TreedMenuVo> menus = sysMenuService.getTreedMenuByRole(List.of(roleId));
-                    roleUtil.cacheTreedMenus(roleId, menus);
+                    cacheRoleService.cacheTreedMenus(roleId, menus);
                 }
             }
 
         }
-        return roleUtil.getTreedMenus(roleIds);
+        return cacheRoleService.getTreedMenus(roleIds);
     }
 
     @Override
     public List<TreedMenuVo> getTreedMenuByRole() {
         Long userId = myId();
         List<Long> roleIds = getRoleIdsByUserId(userId);
-//        return sysMenuService.getTreedMenuByRole(roleIds);
-
 
         // in-memory root account
         if (userId == 0L) {

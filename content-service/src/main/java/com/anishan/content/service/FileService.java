@@ -1,16 +1,24 @@
 package com.anishan.content.service;
 
+import cn.hutool.core.date.DateUtil;
 import com.anishan.api.client.content.domain.OssFileInputStream;
+import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 public interface FileService {
 
     String imagePath = "images/";
 
+    /**
+     * images/年/月/日/fileName
+     */
     default String getImagePath(String fileName) {
-        return imagePath + fileName;
+        String dateTime = DateUtil.format(DateUtil.date(), "yyyy/MM/dd");
+        return imagePath + "/" + dateTime + fileName;
     }
 
     default String getAvatarPath(Long userId) {

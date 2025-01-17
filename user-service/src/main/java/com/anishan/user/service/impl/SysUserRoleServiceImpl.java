@@ -11,11 +11,13 @@ import com.anishan.user.mapper.SysUserMapper;
 import com.anishan.user.service.SysRoleService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.mapper.SysUserRoleMapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -86,8 +88,10 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
 
         ThrowUtil.illegalArgument(!role, "角色不存在");
 
-        boolean exists = sysUserMapper.exists(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getUserId, sysUserRoleRelation.getUserId()));
+        LambdaQueryWrapper<SysUser> wrapper = Wrappers.lambdaQuery(SysUser.class)
+                .eq(SysUser::getUserId, sysUserRoleRelation.getUserId());
+
+        boolean exists = Db.count(wrapper) > 0;
 
         ThrowUtil.illegalArgument(!exists, "用户不存在");
 

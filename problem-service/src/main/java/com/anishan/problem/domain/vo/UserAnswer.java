@@ -1,6 +1,8 @@
 package com.anishan.problem.domain.vo;
 
 import com.anishan.problem.domain.dto.JudgeAnswer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -21,5 +23,6 @@ public class UserAnswer {
     private String code;
 
     @ApiModelProperty("编程语言ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long languageId;
 }

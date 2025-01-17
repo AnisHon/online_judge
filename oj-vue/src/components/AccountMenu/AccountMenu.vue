@@ -16,7 +16,6 @@
 
 <script setup lang="ts">
 
-import {UserFilled} from "@element-plus/icons-vue";
 import {logout} from "@/api/auth/authentication.ts";
 import {computed} from "vue";
 import {useRoute, useRouter} from "vue-router";

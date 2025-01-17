@@ -1,10 +1,11 @@
 import type {PagedResponse, PagedType, SortedPagedType,} from "@/api/pagedType";
-import {get, getWithParams, post, put, type successCallback} from "@/utils/http";
+import {get, getWithParams, put, type successCallback} from "@/utils/http";
 import __, {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, update} from "@/utils/simpleCRUD";
 import {useUserStore} from "@/stores/useUserStore";
 import {ElNotification} from "element-plus";
+import type {IdType} from "@/api/common.ts";
 
 enum UserStatus {
     NORMAL,
@@ -24,7 +25,7 @@ interface UserAddForm {
 }
 
 interface UserUpdateForm {
-    userId?: number;
+    userId?: IdType;
     nikeName?: string;
     email?: string;
     status?: UserStatus;
@@ -32,7 +33,7 @@ interface UserUpdateForm {
 }
 
 interface UserView {
-    userId: number;
+    userId: IdType;
     userName: string;
     email: string;
     point: number;
@@ -43,13 +44,13 @@ interface UserView {
 }
 
 interface UserForm {
-    userId?: number;
+    userId?: IdType;
     userName?: string;
     nikeName?: string;
 }
 
 interface QueryUser extends SortedPagedType{
-    userId?: number;
+    userId?: IdType;
     userName?: string;
     nikeName?: string;
     email?: string;
@@ -57,8 +58,8 @@ interface QueryUser extends SortedPagedType{
 }
 
 interface QueryRoleUser extends PagedType{
-    roleId?: number,
-    userId?: number,
+    roleId?: IdType,
+    userId?: IdType,
     username?: string
     email?: string,
     nikeName?: string,
@@ -84,7 +85,7 @@ const rank = async (limit: number) => {
 
 
 
-const removeUser = async (id: number | number[]) => {
+const removeUser = async (id: IdType | IdType[]) => {
     await remove(id,  "/user-api/user");
 }
 
@@ -93,12 +94,7 @@ export const getMyPoint = async (): Promise<string> => {
     return data;
 }
 
-export const countOnline = async (): Promise<number> => {
-    const {data} = await get<number>("/user-api/auth/count");
-    return data;
-}
-
-export const banUser = async (id: number | number[]) => {
+export const banUser = async (id: IdType | IdType[]) => {
     const {data} = await put("/user-api/auth/ban/" + id, undefined);
     if (data) {
         ElNotification.success("封禁成功")
@@ -107,7 +103,7 @@ export const banUser = async (id: number | number[]) => {
     }
 }
 
-export const unbanUser = async (id: number) => {
+export const unbanUser = async (id: IdType) => {
     const {data} = await put("/user-api/auth/unban/" + id, undefined);
     if (data) {
         ElNotification.success("解封成功")
@@ -116,7 +112,7 @@ export const unbanUser = async (id: number) => {
     }
 }
 
-export const resetToDefault = async (id: number) => {
+export const resetToDefault = async (id: IdType) => {
     const {data} = await put("/user-api/auth/resetToDefault/" + id, undefined);
     if (data) {
         ElNotification.success("重置成功")

@@ -5,6 +5,8 @@ import com.anishan.commons.domain.dto.SortedPagedQuery;
 import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.problem.domain.entity.ProblemList;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,6 +23,7 @@ public class PagedProblemList extends SortedPagedQuery<ProblemList> {
     @ApiModelProperty("主键")
     @NotNull(groups = ValidationGroup.Update.class)
     @ConditionColumn(value = "eq")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long listId;
 
     @ApiModelProperty("题单名字，必须唯一")

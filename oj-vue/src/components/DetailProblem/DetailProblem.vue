@@ -234,7 +234,8 @@ import CustomElMessage from "@/components/CustomElMessage.vue";
 import {ChatLineSquare, Document, Notebook} from "@element-plus/icons-vue";
 import Solutions from "@/components/SolutionsComponent/SolutionsComponent.vue";
 import type {QuerySolution} from "@/api/solution";
-import {closeSse, getUuid, initSSE, offSse, onSse, SseEvent} from "@/utils/sse";
+import {getUuid, initSSE, offSse, onSse, SseEvent} from "@/utils/sse";
+import type {IdType} from "@/api/common.ts";
 
 const errorTitle = ref("");
 
@@ -255,7 +256,7 @@ const isFullScreen = ref(false)
 const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 
 // 传入题目组件
-const {problemId, contestId, disableSubmit = false} = defineProps<{problemId: number, contestId?: number, disableSubmit?: boolean}>()
+const {problemId, contestId, disableSubmit = false} = defineProps<{problemId: IdType, contestId?: IdType, disableSubmit?: boolean}>()
 
 const solutionParam = reactive<QuerySolution>({
   asc: true,
@@ -525,7 +526,7 @@ const reset = () => {
   judgeForm.code = "";
   judgeForm.problemId = problemId;
   judgeForm.contestId = contestId;
-  judgeForm.languageId = 1;
+  judgeForm.languageId = '1';
 
   submitLogs.length = 0;
 
@@ -608,7 +609,7 @@ const getAnswer = async () => {
   judgeForm.code = <string>answer.code;
   answer.answers?.sort((a, b) => a.index - b.index);
   judgeForm.answers = <Answer[]>answer.answers;
-  judgeForm.languageId = !!answer.languageId ? answer.languageId : 1;
+  judgeForm.languageId = !!answer.languageId ? answer.languageId : '1';
 }
 
 const saveAnswer = async () => {

@@ -3,12 +3,14 @@ package com.anishan.user.domain.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 
 @Data
 @ApiModel("密码发送验证码申请")
+@ToString(exclude = "password")
 public class PasswordForgetRequest {
 
     @NotNull

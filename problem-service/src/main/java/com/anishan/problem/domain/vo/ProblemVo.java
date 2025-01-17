@@ -3,6 +3,8 @@ package com.anishan.problem.domain.vo;
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.enumeration.ProblemType;
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -18,6 +20,7 @@ public class ProblemVo {
 
     @TableId(type = IdType.AUTO)
     @ApiModelProperty("主键")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
     @ApiModelProperty("题目名称")

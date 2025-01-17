@@ -1,6 +1,8 @@
 package com.anishan.user.domain.dto;
 
 import com.anishan.commons.domain.dto.PagedQuery;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -13,8 +15,10 @@ import lombok.EqualsAndHashCode;
 public class UserClassQuery extends PagedQuery<UserClassQuery> {
 
     @ApiModelProperty("班级ID用于通过角色查找用户")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long classId;
     @ApiModelProperty("用户ID用于通过用户查找角色")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
     @ApiModelProperty("用户名")
     private String username;

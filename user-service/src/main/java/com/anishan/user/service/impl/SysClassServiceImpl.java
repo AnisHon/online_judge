@@ -16,14 +16,15 @@ import com.anishan.user.domain.entity.SysClass;
 import com.anishan.user.domain.vo.BinaryResultOv;
 import com.anishan.user.domain.vo.ClassVo;
 import com.anishan.user.mapper.SysClassMapper;
-import com.anishan.user.service.AuthenticationService;
 import com.anishan.user.service.StudentClassService;
 import com.anishan.user.service.SysClassService;
+import com.anishan.user.util.UserUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,24 +41,14 @@ import java.util.List;
 * @createDate 2024-10-03 01:02:36
 */
 @Service
+@RequiredArgsConstructor(onConstructor_ = {@Autowired})
 public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
     implements SysClassService{
 
 
     private final SysClassMapper sysClassMapper;
     private final StudentClassService studentClassService;
-    private final AuthenticationService authenticationService;
 
-    @Autowired
-    public SysClassServiceImpl(
-            SysClassMapper sysClassMapper,
-            StudentClassService studentClassService,
-            AuthenticationService authenticationService
-    ) {
-        this.sysClassMapper = sysClassMapper;
-        this.studentClassService = studentClassService;
-        this.authenticationService = authenticationService;
-    }
 
     @Override
     public ClassVo getClassById(Long id) {
@@ -104,8 +95,7 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
     @Override
     public boolean addClass(ClassDto classDto) {
         SysClass sysClass = BeanUtil.copyProperties(classDto, SysClass.class, "classId");
-        int insert = sysClassMapper.insert(sysClass);
-        return insert > 0;
+        return this.save(sysClass);
     }
 
     public boolean isClassExisted(Long classId) {
@@ -135,7 +125,7 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
 
     @Override
     public BinaryResultOv joinClass(Long classId) {
-        Long userId = authenticationService.myId();
+        Long userId = UserUtil.getUserId();
         return joinClass(userId, classId);
     }
 
@@ -152,13 +142,13 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
 
     @Override
     public BinaryResultOv quitClass(Long classId) {
-        Long userId = authenticationService.myId();
+        Long userId = UserUtil.getUserId();
         return quitClass(userId, classId);
     }
 
     @Override
     public PagedResult<ClassVo> listClassOfUser(ClassPagedQuery classPagedQuery) {
-        Long userId = authenticationService.myId();
+        Long userId = UserUtil.getUserId();
         return listClassOfUser(classPagedQuery, userId);
     }
 
@@ -201,8 +191,8 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
     @Override
     public boolean createClass(ClassDto classDto) {
         SysClass sysClass = BeanUtil.copyProperties(classDto, SysClass.class, "classId");
-        int b = sysClassMapper.insert(sysClass);
-        return b > 0;
+
+        return this.save(sysClass);
     }
 
     @Override

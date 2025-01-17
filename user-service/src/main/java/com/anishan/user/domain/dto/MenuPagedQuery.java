@@ -6,6 +6,8 @@ import com.anishan.commons.domain.dto.SortedPagedQuery;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.commons.enumeration.MenuType;
 import com.anishan.user.domain.entity.SysMenu;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,29 +20,10 @@ import java.util.Map;
 @ApiModel("菜单分页 条件 查询参数类")
 public class MenuPagedQuery extends SortedPagedQuery<SysMenu> {
 
-    private static final Map<String, String> KEY_MAPPING;
-    static {
-        KEY_MAPPING = MysqlMappingUtils.mapColumn(MenuPagedQuery.class);
-    }
-
-    @Override
-    protected Class<SysMenu> extendedClass() {
-        return SysMenu.class;
-    }
-
-    @Override
-    protected Object extendedObject() {
-        return this;
-    }
-
-    @Override
-    protected Map<String, String> extendedKeyMapping() {
-        return KEY_MAPPING;
-    }
-
     @ConditionColumn("eq")
     @SortedColumn
     @ApiModelProperty("菜单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long menuId;
 
     @ConditionColumn
@@ -51,6 +34,7 @@ public class MenuPagedQuery extends SortedPagedQuery<SysMenu> {
     @ConditionColumn("eq")
     @SortedColumn
     @ApiModelProperty("父菜单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;
 
     @ConditionColumn

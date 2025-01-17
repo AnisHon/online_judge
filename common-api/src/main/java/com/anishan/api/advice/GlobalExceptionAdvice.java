@@ -95,14 +95,14 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(DuplicateKeyException.class)
     @ResponseStatus(org.springframework.http.HttpStatus.CONFLICT)
     public R<String> handleDuplicateKeyException(DuplicateKeyException e) {
-        e.printStackTrace();
+        log.error(e.getMessage(), e);
         return R.error(HttpStatus.HTTP_CONFLICT, "字段冲突，请查对后再提交");
     }
 
     @ResponseBody
     @ExceptionHandler(ConstraintViolationException.class)
     public R<String> handleConstraintViolationException(ConstraintViolationException e) {
-        e.printStackTrace();
+        log.error(e.getMessage(), e);
         return R.error(HttpStatus.HTTP_BAD_REQUEST, "使用了不存在的对象，请检查后重试");
     }
 
@@ -110,14 +110,14 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(RuntimeException.class)
     public R<String> handleRuntimeException(RuntimeException e) {
         // todo
-        e.printStackTrace();
+        log.error(e.getMessage(), e);
         return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
     }
 
     @ResponseBody
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public R<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
-        e.printStackTrace();
+        log.error(e.getMessage(), e);
         return R.error(HttpStatus.HTTP_BAD_REQUEST, "JSON语法错误" + e.getMessage());
     }
 

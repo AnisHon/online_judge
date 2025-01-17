@@ -206,7 +206,7 @@ public class JudgeServiceImpl implements JudgeService {
     public TestResult test(JudgeMessage message) throws SystemError, SubmitError {
         String language = message.getLanguage();
         LanguageConfig languageConfig = languageConfigLoader.getLanguageConfigByName(language);
-        String fileId = null;
+        String fileId;
         try {
             fileId = compile(languageConfig, message);
         } catch (CompileError e) {

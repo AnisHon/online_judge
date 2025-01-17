@@ -17,14 +17,16 @@ const emitter = ref(mitt())
 const uuid = ref<string>();
 
 export const SSE_URL = "/content-api/sse";
-export const CLOSE_SSE_URL = "/contest-api/sse/close";
+export const CLOSE_SSE_URL = "/sse/close";
 
 export const initSSE = (url: string = SSE_URL) => {
+    if (!useToken().token) {
+        return undefined;
+    }
     if (!sseMap.has(url)) {
         sseMap.set(url, connectSse(`${baseURL}/${url}`));
     }
     return sseMap.get(url)
-
 }
 
 export const getUuid = () => {
@@ -80,7 +82,7 @@ export const offSse = <T> (event: string, callback: Handler<T>) => {
 
 window.addEventListener('beforeunload', () => closeSse(SSE_URL));
 export const closeSse = (url: string | undefined) => {
-    if (!url) {
+    if (!url || !useToken().token) {
         return;
     }
     const sse = sseMap.get(url);

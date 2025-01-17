@@ -2,6 +2,8 @@ package com.anishan.user.domain.vo;
 
 import com.anishan.commons.enumeration.UserState;
 import com.anishan.commons.enumeration.ValidationGroup;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -13,6 +15,7 @@ import java.util.List;
 public class LoginUserVo {
     @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("用户ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @ApiModelProperty("用户名，唯一，可用于登陆")

@@ -5,6 +5,5 @@ public enum CaseFileType {
     In,
     Out,
     All,
-    ;
 
 }

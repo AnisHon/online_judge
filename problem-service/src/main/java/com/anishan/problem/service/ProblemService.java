@@ -48,4 +48,6 @@ public interface ProblemService extends IService<Problem> {
     boolean saveListProblems(List<List<DetailProblemDto>> problems);
 
     boolean saveMultiParts(MultipartFile[] files);
+
+    List<ProblemVo> recentProblems(@NotNull Integer limit);
 }

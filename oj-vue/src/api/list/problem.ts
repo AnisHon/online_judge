@@ -3,10 +3,11 @@ import {get, type successCallback} from "@/utils/http";
 import type {ProblemInListView} from "@/api/list/index";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
+import type {IdType} from "@/api/common.ts";
 
 
-const contestProblems = async (listId: number) => {
-    const {data} = await get<ProblemInListView[], number>("/problem-api/contest/problems", listId);
+const contestProblems = async (listId: IdType) => {
+    const {data} = await get<ProblemInListView[], IdType>("/problem-api/contest/problems", listId);
     return data;
 }
 

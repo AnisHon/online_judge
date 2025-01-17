@@ -2,6 +2,8 @@ package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.enumeration.Difficulty;
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -19,6 +21,7 @@ public class OjProblemDto {
      * 主键
      */
     @TableId(type = IdType.AUTO)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
     /**

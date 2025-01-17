@@ -1,5 +1,7 @@
 package com.anishan.problem.domain.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -14,6 +16,7 @@ import javax.validation.constraints.NotNull;
 @Accessors(chain = true)
 public class DetailSolutionDto {
     @ApiModelProperty(value = "主键")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long solutionId;
 
     @NotNull(message = "标题不能为空")
@@ -24,6 +27,7 @@ public class DetailSolutionDto {
 
     @NotNull
     @ApiModelProperty(value = "对应题目")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
     @ApiModelProperty(value = "是否置顶, 对于普通用户没用")

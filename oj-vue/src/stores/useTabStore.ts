@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {readonly, ref} from "vue";
+import {ref} from "vue";
 import __ from "lodash";
 import router from "@/router";
 
@@ -8,6 +8,7 @@ export interface TabStoreType {
     name: string;
     closable: boolean;
     component: string;
+    url: string;
 }
 
 export const useTabStore = defineStore("tabStore", () => {
@@ -17,6 +18,7 @@ export const useTabStore = defineStore("tabStore", () => {
         name: 'backend-index',
         closable: false,
         component: 'Index',
+        url: "/backend"
     }]);
 
     const currentTab = ref("backend-index");
@@ -52,8 +54,17 @@ export const useTabStore = defineStore("tabStore", () => {
         return activeName;
     }
 
+    const getUrl = (name: string) => {
+        const idx = indexOf(name);
+        if (idx === -1) {
+            return undefined;
+        }
 
-    const open = (name: string, title: string) => {
+        return tabs.value[idx].url;
+
+    }
+
+    const open = (name: string, title: string, url: string) => {
         const find = router.getRoutes().find((route) => route.name === name);
         const index = indexOf(name);
         if (index === -1) {
@@ -61,8 +72,11 @@ export const useTabStore = defineStore("tabStore", () => {
                 name: name,
                 title: title,
                 closable: true,
-                component: <string>find?.meta?.component
+                component: <string>find?.meta?.component,
+                url: url
             })
+        } else {
+            tabs.value[index].url = url;
         }
 
         currentTab.value = name;
@@ -82,6 +96,7 @@ export const useTabStore = defineStore("tabStore", () => {
         set,
         setCurrentTab,
         getCurrentTab,
-        getTabs
+        getTabs,
+        getUrl
     }
 })

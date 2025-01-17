@@ -6,26 +6,27 @@ import {type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, update} from "@/utils/simpleCRUD";
+import type {IdType} from "@/api/common.ts";
 
 interface ClassView {
-    classId: number;
+    classId: IdType;
     className: string;
     createTime: Date;
     remark: string;
 }
 
 interface ClassForm {
-    classId?: number;
+    classId?: IdType;
     className?: string;
     remark?: string;
 }
 
 interface QueryClass extends SortedPagedType{
-    classId?: number;
+    classId?: IdType;
     className?: string;
 }
 
-const removeClass = async (id: number | number[]) => {
+const removeClass = async (id: IdType | IdType[]) => {
     await remove(id, "/user-api/class");
 }
 

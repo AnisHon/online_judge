@@ -135,10 +135,10 @@ import IconMacOs from "@/assets/icons/IconMacOs.vue";
 import IconLinux from "@/assets/icons/IconLinux.vue";
 import {CaretTop} from "@element-plus/icons-vue";
 import {countProblems} from "@/api/problem";
-import {countOnline} from "@/api/user";
 import {ElNotification} from "element-plus";
 import {copyTextToClipboard} from "@/utils/clipboard.ts";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
+import {countOnline, freeDisk} from "@/api/file";
 
 const help = `
 #### 安装SSh
@@ -287,6 +287,9 @@ const handleCopy = (ports: number[]) => {
 const init = async () => {
   problemNumber.value = await countProblems();
   online.value = await countOnline();
+  const {free, total} = await freeDisk();
+  freeMemory.value = free;
+  totalMemory.value = total;
 }
 
 

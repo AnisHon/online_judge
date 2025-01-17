@@ -3,12 +3,14 @@ package com.anishan.user.domain.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 
 @Data
 @ApiModel("登陆表单")
+@ToString(exclude = "password")
 public class LoginForm {
 
     @NotNull
@@ -27,6 +29,5 @@ public class LoginForm {
     @NotNull
     @ApiModelProperty(value = "图片验证码code", required = true)
     private String captchaCode;
-
 
 }

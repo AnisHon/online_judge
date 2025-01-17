@@ -107,7 +107,7 @@ public class AuthUtil {
     
 
 
-    public boolean hasEmailKey(String key) {
+    public synchronized boolean hasEmailKey(String key) {
         return Boolean.TRUE.equals(stringRedisTemplate.hasKey(getEmailCodeKey(key)));
     }
 

@@ -1,20 +1,21 @@
-import {getWithParams, post, service} from "@/utils/http.ts";
+import {get, getWithParams, post, service} from "@/utils/http.ts";
 import {ElNotification} from "element-plus";
 import __ from "lodash";
 import {remove} from "@/utils/simpleCRUD.ts";
 import {useUserStore} from "@/stores/useUserStore.ts";
 import {computed} from "vue";
+import type {IdType} from "@/api/common.ts";
 
 export interface CloudFile {
     cloudFileId: string;
     fileName: string;
-    fileId?: string;
+    fileId?: IdType;
     fileMd5?: string;
     filePath?: string;
     fileSize?: string;
-    userId: string;
+    userId: IdType;
     nikeName: string;
-    parentId: string;
+    parentId: IdType;
     dir: boolean;
     updateTime?: Date;
     createTime?: Date;
@@ -25,15 +26,24 @@ export interface CloudFile {
 }
 
 export interface QueryCloudFile {
-    parentId: string;
+    parentId: IdType;
     fileName: string;
 }
 
 export interface CloudFileForm {
     fileName: string;
-    parentId: string;
+    parentId: IdType;
 }
 
+export const countOnline = async (): Promise<number> => {
+    const {data} = await get<number>("/content-api/info/online");
+    return data;
+}
+
+export const freeDisk = async (): Promise<{free: number, total: number}> => {
+    const {data} = await get<{free: number, total: number}>("/content-api/info/free");
+    return data;
+}
 
 export const uploadImages = async (files: File[]): Promise<string[]> => {
     const form = new FormData();
@@ -50,11 +60,11 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
 
 export const myAvatarPath = computed(() => {
     const userStore = useUserStore();
-    const userId = userStore?.user?.userId || 0
+    const userId = userStore?.user?.userId || ""
     return getAvatarPath(userId);
 })
 
-export const getAvatarPath = (userId: number) => {
+export const getAvatarPath = (userId: IdType) => {
 
 
     return `/api/avatar/${userId}`;
@@ -95,5 +105,5 @@ export const debouncedAddDir = (callback: Function) => {
 }
 
 export const deleteFile = (id: string) => {
-    remove(id, "/file")
+    return remove(id, "/file")
 }

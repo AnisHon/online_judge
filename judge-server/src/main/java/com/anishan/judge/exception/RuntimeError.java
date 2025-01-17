@@ -1,12 +1,14 @@
 package com.anishan.judge.exception;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @Author: Himit_ZH
  * @Date: 2021/1/31 00:16
  * @Description:
  */
+@EqualsAndHashCode(callSuper=true)
 @Data
 public class RuntimeError extends Exception {
     private String message;

@@ -43,7 +43,7 @@ public class LanguageConfigLoader {
             "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
             "LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8");
 
-    private static AtomicBoolean init = new AtomicBoolean(false);
+    private static final AtomicBoolean init = new AtomicBoolean(false);
 
     private static HashMap<String, LanguageConfig> languageConfigMap;
 

@@ -8,6 +8,7 @@ import {
     type successCallback
 } from "@/utils/http";
 import {debounce} from "lodash";
+import type {IdType} from "@/api/common.ts";
 
 enum OJResult {
     QUEUE = "QUEUE",
@@ -35,9 +36,9 @@ interface JudgeMessage {
 
 
 interface JudgeForm {
-    contestId?: number;
-    problemId: number;
-    languageId?: number;
+    contestId?: IdType;
+    problemId: IdType;
+    languageId?: IdType;
     answers: Answer[];
     code: string;
     uuid?: string;
@@ -54,21 +55,21 @@ interface JudgeResponse {
     fullMark: string;
 }
 
-interface UserAnswer {
+export interface UserAnswer {
     answers?: Answer[];
     code?: string;
-    languageId?: number;
+    languageId?: IdType;
 }
 
 interface UserAnswerRequest {
-    contestId?: number;
-    problemId?: number;
+    contestId?: IdType;
+    problemId?: IdType;
 }
 
 interface LogSubmit {
-    submitId: number;
-    userId: number;
-    problemId: number;
+    submitId: IdType;
+    userId: IdType;
+    problemId: IdType;
     language: string;
     status: OJResult;
     time?: number;
@@ -78,14 +79,14 @@ interface LogSubmit {
 }
 
 interface TestForm {
-    languageId?: number;
+    languageId?: IdType;
     stdin?: string;
     code?: string;
     uuid?: string;
 }
 
 interface TestResult {
-    userId: 0
+    userId: IdType
     judgeResult: OJResult,
     stderr?: string,
     stdout?: string,

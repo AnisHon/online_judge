@@ -1,6 +1,8 @@
 package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.enumeration.ValidationGroup;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,6 +26,7 @@ public class ChoiceFillAnswersDto implements Serializable {
 
     @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("主键id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long answerId;
 
     /**

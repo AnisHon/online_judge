@@ -1,6 +1,8 @@
 package com.anishan.user.controller;
 
 
+import com.anishan.api.annotation.ControllerLog;
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.R;
@@ -45,6 +47,7 @@ public class AuthenticationController {
 
     @GetMapping("/count")
     @ApiOperation("查看在线人数")
+    @EnableCache(name = "count-online", expire = 60 * 1000)
     @PreAuthorize("hasAuthority('user:user:list')")
     public R<Long> countOnline() {
         Long count = authUtil.countUser();
@@ -76,6 +79,7 @@ public class AuthenticationController {
 
     @GetMapping("/logout")
     @ApiOperation("登出")
+    @ControllerLog(api = "auth", operation = "logout", desc = "用户退出登录")
     public R<String> logout(@RequestHeader("token") String token) {
         Long userId = UserUtil.getUserId();
         authenticationService.logout(userId, token);
@@ -84,6 +88,7 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     @ApiOperation("登陆接口")
+    @ControllerLog(api = "auth", operation = "login", desc = "用户登录")
     public R<LoginVo> login(@RequestBody @Validated LoginForm loginUser) {
         LoginVo login = authenticationService.login(loginUser);
         return R.success(login);
@@ -91,6 +96,7 @@ public class AuthenticationController {
 
     @PostMapping("/registration")
     @ApiOperation("注册接口")
+    @ControllerLog(api = "auth", operation = "registration", desc = "用户注册")
     public R<LoginVo> registration(@RequestBody @Validated RegistrationForm registrationForm) {
         LoginVo registration = authenticationService.registration(registrationForm);
         return R.success(registration);
@@ -99,6 +105,7 @@ public class AuthenticationController {
 
     @PutMapping("/reset-pass")
     @ApiOperation("重制密码，重新设置密码")
+    @ControllerLog(api = "auth", operation = "reset-pass", desc = "用户重设密码")
     public R<AuthResultVo> resetPass(@RequestBody @Validated PasswordResetRequest passwordResetRequest) {
         AuthResultVo authResultVo = authenticationService.resetPassword(
                 passwordResetRequest.getCode(),
@@ -109,6 +116,7 @@ public class AuthenticationController {
 
     @PostMapping("/forget-pass")
     @ApiOperation("忘记密码，重设密码")
+    @ControllerLog(api = "auth", operation = "forget-pass", desc = "用户重设密码（忘记密码）")
     public R<AuthResultVo> forgetPass(
             @RequestBody @Validated PasswordForgetRequest passwordForgetRequest
             ) {
@@ -128,6 +136,7 @@ public class AuthenticationController {
 
     @PutMapping("/reset-email")
     @ApiOperation("重制邮箱")
+    @ControllerLog(api = "auth", operation = "reset-email", desc = "用户重设邮箱")
     public R<AuthResultVo> resetEmail(@RequestBody @Validated EmailResetRequest emailResetRequest) {
         AuthResultVo authResultVo = authenticationService.resetEmail(
                 emailResetRequest.getCode(),
@@ -138,7 +147,6 @@ public class AuthenticationController {
 
     @PostMapping("/send-email-code")
     @ApiOperation("发送邮箱验证码")
-
     public R<AuthResultVo> sendEmailCode(@RequestBody @Validated EmailCodeRequest emailCodeRequest) {
         AuthResultVo authResultVo = authenticationService.sendEmailCode(
                 emailCodeRequest.getEmail(),
@@ -150,6 +158,7 @@ public class AuthenticationController {
 
     @PostMapping("/send-forget-email-code")
     @ApiOperation("发送验证码，用于忘记密码，只需要提供用户名")
+    @ControllerLog(api = "auth", operation = "send-forget-email-code", desc = "用户请求重设密码邮箱验证码")
     public R<AuthResultVo> sendForgetEmailCode(@RequestBody @Validated ForgetEmailCodeRequest forgetEmailCodeRequest) {
 
         String email = sysUserService.getUserByUsernameOrEmail(forgetEmailCodeRequest.getUsername()).getEmail();
@@ -172,6 +181,7 @@ public class AuthenticationController {
     @PutMapping("/ban/{ids}")
     @ApiOperation("封禁用户")
     @PreAuthorize("hasAuthority('user:auth:ban')")
+    @ControllerLog(api = "auth", operation = "ban", desc = "封禁用户")
     public R<String> ban(@PathVariable @NotNull @ApiParam(value = "用户id", required = true) List<Long> ids) {
         String ban = authenticationService.ban(ids);
         return R.success(ban);
@@ -180,6 +190,7 @@ public class AuthenticationController {
     @PutMapping("/unban/{id}")
     @ApiOperation("解封用户")
     @PreAuthorize("hasAuthority('user:auth:unban')")
+    @ControllerLog(api = "auth", operation = "unban", desc = "解封用户")
     public R<String> unban(@PathVariable @NotNull @ApiParam(value = "用户id", required = true) Long id) {
         String ban = authenticationService.unban(id);
         return R.success(ban);

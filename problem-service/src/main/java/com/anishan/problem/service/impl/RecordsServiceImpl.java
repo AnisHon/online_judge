@@ -1,16 +1,13 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.anishan.api.client.user.client.UserClient;
+import cn.hutool.core.collection.CollUtil;
 import com.anishan.api.client.user.client.UserInternalClient;
-import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.ContestAnswerRecords;
 import com.anishan.problem.domain.entity.ContestRecords;
-import com.anishan.problem.domain.vo.ScoredUser;
-import com.anishan.problem.domain.vo.ProblemStatistic;
-import com.anishan.problem.domain.vo.UserAnswer;
+import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.ProblemCompleteService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -41,7 +38,6 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
 
     private final ContestService contestService;
     private final RecordsMapper recordsMapper;
-    private final UserClient userClient;
     private final JudgeConfig judgeConfig;
     private final UserInternalClient userInternalClient;
     private final ProblemCompleteService problemCompleteService;
@@ -71,7 +67,6 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         return this.getObj(wrapper, x -> (Long) x);
     }
 
-
     public void checkBeforeAdd(Records records) {
         if (records.getContestId() == null) {
             return;
@@ -97,7 +92,6 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         userInternalClient.addPoint(point.toString(), newRec.getUserId());
 
     }
-
 
     private Long addPoint(Records records) {
         if (records == null || records.getProblemId() == null || records.getUserId() == null) {
@@ -149,7 +143,6 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
 
         records.setRecordId(recordId);
 
-
         UserAnswer answer = records.getAnswer();
 
         // 普通做题不存答案
@@ -173,15 +166,8 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
             b = this.saveOrUpdate(records);
         }
 
-
-
-
-
-
         // 标记已完成
         problemCompleteService.finish(records.getUserId(), records.getProblemId());
-
-
 
         return b;
     }
@@ -198,40 +184,57 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         return score.stream().findFirst().orElse(null);
     }
 
+    /**
+     * 用户分数情况
+     * todo Contest没有完善
+     */
     @Override
-    public List<ScoredUser> rank(Long contestId) {
-        MPJLambdaWrapper<Records> wrapper = new MPJLambdaWrapper<Records>()
-                .select("user_id")
-                .selectSum(Records::getScore, "score")
-                .eq(Records::getContestId, contestId)
-                .groupBy(Records::getUserId);
+    public List<UserStatistic> getUserStatistic(Long contestId) {
 
-        List<Map<String, Object>> maps = recordsMapper.selectJoinMaps(wrapper);
+        List<UserStatistic> scores = recordsMapper.selectUserStatistic(contestId);
 
-        List<Long> ids = maps.stream().map(x -> (Long) x.get("user_id")).collect(Collectors.toList());
+        List<Long> userIds = scores.stream().map(UserStatistic::getUserId).collect(Collectors.toList());
 
-        HashMap<Long, UserVo> users = new HashMap<>();
+        if (CollUtil.isEmpty(userIds)) {
+            return Collections.emptyList();
+        }
 
-        userClient.listUser(ids).getData().forEach(x -> users.put(x.getUserId(), x));
+        Map<Long, String> map = userInternalClient.nikeName(userIds).getData();
 
+        scores.forEach(x -> x.setNikeName(map.get(x.getUserId())));
 
-        List<ScoredUser> scoredUsers = new ArrayList<>();
+        return scores;
+    }
 
+    /**
+     * 题目正误情况
+     */
+    @Override
+    public List<ProblemStatistic> getProblemStatistic(Long contestId) {
+        return recordsMapper.selectProblemStatistic(contestId);
+    }
 
-        maps.forEach(x -> {
-            Long id = (Long) x.get("user_id");
-            ScoredUser score = new ScoredUser(users.get(id), (BigDecimal) x.get("score"));
-            scoredUsers.add(score);
-        });
-
-
-
-        return scoredUsers;
+    /**
+     * 用户每道题的正误情况
+     */
+    @Override
+    public List<UserScore> getUserScores(Long userId, Long contestId) {
+        return recordsMapper.selectUserScore(userId, contestId);
     }
 
     @Override
-    public List<ProblemStatistic> statistic(Long contestId) {
-        return recordsMapper.statistic(contestId);
+    public List<ProblemScore> getProblemScores(Long problemId, Long contestId) {
+        List<ProblemScore> problemScores = recordsMapper.selectProblemScore(problemId, contestId);
+        List<Long> userIds = problemScores.stream().map(ProblemScore::getUserId).collect(Collectors.toList());
+
+        if (CollUtil.isEmpty(userIds)) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, String> map = userInternalClient.nikeName(userIds).getData();
+
+        problemScores.forEach(x -> x.setNikeName(map.get(x.getUserId())));
+        return problemScores;
     }
 
     @Override

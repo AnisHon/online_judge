@@ -29,23 +29,18 @@ public class TeacherController {
     @PostMapping("/createClass")
     @ApiOperation("创建班级，如果失败msg就是原因")
     @PreAuthorize("hasAuthority('user:teacher:create-class')")
-    public R<BinaryResultOv> createClass(@RequestBody @Validated ClassDto classDto) {
-        try {
-            boolean b = sysClassService.createClass(classDto);
-            return BinaryResultOv.ternary(b, "创建成功", "失败原因未知").tOvR();
-        } catch (DuplicateKeyException ignore) {
-            return BinaryResultOv.fail("失败，班级名重复").tOvR();
-        }
-
+    public R<Boolean> createClass(@RequestBody @Validated ClassDto classDto) {
+        boolean b = sysClassService.createClass(classDto);
+        return R.success(b);
     }
 
     // delete class
     @DeleteMapping("/{classId}")
     @ApiOperation("删除班级，如果失败msg就是原因")
     @PreAuthorize("hasAuthority('user:teacher:remove-class')")
-    public R<BinaryResultOv> removeClass(@PathVariable("classId") @Validated Long classId) {
+    public R<Boolean> removeClass(@PathVariable("classId") @Validated Long classId) {
         boolean b = sysClassService.removeById(classId);
-        return BinaryResultOv.ternary(b, "删除成功", "删除失败，班级不存在").tOvR();
+        return R.success(b);
     }
 
     // todo

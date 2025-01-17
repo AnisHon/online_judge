@@ -26,8 +26,7 @@ public interface SysUserMapper extends MPJBaseMapper<SysUser> {
             @Param("teacherId") Long teacherId,
             @Param("currentPage") Long currentPage,
             @Param("pageSize") Long pageSize);
-
-    @Update("update sys_user set points = points + #{points}  where user_id = #{userId} for update")
+    @Update("update sys_user set points = points + #{points}  where user_id = #{userId}")
     int addPoints(@Param("userId") Long userId, @Param("points") BigDecimal points);
 
     List<UserVo> selectUserByUserRoleQuery(Page<SysUserRoleRelation> page, @Param("userQuery") PagedUserRoleQuery userQuery);

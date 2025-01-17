@@ -1,36 +1,47 @@
 package com.anishan.problem;
 
-import com.anishan.problem.domain.entity.Contest;
-import com.anishan.problem.util.ProblemUploadUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.anishan.api.util.MDUtil;
+import com.anishan.problem.domain.entity.Problem;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import javax.annotation.Resource;
-import java.lang.reflect.Method;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 @SpringBootTest
 public class TestT {
 
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
-    @Resource
-    ProblemUploadUtil problemUploadUtil;
-
-    @Resource
-    ObjectMapper mapper;
 
     @SneakyThrows
     @Test
     public void test() {
-        Class<Contest> contestClass = Contest.class;
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED); // 设置隔离级别
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);  // 设置传播行为
 
-        Method[] declaredMethods = contestClass.getDeclaredMethods();
-        for (Method declaredMethod : declaredMethods) {
+        // 2. 开始事务
+        TransactionStatus status = transactionManager.getTransaction(def);
 
-        }
+        Problem problem = new Problem();
+        problem.setProblemId(1001L);
+        problem.setTitle("卢本伟牛逼");
+        Db.updateById(problem);
+        System.out.println(Db.getById(1001, Problem.class));
 
-
+        transactionManager.rollback(status);
     }
 
 

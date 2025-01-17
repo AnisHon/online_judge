@@ -43,7 +43,7 @@ public class UserController {
     @GetMapping("/rank/{limit}")
     @ApiOperation("查看排名,最大200，高了没用")
     public R<List<UserVo>> rank(@NotNull @PathVariable("limit") @ApiParam("前limit位") Integer limit) {
-        List<UserVo> list = sysUserService.rank(limit);
+        List<UserVo> list = sysUserService.rank(30);
         return R.success(list);
     }
 
@@ -123,13 +123,13 @@ public class UserController {
         return R.success(b);
     }
 
-    @DeleteMapping("/{ids}")
-    @PreAuthorize("hasAuthority('user:user:remove')")
-    @ApiOperation("删除用户，由于其破坏性较大所以已经禁止删除")
-    public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
-//        boolean b = sysUserService.removeBatchByIds(ids);
-        return R.success(false);
-    }
+//    @DeleteMapping("/{ids}")
+//    @PreAuthorize("hasAuthority('user:user:remove')")
+//    @ApiOperation("删除用户，由于其破坏性较大所以已经禁止删除")
+//    public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
+////        boolean b = sysUserService.removeBatchByIds(ids);
+//        return R.success(false);
+//    }
 
     @PostMapping
     @PreAuthorize("hasAuthority('user:user:add')")

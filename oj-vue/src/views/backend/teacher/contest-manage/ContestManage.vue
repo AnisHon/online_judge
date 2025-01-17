@@ -75,12 +75,12 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <div v-has="'problem:contest:statistic'">
-                  <el-dropdown-item command="handleStatistic" icon="PieChart"
+                  <el-dropdown-item command="handleProblemStatistic" icon="PieChart"
                   >题目统计</el-dropdown-item>
                 </div>
-                <div v-has="'problem:contest:rank'" >
-                  <el-dropdown-item command="handleRank" icon="user"
-                  >排名</el-dropdown-item>
+                <div v-has="'problem:contest:statistic'" >
+                  <el-dropdown-item command="handleUserStatistic" icon="TrendCharts"
+                  >用户统计</el-dropdown-item>
                 </div>
 
               </el-dropdown-menu>
@@ -216,6 +216,9 @@ import type {PagedType} from "@/api/pagedType";
 import ListView from "@/components/ListView/ListView.vue";
 import {authTagType, authText} from "@/utils/contest";
 import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
+import {useRouter} from "vue-router";
+
+const router = useRouter();
 
 const openSelectList = ref(false);
 
@@ -303,25 +306,14 @@ const sortStatisticProblems = computed(() => {
 })
 
 const handleCommand = (command: string, row: ContestView) => {
-  if (command === "handleStatistic") {
-    statistic(row.contestId).then((data) => {
-      if (!data) {
-        return;
-      }statisticProblems.length = 0;
-      statisticProblems.push(...data);
-    })
-    openStatistic.value = true;
 
-  } else if (command === "handleRank") {
-    rank(row.contestId).then((data) => {
-      if (!data) {
-        return;
-      }
-      console.log(data)
-      scoredUsers.length = 0;
-      scoredUsers.push(...data);
-    })
-    openRank.value = true;
+  if (command === "handleProblemStatistic") {
+    //题目统计
+    router.push({name: "problem-statistic", params: {contestId: row.contestId}});
+
+  } else if (command === "handleUserStatistic") {
+    // 用户统计
+    router.push({name: "user-statistic", params: {contestId: row.contestId}});
 
   }
 }
@@ -347,13 +339,6 @@ const handleDelete = (row: ContestView | Event) => {
 
 
 }
-
-// // 搜索按钮
-// const handleQuery = () => {
-//   getList();
-//   single.value = false
-//   multiple.value = false;
-// }
 
 const finishDialog = () => {
   open.value = false;
@@ -404,7 +389,7 @@ const cancel = () => {
 
 
 // created -> 获取列表
-getList()
+getList();
 
 
 

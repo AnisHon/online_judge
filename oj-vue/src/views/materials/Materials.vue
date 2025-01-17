@@ -311,7 +311,10 @@ const handlePreview = (row: CloudFile) => {
 getList();
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+
+@import "@/assets/color";
+
 .app-container {
   margin: auto;
 }
@@ -355,7 +358,7 @@ getList();
 }
 
 .filename:hover {
-  color: #409EFF;
+  color: $table-header-color-hover;
 }
 
 .file-link {
@@ -369,7 +372,9 @@ getList();
 
 </style>
 
-<style>
+<style lang="scss">
+
+@import "@/assets/color";
 
 .files .file-table .file-row {
   height: 66px;
@@ -380,7 +385,7 @@ getList();
 }
 
 .files .file-table .file-header-cell {
-  background-color: #E6E8EB;
+  background-color: $table-header-color;
 }
 
 .files .file-table .file-row:hover .file-link {

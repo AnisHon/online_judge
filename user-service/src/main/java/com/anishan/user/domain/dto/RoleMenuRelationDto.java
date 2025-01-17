@@ -2,6 +2,8 @@ package com.anishan.user.domain.dto;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,11 +22,13 @@ public class RoleMenuRelationDto implements Serializable {
     /**
      * 角色ID
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long roleId;
 
     /**
      * 菜单ID
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long menuId;
 
     @TableField(exist = false)

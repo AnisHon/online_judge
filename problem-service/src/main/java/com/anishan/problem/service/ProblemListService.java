@@ -28,9 +28,9 @@ public interface ProblemListService extends IService<ProblemList> {
 
     LocalDateTime getDataTime(Long id);
 
-    boolean updateProblem(ProblemListDto problemListDto);
+    boolean updateProblemList(ProblemListDto problemListDto);
 
-    boolean addProblem(List<ProblemListRelationDto> relations);
+    boolean addProblemList(List<ProblemListRelationDto> relations);
 
     boolean delProblem(List<ProblemListRelationDto> relations);
 
@@ -38,5 +38,5 @@ public interface ProblemListService extends IService<ProblemList> {
 
     PagedResult<ProblemListVo> listPage(PagedProblemList query);
 
-    List<ProblemInListVo> getProblemsForUser(Long id);
+    List<ProblemInListVo> getProblemsForUser(Long listId);
 }

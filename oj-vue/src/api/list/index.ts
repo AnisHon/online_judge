@@ -7,30 +7,31 @@ import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, postedRemove, remove, update} from "@/utils/simpleCRUD";
 import {ProblemType, type ProblemView} from "@/api/problem";
+import type {IdType} from "@/api/common.ts";
 
 interface ListView {
-    listId: number;
+    listId: IdType;
     listName: string;
     description: string;
 }
 
 interface ListForm {
-    listId?: number;
+    listId?: IdType;
     listName?: string;
     description?: string;
 }
 
 interface ListProblemQuery extends PagedType{
-    listId: number,
+    listId: IdType,
     problemId?: string | null;
-    tagIds?: number[] | null;
+    tagIds?: IdType[] | null;
     title?: string;
     type?: ProblemType;
 }
 
 interface ProblemListRelation {
-    listId: number,
-    problemId?: number,
+    listId: IdType,
+    problemId?: IdType,
     problemOrder?: number,
     score?: number
 }
@@ -84,9 +85,9 @@ const debouncedFetchProblemsNotInList = (problemParam: ListProblemQuery, success
     return {loading, isLoading, get};
 }
 
-async function getProblemsAdmin(listId: number) {
+async function getProblemsAdmin(listId: IdType) {
     const {data} =
-        await get<ProblemView[], number>("/problem-api/list/getProblems", listId);
+        await get<ProblemView[], IdType>("/problem-api/list/getProblems", listId);
     return data;
 }
 
@@ -94,13 +95,13 @@ async function getProblemsAdmin(listId: number) {
  * 通过题单获取题目，用户专用
  * @param listId 题单ID
  */
-async function getProblems(listId: number) {
+async function getProblems(listId: IdType) {
     const {data} =
-        await get<ProblemInListView[], number>("/problem-api/list/problems", listId);
+        await get<ProblemInListView[], IdType>("/problem-api/list/problems", listId);
     return data;
 }
 
-const debouncedUserGetProblem = (listId: number, success: successCallback<ProblemInListView[]>) => {
+const debouncedUserGetProblem = (listId: IdType, success: successCallback<ProblemInListView[]>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce(() => {
         getProblems(listId)
@@ -111,7 +112,7 @@ const debouncedUserGetProblem = (listId: number, success: successCallback<Proble
 }
 
 
-const debouncedGetProblem = (listId: number, success: successCallback<ProblemView[]>) => {
+const debouncedGetProblem = (listId: IdType, success: successCallback<ProblemView[]>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce(() => {
         getProblemsAdmin(listId)
@@ -126,7 +127,7 @@ interface QueryList extends SortedPagedType{
     listName?: string;
 }
 
-const removeList = async (id: number | number[]) => {
+const removeList = async (id: IdType | IdType[]) => {
     await remove(id, "/problem-api/list/del");
 }
 

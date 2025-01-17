@@ -1,7 +1,8 @@
 import {get, type successCallback} from "@/utils/http";
-import {add, postedRemove, putRemove} from "@/utils/simpleCRUD";
+import {add, putRemove} from "@/utils/simpleCRUD";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
+import type {IdType} from "@/api/common.ts";
 
 enum MenuType {
     MENU = 'M',
@@ -9,16 +10,16 @@ enum MenuType {
     BUTTON = 'B'
 }
 interface MenuRoleRelation {
-    menuId?: number;
-    roleId?: number;
+    menuId?: IdType;
+    roleId?: IdType;
 }
 
 
 interface MenuView {
-    menuId: number;
+    menuId: IdType;
     menuName: string;
     menuType: MenuType;
-    parentId: number;
+    parentId: IdType;
     icon: string;
     perms: string;                  // 权限子段
     router: string;                 // 路由路径
@@ -29,10 +30,10 @@ interface MenuView {
 }
 
 interface MenuForm {
-    menuId?: number;
+    menuId?: IdType;
     menuName?: string;
     menuType?: MenuType;
-    parentId?: number;
+    parentId?: IdType;
     icon?: string;
     perms?: string;
     router?: string;
@@ -41,7 +42,7 @@ interface MenuForm {
 }
 
 interface TreedMenu {
-    id?: number;
+    id?: IdType;
     menu: MenuView;
     children: TreedMenu[];
 }

@@ -4,6 +4,7 @@ import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, putRemove, remove, update} from "@/utils/simpleCRUD";
 import {ElNotification} from "element-plus";
+import type {IdType} from "@/api/common.ts";
 
 enum RoleStatus {
     NORMAL,
@@ -11,19 +12,19 @@ enum RoleStatus {
 }
 
 interface UserRoleRelation{
-    userId: number;
-    roleId: number;
+    userId: IdType;
+    roleId: IdType;
 }
 
 interface RoleForm {
-    roleId?: number;
+    roleId?: IdType;
     roleName?: string;
     status?: RoleStatus;
     remark?: string;
 }
 
 interface RoleView {
-    roleId: number;
+    roleId: IdType;
     roleName: string;
     status: RoleStatus;
     createTime: Date;
@@ -31,7 +32,7 @@ interface RoleView {
 }
 
 interface QueryRole extends SortedPagedType{
-    roleId?: number;
+    roleId?: IdType;
     roleName?: string;
     status?: RoleStatus;
     remark?: string;
@@ -50,7 +51,7 @@ const dict = {
     ],
 };
 
-const removeRole = async (id: number | number[]) => {
+const removeRole = async (id: IdType | IdType[]) => {
     await remove(id, "/user-api/role");
 }
 

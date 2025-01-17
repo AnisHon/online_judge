@@ -38,9 +38,5 @@ public class PagedQuery<T> {
         return new Page<>(currentPage, pageSize);
     }
 
-//    @ApiIgnore
-//    public List<T> record() {
-//        return new Page<T>(currentPage, pageSize).getRecords();
-//    }
 
 }

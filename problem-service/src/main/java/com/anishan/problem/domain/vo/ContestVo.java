@@ -1,5 +1,7 @@
 package com.anishan.problem.domain.vo;
 import com.anishan.commons.enumeration.ContestAuth;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -14,15 +16,18 @@ public class ContestVo {
     private Integer joinedNumber;
 
     @ApiModelProperty("比赛ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long contestId;
 
     @ApiModelProperty("比赛创建者id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @ApiModelProperty("比赛标题")
     private String title;
 
     @ApiModelProperty("题单id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long listId;
 
     @ApiModelProperty("密码")

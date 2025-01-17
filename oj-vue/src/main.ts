@@ -15,6 +15,7 @@ import App from '@/App.vue';
 import router from './router';
 import {has, hasAny} from "@/utils/hasAuth";
 import {initSSE} from "@/utils/sse";
+import {useToken} from "@/stores/useToken.ts";
 
 
 const app = createApp(App)

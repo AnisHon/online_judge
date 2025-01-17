@@ -1,12 +1,12 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
-import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.anishan.problem.domain.entity.UserContestRelation;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
@@ -79,6 +79,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
+    @EnableCache(name = "get-contest-id")
     public ContestVo getContestById(Long id) {
         Contest contest = this.getOne(
                 new LambdaQueryWrapper<Contest>()
@@ -98,6 +99,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
+    @EnableCache(name = "list-contests", expire = 30 * 1000)
     public PagedResult<ContestVo> listContests(PagedQuery<Contest> pagedQuery) {
         Page<ContestVo> page = pagedQuery.customPage();
         MPJLambdaWrapper<Contest> wrapper = new MPJLambdaWrapper<Contest>()

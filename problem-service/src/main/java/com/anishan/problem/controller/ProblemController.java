@@ -1,6 +1,7 @@
 package com.anishan.problem.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ProblemAuth;
@@ -50,19 +51,11 @@ public class ProblemController {
     }
 
     @GetMapping("/recentProblems/{limit}")
-    @ApiOperation("最近题目，最多50个")
+    @ApiOperation("最近题目")
     public R<List<ProblemVo>> getRecentProblems(@NotNull @PathVariable Integer limit) {
-        limit = Math.min(limit, 50);
+        limit = 10;
+        List<ProblemVo> problemVos = problemService.recentProblems(limit);
 
-        Page<Problem> page = Page.of(1, limit);
-        List<Problem> list = problemService.list(
-                page,
-                new LambdaQueryWrapper<Problem>()
-                        .eq(Problem::getAuth, ProblemAuth.Public)
-                        .orderByDesc(Problem::getCreateTime)
-        );
-
-        List<ProblemVo> problemVos = BeanUtil.copyToList(list, ProblemVo.class);
         return R.success(problemVos);
     }
 
@@ -82,6 +75,7 @@ public class ProblemController {
 
     @GetMapping("/{id}")
     @ApiOperation("通过ID得到详细题目（用于进入题目）")
+
     public R<DetailProblem> getProblemById(@PathVariable("id") @NotNull Long id) {
         DetailProblem detailProblem = problemService.getDetailProblem(id);
         return R.success(detailProblem);
