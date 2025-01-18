@@ -11,7 +11,7 @@
         />
       </el-form-item>
       <el-form-item label="列表ID" prop="parentId">
-        <el-input-number v-model="queryParams.listId" :controls="false"/>
+        <el-input v-model="queryParams.listId" :controls="false"/>
       </el-form-item>
 
       <el-form-item>
@@ -58,7 +58,7 @@
 
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="题单ID" align="center" prop="listId" v-if="columns[0].visible" />
+      <el-table-column label="题单ID" align="center" prop="listId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="题单名称" align="center" prop="listName" v-if="columns[1].visible" />
       <el-table-column label="题单描述" align="center" prop="description" v-if="columns[2].visible" />
       <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[2].visible" />
@@ -147,6 +147,7 @@ import Pagination from "@/components/pageination/Pagination.vue";
 import {ElDialog, ElMessageBox} from "element-plus";
 import __ from "lodash";
 import {useRoute, useRouter} from "vue-router";
+import type {IdType} from "@/api/common.ts";
 
 
 const route = useRoute();
@@ -213,7 +214,7 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = ref<number[]>([])
+const ids = ref<IdType[]>([])
 
 const handleSelectionChange = (selection: ListView[]) => {
   ids.value = selection.map(item => item.listId);
@@ -241,8 +242,6 @@ const handleDelete = (row: ListView | Event) => {
           removeList(row.listId).then(getList);
         })
   }
-
-
 }
 
 // 搜索按钮
@@ -319,24 +318,20 @@ getList()
 
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
-</style>
-
-<style>
-.list-container {
-  .inline-form {
-    .el-input {
-      --el-input-width: 220px;
-    }
-
-    .el-select {
-      --el-select-width: 220px;
-    }
-  }
-  .el-table__row .el-dropdown {
-    height: 23px;
+::v-deep(.inline-form) {
+  .el-input {
+    --el-input-width: 220px;
   }
 
+  .el-select {
+    --el-select-width: 220px;
+  }
+
+}
+
+::v-deep(.el-table__row) .el-dropdown {
+  height: 23px;
 }
 </style>

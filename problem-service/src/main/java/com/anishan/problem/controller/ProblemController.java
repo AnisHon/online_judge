@@ -142,6 +142,7 @@ public class ProblemController {
     @PreAuthorize("hasAuthority('problem:problem:remove')")
     public R<Boolean> removeBatchProblem(@PathVariable @NotEmpty List<Long> ids) {
         boolean b = problemService.removeByIds(ids);
+        problemService.removeCaseFiles(ids);
         return R.success(b);
     }
 

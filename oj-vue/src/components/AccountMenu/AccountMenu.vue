@@ -1,7 +1,7 @@
 <template>
   <el-dropdown size="large" style="height: 100%;" @command="handleCommand">
           <span class="el-dropdown-link" style="height: 100%; display: flex; justify-content: center; align-items: center;">
-              <el-avatar :src="myAvatarPath"/>
+              <avatar/>
             </span>
     <template #dropdown>
       <el-dropdown-menu>
@@ -20,7 +20,7 @@ import {logout} from "@/api/auth/authentication.ts";
 import {computed} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {useMenuStore} from "@/stores/useMenuStore.ts";
-import {myAvatarPath} from "@/api/file";
+import Avatar from "@/components/Avatar/Avatar.vue";
 const router = useRouter();
 
 const route = useRoute();

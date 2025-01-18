@@ -13,6 +13,7 @@ import type {IdType} from "@/api/common.ts";
 enum OJResult {
     QUEUE = "QUEUE",
     COMPILING = "compiling",
+    RUNNING = "running",
     ACCEPT = "AC",
     RUNTIME_ERROR = "RE",
     WRONG_ANSWER = "WA",

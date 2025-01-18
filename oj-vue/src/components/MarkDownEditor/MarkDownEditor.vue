@@ -17,6 +17,7 @@ import {uploadImages} from "@/api/file";
 import {fileSize, MAX_IMAGE_COUNT, MAX_IMAGE_SIZE} from "@/utils/file";
 import {ElNotification} from "element-plus";
 import type {UploadImgCallBack, UploadImgCallBackParam} from "md-editor-v3/lib/types/MdEditor/type";
+import {baseURL, service} from "@/utils/http.ts";
 
 const config = useConfig();
 
@@ -53,11 +54,10 @@ const onUploadImg = async (files: File[], callback: UploadImgCallBack) => {
 
 
   const callbackUrls: UploadImgCallBackParam = urls
-      .map((url, index) => ({url: "/api/" + url, alt: files[index].name, title: files[index].name}))
-
-
+      ?.map((url, index) => ({url: `${baseURL}/image/${url}`, alt: files[index].name, title: files[index].name}))
   callback(callbackUrls);
 }
+
 
 
 </script>

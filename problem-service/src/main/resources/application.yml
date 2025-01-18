@@ -12,3 +12,5 @@ oj:
   knife4j:
     resource: com.anishan.problem
 
+  minio:
+    bucket-name: case

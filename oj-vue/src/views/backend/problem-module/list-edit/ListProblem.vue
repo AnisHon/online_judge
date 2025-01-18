@@ -49,7 +49,7 @@
     <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
     <el-table v-loading="isLoading" :data="sortedTableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" />
+      <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
       <el-table-column label="问题描述" align="center" prop="description" v-if="columns[2].visible">
         <template v-slot="scope">
@@ -134,11 +134,12 @@ import {
   type ProblemListRelation, updateProblemRelation
 } from "@/api/list";
 import ListProblemView from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemView.vue";
+import type {IdType} from "@/api/common.ts";
 
 const route = useRoute();
 const router = useRouter();
-const listId = computed((): number => {
-  return parseInt(<string>route.params.id);
+const listId = computed((): IdType => {
+  return <string>route.params.id;
 })
 // 查询需要的表单数据
 const queryParams = reactive<ListProblemQuery>({
@@ -205,9 +206,9 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = ref<number[]>([])
+const ids = ref<IdType[]>([])
 
-const addProblemIds = ref<number[]>([])
+const addProblemIds = ref<IdType[]>([])
 
 const isEdit = ref(false)
 
@@ -326,25 +327,20 @@ getList();
 
 
 </script>
+<style lang="scss" scoped>
 
-<style scoped>
-
-</style>
-
-<style>
-.app-container {
-  .inline-form {
-    .el-input {
-      --el-input-width: 220px;
-    }
-
-    .el-select {
-      --el-select-width: 220px;
-    }
-  }
-  .el-table__row .el-dropdown {
-    height: 23px;
+::v-deep(.inline-form) {
+  .el-input {
+    --el-input-width: 220px;
   }
 
+  .el-select {
+    --el-select-width: 220px;
+  }
+
+}
+
+::v-deep(.el-table__row) .el-dropdown {
+  height: 23px;
 }
 </style>

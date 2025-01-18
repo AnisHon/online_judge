@@ -64,6 +64,7 @@ import {
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
+import type {IdType} from "@/api/common.ts";
 
 // 查询需要的表单数据
 const queryParams = reactive<QueryList>({
@@ -74,7 +75,7 @@ const queryParams = reactive<QueryList>({
   listName: undefined,
 });
 
-const listId = defineModel({type: Number})
+const listId = defineModel<IdType>()
 const isOpen = defineModel("isOpen", {type: Boolean})
 
 const {columns} = useColumn(['列表ID', '列表名称', '列表描述']);
@@ -124,29 +125,27 @@ const handleChoose = (data: ListView) => {
 // created -> 获取列表
 getList()
 
-
-
-
 </script>
 
 <style scoped>
 
 </style>
 
-<style>
-.list-container {
-  .inline-form {
-    .el-input {
-      --el-input-width: 220px;
-    }
+<style lang="scss" scoped>
+::v-deep(.inline-form ) {
 
-    .el-select {
-      --el-select-width: 220px;
-    }
+  .el-input {
+    --el-input-width: 220px;
   }
+
+  .el-select {
+    --el-select-width: 220px;
+  }
+}
+
+::v-deep(.inline-form) {
   .el-table__row .el-dropdown {
     height: 23px;
   }
-
 }
 </style>

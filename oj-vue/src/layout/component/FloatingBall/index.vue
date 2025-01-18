@@ -32,7 +32,7 @@
 //@ts-nocheck
 import {Coin} from "@element-plus/icons-vue";
 
-import DrawerContent from "@/components/FloatingBall/DrawerContent.vue";
+import DrawerContent from "@/layout/component/FloatingBall/DrawerContent.vue";
 import {onSse, SseEvent} from "@/utils/sse";
 import {getMyPoint} from "@/api/user/index.ts";
 

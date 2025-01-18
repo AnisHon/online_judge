@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import CodeEditor from "@/components/CodeEditor/CodeEditor.vue";
+import CodeEditor from "@/components/EnhancedCodeEdior/CodeEditor/CodeEditor.vue";
 import {computed, onMounted, ref, watch} from "vue";
 import type {JudgeForm} from "@/api/problem/judge";
 import useLanguage from "@/stores/useLanguage";

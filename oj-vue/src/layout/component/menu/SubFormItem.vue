@@ -25,9 +25,9 @@
 
 <script setup lang="ts">
 
-import type {RouterType} from "@/router/dynamic";
+import type {RouterType} from "@/router/dynamic.ts";
 import {computed} from "vue";
-import {MenuType} from "@/api/auth/menu";
+import {MenuType} from "@/api/auth/menu.ts";
 import __ from 'lodash';
 
 

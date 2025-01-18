@@ -16,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,7 @@ import java.util.List;
 */
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@CacheConfig(cacheNames = "problem:tag")
 public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
     implements TagService{
 
@@ -59,6 +63,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
     }
 
     @Override
+    @Cacheable(key = "'all-tag'")
     public List<TagVo> getAll() {
         List<Tag> tags = this.list();
         return BeanUtil.copyToList(tags, TagVo.class);
@@ -73,6 +78,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
     }
 
     @Override
+    @CacheEvict(key = "'all-tag'", allEntries = true)
     public boolean updateTag(TagDto tagDto) {
         Tag tag = this.getById(tagDto.getTagId());
         BeanUtil.copyProperties(tagDto, tag);
@@ -80,14 +86,13 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
     }
 
     @Override
+    @CacheEvict(key = "'all-tag'", allEntries = true)
     public boolean deleteTag(Long id) {
-
         return this.removeById(id);
     }
 
     @Override
     public boolean addTagForProblem(ProblemTagDto problemTagDto) {
-
         ProblemTagRelation problemTagRelation = BeanUtil.copyProperties(problemTagDto, ProblemTagRelation.class);
         return problemTagService.save(problemTagRelation);
     }

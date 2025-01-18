@@ -131,7 +131,7 @@ const {loading, isLoading, finish} = useLoading();
 const deleteSolution = debouncedDeleteSolution(finish);
 
 const loadSolution = async () => {
-  solution.value = await getSolution(parseInt(<string>route.params.id));
+  solution.value = await getSolution(<string>route.params.id);
   if (!solution.value) {
     ElNotification.error("不存在")
   }

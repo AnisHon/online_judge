@@ -1,18 +1,20 @@
 package com.anishan.content.controller;
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpStatus;
 import com.anishan.api.client.content.domain.OssFileInputStream;
 import com.anishan.commons.domain.R;
 import com.anishan.content.domain.dto.CloudFileDto;
 import com.anishan.content.domain.dto.QueryCloudFile;
 import com.anishan.content.domain.vo.CloudFilesVo;
-import com.anishan.content.file.FileOperation;
+import com.anishan.api.file.FileOperation;
 import com.anishan.content.service.FileService;
 import com.anishan.content.service.CloudFilesService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +23,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping
 @Api("文件上传下载API")
@@ -86,7 +90,7 @@ public class FileController {
         ArrayList<String> paths = new ArrayList<>(images.size());
         for (MultipartFile image : images) {
             // 这是url链接路径，不是OSS路径
-            String path = "/image/" + fileService.uploadImage(image);
+            String path = fileService.uploadImage(image);
             paths.add(path);
         }
 
@@ -94,10 +98,11 @@ public class FileController {
     }
 
     @ApiOperation("获取图片")
-    @GetMapping("/image/{name}")
-    public void getImage(@NotNull @PathVariable("name") String name, @NotNull HttpServletResponse response) {
-        String path = fileService.getImagePath(name);
-        responseFile(path, response);
+    @GetMapping("/image/**")
+    public void getImage(HttpServletRequest req, @NotNull HttpServletResponse response) {
+        String uri = StrUtil.subSuf(req.getRequestURI(), "/image/".length());
+        log.debug(uri);
+        responseFile(uri, response);
     }
 
 
@@ -135,9 +140,7 @@ public class FileController {
     @PreAuthorize("hasAuthority('content:file:remove')")
     @Transactional
     public R<Boolean> deleteFile(@PathVariable("id") Long id) {
-
         boolean b = cloudFilesService.removeCloudFile(id);
-
         return R.success(b);
     }
 

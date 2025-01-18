@@ -29,11 +29,11 @@
 
 <script setup lang="ts">
 
-import MenuBar from "@/components/menu/Menu.vue";
+import MenuBar from "@/layout/component/menu/Menu.vue";
 import {provide, ref} from "vue";
 import {type ElMain} from "element-plus"
 //@ts-ignore
-import FloatingBall from "@/components/FloatingBall/index.vue";
+import FloatingBall from "@/layout/component/FloatingBall/index.vue";
 const elMainRef = ref<InstanceType<typeof ElMain>>();
 provide('elMain', {elMainRef: elMainRef});
 

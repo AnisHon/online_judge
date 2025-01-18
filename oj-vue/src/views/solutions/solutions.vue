@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import SolutionsComponent from "@/components/SolutionsComponent/SolutionsComponent.vue";
+import SolutionsComponent from "@/views/solutions/component/SolutionsComponent/SolutionsComponent.vue";
 import {reactive} from "vue";
 import type {QuerySolution} from "@/api/solution";
 

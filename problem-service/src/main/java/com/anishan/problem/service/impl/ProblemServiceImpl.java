@@ -2,19 +2,20 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.lang.Pair;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.api.annotation.EnableCache;
+import com.anishan.api.file.FileOperation;
+import com.anishan.commons.enumeration.ProblemType;
+import com.anishan.problem.domain.CaseParam;
+import com.anishan.problem.domain.dto.*;
 import com.anishan.problem.domain.vo.OjProblemVo;
 import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.util.ThrowUtil;
-import com.anishan.problem.domain.dto.ChoiceFillAnswersDto;
-import com.anishan.problem.domain.dto.DetailProblemDto;
-import com.anishan.problem.domain.dto.PagedProblem;
-import com.anishan.problem.domain.dto.ProblemDto;
 import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.mapper.ProblemMapper;
@@ -22,8 +23,10 @@ import com.anishan.problem.mapper.ProblemProblemListMapper;
 import com.anishan.problem.service.*;
 import com.anishan.problem.util.ProblemUploadUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +34,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -55,6 +61,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final OjProblemCaseService ojProblemCaseService;
     private final ProblemProblemListMapper problemProblemListMapper;
     private final ProblemUploadUtil problemUploadUtil;
+    private final FileOperation fileOperation;
 
 
     public Problem doGetProblem(Long id) {
@@ -134,18 +141,72 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
     }
 
-    private void doAddOjCases(DetailProblemDto problem, Long problemId) {
-        if (CollectionUtil.isEmpty(problem.getCases())) {
-            return;
+    /**
+     * 获取Path
+     * @param problemId 题目ID
+     * @param caseId 测试用例Id
+     * @param in 是输入还是输出（true->.in false->.out）
+     * @return
+     */
+    private String getPath(Long problemId, Long caseId, boolean in) {
+        return problemId + "/" + caseId + "." + (in ? "in" : "out");
+    }
+
+    private void saveCaseFile(List<CaseParam> list) {
+        for (CaseParam item : list) {
+            fileOperation.saveFile(item.getIn(), item.getInCase(), "text/plain");
+            fileOperation.saveFile(item.getOut(), item.getOutCase(), "text/plain");
         }
+    }
+
+    private Pair<List<CaseParam>, List<OjProblemCase>> doGetOjCasesList(DetailProblemDto problem, Long problemId) {
+        if (CollectionUtil.isEmpty(problem.getCases())) {
+            return Pair.of(Collections.emptyList(), Collections.emptyList());
+        }
+
+        List<CaseParam> list = new ArrayList<>();
+
+        // 构建路径，id，
+        problem.getCases().forEach(item -> {
+            long caseId = IdWorker.getId();
+
+            String inPath = getPath(problemId, caseId, true);
+            String outPath = getPath(problemId, caseId, false);
+            ByteArrayInputStream inIs = new ByteArrayInputStream(item.getInput().getBytes(StandardCharsets.UTF_8));
+            ByteArrayInputStream outIs = new ByteArrayInputStream(item.getOutput().getBytes(StandardCharsets.UTF_8));
+
+            item.setCaseId(caseId);
+            item.setProblemId(problemId);
+            item.setCaseId(caseId);
+            item.setInput(inPath);
+            item.setOutput(outPath);
+
+            CaseParam caseParam = new CaseParam()
+                    .setIn(inPath)
+                    .setOut(outPath)
+                    .setInCase(inIs)
+                    .setOutCase(outIs);
+            list.add(caseParam);
+        });
+
+
+        // 实体类
         List<OjProblemCase> entityCase =
                 BeanUtil.copyToList(problem.getCases(), OjProblemCase.class);
 
-        entityCase.forEach(x -> x.setProblemId(problemId));
+        return Pair.of(list, entityCase);
 
-        boolean b = ojProblemCaseService.saveBatch(entityCase);
+    }
+
+    private void doAddOjCases(DetailProblemDto problem, Long problemId) {
+
+        Pair<List<CaseParam>, List<OjProblemCase>> pair = doGetOjCasesList(problem, problemId);
+
+        boolean b = ojProblemCaseService.saveBatch(pair.getValue());
+
         ThrowUtil.runtime(!b, "OJ题目测试用例添加失败");
 
+        saveCaseFile(pair.getKey());
     }
 
     private boolean doAddChoiceFillAnswers(List<ChoiceFillAnswersDto> dtoAnswers, Long problemId) {
@@ -214,6 +275,50 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
 
+    @Transactional
+    public void decidedBatchAddProblem(List<DetailProblemDto> problem) {
+
+        List<Problem> problemEntities = new ArrayList<>();
+        List<ChoiceFillAnswers> choiceFillAnswers  = new ArrayList<>();
+        List<OjProblem> ojProblems  = new ArrayList<>();
+        List<OjProblemCase> OjProblemCases  = new ArrayList<>();
+        List<CaseParam> caseParams  = new ArrayList<>();
+        for (DetailProblemDto detailProblemDto : problem) {
+            Problem entity = BeanUtil.copyProperties(detailProblemDto.getProblem(), Problem.class);
+
+            // 分配ID
+            long problemId = IdWorker.getId();
+            entity.setProblemId(problemId);
+            // 添加到列表
+            problemEntities.add(entity);
+
+            if (detailProblemDto.getProblem().getType() == ProblemType.OJ) {
+                OjProblem ojProblem = BeanUtil.copyProperties(detailProblemDto.getOjProblem(), OjProblem.class);
+                ojProblem.setProblemId(problemId);
+
+                Pair<List<CaseParam>, List<OjProblemCase>> pair = doGetOjCasesList(detailProblemDto, problemId);
+
+                OjProblemCases.addAll(pair.getValue());
+                caseParams.addAll(pair.getKey());
+                ojProblems.add(ojProblem);
+
+            } else {
+                List<ChoiceFillAnswersDto> choices = detailProblemDto.getChoices();
+                List<ChoiceFillAnswers> choiceFillAnswersTemp = BeanUtil.copyToList(choices, ChoiceFillAnswers.class);
+                choiceFillAnswersTemp.forEach(x -> x.setProblemId(problemId));
+                choiceFillAnswers.addAll(choiceFillAnswersTemp);
+            }
+        }
+
+        Db.saveBatch(problemEntities);
+        Db.saveBatch(ojProblems);
+        Db.saveBatch(OjProblemCases);
+        Db.saveBatch(choiceFillAnswers);
+
+        saveCaseFile(caseParams);
+    }
+
+
     /**
      * 添加problem，开启了事务
      *
@@ -224,6 +329,12 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     @Transactional
     public Long addProblem(DetailProblemDto problem) {
         return decidedAddProblem(problem);
+    }
+
+    @Transactional
+    @Override
+    public void batchAddProblem(List<DetailProblemDto> problems) {
+        decidedBatchAddProblem(problems);
     }
 
     private boolean decidedUpdateProblem(DetailProblemDto problem, Problem entity) {
@@ -273,35 +384,13 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
     private boolean doUpdateOjProblem(DetailProblemDto problem) {
         problem.getCases().forEach(x -> x.setProblemId(problem.getProblem().getProblemId()));
-        boolean caseUpdate = doUpdateOjCases(problem.getCases());
-        boolean b = ojProblemService.updateById(problem.getOjProblem());
-        return caseUpdate || b;
+        return ojProblemService.updateById(problem.getOjProblem());
 
     }
 
-    private boolean doUpdateOjCases(List<OjProblemCase> cases) {
-        if (CollectionUtil.isEmpty(cases)) {
-            return true;
-        }
-        Long problemId = cases.get(0).getProblemId();
-
-        List<Long> ids = cases
-                .stream()
-                .map(OjProblemCase::getCaseId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        LambdaQueryWrapper<OjProblemCase> wrapper = new LambdaQueryWrapper<OjProblemCase>()
-                .eq(OjProblemCase::getProblemId, problemId)
-                .notIn(!CollectionUtil.isEmpty(ids), OjProblemCase::getCaseId, ids);
-
-        ojProblemCaseService.remove(
-                wrapper
-        );
-
-        //        judgeClient.setCase(problemId, cases);
-        return ojProblemCaseService.saveOrUpdateBatch(cases);
-    }
-
+    /*
+     * 不能刷新OJ题目的case
+     */
     @Override
     @Transactional
     public boolean updateProblem(DetailProblemDto problem) {
@@ -466,11 +555,10 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     @Override
     @Transactional
     public boolean saveListProblems(List<List<DetailProblemDto>> problems) {
-        boolean b = true;
-        for (List<DetailProblemDto> problem : problems) {
-            b &= saveProblems(problem);
+        for (List<DetailProblemDto> problemList : problems) {
+            this.batchAddProblem(problemList);
         }
-        return b;
+        return true;
     }
 
     @Override
@@ -509,6 +597,11 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         );
 
         return BeanUtil.copyToList(list, ProblemVo.class);
+    }
+
+    @Override
+    public void removeCaseFiles(List<Long> ids) {
+
     }
 
 }

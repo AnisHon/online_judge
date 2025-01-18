@@ -16,12 +16,13 @@
               label="头像"
               align="center"
           >
-              <el-avatar
-                  :src="myAvatarPath"
-                  @click="openUploadAvatarDialog = true"
-                  shape="square"
-                  :size="64"
-              />
+            <avatar
+                shape="square"
+                class="portrait"
+                :user-id="user.userId"
+                @click="openUploadAvatarDialog = true"
+            />
+
             <el-upload/>
           </el-descriptions-item>
           <el-descriptions-item label="用户名">{{ user.userName }}</el-descriptions-item>
@@ -292,7 +293,7 @@
 
     <el-dialog v-model="openUploadAvatarDialog" append-to-body>
       <div class="absoluteCenter">
-        <AvatarCutter style="margin: auto" @cut-down="handleUploadAvatar"/>
+        <AvatarCutter style="margin: auto" @cut-down="handleUploadAvatar" @cancel="openUploadAvatarDialog = false"/>
       </div>
 
     </el-dialog>
@@ -313,8 +314,9 @@ import {ElNotification, type FormInstance, type FormRules} from "element-plus";
 import {resetPassword} from "@/api/auth/authentication";
 import {sendForgetEmailCode} from "@/api/auth/emailCode";
 import getCaptcha from "@/api/auth/captchaCode";
-import {myAvatarPath, uploadAvatar} from "@/api/file";
+import {uploadAvatar} from "@/api/file";
 import AvatarCutter from "@/components/AvatarCutter/AvatarCutter.vue";
+import Avatar from "@/components/Avatar/Avatar.vue";
 
 const userStore = useUserStore();
 const router = useRouter();

@@ -18,7 +18,6 @@ import com.anishan.judge.judge.Compiler;
 import com.anishan.judge.judge.Judge;
 import com.anishan.judge.judge.SandboxRun;
 import com.anishan.judge.service.JudgeService;
-import com.anishan.judge.service.OjProblemCaseService;
 import com.anishan.judge.util.Constants;
 import com.anishan.judge.util.JudgeDelayUtil;
 import com.anishan.judge.util.JudgeUtils;
@@ -44,7 +43,6 @@ public class JudgeServiceImpl implements JudgeService {
     private final Compiler compiler;
     private final LanguageConfigLoader languageConfigLoader;
     private final SandboxRun sandboxRun;
-    private final OjProblemCaseService ojProblemCaseService;
     private final RabbitTemplate rabbitTemplate;
     private final JudgeDelayUtil judgeDelayUtil;
 
@@ -53,7 +51,7 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     private JudgeMessage makeJudgeMessage(JudgeInfo judgeInfo) {
-        List<OjProblemCaseVo> caseVos = ojProblemCaseService.getByProblemId(judgeInfo.getProblemId());
+        List<OjProblemCaseVo> caseVos = null;
 
         BigDecimal score = BigDecimal.ZERO;
         for (OjProblemCaseVo caseVo : caseVos) {

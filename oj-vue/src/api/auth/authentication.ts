@@ -60,9 +60,11 @@ const toHome = () => {
 async function login(data: LoginForm) {
     const {data: {message, success, token}} = await post<LoginForm, LoginResponse>('/user-api/auth/login', data);
     const tokenStore = useToken();
+    await useMenuStore().getTree()
 
     if (success) {
         await tokenStore.setToken(token);
+
         initSSE();
         toHome();
     } else {

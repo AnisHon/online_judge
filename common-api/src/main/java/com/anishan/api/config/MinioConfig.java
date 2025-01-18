@@ -1,7 +1,7 @@
-package com.anishan.content.config;
+package com.anishan.api.config;
 
-import com.anishan.content.file.FileOperation;
-import com.anishan.content.file.impl.MinioFileOperationImpl;
+import com.anishan.api.file.FileOperation;
+import com.anishan.api.file.impl.MinioFileOperationImpl;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;

@@ -39,7 +39,7 @@
 <!--    ['比赛ID', '比赛标题', '权限', '开始时间', '结束时间', '密码', '列表ID', '描述']-->
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="比赛ID" align="center" prop="contestId" v-if="columns[0].visible" />
+      <el-table-column label="比赛ID" align="center" prop="contestId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="比赛标题" align="center" prop="title" v-if="columns[1].visible" />
       <el-table-column label="权限" align="center" prop="auth" v-if="columns[2].visible" >
         <template v-slot="scope">
@@ -216,6 +216,7 @@ import ListView from "@/components/ListView/ListView.vue";
 import {authTagType, authText} from "@/utils/contest";
 import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
 import {useRouter} from "vue-router";
+import type {IdType} from "@/api/common.ts";
 
 const router = useRouter();
 
@@ -280,7 +281,7 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = ref<number[]>([])
+const ids = ref<IdType[]>([])
 
 const handleSelectionChange = (selection: ContestView[]) => {
   ids.value = selection.map(item => item.contestId);
@@ -395,24 +396,20 @@ getList();
 
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
-</style>
-
-<style lang="scss">
-.contest-container {
-  .inline-form {
-    .el-input {
-      --el-input-width: 220px;
-    }
-
-    .el-select {
-      --el-select-width: 220px;
-    }
-  }
-  .el-table__row .el-dropdown {
-    height: 23px;
+::v-deep(.inline-form) {
+  .el-input {
+    --el-input-width: 220px;
   }
 
+  .el-select {
+    --el-select-width: 220px;
+  }
+
+}
+
+::v-deep(.el-table__row) .el-dropdown {
+  height: 23px;
 }
 </style>

@@ -79,7 +79,7 @@
 
           <el-col :span="12">
             <el-form-item label="题单ID" prop="icon" >
-              <el-input-number
+              <el-input
                   v-model="form.listId"
                   @click="openSelectList = true"
                   :controls="false"
@@ -134,7 +134,6 @@ import {
   dict,
   type FolderForm,
   FolderType,
-  type FolderView,
   removeFolder,
   type TreedFolderView
 } from "@/api/folder";
@@ -143,6 +142,7 @@ import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import {ElDialog, ElMessageBox, type ElTree} from "element-plus";
 import __ from "lodash";
 import ListView from "@/components/ListView/ListView.vue";
+import type {IdType} from "@/api/common.ts";
 
 
 // 查询需要的表单数据
@@ -213,7 +213,7 @@ const getList = () => {
 }
 
 // 过滤
-const filterNode = (value: number | undefined, data: TreedFolderView) => {
+const filterNode = (value: IdType | undefined, data: TreedFolderView) => {
   let result = true;
   if (value) {
     result = (data.folder.folderId !== value)
@@ -231,7 +231,7 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = ref<number[]>([])
+const ids = ref<IdType[]>([])
 
 const handleSelectionChange = (selection: TreedFolderView[]) => {
   ids.value = selection.map(item => item.folder.folderId);
@@ -240,7 +240,7 @@ const handleSelectionChange = (selection: TreedFolderView[]) => {
 }
 
 
-const getIds = (folder: TreedFolderView, ids: number[] | undefined) => {
+const getIds = (folder: TreedFolderView, ids: IdType[] | undefined) => {
   if (!ids) {
     ids = []
   }
@@ -312,11 +312,11 @@ const submitForm = () => {
 
   const keys = treeRef.value?.getCheckedKeys();
   if (!hasParentId) {
-    form.parentId = 0;
+    form.parentId = '0';
   } else if (keys?.length) {
-    form.parentId = <number>keys[0]
+    form.parentId = <IdType>keys[0]
   } else {
-    form.parentId = 0;
+    form.parentId = '0';
   }
   if (dialogState.value === 1) {
     addLoading();
@@ -334,18 +334,6 @@ const cancel = () => {
   resetForm()
 }
 
-
 // created -> 获取列表
 getList()
-
-
-
-
 </script>
-
-<style scoped>
-
-</style>
-
-<style>
-</style>

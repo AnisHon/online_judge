@@ -43,6 +43,10 @@ a {
     max-width: var(--page-max-width);
 }
 
+.middle {
+    margin: auto;
+}
+
 .common-tag-text-color {
     color: var(--color-tag-text);
 }

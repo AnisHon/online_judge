@@ -1,0 +1,5 @@
+oj:
+  minio:
+    url: http://localhost:9000
+    access-key: change-this-object-storage-access-key
+    secret-key: change-this-object-storage-password

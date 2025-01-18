@@ -1,5 +1,6 @@
 package com.anishan.content.controller;
 
+import com.anishan.api.service.CaseFileService;
 import com.anishan.content.service.SseService;
 import com.anishan.api.client.user.domain.SseMessage;
 import com.anishan.commons.domain.R;
@@ -24,6 +25,7 @@ public class InternalController {
     private final FileInfoService fileInfoService;
 
     private final SseService sseService;
+    private final CaseFileService caseFileService;
 
     @ResponseBody
     @ApiOperation("处理引用计数")

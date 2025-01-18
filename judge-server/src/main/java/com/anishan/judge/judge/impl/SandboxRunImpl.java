@@ -143,6 +143,7 @@ public class SandboxRunImpl implements SandboxRun {
     @Override
     public void delFile(String fileId) {
 
+
         try {
             judgeClient.delete(fileId);
         } catch (RestClientResponseException ex) {

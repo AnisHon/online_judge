@@ -15,4 +15,10 @@ public class JudgeConfig {
      * 判题间隔，单位s
      */
     private Integer judgeInterval = 10;
+
+    /**
+     * Minio本地挂载路径
+     */
+    private String mountPath = "/mnt/minio";
+
 }

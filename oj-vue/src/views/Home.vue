@@ -1,5 +1,5 @@
 <template>
-  <div style="margin: auto; max-width: var(--page-max-width);">
+  <div class="common-max-width-page middle">
 
 
     <el-row :gutter="20">

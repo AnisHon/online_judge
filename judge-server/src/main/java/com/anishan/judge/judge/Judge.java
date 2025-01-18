@@ -1,6 +1,7 @@
 package com.anishan.judge.judge;
 
 import com.anishan.api.client.gojudge.domain.RunResult;
+import com.anishan.judge.domain.JudgeContent;
 import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.SystemError;
 
@@ -14,6 +15,8 @@ public interface Judge {
             Long maxMemory,
             Integer maxStack
     ) throws SystemError;
+
+    RunResult doJudge(JudgeContent content) throws SystemError;
 
     List<RunResult> judgeAll(String fileId, LanguageConfig languageConfig, Long memLimit, Long timeLimit, Integer stackLimit, List<String> cases) throws SystemError;
 }

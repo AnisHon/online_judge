@@ -1,17 +1,15 @@
 package com.anishan.judge.service;
 
 
-import com.anishan.api.client.judgeserver.domain.JudgeMessage;
-import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
+import com.anishan.api.client.judgeserver.domain.JudgeInfo;
+import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.judge.config.LanguageConfigLoader;
-import com.anishan.judge.domain.entity.LanguageConfig;
+import com.anishan.judge.judge.JudgeRun;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.List;
 
 @SpringBootTest
 public class TestT {
@@ -22,30 +20,44 @@ public class TestT {
     @Resource
     LanguageConfigLoader languageConfigLoader;
 
+    @Resource
+    JudgeRun judgeRun;
+
     @Test
     @SneakyThrows
     public void test() {
 
-        LanguageConfig python3 = languageConfigLoader.getLanguageConfigByName("C++");
+        JudgeInfo judgeInfo = new JudgeInfo();
+        judgeInfo
+                .setUserId(4L)
+                .setUuid("123")
+                .setContestId(null)
+                .setProblemId(1880247920550653953L)
+                .setLanguage("C++")
+                .setCode("#include <iostream>\n" +
+                        "\n" +
+                        "int main() {\n" +
+                        "\tint a;\n" +
+                        "\tstd::cin >> a;\n" +
+                        "\tstd::cout << a;\n" +
+                        "\treturn 0;\n" +
+                        "}")
+                .setLanguage("C++")
+                .setTimeLimit(123123123213123L)
+                .setMemoryLimit(12312323123L)
+                .setStackLimit(123123123);
 
 
-        String code = "int main() {return 0;}";
+        RunTestInfo runTestInfo = new RunTestInfo();
+        runTestInfo.setStdin("1 2 3");
+        runTestInfo.setCode(judgeInfo.getCode());
+        runTestInfo.setLanguage("C++");
+        runTestInfo.setUserId(123L);
+        runTestInfo.setUuid("123");
 
-        JudgeMessage message = new JudgeMessage();
-        message.setCode(code);
-        OjProblemCaseVo e1 = new OjProblemCaseVo();
-        e1.setInput("1 1");
-        e1.setOutput("2\n");
-        e1.setScore(BigDecimal.ONE);
-        message.setCases(List.of(e1));
+        System.out.println(judgeRun.judgeTest(runTestInfo));
 
-        message.setLanguage("C++");
 
-        message.setMemoryLimit(100000L);
-        message.setTimeLimit(100000L);
-        message.setStackLimit(100000);
-
-        judgeService.judge(message);
 
     }
 

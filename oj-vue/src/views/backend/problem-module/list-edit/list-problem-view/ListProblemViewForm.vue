@@ -77,6 +77,7 @@ import {getAllTags} from "@/api/problem/label";
 import {type TagView} from "@/api/problem/label"
 import type {ListProblemQuery} from "@/api/list";
 import __ from "lodash";
+import type {IdType} from "@/api/common.ts";
 
 
 
@@ -88,7 +89,7 @@ const select = ref("1");
 
 const tagDialogVisible = ref(false);
 
-const getTag = (id: number) => {
+const getTag = (id: IdType) => {
   return __.find(tags, x => x.tagId === id);
 }
 
@@ -129,7 +130,7 @@ const onResetHandler = () => {
   emit('query');
 }
 
-const handleCheckTag = (id: number) => {
+const handleCheckTag = (id: IdType) => {
 
   const index = queryForm.value.tagIds?.indexOf(id);
   if (index === -1 || index === undefined) {

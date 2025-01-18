@@ -96,6 +96,7 @@ import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 
 import {getRole, type RoleView} from "@/api/role";
+import type {IdType} from "@/api/common.ts";
 
 
 // 查询需要的表单数据
@@ -111,11 +112,11 @@ const queryParams = reactive<QueryUser>({
 });
 
 const emit = defineEmits<{
-  (e: 'update:ids', id: number[]): void
+  (e: 'update:ids', id: IdType[]): void
 }>()
 
 const {ids, loading: addLoading = false} = defineProps<{
-  ids: number[]
+  ids: IdType[]
   loading: boolean
 }>()
 
@@ -195,22 +196,15 @@ getRole({currentPage: 1, pageSize: 200, asc: true}).then((data) => {
 
 
 </script>
+<style lang="scss" scoped>
 
-<style scoped>
-
-</style>
-
-<style>
-.app-container {
-  .inline-form {
-    .el-input {
-      --el-input-width: 220px;
-    }
-
-    .el-select {
-      --el-select-width: 220px;
-    }
+::v-deep(.inline-form) {
+  .el-input {
+    --el-input-width: 220px;
   }
 
+  .el-select {
+    --el-select-width: 220px;
+  }
 }
 </style>

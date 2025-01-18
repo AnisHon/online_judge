@@ -13,6 +13,9 @@ oj:
   config:
     captcha-type: line
 
+  minio:
+    bucket-name: uploads
+
 
 knife4j:
   enable: true

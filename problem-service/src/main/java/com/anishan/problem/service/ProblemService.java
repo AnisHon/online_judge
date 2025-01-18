@@ -9,8 +9,10 @@ import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.DetailProblem;
 import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -37,6 +39,9 @@ public interface ProblemService extends IService<Problem> {
 
     Long addProblem(DetailProblemDto problem);
 
+    @Transactional
+    void batchAddProblem(List<DetailProblemDto> problems);
+
     boolean updateProblem(DetailProblemDto problem);
 
     AdminDetailProblem getAdminDetail(@NotNull Long id);
@@ -50,4 +55,6 @@ public interface ProblemService extends IService<Problem> {
     boolean saveMultiParts(MultipartFile[] files);
 
     List<ProblemVo> recentProblems(@NotNull Integer limit);
+
+    void removeCaseFiles(@NotEmpty List<Long> ids);
 }

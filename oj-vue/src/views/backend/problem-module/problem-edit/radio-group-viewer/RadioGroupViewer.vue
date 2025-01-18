@@ -22,7 +22,7 @@ import type {JudgeForm} from "@/api/problem/judge";
 
 
 const answers = reactive<JudgeForm>({
-  problemId: 0,
+  problemId: '0',
   answers: [],
   code: "",
 })

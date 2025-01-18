@@ -2,8 +2,10 @@ package com.anishan.api.client.gojudge.domain;
 
 import com.anishan.commons.enumeration.JudgeResult;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 @Data
+@Accessors(chain = true)
 public class TestResult {
 
     private Long userId;

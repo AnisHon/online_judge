@@ -14,8 +14,8 @@ public interface FileService {
      * images/年/月/日/fileName
      */
     default String getImagePath(String fileName) {
-        String dateTime = DateUtil.format(DateUtil.date(), "yyyy/MM/dd");
-        return imagePath + "/" + dateTime + fileName;
+        String dateTime = DateUtil.format(DateUtil.date(), "yyyy/MM/dd/");
+        return imagePath + dateTime + fileName;
     }
 
     default String getAvatarPath(Long userId) {

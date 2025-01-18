@@ -16,6 +16,8 @@
         :previewMode="true"
         :quality="0.5"
         @cutDown="cutDown"
+        @onClearAll="error"
+
         accept="image/gif, image/jpeg ,image/png"
         >
       <template #open>
@@ -31,10 +33,15 @@
 import ImgCutter from 'vue-img-cutter';
 
 
-const emit = defineEmits<{(e: 'cutDown', file: File): void}>()
-
+const emit = defineEmits<{
+  (e: 'cutDown', file: File): void,
+  (e: 'cancel'): void,
+}>()
 const cutDown = (file: any) => {
   emit('cutDown', file.file);
+}
+const error = () => {
+  emit('cancel');
 }
 
 </script>

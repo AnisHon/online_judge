@@ -23,7 +23,7 @@
 <script setup lang="ts">
 
 import {computed} from "vue";
-import CustomBreadCrumb from "@/components/CustomBreadCrumb/CustomBreadCrumb.vue";
+import CustomBreadCrumb from "@/layout-backend/component/CustomBreadCrumb/CustomBreadCrumb.vue";
 import ThemeTrigger from "@/components/ThemeTrigger/ThemeTrigger.vue";
 import AccountMenu from "@/components/AccountMenu/AccountMenu.vue";
 

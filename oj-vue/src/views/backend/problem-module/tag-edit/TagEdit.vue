@@ -110,6 +110,7 @@ import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import {ElDialog, ElMessageBox} from "element-plus";
 import __ from "lodash";
+import type {IdType} from "@/api/common.ts";
 
 
 // 查询需要的表单数据
@@ -157,7 +158,7 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = ref<number[]>([])
+const ids = ref<IdType[]>([])
 
 const handleSelectionChange = (selection: TagView[]) => {
   ids.value = selection.map(item => item.tagId);
@@ -238,22 +239,8 @@ const cancel = () => {
   resetForm()
 }
 
-
-
-
-
-
 // created -> 获取列表
 getList()
 
-
-
-
 </script>
 
-<style scoped>
-
-</style>
-
-<style>
-</style>

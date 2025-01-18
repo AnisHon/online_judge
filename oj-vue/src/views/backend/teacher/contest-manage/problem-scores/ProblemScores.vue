@@ -62,14 +62,10 @@
 <script setup lang="ts">
 
 import {useRoute, useRouter} from "vue-router";
-import {computed, ref} from "vue";
+import {ref} from "vue";
 import type {IdType} from "@/api/common.ts";
-import {getProblemScore, type ProblemScore, type ProblemStatistic} from "@/api/record"
-import {round} from "lodash";
+import {getProblemScore, type ProblemScore} from "@/api/record"
 import {isNullObj} from "@/utils/valueutil.ts";
-import {useParamStore} from "@/stores/useParam.ts";
-
-const useParam = useParamStore();
 
 const route = useRoute();
 
@@ -78,29 +74,13 @@ const router = useRouter();
 const contestId = ref<IdType>(<string>route?.params?.contestId);
 
 const problemId = ref<IdType>(<string>route?.params?.problemId);
-
-const problemStatistic = ref<ProblemStatistic>(useParam.get("ProblemStatistic"));
-
 const list = ref<ProblemScore[]>([])
-
-const scores = computed(() => {
-  return list.value.map((item: ProblemScore) => item?.score || 0);
-})
 
 const getList = async () => {
   list.value = await getProblemScore({
     problemId: problemId.value,
     contestId: contestId.value,
   });
-}
-
-const getAccuracy = (row: ProblemStatistic) => {
-  const total = row.absentNum + row.rightNum + row.wrongNum;
-  if (total === 0) {
-    return 0;
-  }
-
-  return round(row.rightNum / total, 2) * 100;
 }
 
 
@@ -111,25 +91,22 @@ getList();
 
 
 
-<style scoped>
+<style lang="scss" scoped>
+@use '@/assets/color' as *;
 
+::v-deep(.table) {
+  .header-cell {
+    height: 64px;
+    background-color: $table-header-color;
+  }
 
-</style>
+  .el-progress__text {
+    font-size: 14px !important;
+  }
 
-<style lang="scss">
-@import "@/assets/color.scss";
-
-.app-container .table .header-cell {
-  height: 64px;
-  background-color: $table-header-color;
+  .row {
+    height: 64px;
+  }
 
 }
-.table .el-progress__text {
-  font-size: 14px !important;
-}
-
-.row {
-  height: 64px;
-}
-
 </style>

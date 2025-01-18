@@ -307,17 +307,23 @@ onUnmounted(() => {
 </script>
 
 
-<style scoped>
+<style lang="scss" scoped>
+@use '@/assets/color' as *;
 
-.problem-content {
-  padding: 0 20px;
-  height: calc(var(--in-main-content-height) - 20px);
-  overflow: auto;
-}
+::v-deep(.table) {
+  .header-cell {
+    height: 64px;
+    background-color: $table-header-color;
+  }
 
+  .el-progress__text {
+    font-size: 14px !important;
+  }
 
-.tags {
-  margin: 5px 0;
+  .row {
+    height: 64px;
+  }
+
 }
 
 </style>

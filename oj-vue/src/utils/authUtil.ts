@@ -1,4 +1,5 @@
 import {useUserStore} from "@/stores/useUserStore.ts";
+import type {IdType} from "@/api/common.ts";
 
 export const hasPerm = (perm: string | string[] | undefined): boolean => {
     if (!perm) {
@@ -20,7 +21,7 @@ export const hasPerm = (perm: string | string[] | undefined): boolean => {
 }
 
 
-export const isUserIdEqual = (id: number | undefined): boolean => {
+export const isUserIdEqual = (id: IdType | undefined): boolean => {
     const userStore = useUserStore();
 
     if (id === null || !userStore.user?.userId) {

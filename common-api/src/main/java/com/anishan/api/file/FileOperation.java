@@ -1,4 +1,4 @@
-package com.anishan.content.file;
+package com.anishan.api.file;
 
 import com.anishan.api.client.content.domain.OSSFileInfo;
 import com.anishan.api.client.content.domain.OssFileInputStream;
@@ -18,7 +18,6 @@ public interface FileOperation {
 
     void saveFile(String path, InputStream inputStream, Long chunkSize);
 
-
     void deleteFile(String path);
 
     void deleteFiles(List<String> path);
@@ -27,4 +26,5 @@ public interface FileOperation {
 
     void uploadFile(String bucketName, String objectName, String path, Long partSize);
 
+    OSSFileInfo getFileInfo(String objectName);
 }

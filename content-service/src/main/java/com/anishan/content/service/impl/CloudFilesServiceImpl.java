@@ -37,7 +37,6 @@ public class CloudFilesServiceImpl extends ServiceImpl<CloudFilesMapper, CloudFi
     private final CloudFilesMapper cloudFilesMapper;
 
     private final UserInternalClient userClient;
-    private final FileInfoService fileInfoService;
 
     @Override
     public List<CloudFilesVo> getCloudFilesVo(QueryCloudFile query) {

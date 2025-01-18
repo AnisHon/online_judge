@@ -34,12 +34,12 @@ export interface QuerySolution extends SortedPagedType {
     userId?: IdType;
 }
 
-export const getSolution = async (id: number): Promise<Solution> => {
+export const getSolution = async (id: IdType): Promise<Solution> => {
     const {data} = await get<Solution>("/problem-api/solution", id);
     return data;
 }
 
-export const getSolutionAdmin = async (id: number): Promise<Solution> => {
+export const getSolutionAdmin = async (id: IdType): Promise<Solution> => {
     const {data} = await get<Solution>("/problem-api/solution/admin", id);
     return data;
 }

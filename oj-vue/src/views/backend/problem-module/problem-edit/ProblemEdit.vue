@@ -26,7 +26,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="题目ID" prop="parentId">
-        <el-input-number v-model="queryParams.problemId" :controls="false"/>
+        <el-input v-model="queryParams.problemId" :controls="false"/>
       </el-form-item>
 
       <el-form-item>
@@ -84,7 +84,7 @@
 <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" />
+      <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip/>
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
       <el-table-column label="问题描述" align="center" prop="description" v-if="columns[2].visible" show-overflow-tooltip />
 
@@ -218,6 +218,7 @@ import {useRouter} from "vue-router";
 import {UploadFilled} from "@element-plus/icons-vue";
 import type {UploadAjaxError} from "element-plus/es/components/upload/src/ajax";
 import type {AjaxResult} from "@/utils/http";
+import type {IdType} from "@/api/common.ts";
 
 const router = useRouter();
 
@@ -265,7 +266,7 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = ref<number[]>([])
+const ids = ref<IdType[]>([])
 
 const handleSelectionChange = (selection: ProblemView[]) => {
   ids.value = selection.map(item => item.problemId);
@@ -368,7 +369,7 @@ const originCards = ref<TagView[]>([]);
 const allCards = ref<TagView[]>([]);
 const status = reactive<boolean[]>([])
 const open = ref(false)
-const currentProblemId = ref(0)
+const currentProblemId = ref('0')
 
 const onChange = (bool: boolean, id: TagView) => {
 
@@ -413,7 +414,7 @@ const submit = () => {
 
 }
 
-const manageTag = (id: number) => {
+const manageTag = (id: IdType) => {
   getTag();
   open.value = true;
   loadingCard.value = true
@@ -446,29 +447,22 @@ const getTag = () => {
 // created -> 获取列表
 getList();
 getTag();
-
-
-
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
-</style>
-
-<style>
-.app-container {
-  .inline-form {
-    .el-input {
-      --el-input-width: 220px;
-    }
-
-    .el-select {
-      --el-select-width: 220px;
-    }
-  }
-  .el-table__row .el-dropdown {
-    height: 23px;
+::v-deep(.inline-form) {
+  .el-input {
+    --el-input-width: 220px;
   }
 
+  .el-select {
+    --el-select-width: 220px;
+  }
+
+}
+
+::v-deep(.el-table__row) .el-dropdown {
+  height: 23px;
 }
 </style>

@@ -54,9 +54,10 @@ import {debouncedFetchProblemsNotInList, type ListProblemQuery} from "@/api/list
 import ListProblemViewForm from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemViewForm.vue";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
+import type {IdType} from "@/api/common.ts";
 
 const {listId} = defineProps<{
-  listId: number
+  listId: IdType
 }>()
 // 显示搜索栏
 const showSearch = ref(true);
@@ -98,7 +99,7 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = defineModel<number[]>()
+const ids = defineModel<IdType[]>()
 // const ids = ref<number[]>([])
 
 const handleSelectionChange = (selection: ProblemView[]) => {

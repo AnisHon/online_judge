@@ -84,7 +84,7 @@
 <!--    ['角色ID', '角色名称', '状态', '标记']-->
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="角色ID" align="center" prop="roleId" v-if="columns[0].visible" />
+      <el-table-column label="角色ID" align="center" prop="roleId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="角色名称" align="center" prop="roleName" v-if="columns[1].visible" />
       <el-table-column label="状态" align="center" prop="status" v-if="columns[2].visible" >
         <template v-slot="scope">
@@ -216,6 +216,7 @@ import {getAllTreedMenu} from "@/api/menu";
 import {setTreeId} from "@/utils/menu";
 import type {TreeOptionProps} from "element-plus/es/components/tree/src/tree.type";
 import type {TreeNodeData} from "element-plus/lib/components/tree/src/tree.type";
+import type {IdType} from "@/api/common.ts";
 // 查询需要的表单数据
 
 const route = useRoute();
@@ -292,7 +293,7 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = ref<number[]>([])
+const ids = ref<IdType[]>([])
 
 const handleSelectionChange = (selection: RoleView[]) => {
   ids.value = selection.map(item => item.roleId);
@@ -422,8 +423,8 @@ const menuTree = reactive<TreedMenu[]>([])
 const openDataScope = ref(false);
 const treeRef = ref<InstanceType<typeof ElTree>>();
 
-const original = ref<Number[]>([]);
-const current = ref<Number[]>([])
+const original = ref<IdType[]>([]);
+const current = ref<IdType[]>([])
 const delArray = ref<MenuRoleRelation[]>([])
 const addArray = ref<MenuRoleRelation[]>([])
 
@@ -464,7 +465,7 @@ const submitMenu = () => {
   addArray.value.length = 0;
 
 
-  current.value = <number[]>treeRef.value?.getCheckedKeys();
+  current.value = <IdType[]>treeRef.value?.getCheckedKeys();
 
   const delIdTemp = __.difference(original.value, current.value);
   const addIdTemp = __.difference(current.value, original.value);
@@ -519,28 +520,20 @@ getList()
 
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
-</style>
-
-<style>
-.app-container {
-  .inline-form {
-    .el-input {
-      --el-input-width: 220px;
-    }
-
-    .el-select {
-      --el-select-width: 220px;
-    }
+::v-deep(.inline-form) {
+  .el-input {
+    --el-input-width: 220px;
   }
 
-  .el-table__row .el-dropdown {
-     height: 23px;
-  }
-  .tree {
-    min-width: 250px;
+  .el-select {
+    --el-select-width: 220px;
   }
 
+}
+
+::v-deep(.el-table__row) .el-dropdown {
+  height: 23px;
 }
 </style>

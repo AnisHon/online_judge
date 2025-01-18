@@ -151,23 +151,22 @@ getList();
 
 </script>
 
+<style lang="scss" scoped>
+@use '@/assets/color' as *;
 
+::v-deep(.table) {
+  .header-cell {
+    height: 64px;
+    background-color: $table-header-color;
+  }
 
-<style scoped>
+  .el-progress__text {
+    font-size: 14px !important;
+  }
 
-
-</style>
-
-<style lang="scss">
-@import "@/assets/color.scss";
-
-.app-container .table .header-cell {
-  height: 64px;
-  background-color: $table-header-color;
+  .row {
+    height: 64px;
+  }
 
 }
-.table .el-progress__text {
-  font-size: 14px !important;
-}
-
 </style>

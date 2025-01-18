@@ -16,5 +16,7 @@ spring:
           - data-id: shared-knife4j.yaml
           - data-id: shared-redis.yaml
           - data-id: shared-common.yaml
+          - data-id: shared-minio.yaml
+          - data-id: shared-rabbit.yaml
 #          - data-id: shared-rabbit.yaml
 

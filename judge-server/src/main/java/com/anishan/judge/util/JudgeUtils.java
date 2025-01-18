@@ -1,7 +1,12 @@
 package com.anishan.judge.util;
 
+import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.enumeration.JudgeResult;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.ReaderInputStream;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -93,6 +98,14 @@ public class JudgeUtils {
                 result = JudgeResult.RuntimeError;
         }
         return result;
+    }
+
+
+    public static boolean equals(InputStream is, String out) throws IOException {
+        StringReader reader = new StringReader(out);
+        InputStreamReader inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
+        return IOUtils.contentEquals(reader, inputStreamReader);
+
     }
 
 }

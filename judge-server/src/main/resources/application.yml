@@ -17,6 +17,9 @@ oj:
   knife4j:
     resource: com.anishan.judge
 
+  minio:
+    bucket-name: case
+
 
 # judge的url
 judge:

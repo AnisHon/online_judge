@@ -1,10 +1,12 @@
 package com.anishan.judge.judge;
 
-import com.anishan.api.client.gojudge.domain.RunResult;
-import com.anishan.judge.domain.entity.LanguageConfig;
+import com.anishan.api.client.gojudge.domain.TestResult;
+import com.anishan.api.client.judgeserver.domain.JudgeInfo;
+import com.anishan.api.client.judgeserver.domain.JudgeScore;
+import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 
 public interface JudgeRun {
+    JudgeScore judgeAll(JudgeInfo judgeInfo);
 
-
-    RunResult run(String fileId, String stdin, LanguageConfig config);
+    TestResult judgeTest(RunTestInfo runTestInfo);
 }

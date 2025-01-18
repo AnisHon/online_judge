@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="发送者ID" prop="className">
-        <el-input-number
+        <el-input
             v-model="queryParams.userId"
             placeholder="请输入发送者ID"
 
@@ -11,7 +11,7 @@
         />
       </el-form-item>
       <el-form-item label="题目ID" prop="parentId">
-        <el-input-number
+        <el-input
             v-model="queryParams.problemId"
             placeholder="请输入题目ID"
             :controls="false"
@@ -62,7 +62,7 @@
 
     <el-table :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="题解ID" align="center" prop="solutionId" v-if="columns[0].visible" />
+      <el-table-column label="题解ID" align="center" prop="solutionId" v-if="columns[0].visible" show-overflow-tooltip/>
       <el-table-column label="标题" align="center" prop="title" v-if="columns[1].visible" show-overflow-tooltip/>
       <el-table-column label="置顶" align="center" prop="topUp" v-if="columns[2].visible" >
         <template v-slot="scope">
@@ -148,6 +148,7 @@ import {
   type QuerySolution,
   type Solution, topUp
 } from "@/api/solution";
+import type {IdType} from "@/api/common.ts";
 
 const router = useRouter();
 
@@ -165,7 +166,7 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = ref<number[]>([])
+const ids = ref<IdType[]>([])
 
 const columns = ref([
   {
@@ -309,24 +310,20 @@ getList()
 
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
-</style>
-
-<style>
-.app-container {
-  .inline-form {
-    .el-input {
-      --el-input-width: 220px;
-    }
-
-    .el-select {
-      --el-select-width: 220px;
-    }
-  }
-  .el-table__row .el-dropdown {
-    height: 23px;
+::v-deep(.inline-form) {
+  .el-input {
+    --el-input-width: 220px;
   }
 
+  .el-select {
+    --el-select-width: 220px;
+  }
+
+}
+
+::v-deep(.el-table__row) .el-dropdown {
+  height: 23px;
 }
 </style>

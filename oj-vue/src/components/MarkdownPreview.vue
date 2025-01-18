@@ -1,6 +1,11 @@
 <template>
-  <MdPreview :id="id" :modelValue="text" :theme="theme" :previewTheme="previewTheme" :codeTheme="codeTheme" style="background-color: var(--el-bg-color)"/>
-<!--  <MdCatalog :editorId="id" :theme="theme"/>-->
+  <MdPreview
+      :id="id"
+      :modelValue="text"
+      :theme="theme"
+      :previewTheme="previewTheme"
+      :codeTheme="codeTheme"
+      style="background-color: var(--el-bg-color)"/>
 </template>
 
 <script setup lang="ts">
@@ -16,6 +21,7 @@ import { MdPreview, MdCatalog } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import {useDark} from "@vueuse/core";
 import useConfig from "@/stores/useConfig.ts";
+import {baseURL} from "@/utils/http.ts";
 
 const isDark = useDark();
 
@@ -36,7 +42,6 @@ const previewTheme = computed(() => {
 const codeTheme = computed(() => {
   return config.readonly.codeTheme || "atom";
 })
-
 
 const md = new MarkdownIt({
   html:true,

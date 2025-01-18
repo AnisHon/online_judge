@@ -1,9 +1,9 @@
-package com.anishan.content.file.impl;
+package com.anishan.api.file.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.anishan.api.client.content.domain.OSSFileInfo;
 import com.anishan.api.client.content.domain.OssFileInputStream;
-import com.anishan.content.file.FileOperation;
+import com.anishan.api.file.FileOperation;
 import io.minio.*;
 import io.minio.errors.*;
 import io.minio.messages.DeleteError;
@@ -211,5 +211,30 @@ public class MinioFileOperationImpl implements FileOperation {
         } catch (InsufficientDataException | IOException | InvalidResponseException | ErrorResponseException e) {
             throw new RuntimeException(e);
         }
+
     }
+
+    @Override
+    public OSSFileInfo getFileInfo(String objectName) {
+
+        OSSFileInfo ossFileInfo = null;
+        try {
+            StatObjectResponse response = minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
+
+            ossFileInfo = new OSSFileInfo()
+                    .setHash(response.etag())
+                    .setFilename(response.object())
+                    .setDir(false)
+                    .setLastModified(response.lastModified().toLocalDateTime())
+                    .setVersionId(response.versionId())
+                    .setSize(response.size())
+                    .setMeta(response.userMetadata());
+        } catch (InternalException | NoSuchAlgorithmException | ServerException | InvalidKeyException | XmlParserException e) {
+            log.error("Minio内部出现错误：",e);
+        } catch (InsufficientDataException | IOException | InvalidResponseException | ErrorResponseException e) {
+            throw new RuntimeException(e);
+        }
+        return ossFileInfo;
+    }
+
 }

@@ -2,22 +2,23 @@ import {get, type successCallback} from "@/utils/http"
 import {batchAdd, putRemove} from "@/utils/simpleCRUD";
 import useLoading from "@/hooks/useLoading";
 import {debounce} from "lodash";
+import type {IdType} from "@/api/common.ts";
 
 export interface TagView {
 
-    tagId: number;
+    tagId: IdType;
     tagName: string;
     tagColor: string;
     createTime: Date;
 }
 
 export interface ProblemTagRelation {
-    tagId: number;
-    problemId: number;
+    tagId: IdType;
+    problemId: IdType;
 }
 
-const fetchTagByProblemId = async (problemId: number) => {
-    const {data} = await get<TagView[], number>("/problem-api/tag/problem", problemId);
+const fetchTagByProblemId = async (problemId: IdType) => {
+    const {data} = await get<TagView[], IdType>("/problem-api/tag/problem", problemId);
     return data;
 }
 

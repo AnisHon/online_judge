@@ -311,7 +311,7 @@ getList();
 
 <style lang="scss" scoped>
 
-@import "@/assets/color";
+@use "@/assets/color" as *;
 
 .app-container {
   margin: auto;
@@ -356,7 +356,7 @@ getList();
 }
 
 .filename:hover {
-  color: $table-header-color-hover;
+  color: var(--brand-color);
 }
 
 .file-link {
@@ -368,26 +368,28 @@ getList();
 }
 
 
-</style>
+// table的deep
+::v-deep(.files .file-table) {
+  .file-row {
+    height: 66px;
+    background-color: var(--el-fill-color-extra-light);
+  }
 
-<style lang="scss">
 
-@import "@/assets/color";
+  .file-cell {
+    border: none;
+    color: var(--regular-text);
+  }
 
-.files .file-table .file-row {
-  height: 66px;
+  .file-header-cell {
+    background-color: $table-header-color;
+    color: $table-header-text-color;
+  }
+
+  .file-row:hover .file-link {
+    display: inline-block;
+  }
 }
 
-.files .file-table .file-cell {
-  border: none;
-}
-
-.files .file-table .file-header-cell {
-  background-color: $table-header-color;
-}
-
-.files .file-table .file-row:hover .file-link {
-  display: inline-block;
-}
 
 </style>

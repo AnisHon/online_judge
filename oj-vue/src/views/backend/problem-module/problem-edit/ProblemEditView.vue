@@ -222,6 +222,7 @@ import ProblemReviewer from "@/views/backend/problem-module/problem-edit/problem
 import {numberToLetter} from "@/utils/stringUtils";
 import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
 import {useTabStore} from "@/stores/useTabStore.ts";
+import type {IdType} from "@/api/common.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -229,11 +230,7 @@ const tabStore = useTabStore();
 
 
 const problemId = computed(() => {
-  if (route.query.id) {
-    return parseInt(<string>route.query.id)
-  } else {
-    return undefined;
-  }
+  return <IdType>route?.query?.id || ""
 });
 
 const isShowPreview = ref(false);
@@ -273,7 +270,7 @@ const smallSpan = computed(() => {
 })
 
 const isAdd = computed((): boolean => {
-  return __.isUndefined(problemId.value);
+  return !problemId.value;
 })
 
 const problemType = computed(() => {
@@ -302,7 +299,7 @@ const back = async () => {
 }
 
 const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateProblem(problem, () => {})
-const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddProblem(problem, (id: number) => {
+const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddProblem(problem, (id: IdType) => {
   router.replace({name: "edit-problem", query: {id: id}});
 })
 
@@ -401,8 +398,3 @@ if (isAdd.value) {
   })
 }
 </script>
-
-
-<style scoped>
-
-</style>

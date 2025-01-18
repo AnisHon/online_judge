@@ -63,6 +63,7 @@ import {useRoute, useRouter} from "vue-router";
 import __ from "lodash";
 import {hasPerm} from "@/utils/authUtil.ts";
 import useLoading from "@/hooks/useLoading.ts";
+import type {IdType} from "@/api/common.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -150,17 +151,17 @@ const submit = async () => {
 
 const fillForm = async () => {
   if (route.query.problemId) {
-    form.problemId = parseInt(<string>route.query.problemId);
+    form.problemId = <string>route.query.problemId;
   }
   if (route.query.solutionId) {
-    form.solutionId = parseInt(<string>route.query.solutionId);
+    form.solutionId = <string>route.query.solutionId;
   }
   if (!isAdd.value) {
     let solution;
     if (hasPerm("problem:solution:list")) {
-      solution = await getSolutionAdmin(<number>form.solutionId);
+      solution = await getSolutionAdmin(<IdType>form.solutionId);
     } else {
-      solution = await getSolution(<number>form.solutionId);
+      solution = await getSolution(<IdType>form.solutionId);
     }
     __.assign(form, solution);
   }

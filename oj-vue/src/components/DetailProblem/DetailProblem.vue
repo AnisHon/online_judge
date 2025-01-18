@@ -166,7 +166,7 @@
 
     </el-row>
 
-    <el-dialog v-model="openErrorDialog">
+    <el-dialog v-model="openErrorDialog" style="min-height: 400px">
       <el-result
           icon="error"
           :title="errorTitle"
@@ -195,17 +195,7 @@ import {
   ProblemType,
   recentSubmit,
 } from "@/api/problem";
-import {
-  computed,
-  createVNode,
-  onMounted,
-  onUnmounted,
-  reactive,
-  type Ref,
-  ref,
-  type VNode,
-  watch
-} from "vue";
+import {computed, createVNode, onMounted, onUnmounted, reactive, type Ref, ref, type VNode, watch} from "vue";
 import EnhancedCodeEditor from '@/components/EnhancedCodeEdior/index.vue'
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
@@ -232,7 +222,7 @@ import {letterToNumber} from "@/utils/stringUtils";
 import {ElMessage, type MessageHandler} from "element-plus";
 import CustomElMessage from "@/components/CustomElMessage.vue";
 import {ChatLineSquare, Document, Notebook} from "@element-plus/icons-vue";
-import Solutions from "@/components/SolutionsComponent/SolutionsComponent.vue";
+import Solutions from "@/views/solutions/component/SolutionsComponent/SolutionsComponent.vue";
 import type {QuerySolution} from "@/api/solution";
 import {getUuid, initSSE, offSse, onSse, SseEvent} from "@/utils/sse";
 import type {IdType} from "@/api/common.ts";
@@ -402,11 +392,16 @@ const handleTestSubmit = async () => {
 const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: MessageHandler, vnode: VNode, isTest = false) => {
 
   if (judgeMessage.state == OJResult.COMPILING) {
-    setTimeout(() => {
-      vnode?.component?.exposed?.update("编译中")
-    }, 1000);
+
+    vnode?.component?.exposed?.update("编译中")
+
+  } else if (judgeMessage.state == OJResult.RUNNING) {
+    vnode?.component?.exposed?.update("运行中")
   }
 
+  console.log(judgeMessage)
+
+  errMsg.value = judgeMessage.stderr;
   switch (judgeMessage.state) {
     case OJResult.ACCEPT:
       stdout.value = judgeMessage.stdout || "";
@@ -434,10 +429,12 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
     case OJResult.COMPILE_ERROR:
       errorTitle.value = "CE";
       errorText.value = "编译错误";
-      errMsg.value = judgeMessage.stderr;
       break;
+
   }
-  const isFinish = judgeMessage.state != OJResult.COMPILING && judgeMessage.state != OJResult.QUEUE;
+  const isFinish = judgeMessage.state != OJResult.COMPILING
+      && judgeMessage.state != OJResult.QUEUE
+      && judgeMessage.state != OJResult.RUNNING;
 
   if (isFinish) {
     offSse(SseEvent.UPDATE_JUDGE_STATE, handler);

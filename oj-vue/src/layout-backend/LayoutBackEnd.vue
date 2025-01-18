@@ -35,11 +35,11 @@
 </template>
 
 <script setup lang="ts">
-import BackendMenu from "@/components/BackendMenu/BackendMenu.vue";
+import BackendMenu from "@/layout-backend/component/BackendMenu/BackendMenu.vue";
 import {computed, provide, ref} from "vue";
-import HeaderBar from "@/components/HeaderBar/HeaderBar.vue";
+import HeaderBar from "@/layout-backend/component/HeaderBar/HeaderBar.vue";
 import type {ElMain} from "element-plus";
-import CustomTab from "@/components/CustomTab/CustomTab.vue";
+import CustomTab from "@/layout-backend/component/CustomTab/CustomTab.vue";
 import {useTabStore} from "@/stores/useTabStore.ts";
 import {useRouter} from "vue-router";
 

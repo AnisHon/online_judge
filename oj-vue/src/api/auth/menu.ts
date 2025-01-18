@@ -85,8 +85,8 @@ const debouncedRevoke = (relations: MenuRoleRelation[], success: successCallback
     return {loading, isLoading, add};
 }
 
-const listRoleMenu = async (id: number) => {
-    const {data} = await get<MenuView[], number>("/user-api/menu/listRoleMenu", id);
+const listRoleMenu = async (id: IdType) => {
+    const {data} = await get<MenuView[], IdType>("/user-api/menu/listRoleMenu", id);
     return data;
 }
 

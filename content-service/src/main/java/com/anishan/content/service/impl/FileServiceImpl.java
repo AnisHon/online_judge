@@ -6,7 +6,7 @@ import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
 import com.anishan.api.client.content.domain.OssFileInputStream;
 import com.anishan.content.domain.entity.FileInfo;
-import com.anishan.content.file.FileOperation;
+import com.anishan.api.file.FileOperation;
 import com.anishan.content.service.FileInfoService;
 import com.anishan.content.service.FileService;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +64,7 @@ public class FileServiceImpl implements FileService {
     @Override
     @Transactional
     public String uploadImage(MultipartFile image) {
-        String fileName;
+        String filePath;
         FileInfo fileInfo = new FileInfo();
         try {
             long size = image.getSize();
@@ -84,23 +84,23 @@ public class FileServiceImpl implements FileService {
             FileInfo exists = fileInfoService.exists(fileInfo);
 
             if (exists == null) {
-                fileName = IdUtil.fastSimpleUUID();
+                String fileName = IdUtil.fastSimpleUUID();
                 fileInfo.setFileName(fileName);
-                String imagePath = getImagePath(fileName);
-                fileInfo.setFilePath(imagePath);
+                filePath = getImagePath(fileName);
+                fileInfo.setFilePath(filePath);
 
-                fileOperation.saveFile(imagePath, image.getInputStream(), "image/" + type);
+                fileOperation.saveFile(filePath, image.getInputStream(), "image/" + type);
 
                 fileInfoService.save(fileInfo);
             } else {
-                fileName = exists.getFileName();
+                filePath = exists.getFilePath();
             }
 
         } catch (IOException e) {
-            fileName = null;
+            filePath = null;
         }
 
-        return fileName;
+        return filePath;
 
     }
 

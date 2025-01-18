@@ -8,6 +8,7 @@ public enum JudgeResult implements IEnum<String>, Enumerator<String> {
 
     Queue("QUEUE"), //排队中
     Compiling("compiling"), // 编译中
+    Running("running"),
     Accept("AC"),
     RuntimeError("RE"),
     WrongAnswer("WA"),

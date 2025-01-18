@@ -31,7 +31,7 @@
     >
       <el-row :gutter="20">
         <el-col :span="2">
-          <el-avatar class="portrait" :src="getAvatarPath(item.userId)" />
+          <avatar class="portrait" :user-id="item.userId"/>
         </el-col>
 
         <el-col class="main-content" :span=22>
@@ -88,6 +88,8 @@ import {listSolution, type QuerySolution, type Solution} from "@/api/solution";
 import {DocumentAdd} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
 import {getAvatarPath} from "@/api/file";
+import type {IdType} from "@/api/common.ts";
+import Avatar from "@/components/Avatar/Avatar.vue";
 
 const router = useRouter();
 
@@ -116,7 +118,7 @@ const addSolution = () => {
 }
 
 // 查看题解详情
-const detailSolution = (solutionId: number) => {
+const detailSolution = (solutionId: IdType) => {
   router.push({name: "solution", params: {id: solutionId}});
 }
 
@@ -159,6 +161,4 @@ getList();
 .solution-card-body:hover {
   cursor: pointer;
 }
-
-
 </style>

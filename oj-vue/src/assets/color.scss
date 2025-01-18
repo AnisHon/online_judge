@@ -1,3 +1,19 @@
-$table-header-color: #E6E8EB;
-$table-header-color-hover: #409EFF;
 
+:root {
+  --primary-text: #303133;
+  --regular-text: #606266;
+  --darker-fill: #E6E8EB;
+  --brand-color: #409EFF;
+}
+
+html.dark {
+  --primary-text: #E5EAF3;
+  --darker-fill: #424243;
+  --regular-text: #CFD3DC;
+  --brand-color: #409EFF;
+}
+
+
+$table-header-color: var(--el-fill-color-dark);
+$table-row-color: var(--el-fill-color-extra-light);
+$table-header-text-color: var(--el-text-color-primary)
