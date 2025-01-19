@@ -11,7 +11,7 @@ use db_problem;
 -- ----------------------------
 drop table if exists sys_language;
 CREATE TABLE sys_language (
-    language_id     bigint(20)      not null auto_increment comment '主键',
+    language_id     bigint(20)      not null                comment '主键',
     language_name   varchar(255)    default null            comment '语言名字',
     compile_command mediumtext                              comment '编译指令',
     seq             int(11)         default 0               comment '语言排序',
@@ -19,7 +19,7 @@ CREATE TABLE sys_language (
     gmt_modified    datetime        default now() on update now(),
     del_flag        boolean         default 0 not null      comment '删除标记',
     PRIMARY KEY (language_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '编程语言表';
+) ENGINE=InnoDB default charset=utf8mb4 comment '编程语言表';
 
 insert into
     sys_language(language_name, compile_command, seq)
@@ -43,7 +43,7 @@ values
 -- ----------------------------
 drop table if exists problem;
 CREATE TABLE problem (
-    problem_id      bigint(20)     not null auto_increment comment '主键',
+    problem_id      bigint(20)     not null                comment '主键',
     oj_id           bigint(20)     null                    comment 'oj题目ID',
     title           varchar(255)   not null                comment '题目名称',
     type            int(11)        default 1               comment '题目类型，(1 OJ, 2 FILL, 3 CHOICE, 4 MULTI_CHOICE)',
@@ -55,14 +55,14 @@ CREATE TABLE problem (
     create_time     datetime       default now()           comment '创建时间',
     update_time     datetime       default now()           comment '更新时间，用于乐观锁',
     PRIMARY KEY (problem_id)
-) ENGINE=InnoDB auto_increment=1000 default charset=utf8 comment '题目主表，OJ题目有分表，非OJ不需要继续分表';;
+) ENGINE=InnoDB default charset=utf8mb4 comment '题目主表，OJ题目有分表，非OJ不需要继续分表';;
 
 -- ----------------------------
 -- 3、OJ题目分表
 -- ----------------------------
 drop table if exists oj_problem;
 CREATE TABLE oj_problem (
-    problem_id      bigint(20)     not null auto_increment comment '主键',
+    problem_id      bigint(20)     not null                 comment '主键',
     time_limit      int(11)        default 1000            comment '单位ms',
     difficulty      int(11)        default 0               comment '难度 (0 未分类, 1 简单, 2 中等, 3 困难)',
     memory_limit    int(11)        default 65535           comment '单位kb',
@@ -76,15 +76,15 @@ CREATE TABLE oj_problem (
     update_time     datetime       default now()           comment '更新时间，用于乐观锁',
     PRIMARY KEY (problem_id),
     constraint oj_problem_problem_id_fk foreign key oj_problem(problem_id)
-        references problem(problem_id)
-) ENGINE=InnoDB auto_increment=1000 default charset=utf8 comment 'OJ题目分表';
+        references problem(problem_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment 'OJ题目分表';
 
 -- ----------------------------
 -- 4、OJ题目测试用例表
 -- ----------------------------
 drop table if exists oj_problem_case;
 CREATE TABLE oj_problem_case (
-    case_id     bigint(20)  not null auto_increment comment '主键id',
+    case_id     bigint(20)  not null                comment '主键id',
     problem_id  bigint(20)  not null                comment '题目id',
     input       longtext                            comment '测试样例的输入',
     output      longtext                            comment '测试样例的输出',
@@ -94,8 +94,8 @@ CREATE TABLE oj_problem_case (
     update_time datetime default now() on update now(),
     PRIMARY KEY (case_id),
     constraint oj_problem_case_problem_id_fk foreign key oj_problem_case(problem_id)
-                             references problem(problem_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment 'OJ判题测试用例';
+        references problem(problem_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment 'OJ判题测试用例';
 
 create index oj_problem_case_problem_id_idx on oj_problem_case(problem_id);
 
@@ -105,7 +105,7 @@ create index oj_problem_case_problem_id_idx on oj_problem_case(problem_id);
 -- ----------------------------
 drop table if exists choice_fill_answers;
 CREATE TABLE choice_fill_answers (
-    answer_id   bigint(20)      not null auto_increment comment '主键id',
+    answer_id   bigint(20)      not null                comment '主键id',
     problem_id bigint(20)       not null                comment '题目id',
     answer_text text            default null            comment '选项或填空答案',
     is_correct  bool            default false           comment '是否为正确答案（选择题专用）默认false',
@@ -116,8 +116,8 @@ CREATE TABLE choice_fill_answers (
     update_time datetime        default now() on update now() not null ,
     PRIMARY KEY (answer_id),
     constraint choice_fill_answers_problem_id_fk foreign key choice_fill_answers(problem_id)
-                                 references problem(problem_id)
-)ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '填空选择题答案表';
+        references problem(problem_id) on delete cascade
+)ENGINE=InnoDB default charset=utf8mb4 comment '填空选择题答案表';
 create index choice_fill_answers_problem_id_idx on choice_fill_answers(problem_id);
 
 
@@ -126,14 +126,14 @@ create index choice_fill_answers_problem_id_idx on choice_fill_answers(problem_i
 -- ----------------------------
 drop table if exists problem_list;
 CREATE TABLE problem_list (
-    list_id     bigint(20)      not null auto_increment comment '主键',
+    list_id     bigint(20)      not null                comment '主键',
     list_name   varchar(32)     unique                  comment '题单名字，必须唯一',
     description varchar(255)    not null                comment '题单说明，字数不应该太多',
     create_time datetime        default now() not null ,
     update_time datetime        default now() on update now() not null ,
     del_flag    boolean         default 0 not null      comment '删除标记',
     PRIMARY KEY (list_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题单表';
+) ENGINE=InnoDB default charset=utf8mb4 comment '题单表';
 
 -- ----------------------------
 -- 7、题单 题目关系表
@@ -146,10 +146,10 @@ CREATE TABLE problem_problem_list (
     score           decimal(4,2)    default 10 not null comment '每道题对应分数',
     primary key (list_id, problem_id),
     constraint problem_list_problem_id_fk foreign key problem_problem_list(problem_id)
-        references problem(problem_id),
+        references problem(problem_id) on delete cascade,
     constraint problem_list_list_id_fk foreign key problem_problem_list(list_id)
-        references problem_list(list_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题单 题目关系表';
+        references problem_list(list_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '题单 题目关系表';
 create index problem_problem_list_list_id_idx on problem_problem_list(list_id);
 create index problem_problem_list_problem_id_idx on problem_problem_list(problem_id);
 
@@ -159,22 +159,24 @@ create index problem_problem_list_problem_id_idx on problem_problem_list(problem
 -- ----------------------------
 drop table if exists contest;
 CREATE TABLE contest (
-    contest_id  bigint(20)      not null auto_increment,
+    contest_id  bigint(20)      not null,
     user_id     bigint(20)      not null                comment '比赛创建者id',
     title       varchar(255)    default null            comment '比赛标题',
     list_id     bigint(20)      not null                comment '题单id',
     description longtext        null                    comment '比赛说明',
     auth        int(11)         not null                comment '0公开赛，1为私有赛（访问需要密码）2为白名单模式',
+    type        int             not null  default 0     comment '类型(0 比赛, 1 作业)',
     pwd         varchar(255)    default null            comment '比赛密码',
     start_time  datetime        default null            comment '开始时间',
     end_time    datetime        default null            comment '结束时间',
-    del_flag    boolean         default 0  not null     comment '删除标记',
+    submitted   boolean         not null default 0      comment '是否提交，比赛模式提交后不能修改',
+    del_flag    boolean         not null default 0      comment '删除标记',
     create_time datetime        default now(),
     update_time datetime        default now() on update now(),
     primary key (contest_id),
     constraint contest_list_id_fk foreign key contest(list_id)
-        references problem_list(list_id)
-) ENGINE=InnoDB auto_increment=1000 default charset=utf8 comment '比赛表';
+        references problem_list(list_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '比赛表';
 
 
 -- ----------------------------
@@ -182,14 +184,14 @@ CREATE TABLE contest (
 -- ----------------------------
 drop table if exists tag;
 CREATE TABLE tag (
-    tag_id      bigint(20)      not null auto_increment comment '主键',
+    tag_id      bigint(20)      not null                comment '主键',
     tag_name    varchar(255)    unique                  comment '题目标签',
     tag_color   varchar(10)     not null                comment '颜色RGB值，带#',
     create_time datetime        default now() not null ,
     update_time datetime        default now() on update now(),
     del_flag    boolean         default 0 not null      comment '删除标记',
     PRIMARY KEY (tag_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题目标签表';
+) ENGINE=InnoDB default charset=utf8mb4 comment '题目标签表';
 
 
 -- ----------------------------
@@ -201,10 +203,10 @@ CREATE TABLE problem_tag (
     tag_id      bigint(20)      comment '标签id',
     primary key (problem_id, tag_id),
     constraint problem_tag_problem_id_fk foreign key problem_tag(problem_id)
-        references problem(problem_id),
+        references problem(problem_id) on delete cascade,
     constraint problem_tag_tag_id_fk foreign key problem_tag(tag_id)
-        references tag(tag_id)
-)ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '标签 题目关系表';
+        references tag(tag_id) on delete cascade
+)ENGINE=InnoDB default charset=ut comment '标签 题目关系表';
 create index problem_tag_tag_id_idx on problem_tag(tag_id);
 
 -- ----------------------------
@@ -212,7 +214,7 @@ create index problem_tag_tag_id_idx on problem_tag(tag_id);
 -- ----------------------------
 drop table if exists submit_log;
 CREATE TABLE submit_log (
-    submit_id   bigint(20)  not null auto_increment comment '提交ID',
+    submit_id   bigint(20)  not null                comment '提交ID',
     user_id     varchar(32) not null                comment '用户id',
     problem_id  bigint(20)  not null                comment '题目id',
     language    varchar(20) not null                comment '使用语言的id',
@@ -223,8 +225,8 @@ CREATE TABLE submit_log (
     submit_time datetime    default now() not null,
     PRIMARY KEY (submit_id),
     constraint submit_log_problem_id_fk foreign key submit_log(problem_id)
-        references problem(problem_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment 'OJ判题提交记录';
+        references problem(problem_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment 'OJ判题提交记录';
 create index submit_log_problem_id on submit_log(problem_id);
 create index submit_log_user_id on submit_log(user_id);
 create index submit_log_user_problem_id on submit_log(problem_id, user_id);
@@ -236,7 +238,7 @@ create index submit_log_user_problem_id on submit_log(problem_id, user_id);
 -- ----------------------------
 drop table if exists folder;
 create table folder(
-    folder_id   bigint(20)  not null auto_increment comment '文件夹ID，不存在ID为0的wjj',
+    folder_id   bigint(20)  not null                comment '文件夹ID，不存在ID为0的wjj',
     folder_name varchar(32) not null unique         comment '唯一文件夹名',
     folder_type char(1)     default 'M' not null    comment '类型(D directory 目录，F file 文件, M 菜单栏)',
     parent_id   bigint(20)  default 0 not null      comment '父文件夹名，默认0表示没有父文件夹',
@@ -244,15 +246,15 @@ create table folder(
     del_flag    boolean     default 0  not null     comment '逻辑删除',
     primary key (folder_id),
     constraint folder_list_id_fk foreign key folder(list_id)
-        references problem_list(list_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '文件夹表';
+        references problem_list(list_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '文件夹表';
 
 -- ----------------------------
 -- 13、题目完成表
 -- ----------------------------
 drop table if exists records;
 create table records(
-    record_id   bigint(20)      not null auto_increment,
+    record_id   bigint(20)      not null ,
     contest_id  bigint(20)      null                     comment '比赛ID，非比赛可不填，已废弃后续删除',
     user_id     bigint(20)      not null                 comment '用户ID',
     problem_id  bigint(20)      not null                 comment '题目id',
@@ -261,10 +263,10 @@ create table records(
     answer      json            null                     comment '答案',
     primary key (record_id),
     constraint folder_contest_id_fk foreign key records(contest_id)
-        references contest(contest_id),
+        references contest(contest_id) on delete cascade,
     constraint folder_problem_id_fk foreign key records(problem_id)
-        references problem(problem_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题目完成表';
+        references problem(problem_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '题目完成表';
 create index records_contest_id_idx on records(contest_id);
 create index records_user_id_idx on records(user_id);
 create index records_problem_id_idx on records(problem_id);
@@ -278,7 +280,7 @@ create index records_problem_id_user_id_idx on records(problem_id, user_id);
 -- ----------------------------
 drop table if exists contest_records;
 create table contest_records(
-    record_id   bigint(20)      not null auto_increment,
+    record_id   bigint(20)      not null ,
     contest_id  bigint(20)      not null                 comment '比赛ID',
     user_id     bigint(20)      not null                 comment '用户ID',
     problem_id  bigint(20)      not null                 comment '题目id',
@@ -287,10 +289,10 @@ create table contest_records(
     primary key (record_id),
     unique key (record_id, user_id, problem_id),
     constraint contest_records_contest_id_fk foreign key contest_records(contest_id)
-        references contest(contest_id),
+        references contest(contest_id) on delete cascade,
     constraint contest_records_problem_id_fk foreign key contest_records(problem_id)
-        references problem(problem_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '比赛题目记录';
+        references problem(problem_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '比赛题目记录';
 create index contest_records_contest_id_idx on records(contest_id);
 create index contest_records_user_id_idx on records(user_id);
 create index contest_records_problem_id_idx on records(problem_id);
@@ -300,12 +302,12 @@ create index contest_records_problem_id_idx on records(problem_id);
 -- ----------------------------
 drop table if exists contest_answer_records;
 create table contest_answer_records(
-    record_id   bigint(20)      not null auto_increment,
+    record_id   bigint(20)      not null,
     answer      json            null                     comment '答案',
     primary key (record_id),
     constraint contest_answer_records_id_fk foreign key contest_answer_records(record_id)
-    references contest_records(record_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '比赛完成记录表，分表专门用于存储答案';
+    references contest_records(record_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '比赛完成记录表，分表专门用于存储答案';
 
 
 -- ----------------------------
@@ -317,8 +319,8 @@ create table problem_complete(
     problem_id  bigint(20)      not null                 comment '题目id',
     primary key (user_id, problem_id),
     constraint problem_complete_problem_id_fk foreign key problem_complete(problem_id)
-        references problem(problem_id)
-) ENGINE=InnoDB auto_increment=1 default charset=utf8 comment '题目完成表';
+        references problem(problem_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '题目完成表';
 
 -- ----------------------------
 -- 14、比赛参加表
@@ -329,33 +331,44 @@ create table user_contest(
     contest_id bigint(20) not null comment '比赛ID',
     primary key (user_id, contest_id),
     constraint user_contest_contest_id_fk foreign key user_contest(contest_id)
-        references contest(contest_id)
-) ENGINE=InnoDB default charset=utf8 comment '比赛参加表';
+        references contest(contest_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '比赛参加表';
 create index user_contest_user_id_idx on user_contest(user_id);
 create index user_contest_contest_id_idx on user_contest(contest_id);
 
 
 -- ----------------------------
--- 15、白名单题单关系表
+-- 15、用户提交表
 -- ----------------------------
-drop table if exists class_contest;
-create table class_contest(
-    class_id bigint(20) not null comment '班级ID',
-    contest_id bigint(20) not null comment '比赛ID',
-    primary key (class_id, contest_id),
-    constraint class_contest_contest_id_fk foreign key class_contest(contest_id)
-        references contest(contest_id)
-) ENGINE=InnoDB default charset=utf8 comment '白名单题单关系表';
-create index class_contest_class_id_idx on class_contest(class_id);
-create index class_contest_contest_id_idx on class_contest(contest_id);
+drop table if exists user_submit;
+create table user_submit(
+    user_id     bigint(20) not null                 comment '用户ID',
+    contest_id  bigint(20) not null                 comment '比赛ID',
+    submit_time datetime   not null default now()   comment '提交时间',
+    primary key (user_id, contest_id),
+    constraint user_submit_contest_id_fk foreign key user_submit(contest_id)
+        references contest(contest_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '用户提交表';
 
+-- ----------------------------
+-- 15、用户补交表
+-- ----------------------------
+drop table if exists supplement_contest;
+create table supplement_contest(
+    user_id     bigint(20) not null                 comment '用户ID',
+    contest_id  bigint(20) not null                 comment '比赛ID',
+    deadline    datetime   not null default now()   comment '最迟提交时间，比赛不能补交',
+    primary key (user_id, contest_id),
+    constraint supplement_contest_contest_id_fk foreign key user_submit(contest_id)
+        references contest(contest_id) on delete cascade
+);
 
 -- ----------------------------
 -- 16.题解表
 -- ----------------------------
 drop table if exists solution_explanation;
 create table solution_explanation (
-    solution_id bigint(20)      not null auto_increment comment '主键',
+    solution_id bigint(20)      not null                comment '主键',
     title       varchar(255)    not null                comment '题解标题',
     problem_id  bigint(20)      not null                comment '对应题目',
     user_id     bigint(20)      not null                comment '发送者ID',
@@ -365,8 +378,8 @@ create table solution_explanation (
     update_time datetime        not null default current_timestamp,
     primary key solution_explanation(solution_id),
     constraint solution_explanation_problem_id_fk foreign key solution_explanation(problem_id)
-        references problem(problem_id)
-) ENGINE=InnoDB default charset=utf8 auto_increment=1 comment '文件信息表';
+        references problem(problem_id) on delete cascade
+) ENGINE=InnoDB default charset=utf8mb4 comment '文件信息表';
 
 -- ----------------------------
 -- 17.题解-内容表
@@ -377,4 +390,4 @@ create table solution_explanation_content (
     content     text            not null                comment '内容',
     constraint solution_explanation_content_id_fk foreign key solution_explanation_content(solution_id)
       references solution_explanation(solution_id) on delete cascade
-) ENGINE=InnoDB default charset=utf8 comment '题解-内容表';
+) ENGINE=InnoDB default charset=utf8mb4 comment '题解-内容表';

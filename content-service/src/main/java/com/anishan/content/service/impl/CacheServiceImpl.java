@@ -21,10 +21,10 @@ public class CacheServiceImpl implements CacheService {
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
-    public List<String> list() {
+    public List<String> list(String prefix) {
 
         @Cleanup
-        Cursor<String> scan = stringRedisTemplate.scan(ScanOptions.scanOptions().match("*").build());
+        Cursor<String> scan = stringRedisTemplate.scan(ScanOptions.scanOptions().match(prefix + "*").build());
 
         return scan.stream().collect(Collectors.toList());
     }

@@ -22,8 +22,6 @@ public class MybatisConfig {
 
         //乐观锁
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
-
-
         
         PaginationInnerInterceptor pageInterceptor = new PaginationInnerInterceptor(DbType.MYSQL);
         pageInterceptor.setMaxLimit(100L);

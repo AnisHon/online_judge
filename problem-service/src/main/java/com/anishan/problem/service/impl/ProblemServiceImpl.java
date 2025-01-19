@@ -30,6 +30,10 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,6 +55,7 @@ import java.util.stream.Collectors;
 */
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@CacheConfig(cacheNames = "problem:detail:")
 public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     implements ProblemService{
 
@@ -67,7 +72,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     public Problem doGetProblem(Long id) {
         return this.getOne(new LambdaQueryWrapper<Problem>()
                 .eq(Problem::getProblemId, id)
-                .ne(Problem::getAuth, ProblemAuth.Contest)
+                .ne(Problem::getAuth, ProblemAuth.CONTEST)
         );
     }
 
@@ -146,7 +151,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
      * @param problemId 题目ID
      * @param caseId 测试用例Id
      * @param in 是输入还是输出（true->.in false->.out）
-     * @return
+     * @return OSS路径
      */
     private String getPath(Long problemId, Long caseId, boolean in) {
         return problemId + "/" + caseId + "." + (in ? "in" : "out");
@@ -202,11 +207,13 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
         Pair<List<CaseParam>, List<OjProblemCase>> pair = doGetOjCasesList(problem, problemId);
 
-        boolean b = ojProblemCaseService.saveBatch(pair.getValue());
+        if (CollectionUtil.isNotEmpty(pair.getValue())) {
+            boolean b = ojProblemCaseService.saveBatch(pair.getValue());
 
-        ThrowUtil.runtime(!b, "OJ题目测试用例添加失败");
+            ThrowUtil.runtime(!b, "OJ题目测试用例添加失败");
 
-        saveCaseFile(pair.getKey());
+            saveCaseFile(pair.getKey());
+        }
     }
 
     private boolean doAddChoiceFillAnswers(List<ChoiceFillAnswersDto> dtoAnswers, Long problemId) {
@@ -393,6 +400,10 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
      */
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "problem:detail:", key = "#problem.problem.problemId"),
+            @CacheEvict(cacheNames = "problem:choice-fill:", key = "#problem.problem.problemId")
+    })
     public boolean updateProblem(DetailProblemDto problem) {
         ProblemDto dto = problem.getProblem();
         Problem entity = BeanUtil.copyProperties(dto, Problem.class);
@@ -480,6 +491,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     @Override
+    @Cacheable(cacheNames = "problem:detail:", key = "#id")
     public DetailProblem getDetailProblem(Long id) {
         Problem problem = doGetProblem(id);
         ProblemVo problemVo = toVo(problem);
@@ -583,7 +595,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     @Override
-    @EnableCache(name = "recentProblems")
+    @EnableCache(name = "problem:recent:")
     public List<ProblemVo> recentProblems(Integer limit) {
         limit = Math.min(limit, 50);
 
@@ -592,7 +604,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                 page,
                 new LambdaQueryWrapper<Problem>()
                         .select(Problem::getProblemId, Problem::getTitle, Problem::getType, Problem::getSource)
-                        .eq(Problem::getAuth, ProblemAuth.Public)
+                        .eq(Problem::getAuth, ProblemAuth.PUBLIC)
                         .orderByDesc(Problem::getCreateTime)
         );
 

@@ -55,14 +55,14 @@ public class CacheAspect {
         Object obj = template.opsForValue().get(key);
 
         if (obj != null) {
-            log.debug("使用了缓存");
+            log.debug("使用了缓存{}", key);
             return obj;
         }
 
         Object result = joinPoint.proceed();
 
         if (ArrayUtil.isNotEmpty(args)) {
-            template.opsForValue().set(key, result, expire, TimeUnit.SECONDS);
+            template.opsForValue().set(key, result, expire, TimeUnit.MILLISECONDS);
         }
 
         return result;

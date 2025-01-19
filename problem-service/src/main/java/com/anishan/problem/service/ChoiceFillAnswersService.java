@@ -19,4 +19,6 @@ public interface ChoiceFillAnswersService extends IService<ChoiceFillAnswers> {
     List<ChoiceFillAnswersVo> getChoiceVo(Long problemId);
 
     List<ChoiceFillAnswersVo> getAnswerIndexes(Long problemId);
+
+    List<ChoiceFillAnswers> get(Long problemId);
 }

@@ -5,10 +5,12 @@ import com.anishan.problem.domain.vo.ChoiceFillAnswersVo;
 import com.anishan.problem.domain.vo.ProblemChoiceBlank;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.ChoiceFillAnswers;
 import com.anishan.problem.service.ChoiceFillAnswersService;
 import com.anishan.problem.mapper.ChoiceFillAnswersMapper;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -49,6 +51,17 @@ public class ChoiceFillAnswersServiceImpl extends ServiceImpl<ChoiceFillAnswersM
         );
         return BeanUtil.copyToList(list, ChoiceFillAnswersVo.class);
 
+    }
+
+
+    @Override
+    @Cacheable(cacheNames = "problem:choice-fill:", key = "#problemId")
+    public List<ChoiceFillAnswers> get(Long problemId) {
+        this.list(
+                new LambdaUpdateWrapper<ChoiceFillAnswers>()
+                        .eq(ChoiceFillAnswers::getProblemId,problemId)
+        );
+        return List.of();
     }
 }
 

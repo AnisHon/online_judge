@@ -1,5 +1,5 @@
 <template>
-  <splitpanes class="contest-problem-container">
+  <splitpanes class="app-container">
     <pane min-size="10" max-size="30" v-loading="isLoading"  ref="problemsPane" class="problem-list" >
       <el-table
             :data="sortedProblemList"
@@ -95,7 +95,7 @@ const problemsPane = ref<ComponentInstance<Pane>>();
 // 题目列表最大高度
 const maxProblemListHeight = ref<number>(999);
 
-const contestId = computed(() => parseInt(<string>route.params.id));
+const contestId = computed(() => <string>route.params.id);
 
 const problemList = reactive<ProblemInListView[]>([]);
 
@@ -164,18 +164,12 @@ onUnmounted(() => {
 
 </script>
 
-<style scoped>
-
-</style>
-
-<style>
-
-.contest-problem-container {
+<style lang="scss" scoped>
+.app-container {
   height: var(--in-main-content-height);
 }
 
-.splitpanes--vertical > .splitpanes__splitter {
+::v-deep(.splitpanes--vertical) > .splitpanes__splitter {
   min-width: 6px;
 }
-
 </style>

@@ -32,7 +32,7 @@ public class SseController {
         uuid = IdUtil.fastSimpleUUID();
         SseEmitter sse = sseService.createSse(uuid, userId);
 
-        sseService.sendMessage(uuid, SseEvent.SetUUID, uuid);
+        sseService.sendMessage(uuid, SseEvent.SET_UUID, uuid);
 
         return sse;
     }

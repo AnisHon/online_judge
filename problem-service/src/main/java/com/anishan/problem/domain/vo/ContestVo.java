@@ -1,5 +1,6 @@
 package com.anishan.problem.domain.vo;
 import com.anishan.commons.enumeration.ContestAuth;
+import com.anishan.commons.enumeration.ContestType;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
@@ -23,12 +24,18 @@ public class ContestVo {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
+    @ApiModelProperty("创建者昵称")
+    private String nikeName;
+
     @ApiModelProperty("比赛标题")
     private String title;
 
     @ApiModelProperty("题单id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long listId;
+
+    @ApiModelProperty("类型(0 比赛, 1 作业), 提交后不能修改")
+    private ContestType type;
 
     @ApiModelProperty("密码")
     private String pwd;
@@ -44,5 +51,8 @@ public class ContestVo {
 
     @ApiModelProperty("结束时间")
     private LocalDateTime endTime;
+
+    @ApiModelProperty("是否提交，比赛模式提交后不能修改")
+    private Boolean submitted;
 
 }

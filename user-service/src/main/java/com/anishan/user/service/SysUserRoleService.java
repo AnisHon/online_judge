@@ -1,5 +1,6 @@
 package com.anishan.user.service;
 
+import com.anishan.api.annotation.EnableCache;
 import com.anishan.api.domain.entity.SysRole;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -16,6 +17,9 @@ import java.util.List;
 */
 public interface SysUserRoleService extends IService<SysUserRoleRelation> {
 
+
+    @EnableCache(name = "user:role:")
+    List<Long> getRoleIds(Long userId);
 
     List<Long> getRoleIdsByUserId(Long userId);
 

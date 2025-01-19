@@ -6,9 +6,9 @@ import lombok.Getter;
 @Getter
 public enum MenuType implements IEnum<String>, Enumerator<String> {
 
-    Item("I"),
-    MenuBar("M"),
-    Button("B");
+    ITEM("I"),
+    MENU_BAR("M"),
+    BUTTON("B");
 
     private final String value;
     MenuType(String str) {

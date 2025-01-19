@@ -201,7 +201,7 @@ public class SseServiceImpl implements SseService {
             }
 
             for (String s : value) {
-                sendPlainString(s, SseEvent.Ping, "30000");
+                sendPlainString(s, SseEvent.PING, "30000");
             }
         }
         delete.forEach(userTokenMap::remove);

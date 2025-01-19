@@ -12,6 +12,7 @@ import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.service.TagService;
+import com.anishan.problem.util.CacheUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,6 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/problem")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -35,6 +35,7 @@ public class ProblemController {
     private final ProblemService problemService;
     private final TagService tagService;
 
+    private final CacheUtil cacheUtil;
 
     @PostMapping("/upload")
     @ApiOperation("上传题目")
@@ -69,7 +70,6 @@ public class ProblemController {
 
     @GetMapping("/{id}")
     @ApiOperation("通过ID得到详细题目（用于进入题目）")
-
     public R<DetailProblem> getProblemById(@PathVariable("id") @NotNull Long id) {
         DetailProblem detailProblem = problemService.getDetailProblem(id);
         return R.success(detailProblem);
@@ -137,10 +137,14 @@ public class ProblemController {
         return R.success(b);
     }
 
+
     @DeleteMapping("/{ids}")
     @ApiOperation("批量删除题目")
     @PreAuthorize("hasAuthority('problem:problem:remove')")
     public R<Boolean> removeBatchProblem(@PathVariable @NotEmpty List<Long> ids) {
+
+        cacheUtil.clearAllCaches("problem:detail:", ids);
+
         boolean b = problemService.removeByIds(ids);
         problemService.removeCaseFiles(ids);
         return R.success(b);

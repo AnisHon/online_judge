@@ -85,7 +85,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
         UserPoint userPoint = getPoint(userId);
 
-        SseMessage message = SseMessage.create(userId, SseEvent.UpdatePoint, userPoint);
+        SseMessage message = SseMessage.create(userId, SseEvent.UPDATE_POINT, userPoint);
 
         contentInternalClient.sendMessage(message);
         return b;
@@ -238,7 +238,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     }
 
     @Override
-    @EnableCache(name = "rank", expire = 6 * 60 * 60 * 1000)
+    @EnableCache(name = "user:rank:", expire = 6 * 60 * 60 * 1000)
     public List<UserVo> rank(Integer limit) {
         Page<SysUser> page = Page.of(1, limit);
         List<SysUser> users = this.list(

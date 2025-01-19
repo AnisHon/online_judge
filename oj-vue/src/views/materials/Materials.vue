@@ -311,7 +311,7 @@ getList();
 
 <style lang="scss" scoped>
 
-@use "@/assets/color" as *;
+@use "styles/color" as *;
 
 .app-container {
   margin: auto;

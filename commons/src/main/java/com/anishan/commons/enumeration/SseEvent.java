@@ -4,10 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum SseEvent {
-    UpdatePoint("update-point"),
-    Ping("retry"),
-    UpdateJudgeState("update-judge-state"),
-    SetUUID("set-uuid"),
+    UPDATE_POINT("update-point"),
+    PING("retry"),
+    UPDATE_JUDGE_STATE("update-judge-state"),
+    SET_UUID("set-uuid"),
     ;
 
 

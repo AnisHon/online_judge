@@ -9,6 +9,7 @@ import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -60,6 +61,12 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(PermissionDeniedDataAccessException.class)
     public R<String> handlePermissionDeniedDataAccessException(PermissionDeniedDataAccessException e) {
         return R.error(HttpStatus.HTTP_UNAUTHORIZED, e.getMessage());
+    }
+
+    @ResponseBody
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public R<String> handleMissingRequestHeaderException(MissingRequestHeaderException e) {
+        return R.error(HttpStatus.HTTP_UNAUTHORIZED, null);
     }
 
     @ResponseBody

@@ -116,7 +116,7 @@ getList();
 </script>
 
 <style lang="scss" scoped>
-@use '@/assets/color' as *;
+@use 'styles/color' as *;
 
 ::v-deep(.table) {
   .header-cell {

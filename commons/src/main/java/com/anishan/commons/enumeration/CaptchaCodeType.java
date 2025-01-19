@@ -4,10 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum CaptchaCodeType {
-    Shear(0),
-    Gif(1),
-    Line(2),
-    Circle(3),
+    SHEAR(0),
+    GIF(1),
+    LINE(2),
+    CIRCLE(3),
     ;
     private final Integer type;
 

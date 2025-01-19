@@ -38,7 +38,7 @@ public class InternalController {
                 .setUserId(judgeScore.getUserId())
                 .setScore(judgeScore.getScore())
                 .setScore(judgeScore.getScore())
-                .setStatus(judgeScore.getResult() == JudgeResult.Accept)
+                .setStatus(judgeScore.getResult() == JudgeResult.ACCEPT)
                 .setAnswer(userAnswer);
 
         recordsService.addRecord(records);

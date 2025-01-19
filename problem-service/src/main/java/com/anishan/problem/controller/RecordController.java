@@ -4,6 +4,7 @@ import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.commons.enumeration.ProblemType;
+import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.Problem;
@@ -49,7 +50,7 @@ public class RecordController {
                 .setContestId(judgeScore.getContestId())
                 .setProblemId(judgeScore.getProblemId())
                 .setUserId(judgeScore.getUserId())
-                .setStatus(judgeScore.getResult() == JudgeResult.Accept)
+                .setStatus(judgeScore.getResult() == JudgeResult.ACCEPT)
                 .setScore(judgeScore.getScore())
                 .setAnswer(new UserAnswer(null, judgeScore.getCode(), judgeScore.getLanguageId()));
         recordsService.addRecord(records);
@@ -101,6 +102,8 @@ public class RecordController {
     @ApiOperation("获取分数")
     public R<BigDecimal> score(@PathVariable("contestId") Long contestId, @RequestHeader("user-id") Long userId) {
         ContestVo contest = contestService.getContestById(contestId);
+
+        ThrowUtil.businessError(contest == null, "比赛不存在");
 
         if (LocalDateTime.now().isBefore(contest.getEndTime())) {
             return R.success(null);

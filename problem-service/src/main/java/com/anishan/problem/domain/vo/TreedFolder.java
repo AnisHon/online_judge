@@ -1,6 +1,7 @@
 package com.anishan.problem.domain.vo;
 
 import com.anishan.commons.enumeration.FolderType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -25,10 +26,12 @@ public class TreedFolder {
         this.children = new ArrayList<>();
     }
 
+    @JsonIgnore
     public boolean isFile() {
-        return folder.getFolderType() == FolderType.File;
+        return folder.getFolderType() == FolderType.FILE;
     }
 
+    @JsonIgnore
     public void addChild(TreedFolder treedFolder) {
         if (treedFolder == null) {
             return;

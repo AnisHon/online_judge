@@ -1,30 +1,41 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import com.anishan.api.annotation.EnableCache;
+import com.anishan.api.util.NikeNameUtil;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.enumeration.ContestType;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
+import com.anishan.problem.domain.entity.SupplementContest;
 import com.anishan.problem.domain.entity.UserContestRelation;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
+import com.anishan.problem.domain.vo.SupplementContestVo;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.Contest;
 import com.anishan.problem.service.ContestService;
 import com.anishan.problem.mapper.ContestMapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -39,6 +50,7 @@ import java.util.Objects;
 */
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@CacheConfig(cacheNames = "problem:contest:")
 public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     implements ContestService{
 
@@ -79,7 +91,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
-    @EnableCache(name = "get-contest-id")
+    @Cacheable(key = "#id")
     public ContestVo getContestById(Long id) {
         Contest contest = this.getOne(
                 new LambdaQueryWrapper<Contest>()
@@ -99,7 +111,6 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
-    @EnableCache(name = "list-contests", expire = 30 * 1000)
     public PagedResult<ContestVo> listContests(PagedQuery<Contest> pagedQuery) {
         Page<ContestVo> page = pagedQuery.customPage();
         MPJLambdaWrapper<Contest> wrapper = new MPJLambdaWrapper<Contest>()
@@ -122,6 +133,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
+    @CacheEvict(key = "#contestDto.contestId")
     public boolean updateContest(ContestDto contestDto) {
         Contest contest = BeanUtil.copyProperties(contestDto, Contest.class);
 
@@ -236,6 +248,64 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
 
         ProblemProblemListRelation relation = contestMapper.selectJoinOne(ProblemProblemListRelation.class, wrapper);
         return relation.getScore();
+    }
+
+    @Override
+    public boolean getStatus(Long userId, String contestId) {
+        LocalDateTime now = LocalDateTimeUtil.now();
+        Contest contest = this.getById(contestId);
+        SupplementContest supplementContest = Db.getOne(
+                Wrappers
+                        .lambdaQuery(SupplementContest.class)
+                        .eq(SupplementContest::getContestId, contestId)
+                        .eq(SupplementContest::getUserId, userId)
+        );
+
+        // 当前日期是否早于结束日期
+        boolean status = now.isBefore(contest.getEndTime());
+
+
+        // 如果有补交当前时间是否早于supplement的deadline
+        if (supplementContest != null) {
+            status = now.isBefore(supplementContest.getDeadline());
+        }
+
+        return status;
+    }
+
+    @Override
+    @Transactional
+    public boolean addLateSubmission(SupplementContest supplementContest) {
+
+        Contest contest = this.getById(supplementContest.getContestId());
+
+        boolean joined = isUserJoined(contest.getContestId(), supplementContest.getUserId());
+        LocalDateTime endTime = contest.getEndTime();
+        LocalDateTime deadline = supplementContest.getDeadline();
+
+        ThrowUtil.businessError(contest.getType() == ContestType.CONTEST, "比赛不支持补交");
+        ThrowUtil.businessError(deadline.isBefore(endTime), "最迟时间不能早于结束时间");
+        ThrowUtil.businessError(!joined, "用户未参加比赛");
+
+        return Db.save(supplementContest);
+    }
+
+    @Override
+    public List<SupplementContestVo> getLateSubmission(Long contestId) {
+        List<SupplementContest> supplementContests = Db.list(
+                Wrappers
+                        .lambdaQuery(SupplementContest.class)
+                        .eq(SupplementContest::getContestId, contestId)
+        );
+
+
+        List<SupplementContestVo> supplementContestVoes =
+                BeanUtil.copyToList(supplementContests, SupplementContestVo.class);
+
+
+        NikeNameUtil.setNikeName(supplementContestVoes);
+
+        return supplementContestVoes;
     }
 }
 

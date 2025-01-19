@@ -1,9 +1,7 @@
 package com.anishan.judge.util;
 
-import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.enumeration.JudgeResult;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.ReaderInputStream;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -82,20 +80,20 @@ public class JudgeUtils {
         switch (judge) {
 
             case 0: // AC
-                result = JudgeResult.Accept;
+                result = JudgeResult.ACCEPT;
                 break;
             case -1:
-                result = JudgeResult.WrongAnswer;
+                result = JudgeResult.WRONG_ANSWER;
                 break;
             case 1:
-                result = JudgeResult.TimeLimitExceeded;
+                result = JudgeResult.TIME_LIMIT_EXCEEDED;
                 break;
             case 2:
-                result = JudgeResult.MemoryLimitExceeded;
+                result = JudgeResult.MEMORY_LIMIT_EXCEEDED;
                 break;
             case 3:
             default:
-                result = JudgeResult.RuntimeError;
+                result = JudgeResult.RUNTIME_ERROR;
         }
         return result;
     }

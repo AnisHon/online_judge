@@ -116,7 +116,7 @@ public class DefaultJudgeImpl implements JudgeRun {
             return;
         }
 
-        judgeScore.setResult(JudgeResult.Accept);
+        judgeScore.setResult(JudgeResult.ACCEPT);
 
         BigDecimal totalScore = BigDecimal.ZERO;
         long runtime = 0;
@@ -143,7 +143,7 @@ public class DefaultJudgeImpl implements JudgeRun {
             totalScore = totalScore.add(judgeRunResultScore.getScore());
 
             // 设置结果 报错信息
-            if (judgeRunResultScore.getJudgeResult() != JudgeResult.Accept) {
+            if (judgeRunResultScore.getJudgeResult() != JudgeResult.ACCEPT) {
                 judgeScore.setResult(judgeRunResultScore.getJudgeResult());
                 judgeScore.setErrorMessage(judgeRunResultScore.getErrorMessage());
             }
@@ -208,20 +208,20 @@ public class DefaultJudgeImpl implements JudgeRun {
             judgeFinalScore(futureTasks, judgeScore);
         } catch (SystemError e) {
             judgeScore
-                    .setResult(JudgeResult.CompileError)
+                    .setResult(JudgeResult.COMPILE_ERROR)
                     .setErrorMessage("SandBox failed to compile, please contact administrator");
             log.error("判题机异常当前参数{}", judgeInfo, e);
         } catch (CompileError e) {
             judgeScore
-                    .setResult(JudgeResult.CompileError)
+                    .setResult(JudgeResult.COMPILE_ERROR)
                     .setErrorMessage(e.getStderr());
         } catch (SubmitError e) {
             judgeScore
-                    .setResult(JudgeResult.CompileError)
+                    .setResult(JudgeResult.COMPILE_ERROR)
                     .setErrorMessage(e.getStderr());
         } catch (ExecutionException | InterruptedException e) {
             log.error(e.getMessage(), e);
-            judgeScore.setResult(JudgeResult.RuntimeError);
+            judgeScore.setResult(JudgeResult.RUNTIME_ERROR);
         } finally {
             if (fileId != null) {
                 sandboxRun.delFile(fileId);
@@ -287,11 +287,11 @@ public class DefaultJudgeImpl implements JudgeRun {
         } catch (SystemError e) {
             log.error("判题机异常当前参数{}", judgeInfo, e);
         } catch (CompileError e) {
-            testResult.setJudgeResult(JudgeResult.CompileError);
+            testResult.setJudgeResult(JudgeResult.COMPILE_ERROR);
             testResult.setStderr(e.getStderr());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            testResult.setJudgeResult(JudgeResult.RuntimeError);
+            testResult.setJudgeResult(JudgeResult.RUNTIME_ERROR);
         }finally {
             if (fileId != null) {
                 sandboxRun.delFile(fileId);

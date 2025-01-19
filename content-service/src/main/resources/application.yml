@@ -4,9 +4,6 @@ spring:
   config:
     name: content-service
 
-
-
-
 oj:
   db:
     database: db_content
@@ -19,3 +16,5 @@ oj:
     access-key: change-this-object-storage-access-key
     secret-key: change-this-object-storage-password
     bucket-name: uploads
+
+

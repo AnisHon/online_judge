@@ -91,7 +91,7 @@ public class JudgeListener {
 
 
         // 通知完成
-        JudgeResult result = judge == null ? JudgeResult.RuntimeError : judge.getResult();
+        JudgeResult result = judge == null ? JudgeResult.RUNTIME_ERROR : judge.getResult();
         String stderr = judge == null ? "" : judge.getErrorMessage();
 
         judgeNotifyUtil.notify(info.getUuid(), result, stderr);
@@ -119,7 +119,7 @@ public class JudgeListener {
 
         } catch (Exception e) {
              testResult = new TestResult()
-                     .setJudgeResult(JudgeResult.RuntimeError);
+                     .setJudgeResult(JudgeResult.RUNTIME_ERROR);
         }
         // 通知完成
         judgeNotifyUtil.notify(info.getUuid(), testResult.getJudgeResult(), testResult.getStdout(), testResult.getStderr());

@@ -106,6 +106,17 @@ export const dynamicRoute: RouteRecordRaw = {
                 component: 'ProblemAnswer',
                 noKeepAlive: true,
             }
+        },
+        {
+            path: 'teacher/contest-manage/supplement/:contestId',
+            name: 'supplement',
+            component: () => import("@/views/backend/teacher/contest-manage/supplement/Supplement.vue"),
+            meta: {
+                has: ['problem:contest:edit'],
+                name: "设置迟交",
+                component: 'Supplement',
+                noKeepAlive: true,
+            }
         }
     ]
 }

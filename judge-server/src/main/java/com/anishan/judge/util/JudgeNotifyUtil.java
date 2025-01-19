@@ -19,11 +19,11 @@ public class JudgeNotifyUtil {
     private final ContentInternalClient contentInternalClient;
 
     public void notifyCompiling(String uuid) {
-        notify(uuid, JudgeResult.Compiling, "");
+        notify(uuid, JudgeResult.COMPILING, "");
     }
 
     public void notifyRunning(String uuid) {
-        notify(uuid, JudgeResult.Running, "");
+        notify(uuid, JudgeResult.RUNNING, "");
     }
 
     public void notify(String uuid, JudgeResult result, String stderr) {
@@ -39,7 +39,7 @@ public class JudgeNotifyUtil {
         map.put("stderr", stderr);
         map.put("stdout", stdout);
 
-        SseMessage sseMessage = SseMessage.create(uuid, SseEvent.UpdateJudgeState, map);
+        SseMessage sseMessage = SseMessage.create(uuid, SseEvent.UPDATE_JUDGE_STATE, map);
         contentInternalClient.sendMessage(sseMessage);
     }
 

@@ -71,14 +71,14 @@ public class GradeSubmissionImpl implements GradeSubmission {
             if (JudgeUtils.equals(is, runResult.getFiles().getStdout())) {
                 builder
                         .score(caseContent.getScore())
-                        .judgeResult(JudgeResult.Accept)
+                        .judgeResult(JudgeResult.ACCEPT)
                         .passed(true);
             } else {
-                builder.judgeResult(JudgeResult.WrongAnswer);
+                builder.judgeResult(JudgeResult.WRONG_ANSWER);
             }
         } catch (IOException e) {
             log.error("答案对比出错，当前key:{}", outPath, e);
-            builder.judgeResult(JudgeResult.WrongAnswer);
+            builder.judgeResult(JudgeResult.WRONG_ANSWER);
         }
 
         return builder.build();

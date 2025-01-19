@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -371,17 +370,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         authUtil.removeUser(id, token);
     }
 
-    private List<Long> getRoleIdsByUserId(Long userId) {
-        // 只有启用后的角色才返回 0是启用
-
-        return sysUserRoleService
-                .getRolesByUserId(userId)
-                .stream()
-                .filter(x -> x.getStatus() == 0)
-                .map(SysRole::getRoleId)
-                .collect(Collectors.toList());
-    }
-
     private List<MenuVo> useCache(List<Long> roleIds) {
         for (Long roleId : roleIds) {
             boolean exist = cacheRoleService.isExist(roleId);
@@ -398,9 +386,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public List<MenuVo> getAuths() {
-        Long userId = myId();
-        List<Long> roleIds = getRoleIdsByUserId(userId);
+    public List<MenuVo> getAuths(Long userId) {
+        List<Long> roleIds = sysUserRoleService.getRoleIds(userId);
 
         // root auths
         if (userId == 0L) {
@@ -428,7 +415,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public List<TreedMenuVo> getTreedMenuByRole() {
         Long userId = myId();
-        List<Long> roleIds = getRoleIdsByUserId(userId);
+        List<Long> roleIds = sysUserRoleService.getRoleIds(userId);
 
         // in-memory root account
         if (userId == 0L) {

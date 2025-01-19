@@ -5,9 +5,11 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
+import com.anishan.problem.domain.entity.SupplementContest;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
+import com.anishan.problem.domain.vo.SupplementContestVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.validation.constraints.NotNull;
@@ -45,4 +47,10 @@ public interface ContestService extends IService<Contest> {
     List<ProblemInListVo> listProblemInContest(Long userId, @NotNull Long contestId);
 
     BigDecimal getScore(Long contestId, Long ProblemId);
+
+    boolean getStatus(Long userId, String contestId);
+
+    boolean addLateSubmission(SupplementContest supplementContest);
+
+    List<SupplementContestVo> getLateSubmission(Long contestId);
 }

@@ -84,8 +84,8 @@
       </el-table-column>
       <el-table-column label="题目" align="center" prop="problemTitle" v-if="columns[5].visible" show-overflow-tooltip/>
       <el-table-column label="内容" align="center" prop="content" v-if="columns[6].visible" show-overflow-tooltip/>
-      <el-table-column label="创建日期" align="center" prop="createTime" v-if="columns[7].visible" />
-      <el-table-column label="更新日期" align="center" prop="updateTime" v-if="columns[8].visible" />
+      <el-table-column label="创建日期" align="center" prop="createTime" v-if="columns[7].visible" show-overflow-tooltip />
+      <el-table-column label="更新日期" align="center" prop="updateTime" v-if="columns[8].visible" show-overflow-tooltip />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link

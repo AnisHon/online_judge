@@ -10,3 +10,14 @@ spring:
         max-wait: -1  # 最大阻塞等待时间（负数表示没有限制）
         max-idle: 5  # 连接池中最大空闲连接
         min-idle: 0  # 连接池中最小空闲连接
+
+  cache:
+    # 缓存类型 redis、none(不使用缓存)
+    type: redis
+    # 缓存时间(单位：ms)
+    redis:
+      time-to-live: 3600000
+      # 缓存null值，防止缓存穿透
+      cache-null-values: true
+cache:
+  ttl: "{user:1,problem:2}"

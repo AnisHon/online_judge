@@ -6,15 +6,15 @@ import io.swagger.annotations.ApiModel;
 @ApiModel("AC RE WA TLE MLE CE")
 public enum JudgeResult implements IEnum<String>, Enumerator<String> {
 
-    Queue("QUEUE"), //排队中
-    Compiling("compiling"), // 编译中
-    Running("running"),
-    Accept("AC"),
-    RuntimeError("RE"),
-    WrongAnswer("WA"),
-    TimeLimitExceeded("TLE"),
-    MemoryLimitExceeded("MLE"),
-    CompileError("CE"),
+    QUEUE("QUEUE"), //排队中
+    COMPILING("compiling"), // 编译中
+    RUNNING("running"),
+    ACCEPT("AC"),
+    RUNTIME_ERROR("RE"),
+    WRONG_ANSWER("WA"),
+    TIME_LIMIT_EXCEEDED("TLE"),
+    MEMORY_LIMIT_EXCEEDED("MLE"),
+    COMPILE_ERROR("CE"),
     ;
 
     private final String value;

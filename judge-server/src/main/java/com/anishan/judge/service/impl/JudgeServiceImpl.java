@@ -123,11 +123,11 @@ public class JudgeServiceImpl implements JudgeService {
                 .runtimeSetter(maxTime.get())
                 .memorySetter(maxMemory.get());
         if (cases.size() != results.size()) {
-            return judgeScore.setResult(JudgeResult.RuntimeError);
+            return judgeScore.setResult(JudgeResult.RUNTIME_ERROR);
         }
 
         BigDecimal score = BigDecimal.ZERO;
-        judgeScore.setResult(JudgeResult.Accept);
+        judgeScore.setResult(JudgeResult.ACCEPT);
 
 
         // 对比所有的Answer然后判分
@@ -136,7 +136,7 @@ public class JudgeServiceImpl implements JudgeService {
             OjProblemCaseVo answer = cases.get(i);
             RunResult userAnswer = results.get(i);
 
-            boolean isAccepted = !Objects.equals(userAnswer.getStatus(), Constants.Judge.STATUS_ACCEPTED.getStatus()) && judgeScore.getResult() != JudgeResult.WrongAnswer;
+            boolean isAccepted = !Objects.equals(userAnswer.getStatus(), Constants.Judge.STATUS_ACCEPTED.getStatus()) && judgeScore.getResult() != JudgeResult.WRONG_ANSWER;
             if (isAccepted) {
                 judgeScore.setResult(JudgeUtils.judgeToStatus(userAnswer.getStatus()));
                 judgeScore.setErrorMessage(userAnswer.getFiles().getStderr());
@@ -146,7 +146,7 @@ public class JudgeServiceImpl implements JudgeService {
             String stdout = StrUtil.strip(userAnswer.getFiles().getStdout(), "\n");
             String answerOutput = StrUtil.strip(answer.getOutput(), "\n");
             if (!StrUtil.equals(answerOutput, stdout)) {
-                judgeScore.setResult(JudgeResult.WrongAnswer);
+                judgeScore.setResult(JudgeResult.WRONG_ANSWER);
             } else  {
                 score = score.add(Objects.requireNonNullElse(answer.getScore(), BigDecimal.ZERO));
             }
@@ -178,7 +178,7 @@ public class JudgeServiceImpl implements JudgeService {
                 fileId = compile(languageConfig, message);
             } catch (CompileError e) {
                 judgeScore.setScore(BigDecimal.ZERO);
-                judgeScore.setResult(JudgeResult.CompileError);
+                judgeScore.setResult(JudgeResult.COMPILE_ERROR);
                 return judgeScore.setErrorMessage(e.getStderr());
             }
 
@@ -249,7 +249,7 @@ public class JudgeServiceImpl implements JudgeService {
             // 不能让用户接触服务错误，用RuntimeError应付过去
             runResult = new RunResult();
             runResult.setFiles(new RunResult.StdIoFile());
-            return TestResult.fromTestResul(runResult, JudgeResult.RuntimeError);
+            return TestResult.fromTestResul(runResult, JudgeResult.RUNTIME_ERROR);
         }
     }
 

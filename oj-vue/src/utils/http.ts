@@ -1,9 +1,9 @@
 import axios from 'axios';
 import {useToken} from "@/stores/useToken";
-import {ElMessage, ElNotification} from "element-plus";
+import {ElNotification} from "element-plus";
 import router from "@/router"
 import type {PagedResponse} from "@/api/pagedType.ts";
-
+import qs from "qs"
 
 export const baseURL = "/api";
 
@@ -32,7 +32,6 @@ const error401 = () => {
 
 const error403 = () => {
     const token = useToken();
-    token.clearToken();
     ElNotification.error("拒绝访问");
     router.replace({name: '403'});
 };
@@ -106,8 +105,11 @@ const get = <R, T = any>(url: string, params: T | undefined = undefined): Result
 };
 
 export const getWithParams = <R, T>(url: string, params: T): ResultPromise<R> => {
-    return service.get<T, AjaxResult<R>>(url, {
+    return service<T, AjaxResult<R>>({
+        method: "GET",
+        url: url,
         params: params,
+        paramsSerializer: (data) => qs.stringify(data, { arrayFormat: 'repeat' })
     });
 };
 
@@ -115,7 +117,8 @@ export const getWithParams = <R, T>(url: string, params: T): ResultPromise<R> =>
 // 封装的 GET 方法
 export const query = <R, T>(url: string, params: T): ResultPromise<PagedResponse<R>> => {
     return service.get<T, AjaxResult<PagedResponse<R>>>(url, {
-        params: params
+        params: params,
+        paramsSerializer: (data) => qs.stringify(data, { arrayFormat: 'repeat' })
     });
 };
 
@@ -157,7 +160,13 @@ const del = <R, T = any>(url: string, params: T | T[] | undefined = undefined): 
     return service.delete<T, AjaxResult<R>>(url);
 };
 
-
+export const resultNotify = (result: boolean | undefined, successMsg: string, errorMsg: string) => {
+    if (result === true) {
+        ElNotification.success(successMsg);
+    } else if (result === false) {
+        ElNotification.error(errorMsg);
+    }
+}
 
 // 导出封装的方法
 export {

@@ -17,13 +17,13 @@ public class TestResult {
 
         TestResult testResult;
         switch (result) {
-            case RuntimeError:
+            case RUNTIME_ERROR:
                 testResult = TestResult.runtimeError(runResult);
                 break;
-            case TimeLimitExceeded:
+            case TIME_LIMIT_EXCEEDED:
                 testResult = TestResult.timeoutError();
                 break;
-            case MemoryLimitExceeded:
+            case MEMORY_LIMIT_EXCEEDED:
                 testResult = TestResult.memoryError();
                 break;
             default:
@@ -36,14 +36,14 @@ public class TestResult {
 
     public static TestResult compileError(String stderr) {
         TestResult testResult = new TestResult();
-        testResult.setJudgeResult(JudgeResult.CompileError);
+        testResult.setJudgeResult(JudgeResult.COMPILE_ERROR);
         testResult.setStderr(stderr);
         return testResult;
     }
 
     public static TestResult runtimeError(RunResult runResult) {
         TestResult testResult = new TestResult();
-        testResult.setJudgeResult(JudgeResult.RuntimeError);
+        testResult.setJudgeResult(JudgeResult.RUNTIME_ERROR);
         testResult.setStderr(runResult.getFiles().getStderr());
         return testResult;
     }
@@ -51,19 +51,19 @@ public class TestResult {
 
     public static TestResult timeoutError() {
         TestResult testResult = new TestResult();
-        testResult.setJudgeResult(JudgeResult.TimeLimitExceeded);
+        testResult.setJudgeResult(JudgeResult.TIME_LIMIT_EXCEEDED);
         return testResult;
     }
 
     public static TestResult memoryError() {
         TestResult testResult = new TestResult();
-        testResult.setJudgeResult(JudgeResult.MemoryLimitExceeded);
+        testResult.setJudgeResult(JudgeResult.MEMORY_LIMIT_EXCEEDED);
         return testResult;
     }
 
     public static TestResult accept(RunResult runResult) {
         TestResult testResult = new TestResult();
-        testResult.setJudgeResult(JudgeResult.Accept);
+        testResult.setJudgeResult(JudgeResult.ACCEPT);
         testResult.setStdout(runResult.getFiles().getStdout());
         return testResult;
     }

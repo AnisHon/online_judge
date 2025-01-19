@@ -54,6 +54,7 @@ public class UserCheckInServiceImpl extends ServiceImpl<UserCheckInMapper, UserC
                 .selectAll(UserCheckIn.class)
                 .select(SysUser::getNikeName)
                 .leftJoin(SysUser.class, SysUser::getUserId, UserCheckIn::getUserId)
+                .orderByDesc(UserCheckIn::getSignTime)
                 .last("limit 30");
 
         return userCheckInMapper.selectJoinList(UserCheckInDto.class, wrapper);

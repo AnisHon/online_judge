@@ -33,7 +33,6 @@ public class CheckInController {
 
     @GetMapping("/list")
     @ApiOperation("列出最近签到列表")
-    @EnableCache(name = "check-in-list", expire = 60 * 1000)
     public R<List<UserCheckInDto>> list() {
         return R.success(userCheckInService.getUserCheckInList());
     }

@@ -46,7 +46,6 @@ public class AuthenticationController {
 
     @GetMapping("/count")
     @ApiOperation("查看在线人数")
-    @EnableCache(name = "count-online", expire = 60 * 1000)
     @PreAuthorize("hasAuthority('user:user:list')")
     public R<Long> countOnline() {
         Long count = authUtil.countUser();
@@ -62,8 +61,9 @@ public class AuthenticationController {
 
     @GetMapping("/auths")
     @ApiOperation("获取用户所有的权限")
-    public R<List<MenuVo>> getAuths() {
-        List<MenuVo> auths = authenticationService.getAuths();
+
+    public R<List<MenuVo>> getAuths(@RequestHeader("user-id") Long userId) {
+        List<MenuVo> auths = authenticationService.getAuths(userId);
         return R.success(auths);
     }
 

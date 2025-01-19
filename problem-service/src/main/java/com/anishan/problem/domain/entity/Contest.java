@@ -1,6 +1,7 @@
 package com.anishan.problem.domain.entity;
 
 import com.anishan.commons.enumeration.ContestAuth;
+import com.anishan.commons.enumeration.ContestType;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
@@ -46,6 +47,11 @@ public class Contest implements Serializable {
     private ContestAuth auth;
 
     /**
+     * 类型(0 比赛, 1 作业)
+     */
+    private ContestType type;
+
+    /**
      * 比赛密码
      */
     private String pwd;
@@ -59,6 +65,11 @@ public class Contest implements Serializable {
      * 结束时间
      */
     private LocalDateTime endTime;
+
+    /**
+     * 是否提交，比赛模式提交后不能修改
+     */
+    private Boolean submitted;
 
     /**
      * 删除标记

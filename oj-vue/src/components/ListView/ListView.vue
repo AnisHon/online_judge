@@ -37,7 +37,6 @@
               type="primary"
               icon="edit"
               @click="handleChoose(scope.row)"
-              v-has="'problem:list:update'"
           >选择</el-link>
         </template>
       </el-table-column>

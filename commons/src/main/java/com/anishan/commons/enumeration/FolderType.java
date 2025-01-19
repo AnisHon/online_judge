@@ -6,9 +6,9 @@ import lombok.Getter;
 @Getter
 public enum FolderType implements Enumerator<String>, IEnum<String> {
 
-    Dictionary("D"),
-    File("F"),
-    Menu("M"),
+    DICTIONARY("D"),
+    FILE("F"),
+    MENU("M"),
     ;
 
     private final String value;

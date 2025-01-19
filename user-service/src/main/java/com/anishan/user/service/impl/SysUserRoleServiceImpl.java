@@ -20,6 +20,7 @@ import com.anishan.user.mapper.SysUserRoleMapper;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +41,17 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
     private final SysUserRoleMapper sysUserRoleMapper;
     private final SysUserMapper sysUserMapper;
 
+    @Cacheable(cacheNames = "user:role:", key = "#userId")
+    @Override
+    public List<Long> getRoleIds(Long userId) {
+        // 只有启用后的角色才返回 0是启用
 
+        return getRolesByUserId(userId)
+                .stream()
+                .filter(x -> x.getStatus() == 0)
+                .map(SysRole::getRoleId)
+                .collect(Collectors.toList());
+    }
     @Override
     public List<Long> getRoleIdsByUserId(Long userId) {
         return this.listObjs(new LambdaQueryWrapper<SysUserRoleRelation>()

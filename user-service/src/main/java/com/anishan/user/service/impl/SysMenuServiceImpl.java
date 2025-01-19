@@ -56,7 +56,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     // dfs
     private void buildTreeMenuRecursion(Set<TreedMenuVo> menus, TreedMenuVo treeNode) {
         // If not MenuBar, exits
-        if (treeNode == null || MenuType.Button.equals(treeNode.getType())) {
+        if (treeNode == null || MenuType.BUTTON.equals(treeNode.getType())) {
             return;
         }
 
@@ -139,7 +139,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
     public List<MenuVo> getRootAuths() {
         List<SysMenu> list = this.list(
                 new LambdaQueryWrapper<SysMenu>()
-                        .eq(SysMenu::getMenuType, MenuType.Button)
+                        .eq(SysMenu::getMenuType, MenuType.BUTTON)
         );
         return BeanUtil.copyToList(list, MenuVo.class);
     }

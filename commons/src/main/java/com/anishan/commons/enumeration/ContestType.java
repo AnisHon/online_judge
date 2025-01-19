@@ -1,29 +1,27 @@
 package com.anishan.commons.enumeration;
 
+
 import com.baomidou.mybatisplus.annotation.IEnum;
+import lombok.Getter;
 
-public enum Difficulty implements Enumerator<Integer>, IEnum<Integer> {
+@Getter
+public enum ContestType implements IEnum<Integer>, Enumerator<Integer> {
 
-    UNKNOWN(0),
-    EASY(1),
-    MEDIUM(2),
-    HARD(3),
+    CONTEST(0),
+    HOMEWORK(1),
     ;
-
 
     private final int value;
 
-    Difficulty(int value) {
+    ContestType(int value) {
         this.value = value;
     }
-
 
     @Override
     public Integer value() {
         return value;
     }
 
-    @Override
     public Integer getValue() {
         return value;
     }

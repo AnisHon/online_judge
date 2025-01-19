@@ -40,18 +40,28 @@
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="比赛ID" align="center" prop="contestId" v-if="columns[0].visible" show-overflow-tooltip />
-      <el-table-column label="比赛标题" align="center" prop="title" v-if="columns[1].visible" />
+      <el-table-column label="比赛标题" align="center" prop="title" v-if="columns[1].visible" show-overflow-tooltip/>
       <el-table-column label="权限" align="center" prop="auth" v-if="columns[2].visible" >
         <template v-slot="scope">
           <el-tag :type="authTagType(scope.row.auth)">{{ authText(scope.row.auth) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="开始时间" align="center" prop="startTime" v-if="columns[3].visible" />
-      <el-table-column label="结束时间" align="center" prop="endTime" v-if="columns[4].visible"/>
-      <el-table-column label="密码" align="center" prop="pwd" v-if="columns[5].visible" />
-      <el-table-column label="列表ID" align="center" prop="listId" v-if="columns[6].visible" />
-      <el-table-column label="描述" align="center" prop="description" v-if="columns[7].visible" />
-      <el-table-column label="参加人数" align="center" prop="joinedNumber" v-if="columns[8].visible" />
+      <el-table-column label="开始时间" align="center" prop="startTime" v-if="columns[3].visible" show-overflow-tooltip/>
+      <el-table-column label="结束时间" align="center" prop="endTime" v-if="columns[4].visible" show-overflow-tooltip/>
+      <el-table-column label="密码" align="center" prop="pwd" v-if="columns[5].visible" show-overflow-tooltip/>
+      <el-table-column label="类型" align="center" prop="type" v-if="columns[6].visible">
+        <template v-slot="scope">
+          <el-tag v-if="scope.row.type === ContestType.CONTEST" type="warning">
+            竞赛
+          </el-tag>
+          <el-tag v-else type="danger">
+            作业
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="列表ID" align="center" prop="listId" v-if="columns[7].visible" show-overflow-tooltip />
+      <el-table-column label="描述" align="center" prop="description" v-if="columns[8].visible" show-overflow-tooltip />
+      <el-table-column label="参加人数" align="center" prop="joinedNumber" v-if="columns[9].visible" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
@@ -70,7 +80,7 @@
           >删除</el-link>
 
           <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
-                       v-has-any="['problem:contest:rank', 'problem:contest:statistic']">
+                       v-has-any="['problem:contest:rank', 'problem:contest:statistic', 'problem:contest:edit']">
             <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
             <template #dropdown>
               <el-dropdown-menu>
@@ -81,6 +91,10 @@
                 <div v-has="'problem:contest:statistic'" >
                   <el-dropdown-item command="handleUserStatistic" icon="TrendCharts"
                   >用户统计</el-dropdown-item>
+                </div>
+                <div v-has="'problem:contest:edit'" >
+                  <el-dropdown-item command="handleSupplement" icon="UserFilled"
+                  >设置迟交</el-dropdown-item>
                 </div>
 
               </el-dropdown-menu>
@@ -100,7 +114,7 @@
     />
 
     <!-- 添加或修改测试功能对话框 -->
-    <el-dialog :title="title" v-model="open" width="1050px" append-to-body>
+    <el-dialog :title="title" v-model="open" append-to-body>
       <el-form :model="form" :rules="rules" label-position="top" label-width="100px">
         <el-row>
           <el-col :span="24">
@@ -115,9 +129,23 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
+          <el-col :span="24">
+            <el-form-item label="类型" prop="auth">
+              <el-radio-group v-model="form.type">
+                <el-radio v-for="item of dict.contestType" :label="item.label" :value="item.value" >{{ item.label }}</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="列表ID" prop="listId">
+              <el-input
+                  @click="openSelectList = true"
+                  v-model="form.listId"
+              />
+            </el-form-item>
+          </el-col>
           <el-col :span="12" >
             <el-form-item label="开始时间" prop="startTime">
-<!--              <el-input v-model="form.startTime" placeholder="请输入icon"/>-->
               <el-date-picker
                   v-model="form.startTime"
                   type="datetime"
@@ -137,15 +165,6 @@
                   format="YYYY-MM-DD HH:mm:ss"
                   date-format="MMM DD, YYYY"
                   time-format="HH:mm"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="列表ID" prop="listId">
-              <el-input-number
-                  @click="openSelectList = true"
-                  v-model="form.listId"
-                  :controls="false"
               />
             </el-form-item>
           </el-col>
@@ -173,25 +192,6 @@
       <ListView v-model="form.listId" v-model:isOpen="openSelectList"/>
     </el-dialog>
 
-    <el-dialog v-model="openRank" title="排名">
-      <el-table :data="sortedScoredUsers">
-        <el-table-column type="index" width="50" />
-        <el-table-column prop="userVo.userName" label="用户名" />
-        <el-table-column prop="userVo.nikeName" label="昵称" />
-        <el-table-column prop="score" label="分数" />
-      </el-table>
-    </el-dialog>
-
-    <el-dialog v-model="openStatistic" title="统计">
-      <el-table :data="sortStatisticProblems">
-        <el-table-column type="index" width="50" />
-        <el-table-column prop="problemId" label="问题ID" />
-        <el-table-column prop="title" label="题目" />
-        <el-table-column prop="rightNum" label="正确个数" />
-        <el-table-column prop="wrongNum" label="错误个数" />
-      </el-table>
-    </el-dialog>
-
   </div>
 </template>
 
@@ -199,12 +199,12 @@
 import {computed, reactive, ref} from "vue";
 import {
   ContestAuth,
-  type ContestForm,
+  type ContestForm, ContestType,
   type ContestView,
   debouncedAddContest,
   debouncedGetContestAdmin,
   debouncedUpdateContest,
-  dict, removeContest, type ScoredUser, type StatisticProblem
+  dict, removeContest
 } from "@/api/contest";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
@@ -232,6 +232,7 @@ const form = reactive<ContestForm>({
   contestId: undefined,
   title: '',
   auth: ContestAuth.PUBLIC,
+  type: ContestType.CONTEST,
   startTime: undefined,
   endTime: undefined,
   pwd: undefined,
@@ -244,12 +245,13 @@ const rules = ref();
 
 const open = ref(false);
 
-const {columns} = useColumn(['比赛ID', '比赛题目', '权限', '开始时间', '结束时间', '密码', '列表ID', '描述', '参加人数']);
+const {columns} = useColumn(['比赛ID', '比赛题目', '权限', '开始时间', '结束时间', '密码', '类型', '列表ID', '描述', '参加人数']);
 
 // 重置表单
 const resetForm = () => {
   form.contestId = undefined;
   form.title = '';
+  form.type = ContestType.CONTEST;
   form.auth = ContestAuth.PUBLIC;
   form.startTime = undefined;
   form.endTime = undefined;
@@ -289,22 +291,6 @@ const handleSelectionChange = (selection: ContestView[]) => {
   multiple.value = !selection.length;
 }
 
-const scoredUsers = reactive<ScoredUser[]>([])
-const statisticProblems = reactive<StatisticProblem[]>([])
-
-const openRank = ref(false);
-const openStatistic = ref(false);
-
-const sortedScoredUsers = computed(() => {
-  scoredUsers.sort((a, b) => b.score - a.score);
-  return scoredUsers;
-})
-
-const sortStatisticProblems = computed(() => {
-  statisticProblems.sort((a, b) => b.wrongNum - a.wrongNum);
-  return statisticProblems;
-})
-
 const handleCommand = (command: string, row: ContestView) => {
 
   if (command === "handleProblemStatistic") {
@@ -315,6 +301,8 @@ const handleCommand = (command: string, row: ContestView) => {
     // 用户统计
     router.push({name: "user-statistic", params: {contestId: row.contestId}});
 
+  } else if (command === "handleSupplement") {
+    router.push({name: "supplement", params: {contestId: row.contestId}});
   }
 }
 

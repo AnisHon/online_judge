@@ -165,9 +165,9 @@ public class ProblemUploadUtil {
         Difficulty difficulty1 =
                 Difficulty.valueOf(
                         difficulty == null ?
-                                Difficulty.Unknown.name()
+                                Difficulty.UNKNOWN.name()
                                 :
-                                difficulty.asText(Difficulty.Unknown.name())
+                                difficulty.asText(Difficulty.UNKNOWN.name())
                 );
 
         OjProblemDto result = new OjProblemDto()
@@ -210,7 +210,7 @@ public class ProblemUploadUtil {
                 .setDescription(descriptionText)
                 .setSource(source == null ? "共有题库" : source.asText("共有题库"))
                 .setHint(hint == null ? null : hint.asText(null))
-                .setAuth(ProblemAuth.valueOf(auth == null ? ProblemAuth.Public.name() : auth.asText(ProblemAuth.Public.name())))
+                .setAuth(ProblemAuth.valueOf(auth == null ? ProblemAuth.PUBLIC.name() : auth.asText(ProblemAuth.PUBLIC.name())))
                 .setType(ProblemType.valueOf(type == null ? ProblemType.OJ.name() : type.asText(ProblemType.OJ.name())));
 
 

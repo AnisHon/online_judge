@@ -35,7 +35,7 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
     public Long logQueue(Long userId, Long problemId, String language) {
         SubmitLog submitLog = new SubmitLog()
                 .setLanguage(language)
-                .setStatus(JudgeResult.Queue)
+                .setStatus(JudgeResult.QUEUE)
                 .setUserId(userId)
                 .setProblemId(problemId);
 

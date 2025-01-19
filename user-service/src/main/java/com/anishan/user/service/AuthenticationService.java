@@ -47,7 +47,7 @@ public interface AuthenticationService {
 
     void logout(Long userId, String token);
 
-    List<MenuVo> getAuths();
+    List<MenuVo> getAuths(Long userId);
 
     List<TreedMenuVo> getTreedMenuByRole();
 

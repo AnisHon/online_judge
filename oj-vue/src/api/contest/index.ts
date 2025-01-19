@@ -5,13 +5,17 @@ import {get, getWithParams, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, pagedFetch, remove, update} from "@/utils/simpleCRUD";
-import type {UserView} from "@/api/user";
 import type {IdType} from "@/api/common.ts";
 
 enum ContestAuth {
     PUBLIC,
     PRIVATE,
     WHITE_LIST
+}
+
+export enum ContestType {
+    CONTEST,
+    HOMEWORK
 }
 
 interface ContestView {
@@ -23,6 +27,7 @@ interface ContestView {
     joinedNumber?: number;
     problemId?: IdType;
     pwd?: string;
+    type?: ContestType;
     listId?: IdType;
     description?: string;
 }
@@ -31,6 +36,7 @@ interface ContestForm {
     contestId?: IdType;
     title?: string;
     auth?: ContestAuth;
+    type?: ContestType;
     startTime?: Date;
     endTime?: Date;
     pwd?: string;
@@ -48,18 +54,6 @@ interface JoinContestResponse {
     message: string;
 }
 
-interface ScoredUser {
-    userVo: UserView;
-    score: number;
-}
-
-interface StatisticProblem {
-    problemId: IdType;
-    title: string;
-    rightNum: number;
-    wrongNum: number;
-}
-
 const dict = {
     contestAuth: [
         {
@@ -73,18 +67,16 @@ const dict = {
             label: "白名单"
         }
     ],
-}
-
-const rank = async (id: number) => {
-    const {data} = await get<ScoredUser[], number>("/problem-api/record/rank", id);
-    return data;
-}
-
-const statistic = async (id: number) => {
-    const {data} = await get<StatisticProblem[], number>("/problem-api/record/statistic", id);
-    const {data: count} = await get<number, number>("/problem-api/record/join-number", id);
-    data.forEach(x => x.wrongNum = count - x.rightNum);
-    return data;
+    contestType: [
+        {
+            value: ContestType.CONTEST,
+            label: "比赛"
+        },
+        {
+            value: ContestType.HOMEWORK,
+            label: "作业"
+        }
+    ]
 }
 
 const join = async (req: JoinContestRequest) => {
@@ -102,13 +94,13 @@ const debouncedJoin = (req: JoinContestRequest, success: successCallback<JoinCon
     return {loading, isLoading, post};
 }
 
-const isJoined = async (contestId: number) => {
+const isJoined = async (contestId: IdType) => {
     const {data} = await get<boolean>("/problem-api/contest/isJoined", contestId);
     return data;
 }
 
-const fetchContestById = async (contestId: number) => {
-    const {data} = await get<ContestView , number>("/problem-api/contest", contestId);
+const fetchContestById = async (contestId: IdType) => {
+    const {data} = await get<ContestView , IdType>("/problem-api/contest", contestId);
     return data;
 }
 
@@ -191,7 +183,7 @@ const debouncedGetContestAdmin = (page: PagedType, success: successCallback<Page
 }
 
 const getScore = async (contestId: IdType) => {
-    const {data} = await get<IdType | null>("/problem-api/record/score", contestId);
+    const {data} = await get<number | null>("/problem-api/record/score", contestId);
     return data;
 }
 
@@ -199,8 +191,6 @@ export type {
     ContestForm,
     ContestView,
     JoinContestRequest,
-    StatisticProblem,
-    ScoredUser
 }
 
 export {
@@ -216,8 +206,6 @@ export {
     debouncedJoin,
     fetchContestById,
     getScore,
-    rank,
-    statistic,
     dict,
     ContestAuth
 }

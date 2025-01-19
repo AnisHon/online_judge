@@ -92,7 +92,6 @@ getList();
 
 
 <style lang="scss" scoped>
-@use '@/assets/color' as *;
 
 ::v-deep(.table) {
   .header-cell {

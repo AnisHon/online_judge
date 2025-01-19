@@ -3,8 +3,8 @@ package com.anishan.commons.enumeration;
 import com.baomidou.mybatisplus.annotation.IEnum;
 
 public enum ProblemAuth implements Enumerator<Integer>, IEnum<Integer> {
-    Public(1),
-    Contest(2),
+    PUBLIC(1),
+    CONTEST(2),
     ;
     private final int value;
 

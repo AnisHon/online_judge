@@ -51,7 +51,7 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
                 .selectAll(ProblemVo.class)
                 .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
                 .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
-                .eq(Problem::getAuth, ProblemAuth.Public)
+                .eq(Problem::getAuth, ProblemAuth.PUBLIC)
                 .eq(ProblemList::getListId, id);
 
         return problemListMapper.selectJoinList(ProblemVo.class, wrapper);
@@ -136,7 +136,7 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
     @Override
-    @EnableCache(name = "get-contest-problems")
+    @EnableCache(name = "contest:problem:")
     public List<ProblemInListVo> getProblemsForUser(Long listId) {
         MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
                 .selectAll(Problem.class)
@@ -144,7 +144,7 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
                 .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
                 .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
                 .eq(ProblemList::getListId, listId)
-                .eq(Problem::getAuth, ProblemAuth.Public)
+                .eq(Problem::getAuth, ProblemAuth.PUBLIC)
                 .isNotNull(Problem::getProblemId);
         return problemListMapper.selectJoinList(ProblemInListVo.class, wrapper);
     }

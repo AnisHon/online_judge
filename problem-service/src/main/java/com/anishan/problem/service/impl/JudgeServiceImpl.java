@@ -4,10 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.client.JudgeClient;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
-import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.util.RedisJudgeTestUtil;
-import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.problem.domain.dto.TestRequest;
 import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.commons.enumeration.ProblemType;
@@ -40,11 +38,9 @@ public class JudgeServiceImpl implements JudgeService {
     private final ContestService contestService;
     private final RecordsService recordsService;
     private final OjProblemService ojProblemService;
-    private final OjProblemCaseService ojProblemCaseService;
     private final ChoiceFillAnswersService choiceFillAnswersService;
     private final SysLanguageService sysLanguageService;
     private final RabbitTemplate rabbitTemplate;
-    private final SubmitLogService submitLogService;
     private final RedisJudgeTestUtil redisJudgeTestUtil;
     private final JudgeClient judgeClient;
 
@@ -96,15 +92,15 @@ public class JudgeServiceImpl implements JudgeService {
             Map<Integer, List<ChoiceFillAnswers>> blankAnswers
     ) {
         Integer index = judgeAnswer.getIndex();
-//        没有对应答案直接0分
+        // 没有对应答案直接0分
         if (!blankAnswers.containsKey(index)) {
             return ScoreAndIsCorrected.wrong();
         }
 
-//        去除首尾空格
+        // 去除首尾空格
         String userAnswers = judgeAnswer.getAnswer().trim();
 
-//        判断多个答案中是否有一样的
+        // 判断多个答案中是否有一样的
         List<ChoiceFillAnswers> choiceFillAnswers = blankAnswers.get(index);
         for (ChoiceFillAnswers choiceFillAnswer : choiceFillAnswers) {
             String answerText = choiceFillAnswer.getAnswerText();
@@ -180,12 +176,7 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     private ProblemJudgeResult judgeFill(Problem problem, JudgeRequest judgeRequest) {
-        List<ChoiceFillAnswers> blankAnswers = choiceFillAnswersService.list(
-                new LambdaUpdateWrapper<ChoiceFillAnswers>()
-                        .eq(ChoiceFillAnswers::getProblemId, problem.getProblemId())
-        );
-
-
+        List<ChoiceFillAnswers> blankAnswers = choiceFillAnswersService.get(problem.getProblemId());
 
 
         ProblemJudgeResult judgeResult = doJudgeFill(blankAnswers, judgeRequest);

@@ -1,0 +1,30 @@
+.el-breadcrumb__inner,
+.el-breadcrumb__inner a {
+  font-weight: 400 !important;
+}
+
+.small-padding {
+  .cell {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}
+
+.fixed-width {
+  .el-button--mini {
+    padding: 7px 10px;
+    width: 60px;
+  }
+
+  .cell {
+    min-width: 158px !important;
+
+  }
+}
+
+.el-dropdown-menu {
+  a {
+    display: block
+  }
+}
+
