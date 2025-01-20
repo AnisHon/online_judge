@@ -276,9 +276,9 @@ public class JudgeServiceImpl implements JudgeService {
     public boolean sendJudgeMessage(JudgeInfo judgeInfo) {
         // 并发安全
         synchronized (this) {
-            boolean available = judgeDelayUtil.isAvailable(judgeInfo.getUserId());
+            boolean available = JudgeDelayUtil.isAvailable(judgeInfo.getUserId());
             if (available) {
-                judgeDelayUtil.setDelay(judgeInfo.getUserId());
+                JudgeDelayUtil.setDelay(judgeInfo.getUserId());
             } else {
                 return false;
             }
@@ -292,9 +292,9 @@ public class JudgeServiceImpl implements JudgeService {
     public boolean sendTestMessage(RunTestInfo testInfo) {
         // 并发安全
         synchronized (this) {
-            boolean available = judgeDelayUtil.isAvailable(testInfo.getUserId());
+            boolean available = JudgeDelayUtil.isAvailable(testInfo.getUserId());
             if (available) {
-                judgeDelayUtil.setDelay(testInfo.getUserId());
+                JudgeDelayUtil.setDelay(testInfo.getUserId());
             } else {
                 return false;
             }

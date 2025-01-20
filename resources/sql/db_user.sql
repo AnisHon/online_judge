@@ -119,6 +119,7 @@ create table sys_menu (
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (1, '题目模块', 1, null, 'problem-module', 'M', '#', 'Files', null);
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (2, '用户模块', 2, null, 'user-module', 'M', '#', 'UserFilled', null);
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (3, '教师功能', 0, null, 'teacher', 'M', '#', 'Notebook', null);
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (4, '系统管理', 0, null, 'system-manage', 'M', '#', 'Setting', null);
 
 # 二集菜单
 # menu_id 1 题目模块
@@ -141,6 +142,11 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (30, '用户组', 1, 3, 'my-class', 'I', '#', 'School', 'backend/teacher/my-class/MyClass');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (31, '作业管理', 2, 3, 'homework-manage', 'I', '#', 'Histogram', 'backend/teacher/homework-manage/HomeworkManage');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (32, '竞赛管理', 3, 3, 'contest-manage', 'I', '#', 'Flag', 'backend/teacher/contest-manage/ContestManage');
+
+# 二级菜单
+# menu_id 4 系统管理 system-manage
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (41, '缓存管理', 1, 4, 'cache-manage', 'I', '#', 'RefreshRight', 'backend/system/cache-manage/CacheManage');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (42, '文件管理', 2, 4, 'file-manage', 'I', '#', 'Files', 'backend/system/file-manage/FileManage');
 
 
 # menu_id 10 题目编辑
@@ -219,6 +225,16 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (323, '删除比赛', 3, 32, '#', 'B', 'problem:contest:remove', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (324, '统计', 4, 32, '#', 'B', 'problem:contest:statistic', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (325, '排名', 5, 32, '#', 'B', 'problem:contest:rank', '#');
+
+# 缓存管理 menu_id 41
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (410, '查看缓存', 1, 41, '#', 'B', 'content:cache:list', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (412, '删除缓存', 2, 41, '#', 'B', 'content:cache:remove', '#');
+
+
+# 文件管理 menu_id 42
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (420, '列出文件', 1, 42, '#', 'B', 'content:file:list', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (421, '删除文件', 2, 42, '#', 'B', 'content:file:remove', '#');
+
 
 # 文件上传下载删除
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1001, '添加文件', 0, null, '#', 'B', 'content:file:add', '#');

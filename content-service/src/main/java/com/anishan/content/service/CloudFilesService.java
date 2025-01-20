@@ -2,9 +2,13 @@ package com.anishan.content.service;
 
 import com.anishan.content.domain.dto.CloudFileDto;
 import com.anishan.content.domain.dto.QueryCloudFile;
+import com.anishan.content.domain.dto.SpliceChunk;
+import com.anishan.content.domain.dto.ChunkUploadDto;
 import com.anishan.content.domain.entity.CloudFiles;
 import com.anishan.content.domain.vo.CloudFilesVo;
+import com.anishan.content.domain.vo.SpliceVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,4 +27,16 @@ public interface CloudFilesService extends IService<CloudFiles> {
     boolean saveCloudFile(CloudFileDto cloudFileDto, Long userId);
 
     boolean removeCloudFile(Long id);
+
+    SpliceVo spliceUpload(MultipartFile file, String md5, Integer index, ChunkUploadDto chunkUpload);
+
+    boolean rename(CloudFileDto cloudFileDto);
+
+    SpliceVo initSpliceUpload(SpliceChunk spliceChunk);
+
+    void merge(ChunkUploadDto md5);
+
+    SpliceVo getSlice(String md5);
+
+    void saveCloudFileBySpliceVo(SpliceVo spliceVo, Long parentId);
 }

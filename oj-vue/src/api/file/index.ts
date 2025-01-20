@@ -1,10 +1,13 @@
-import {get, getWithParams, post, service} from "@/utils/http.ts";
+import {baseURL, get, getWithParams, post, put, resultNotify, service} from "@/utils/http.ts";
 import {ElNotification} from "element-plus";
 import __ from "lodash";
 import {remove} from "@/utils/simpleCRUD.ts";
 import {useUserStore} from "@/stores/useUserStore.ts";
 import {computed} from "vue";
 import type {IdType} from "@/api/common.ts";
+import axios from "axios";
+import {useToken} from "@/stores/useToken.ts";
+import { saveAs } from 'file-saver'
 
 export interface CloudFile {
     cloudFileId: string;
@@ -33,6 +36,34 @@ export interface QueryCloudFile {
 export interface CloudFileForm {
     fileName: string;
     parentId: IdType;
+}
+
+export interface SpliceChunk {
+    md5: string;
+    chunk: File;
+    chunkSize: number;
+    fileName: string;
+    index: number;
+    parentId: IdType;
+    totalSize: number;
+}
+
+export interface ChunkInfo {
+    chunkId: IdType;
+    chunkNum: number;
+    chunkSize: number;
+    fileMd5: string;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+}
+
+export interface Splice extends ChunkInfo {
+    finished: boolean;
+    path: string;
+    uploadId: string;
+    partHashes: {chuckIndex: number, partHash: string}[];
+
 }
 
 export const countOnline = async (): Promise<number> => {
@@ -89,12 +120,11 @@ export const listFiles = async (query: QueryCloudFile): Promise<CloudFile[]> => 
 
 const addDir = async (file: CloudFileForm): Promise<void> => {
     const {data} = await post<CloudFileForm, boolean>("/file/dir", file);
-
-    if (data) {
-        ElNotification.success("添加成功")
-    } else {
-        ElNotification.error("添加失败")
-    }
+    resultNotify(data, "添加成功", "添加失败");
+}
+// 验证是否为blob格式
+export function blobValidate(data: any) {
+    return data.type !== 'application/json'
 }
 
 export const debouncedAddDir = (callback: Function) => {
@@ -104,6 +134,67 @@ export const debouncedAddDir = (callback: Function) => {
     }, 500);
 }
 
-export const deleteFile = (id: string) => {
+export const updateFile = async (form: CloudFileForm) => {
+    const {data} = await put<CloudFileForm, boolean>("/file", form);
+    resultNotify(data, "修改成功", "修改失败");
+}
+
+export const deleteFile = (id: IdType) => {
     return remove(id, "/file")
 }
+
+export const download = (path: string, fileName: string) => {
+
+    axios.get('/file', {
+        baseURL: baseURL,
+        params: {
+            path: path
+        },
+        headers: {
+            token: useToken().token
+        },
+        responseType: 'blob'
+    }).then((res) => {
+        console.log(res)
+        const isBlob = blobValidate(res.data);
+        if (isBlob) {
+            const blob = new Blob([res.data])
+            saveAs_(blob, fileName)
+        } else {
+            ElNotification.error(res.data.message)
+        }
+    })
+}
+
+export const preview = (path: string) => {
+    window.open(`${baseURL}/file?path=${path}`);
+}
+
+const saveAs_ = (text: any, name: string, opts?: any) => {
+    saveAs(text, name, opts);
+}
+
+export const initSlice = async (spliceChunk: SpliceChunk) => {
+    const {data} = await post<SpliceChunk, Splice>("/file/init", spliceChunk);
+    return data;
+}
+
+export const getProgress = async (md5: string, parentId: IdType) => {
+    const {data} = await get<Splice>(`/file/progress/${md5}/${parentId}`);
+    return data;
+}
+
+export const upload = async (md5: string, partNumber: number, blob: Blob) => {
+    const form = new FormData();
+    form.append("file", blob);
+    return axios({
+        method: 'POST',
+        url: baseURL + `/file/${md5}/${partNumber}`,
+        data: form
+    })
+}
+
+export const mergeFile = (md5: string) => {
+    return post("/file/merge/" + md5, undefined);
+}
+

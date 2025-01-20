@@ -39,7 +39,8 @@ public class CacheController {
                         new CacheTypeVo(6, "problem:recent:", "最近题目缓存"),
                         new CacheTypeVo(7, "contest:problem:", "比赛题目列表缓存"),
                         new CacheTypeVo(8, "user:rank:", "比赛题目列表缓存"),
-                        new CacheTypeVo(8, "problem:choice-fill:", "填空选择答案缓存")
+                        new CacheTypeVo(8, "problem:choice-fill:", "填空选择答案缓存"),
+                        new CacheTypeVo(9, "content:file:", "文件缓存")
                         );
     }
 

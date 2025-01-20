@@ -1,10 +1,8 @@
 package com.anishan.api.util;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ReflectUtil;
 import com.anishan.api.client.user.client.UserInternalClient;
-import com.anishan.commons.domain.R;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

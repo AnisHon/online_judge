@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -30,6 +33,7 @@ public class FileInfo implements Serializable {
 
     @ApiModelProperty(value = "主键")
     @TableId(value = "file_id", type = IdType.ASSIGN_ID)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long fileId;
 
     @ApiModelProperty(value = "文件名")
@@ -45,7 +49,7 @@ public class FileInfo implements Serializable {
     private String fileMd5;
 
     @ApiModelProperty(value = "引用计数")
-    private String reference;
+    private Long reference;
 
     @ApiModelProperty("文件类型")
     private String fileType;

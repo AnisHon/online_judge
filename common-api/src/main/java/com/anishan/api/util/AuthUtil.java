@@ -11,6 +11,7 @@ import com.anishan.commons.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -37,6 +38,7 @@ public class AuthUtil {
     public final Long CODE_TIME_OUT_SECOND;
     public final Long CAPTCHA_TIME_OUT_SECOND;
 
+    @Autowired
     public AuthUtil(
             RedisTemplate<String, Object> redisTemplate,
             StringRedisTemplate stringRedisTemplate,
@@ -218,6 +220,10 @@ public class AuthUtil {
             throw new IllegalTokenException("用户未登录");
         }
         return (LoginUser) principal;
+    }
+
+    public static Long getUserId() {
+        return getContextUser().getUser().getUserId();
     }
 
     public static LoginUser getNonThrowUser() {

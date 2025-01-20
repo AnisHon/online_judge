@@ -2,6 +2,7 @@ package com.anishan.content.service;
 
 import com.anishan.content.domain.entity.FileInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -22,4 +23,5 @@ public interface FileInfoService extends IService<FileInfo> {
     void updateReference(Map<String, Long> map);
 
 
+    void setReference(Long id, Long count);
 }

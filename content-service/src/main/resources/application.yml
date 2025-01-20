@@ -3,7 +3,10 @@ server:
 spring:
   config:
     name: content-service
-
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 100MB
 oj:
   db:
     database: db_content

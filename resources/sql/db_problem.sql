@@ -22,20 +22,20 @@ CREATE TABLE sys_language (
 ) ENGINE=InnoDB default charset=utf8mb4 comment '编程语言表';
 
 insert into
-    sys_language(language_name, compile_command, seq)
+    sys_language(language_id, language_name, compile_command, seq)
 values
-    ('C++', '/usr/bin/g++', 1),
-    ('C++ With O2', '/usr/bin/g++', 2),
-    ('C++ 17', '/usr/bin/g++', 3),
-    ('C++ 17 With O2', '/usr/bin/g++', 4),
-    ('C++ 20', '/usr/bin/g++', 5),
-    ('C++ 20 With O2', '/usr/bin/g++', 6),
-    ('C', '/usr/bin/g++', 7),
-    ('C With O2', '/usr/bin/g++', 8),
-    ('Java', '/usr/bin/javac', 9),
+    (1, 'C++', '/usr/bin/g++', 1),
+    (2, 'C++ With O2', '/usr/bin/g++', 2),
+    (3, 'C++ 17', '/usr/bin/g++', 3),
+    (4, 'C++ 17 With O2', '/usr/bin/g++', 4),
+    (5, 'C++ 20', '/usr/bin/g++', 5),
+    (6, 'C++ 20 With O2', '/usr/bin/g++', 6),
+    (7, 'C', '/usr/bin/g++', 7),
+    (8, 'C With O2', '/usr/bin/g++', 8),
+    (9, 'Java', '/usr/bin/javac', 9),
 #     ('Python2', '/usr/bin/python', 10),
-    ('Python3', '/usr/bin/python', 11),
-    ('Golang', '/usr/bin/python', 12);
+    (10, 'Python3', '/usr/bin/python', 11),
+    (11, 'Golang', '/usr/bin/python', 12);
 
 
 -- ----------------------------

@@ -1,6 +1,5 @@
 package com.anishan.user.controller;
 
-import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.domain.R;
 import com.anishan.user.domain.dto.UserCheckInDto;
 import com.anishan.user.domain.vo.UserCheckInInfo;

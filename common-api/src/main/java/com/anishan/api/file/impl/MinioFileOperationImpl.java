@@ -1,8 +1,11 @@
 package com.anishan.api.file.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.*;
 import com.anishan.api.client.content.domain.OSSFileInfo;
 import com.anishan.api.client.content.domain.OssFileInputStream;
+import com.anishan.api.domain.PartHash;
 import com.anishan.api.file.FileOperation;
 import io.minio.*;
 import io.minio.errors.*;
@@ -29,6 +32,8 @@ public class MinioFileOperationImpl implements FileOperation {
     private final MinioClient minioClient;
 
     private final String bucketName;
+
+    private final AmazonS3 s3Client;
 
 
     @Override
@@ -236,5 +241,67 @@ public class MinioFileOperationImpl implements FileOperation {
         }
         return ossFileInfo;
     }
+
+    @Override
+    public String createMultipartUpload(String fileName, String contentType) {
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        InitiateMultipartUploadRequest initiateMultipartUploadRequest =
+                new InitiateMultipartUploadRequest(bucketName, fileName)
+                        .withObjectMetadata(objectMetadata);
+        InitiateMultipartUploadResult initiateMultipartUploadResult =
+                s3Client.initiateMultipartUpload(initiateMultipartUploadRequest);
+        return initiateMultipartUploadResult.getUploadId();
+    }
+
+    @Override
+    public String uploadPart(String path, String uploadId, InputStream inputStream, int chunkNum, long chunkSize) {
+        UploadPartRequest uploadPartRequest = new UploadPartRequest()
+                .withBucketName(bucketName)
+                .withKey(path)
+                .withUploadId(uploadId)
+                .withPartNumber(chunkNum)
+                .withInputStream(inputStream)
+                .withPartSize(chunkSize);
+        UploadPartResult uploadPartResult = s3Client.uploadPart(uploadPartRequest);
+        return uploadPartResult.getETag();
+    }
+
+    @Override
+    public void abortMultipartUpload(String path, String uploadId) {
+        s3Client.abortMultipartUpload(new AbortMultipartUploadRequest(bucketName, path, uploadId));
+    }
+
+    @Override
+    public String mergePart(String path, String uploadId, List<PartHash> partHashes) {
+        List<PartETag> partETags = partHashes
+                .stream()
+                .map(x -> new PartETag(x.getChuckIndex(), x.getPartHash()))
+                .collect(Collectors.toList());
+
+        CompleteMultipartUploadRequest completeMultipartUploadRequest =
+                new CompleteMultipartUploadRequest(bucketName, path, uploadId, partETags);
+
+        CompleteMultipartUploadResult completeMultipartUploadResult =
+                s3Client.completeMultipartUpload(completeMultipartUploadRequest);
+        return completeMultipartUploadResult.getETag();
+    }
+
+    @Override
+    public List<PartHash> listParts(String path, String uploadId) {
+        ListPartsRequest listPartsRequest = new ListPartsRequest(bucketName, path, uploadId);
+        PartListing partListing = s3Client.listParts(listPartsRequest);
+        List<PartSummary> parts = partListing.getParts();
+
+        return parts
+                .stream()
+                .map(part -> new PartHash(part.getPartNumber(), part.getETag()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean fileExists(String filePath) {
+        return s3Client.doesObjectExist(bucketName, filePath);
+    }
+
 
 }

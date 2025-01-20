@@ -13,7 +13,7 @@ import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.SupplementContestVo;
 import com.anishan.problem.service.ContestService;
-import com.anishan.problem.util.CacheUtil;
+import com.anishan.api.util.CacheUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.swagger.annotations.Api;

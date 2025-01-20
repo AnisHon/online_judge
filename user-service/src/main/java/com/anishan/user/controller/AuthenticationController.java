@@ -2,7 +2,6 @@ package com.anishan.user.controller;
 
 
 import com.anishan.api.annotation.ControllerLog;
-import com.anishan.api.annotation.EnableCache;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.R;

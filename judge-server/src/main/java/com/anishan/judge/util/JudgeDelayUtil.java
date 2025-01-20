@@ -5,24 +5,31 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
 public class JudgeDelayUtil {
 
-    private final StringRedisTemplate stringRedisTemplate;
-    private final JudgeConfig judgeConfig;
+    private static StringRedisTemplate stringRedisTemplate;
+    private static JudgeConfig judgeConfig;
+
+
+    public JudgeDelayUtil(StringRedisTemplate stringRedisTemplate, JudgeConfig judgeConfig) {
+        JudgeDelayUtil.judgeConfig = judgeConfig;
+        JudgeDelayUtil.stringRedisTemplate = stringRedisTemplate;
+    }
 
     private static String getKey(Long userId) {
         return "judge:delay:" + userId;
     }
 
-    public boolean isAvailable(Long userId) {
+    public static boolean isAvailable(Long userId) {
         return !stringRedisTemplate.hasKey(getKey(userId));
     }
 
-    public void setDelay(Long userId) {
+    public static void setDelay(Long userId) {
         stringRedisTemplate.opsForValue().set(getKey(userId), "", judgeConfig.getJudgeInterval(), TimeUnit.SECONDS);
     }
 

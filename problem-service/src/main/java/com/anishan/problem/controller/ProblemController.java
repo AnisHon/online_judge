@@ -12,7 +12,7 @@ import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.TaggedProblemVo;
 import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.service.TagService;
-import com.anishan.problem.util.CacheUtil;
+import com.anishan.api.util.CacheUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;

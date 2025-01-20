@@ -82,6 +82,7 @@ declare module 'vue' {
     ElTree: typeof import('element-plus/es')['ElTree']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     EnhancedCodeEdior: typeof import('./src/components/EnhancedCodeEdior/index.vue')['default']
+    FileIcon: typeof import('./src/components/FileIcon/FileIcon.vue')['default']
     FillBlank: typeof import('./src/components/DetailProblem/FillBlank.vue')['default']
     FloatingBall: typeof import('./src/layout/component/FloatingBall/index.vue')['default']
     GeneralManageLayout: typeof import('./src/components/GeneralManageLayout/index.vue')['default']

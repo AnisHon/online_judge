@@ -5,6 +5,7 @@
           :disabled="unselect"
           type="primary"
           icon="download"
+          @click="handleDownload()"
           round
       >
         下载文件
@@ -14,6 +15,7 @@
         <el-button
             type="primary"
             icon="upload"
+            @click="openUpload = true"
             plain
             round
         >
@@ -59,20 +61,20 @@
           header-cell-class-name="file-header-cell"
           row-class-name="file-row"
           cell-class-name="file-cell"
-          :data="list"
+          :data="sortList"
           @selection-change="handleSelectionChange"
           @rowClick="handleClickRow"
       >
+        <template #empty>
+          <el-empty description="空空如也~"/>
+        </template>
         <el-table-column type="selection" width="55" align="center" :selectable="selectable"/>
 
-        <el-table-column label="文件名" width="600px" prop="cloudFileId">
+        <el-table-column label="文件名" width="400px" prop="cloudFileId">
           <template v-slot="scope">
             <div class="file">
               <div class="icon">
-                <el-icon size="28" >
-                  <icon-folder v-if="scope.row.dir"/>
-                  <icon-loader v-else icon="image" />
-                </el-icon>
+               <file-icon :is-folder="scope.row.dir" :name="scope.row.fileName"/>
               </div>
               <el-text v-show="!scope.row.edit" size="large" type="info" class="filename">
                 {{ scope.row.fileName }}
@@ -86,7 +88,7 @@
 
           </template>
         </el-table-column>
-        <el-table-column type="default" align="center">
+        <el-table-column type="default" align="center" width="250">
           <template v-slot="scope">
             <div class="file-link">
               <el-link
@@ -118,41 +120,61 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="大小" prop="fileSize">
+        <el-table-column label="大小" prop="fileSize" align="center">
           <template v-slot="scope">
-            <el-text size="small" type="info" v-if="scope.row.size">{{ scope.row.size }}KB</el-text>
+            <el-text size="small" type="info" v-if="scope.row.fileSize">
+              {{ bytesToSize(scope.row.fileSize) }}
+            </el-text>
+            <el-text v-else/>
           </template>
         </el-table-column>
-        <el-table-column label="创建者" prop="nikeName">
+        <el-table-column label="创建者" prop="nikeName" >
           <template v-slot="scope">
             <el-text size="small" type="info">{{ scope.row.nikeName }}</el-text>
           </template>
         </el-table-column>
-        <el-table-column label="最后修改时间" prop="updateTime">
+        <el-table-column label="最后修改时间" prop="updateTime" align="center" show-overflow-tooltip>
           <template v-slot="scope">
             <el-text size="small" type="info">{{ scope.row.updateTime }}</el-text>
           </template>
         </el-table-column>
 
-        <template #empty>
-          <el-empty description="空空如也~"/>
-        </template>
-      </el-table>
 
+      </el-table>
     </div>
+
+    <upload :parent-id="query.parentId" v-model="openUpload"/>
   </div>
 </template>
 
 <script setup lang="ts">
 import {computed, ref} from "vue";
-import {type CloudFile, debouncedAddDir, deleteFile, listFiles, type QueryCloudFile} from "@/api/file";
+import {
+  type CloudFile,
+  debouncedAddDir,
+  deleteFile,
+  download,
+  listFiles, preview,
+  type QueryCloudFile,
+  updateFile
+} from "@/api/file";
 import __ from "lodash";
 import {ElMessageBox, ElNotification} from "element-plus";
-import IconFolder from "@/assets/icons/IconFolder.vue";
-import IconLoader from "@/components/IconLoader/IconLoader.vue";
+import FileIcon from "@/components/FileIcon/FileIcon.vue";
+import Upload from "@/views/materials/component/upload.vue";
+import {bytesToSize} from "@/utils/byte2size.ts";
+
+
+const openUpload = ref(false);
 
 // 文件数据
 const list = ref<CloudFile[]>([])
+
+
+const sortList = computed(() => {
+  list.value.sort((a: CloudFile, b: CloudFile) => +b.dir - +a.dir);
+  return list.value;
+})
 
 // 当前面包屑文件路径
 const path = ref([
@@ -179,8 +201,6 @@ const query = ref<QueryCloudFile>({
 const unselect = computed(() => {
   return single.value && multiple.value
 })
-
-
 
 // 是否可以选择
 const selectable = (row: CloudFile) => {
@@ -214,6 +234,7 @@ const jumpTo = (index: number) => {
   getList();
 }
 
+
 // 提交更改文件夹名
 const submit = async (row: CloudFile) => {
   if (!row.fileName) {
@@ -228,11 +249,12 @@ const submit = async (row: CloudFile) => {
       fileName: row.fileName,
       parentId: row.parentId,
     })
-    row.edit = false;
+
   } else {
-
+    await updateFile(row);
   }
-
+  row.edit = false;
+  await getList();
 }
 
 
@@ -265,9 +287,9 @@ const handleDelete = (row: CloudFile) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消'
   })
-      .then(() => {
-        deleteFile(row.cloudFileId);
-        getList();
+      .then(async () => {
+        await deleteFile(row.cloudFileId);
+        await getList();
       }).catch(() => {})
 
 }
@@ -297,21 +319,33 @@ const handleRename = (row: CloudFile) => {
 }
 
 // 处理下载文件
-const handleDownload = (row: CloudFile) => {
-  console.log(row.filePath)
+const handleDownload = (row?: CloudFile) => {
+  if (row) {
+    download(<string>row.filePath, row.fileName)
+  } else {
+    ids.value.forEach(
+        item => {
+          const result = list.value.find((value) => value.cloudFileId === item);
+          if (result) {
+            download(<string>result.filePath, result.fileName);
+          }
+        }
+    )
+  }
 }
 
 // 处理预览文件
 const handlePreview = (row: CloudFile) => {
-  console.log(row.filePath)
+  if (row.filePath) {
+    preview(row.filePath);
+  }
 }
 
 getList();
 </script>
 
 <style lang="scss" scoped>
-
-@use "styles/color" as *;
+@use "@/assets/styles/color" as *;
 
 .app-container {
   margin: auto;

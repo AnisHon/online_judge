@@ -107,7 +107,20 @@ create table cloud_files (
     unique (parent_id, file_name),
     unique (parent_id, cloud_file_id),
     constraint cloud_files_file_id foreign key cloud_files(file_id)
-        references file_info(file_id)
+        references file_info(file_id) on delete cascade
 ) ENGINE=InnoDB default charset=utf8 comment '网盘文件表';
 
-
+-- ----------------------------
+-- 8.分片上传记录
+-- ----------------------------
+drop table if exists chunk_upload;
+CREATE TABLE chunk_upload (
+    chunk_id    bigint          not null,
+    upload_id   varchar(255)    not null comment '分片上传的uploadId',
+    chunk_size  bigint          not null comment '每个分片大小（byte）',
+    chunk_num   int             not null comment '分片数量',
+    primary key (chunk_id),
+    unique key (upload_id),
+    constraint chunk_upload_file_id foreign key chunk_upload(chunk_id)
+        references file_info(file_id) on delete cascade
+) engine=InnoDB default charset=utf8mb4 comment='分片上传记录';

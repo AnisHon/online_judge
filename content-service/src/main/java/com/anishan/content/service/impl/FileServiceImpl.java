@@ -4,9 +4,8 @@ import cn.hutool.core.io.FileTypeUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
-import com.anishan.api.client.content.domain.OssFileInputStream;
-import com.anishan.content.domain.entity.FileInfo;
 import com.anishan.api.file.FileOperation;
+import com.anishan.content.domain.entity.FileInfo;
 import com.anishan.content.service.FileInfoService;
 import com.anishan.content.service.FileService;
 import lombok.RequiredArgsConstructor;
@@ -86,7 +85,7 @@ public class FileServiceImpl implements FileService {
             if (exists == null) {
                 String fileName = IdUtil.fastSimpleUUID();
                 fileInfo.setFileName(fileName);
-                filePath = getImagePath(fileName);
+                filePath = getImagePath(fileName, type);
                 fileInfo.setFilePath(filePath);
 
                 fileOperation.saveFile(filePath, image.getInputStream(), "image/" + type);
@@ -104,9 +103,4 @@ public class FileServiceImpl implements FileService {
 
     }
 
-    @Override
-    public OssFileInputStream getImage(String fileName) {
-        String imagePath = getImagePath(fileName);
-        return fileOperation.getFile(imagePath);
-    }
 }

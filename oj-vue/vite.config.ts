@@ -13,7 +13,8 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler'
+        api: 'modern-compiler',
+        additionalData: '@use "@/assets/styles/element-plus.scss" as *;\n@use "@/assets/styles/color" as *;',
       }
     }
   },

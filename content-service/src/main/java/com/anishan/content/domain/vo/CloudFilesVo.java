@@ -19,12 +19,9 @@ public class CloudFilesVo {
     @ApiModelProperty("文件名")
     private String fileName;
 
-    @ApiModelProperty("file info文件ID")
+    @ApiModelProperty("文件Id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long fileId;
-
-    @ApiModelProperty("文件MD5")
-    private String fileMd5;
 
     @ApiModelProperty("文件OSS路径")
     private String filePath;
