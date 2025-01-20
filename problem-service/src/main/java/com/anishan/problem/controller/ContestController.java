@@ -34,7 +34,6 @@ import java.util.List;
 public class ContestController {
 
     private final ContestService contestService;
-    private final CacheUtil cacheUtil;
 
     @GetMapping("/{id}")
     @ApiOperation("通过id获取比赛")
@@ -80,7 +79,7 @@ public class ContestController {
     @PreAuthorize("hasAuthority('problem:contest:remove')")
     @ApiOperation("删除contest")
     public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
-        cacheUtil.clearAllCaches("problem:contest:", ids);
+        CacheUtil.clearAllCaches("problem:contest:", ids);
         boolean b = contestService.removeBatchByIds(ids);
         return R.success(b);
     }

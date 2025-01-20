@@ -44,7 +44,6 @@ public class JudgeServiceImpl implements JudgeService {
     private final LanguageConfigLoader languageConfigLoader;
     private final SandboxRun sandboxRun;
     private final RabbitTemplate rabbitTemplate;
-    private final JudgeDelayUtil judgeDelayUtil;
 
     private LanguageConfig getLanguageConfig(JudgeMessage message) {
         return languageConfigLoader.getLanguageConfigByName(message.getLanguage());
