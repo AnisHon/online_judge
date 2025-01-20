@@ -1,7 +1,9 @@
 package com.anishan.problem.service;
 
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.enumeration.ContestType;
 import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
@@ -34,13 +36,13 @@ public interface ContestService extends IService<Contest> {
 
     List<ContestVo> listContestById(List<Long> ids);
 
-    PagedResult<ContestVo> listContests(PagedQuery<Contest> pagedQuery);
+    PagedResult<ContestVo> listContests(PagedQuery<Contest> pagedQuery, ContestType type);
 
     boolean updateContest(ContestDto contestDto);
 
     boolean addContest(ContestDto contestDto);
 
-    PagedResult<ContestVo> listContestsAdmin(PagedQuery<Contest> pagedQuery);
+    PagedResult<ContestVo> listContestsAdmin(PagedQuery<Contest> pagedQuery, ContestType type);
 
     ContestJoinResponse joinContest(Long userId, ContestJoinRequest contestJoinRequest);
 
@@ -53,4 +55,10 @@ public interface ContestService extends IService<Contest> {
     boolean addLateSubmission(SupplementContest supplementContest);
 
     List<SupplementContestVo> getLateSubmission(Long contestId);
+
+    List<UserVo> getJoinedUser(Long contestId);
+
+    boolean removeUser(Long contestId, List<Long> userIds);
+
+    boolean addUserByClass(Long contestId, Long classIds);
 }

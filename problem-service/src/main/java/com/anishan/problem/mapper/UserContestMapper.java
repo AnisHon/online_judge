@@ -2,6 +2,9 @@ package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.UserContestRelation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author anishan
@@ -11,6 +14,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface UserContestMapper extends BaseMapper<UserContestRelation> {
 
+    int insertBatchIgnore(@Param("relations") List<UserContestRelation> relations);
 }
 
 

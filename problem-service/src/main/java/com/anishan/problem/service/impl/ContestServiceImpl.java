@@ -1,7 +1,12 @@
 package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.LocalDateTimeUtil;
+import com.anishan.api.client.user.client.ClassClient;
+import com.anishan.api.client.user.client.UserClient;
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.api.util.NikeNameUtil;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -9,10 +14,7 @@ import com.anishan.commons.enumeration.ContestType;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
-import com.anishan.problem.domain.entity.Contest;
-import com.anishan.problem.domain.entity.ProblemProblemListRelation;
-import com.anishan.problem.domain.entity.SupplementContest;
-import com.anishan.problem.domain.entity.UserContestRelation;
+import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
@@ -41,6 +43,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
 * @author happy
@@ -56,6 +59,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     private final UserContestService userContestService;
     private final ContestMapper contestMapper;
     private final ProblemListService problemListService;
+    private final UserClient userClient;
+    private final ClassClient classClient;
 
     @Override
     public LocalDateTime getTime(long id) {
@@ -110,7 +115,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
-    public PagedResult<ContestVo> listContests(PagedQuery<Contest> pagedQuery) {
+    public PagedResult<ContestVo> listContests(PagedQuery<Contest> pagedQuery, ContestType type) {
         Page<ContestVo> page = pagedQuery.customPage();
         MPJLambdaWrapper<Contest> wrapper = new MPJLambdaWrapper<Contest>()
                 .selectCount(UserContestRelation::getUserId, ContestVo::getJoinedNumber)
@@ -122,6 +127,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
                         Contest::getAuth
                 )
                 .leftJoin(UserContestRelation.class, UserContestRelation::getContestId, Contest::getContestId)
+                .eq(Contest::getType, type)
                 .groupBy(Contest::getContestId)
                 .orderByDesc(Contest::getStartTime);
 
@@ -149,12 +155,13 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
-    public PagedResult<ContestVo> listContestsAdmin(PagedQuery<Contest> pagedQuery) {
+    public PagedResult<ContestVo> listContestsAdmin(PagedQuery<Contest> pagedQuery, ContestType type) {
         Page<ContestVo> page = pagedQuery.customPage();
         MPJLambdaWrapper<Contest> wrapper = new MPJLambdaWrapper<Contest>()
                 .selectCount(UserContestRelation::getUserId, ContestVo::getJoinedNumber)
                 .selectAll(Contest.class)
                 .leftJoin(UserContestRelation.class, UserContestRelation::getContestId, Contest::getContestId)
+                .eq(Contest::getType, type)
                 .groupBy(Contest::getContestId)
                 .orderByDesc(Contest::getStartTime);
 
@@ -305,6 +312,56 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
         NikeNameUtil.setNikeName(supplementContestVoes);
 
         return supplementContestVoes;
+    }
+
+    @Override
+    public List<UserVo> getJoinedUser(Long contestId) {
+        UserContestRelation userContestRelation = new UserContestRelation();
+        userContestRelation.setContestId(contestId);
+
+        List<Long> userIds = Db
+                .list(userContestRelation)
+                .stream()
+                .map(UserContestRelation::getUserId)
+                .collect(Collectors.toList());
+
+        if (CollUtil.isEmpty(userIds)) {
+            return ListUtil.empty();
+        }
+
+        return userClient.listUser(userIds).getData();
+    }
+
+    @Override
+    @Transactional
+    public boolean removeUser(Long contestId, List<Long> userIds) {
+        if (CollUtil.isEmpty(userIds)) {
+            return false;
+        }
+
+
+        Db.remove(
+                Wrappers.lambdaQuery(ContestRecords.class)
+                        .eq(ContestRecords::getContestId, contestId)
+                        .in(ContestRecords::getUserId, userIds)
+        );
+
+        return userContestService.remove(
+                Wrappers.lambdaQuery(UserContestRelation.class)
+                        .eq(UserContestRelation::getContestId, contestId)
+                        .in(UserContestRelation::getUserId, userIds)
+        );
+    }
+
+    @Override
+    public boolean addUserByClass(Long contestId, Long classIds) {
+        List<UserContestRelation> relations = classClient.listUser(classIds).getData().stream()
+                .map(UserVo::getUserId)
+                .map(userId -> new UserContestRelation(userId, contestId))
+                .collect(Collectors.toList());
+
+
+        return userContestService.saveIgnore(relations);
     }
 }
 

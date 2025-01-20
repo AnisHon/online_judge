@@ -168,6 +168,20 @@ export const resultNotify = (result: boolean | undefined, successMsg: string, er
     }
 }
 
+
+export const addResultNotify = (result: boolean | undefined, successMsg = "添加成功", errorMsg = "添加失败") => {
+    resultNotify(result, successMsg, errorMsg);
+}
+
+export const updateResultNotify = (result: boolean | undefined, successMsg = "修改成功", errorMsg = "修改失败") => {
+    resultNotify(result, successMsg, errorMsg);
+}
+
+export const removeResultNotify = (result: boolean | undefined, successMsg = "删除成功", errorMsg = "删除失败") => {
+    resultNotify(result, successMsg, errorMsg);
+}
+
+
 // 导出封装的方法
 export {
     get,

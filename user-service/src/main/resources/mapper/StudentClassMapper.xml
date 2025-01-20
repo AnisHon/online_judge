@@ -9,7 +9,9 @@
             <id property="classId" column="class_id" jdbcType="BIGINT"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        student_id,class_id
-    </sql>
+    <insert id="insertIgnore">
+        <foreach collection="relations" item="relation" separator=";">
+            insert ignore into student_class(class_id, student_id) values (#{relation.classId}, #{relation.studentId})
+        </foreach>
+    </insert>
 </mapper>

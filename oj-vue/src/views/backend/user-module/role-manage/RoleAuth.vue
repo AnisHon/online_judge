@@ -5,7 +5,6 @@
         <el-input
             v-model="queryParams.username"
             placeholder="请输入用户名称"
-
             @keyup.enter.native="handleQuery"
             clearable
         />
@@ -109,7 +108,7 @@
 
 
     <el-dialog title="授权用户角色" v-model="open">
-      <user-viwer v-model:ids="grantSelectedIds" :loading="addLoading"/>
+      <user-viewer v-model:ids="grantSelectedIds" :loading="addLoading"/>
       <template #footer>
         <el-button type="primary" @click="submit" :loading="addLoading">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
@@ -130,7 +129,7 @@ import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {ElMessageBox} from "element-plus";
 import {useRoute, useRouter} from "vue-router";
-import UserViwer from "@/views/backend/user-module/role-manage/user-viewer/UserViwer.vue";
+import UserViewer from "@/components/user-viewer/UserViewer.vue";
 import {debouncedGrant, revoke, type UserRoleRelation} from "@/api/role";
 import type {IdType} from "@/api/common.ts";
 

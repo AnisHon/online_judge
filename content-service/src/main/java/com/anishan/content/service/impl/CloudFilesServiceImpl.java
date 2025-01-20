@@ -149,7 +149,7 @@ public class CloudFilesServiceImpl extends ServiceImpl<CloudFilesMapper, CloudFi
         InputStream inputStream = file.getInputStream();
         String uploadId = chunkUpload.getUploadId();
         String filePath = chunkUpload.getFilePath();
-        String hash = fileOperation.uploadPart(filePath, uploadId, inputStream, index, inputStream.available());
+        fileOperation.uploadPart(filePath, uploadId, inputStream, index, inputStream.available());
         return null;
     }
 
@@ -173,7 +173,6 @@ public class CloudFilesServiceImpl extends ServiceImpl<CloudFilesMapper, CloudFi
     }
 
     @Override
-    @CacheEvict(key = "#spliceChunk.parentId")
     public SpliceVo initSpliceUpload(SpliceChunk spliceChunk) {
         String fileName = spliceChunk.getFileName();
 
@@ -212,6 +211,8 @@ public class CloudFilesServiceImpl extends ServiceImpl<CloudFilesMapper, CloudFi
     public void merge(ChunkUploadDto chunkUpload) {
         List<PartHash> partHashes = fileOperation.listParts(chunkUpload.getFilePath(), chunkUpload.getUploadId());
         fileOperation.mergePart(chunkUpload.getFilePath(), chunkUpload.getUploadId(), partHashes);
+        chunkUploadService.saveChunkUpload(chunkUpload);
+
     }
 
     @Override
@@ -240,19 +241,19 @@ public class CloudFilesServiceImpl extends ServiceImpl<CloudFilesMapper, CloudFi
     @Override
     @CacheEvict(key = "#parentId")
     @Transactional
-    public void saveCloudFileBySpliceVo(SpliceVo spliceVo, Long parentId) {
+    public boolean saveCloudFileBySpliceVo(SpliceVo spliceVo, Long parentId, String fileName) {
         if (spliceVo == null) {
-            return;
+            return false;
         }
 
         Long userId = AuthUtil.getUserId();
         CloudFileDto cloudFileDto = new CloudFileDto()
-                .setFileName(spliceVo.getFileName())
+                .setFileName(fileName)
                 .setParentId(parentId)
                 .setFileId(spliceVo.getFileId())
                 .setDir(false);
 
-        saveCloudFile(cloudFileDto, userId);
+        return saveCloudFile(cloudFileDto, userId);
     }
 
 }

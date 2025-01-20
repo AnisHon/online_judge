@@ -1,7 +1,11 @@
 package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.Contest;
+import com.anishan.problem.domain.entity.UserContestRelation;
 import com.github.yulichang.base.MPJBaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -11,6 +15,7 @@ import com.github.yulichang.base.MPJBaseMapper;
 */
 public interface ContestMapper extends MPJBaseMapper<Contest> {
 
+    int deleteBatchUserContestRelations(@Param("relations") List<UserContestRelation> relations);
 }
 
 

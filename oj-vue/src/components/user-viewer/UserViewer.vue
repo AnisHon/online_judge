@@ -91,7 +91,7 @@ import {
   type QueryUser,
 } from "@/api/user";
 import {type UserView} from "@/api/user";
-import {useStatuesColumn} from "@/hooks/useColumn";
+import {useStatuesColumn} from "@/hooks/useColumn.ts";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 

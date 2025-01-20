@@ -79,7 +79,7 @@
         </el-table-column>
 
         <template #empty>
-          <el-empty description="当前没有任何题目"/>
+          <el-empty description="当前没有用户"/>
         </template>
       </el-table>
     </div>
@@ -116,7 +116,7 @@ getList();
 </script>
 
 <style lang="scss" scoped>
-@use 'styles/color' as *;
+@use "@/assets/styles/color" as *;
 
 ::v-deep(.table) {
   .header-cell {

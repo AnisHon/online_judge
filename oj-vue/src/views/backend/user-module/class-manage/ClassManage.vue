@@ -78,6 +78,20 @@
               @click="handleDelete(scope.row)"
               v-has="'user:class:remove'"
           >删除</el-link>
+          <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
+                       v-has-any="['problem:contest:rank', 'problem:contest:statistic', 'problem:contest:edit']">
+            <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <div>
+                  <el-dropdown-item command="handleStudent" icon="UserFilled"
+                  >学生管理</el-dropdown-item>
+                </div>
+
+              </el-dropdown-menu>
+            </template>
+
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
@@ -131,6 +145,9 @@ import {ElDialog, ElMessageBox} from "element-plus";
 import __ from "lodash";
 import type {IdType} from "@/api/common.ts";
 
+import {useRouter} from "vue-router";
+
+const router = useRouter();
 
 // 查询需要的表单数据
 const queryParams = reactive<QueryClass>({
@@ -147,6 +164,14 @@ const form = reactive<ClassForm>({
   remark: ''
 });
 
+// 多选或者单选
+const single = ref(true)
+const multiple = ref(true)
+
+// 选择列的id数组
+const ids = ref<IdType[]>([])
+// 1: Insert 2: Update
+const dialogState = ref(1);
 
 const rules = ref();
 
@@ -168,6 +193,7 @@ const resetQuery = () => {
 const resetForm = () => {
   form.classId = undefined;
   form.className = '';
+  form.remark = '';
 }
 
 const showSearch = ref(true);
@@ -188,12 +214,6 @@ const getList = () => {
 
 }
 
-// 多选或者单选
-const single = ref(true)
-const multiple = ref(true)
-
-// 选择列的id数组
-const ids = ref<IdType[]>([])
 
 const handleSelectionChange = (selection: ClassView[]) => {
   ids.value = selection.map(item => item.classId);
@@ -243,8 +263,7 @@ const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUp
 const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddClass(form, finishDialog);
 
 const {} = debouncedAddClass(form, finishDialog)
-// 1: Insert 2: Update
-const dialogState = ref(1);
+
 const title = computed(() => {
   return dialogState.value === 1 ? "添加" : "修改";
 })
@@ -263,7 +282,7 @@ const handleUpdate = (data: ClassView | void) => {
   __.assign(form, data)
 }
 
-const submitForm = () => {
+const submitForm = async () => {
 
   if (dialogState.value === 1) {
     addLoading();
@@ -274,6 +293,7 @@ const submitForm = () => {
     // 修改
     update();
   }
+
 }
 
 const cancel = () => {
@@ -283,7 +303,13 @@ const cancel = () => {
 
 
 
+const handleCommand = (command: string, row: ClassView) => {
+  const commandMap: Record<string, Function> = {
+    "handleStudent": () => {router.push({name: "student-manage", params:{classId: row.classId}})}
+  }
 
+  commandMap[command](row);
+}
 
 
 // created -> 获取列表

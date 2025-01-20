@@ -59,17 +59,17 @@ public class CacheController {
     }
 
     @ApiOperation("获取某个缓存")
-    @GetMapping
+    @GetMapping("/{key}")
     @PreAuthorize("hasAuthority('content:cache:list')")
-    public R<CacheVo> get(@NotNull String key) {
+    public R<CacheVo> get(@PathVariable String key) {
         CacheVo cacheVo = cacheService.get(key);
         return R.success(cacheVo);
     }
 
     @ApiOperation("删除某个缓存")
-    @DeleteMapping
+    @DeleteMapping("/{key}")
     @PreAuthorize("hasAuthority('content:cache:remove')")
-    public R<CacheVo> del(@NotNull String key) {
+    public R<CacheVo> del(@PathVariable String key) {
         stringRedisTemplate.delete(key);
         return R.success(null);
     }

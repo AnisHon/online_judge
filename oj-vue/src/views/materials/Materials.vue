@@ -70,7 +70,7 @@
         </template>
         <el-table-column type="selection" width="55" align="center" :selectable="selectable"/>
 
-        <el-table-column label="文件名" width="400px" prop="cloudFileId">
+        <el-table-column label="文件名" width="400px" prop="cloudFileId" show-overflow-tooltip>
           <template v-slot="scope">
             <div class="file">
               <div class="icon">
@@ -143,7 +143,7 @@
       </el-table>
     </div>
 
-    <upload :parent-id="query.parentId" v-model="openUpload"/>
+    <upload :parent-id="query.parentId" v-model="openUpload" @finished="getList"/>
   </div>
 </template>
 

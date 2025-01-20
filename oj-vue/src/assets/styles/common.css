@@ -36,6 +36,8 @@ a {
     --header-bar-height: 50px;
     --tab-height: 30px;
     --backend-header-height: calc(var(--header-bar-height) + var(--tab-height));
+    --backend-content-height: calc(100vh - var(--backend-header-height));
+    --backend-content-no-padding-height: calc(100vh - var(--backend-header-height) - 40px);
 }
 
 

@@ -110,9 +110,6 @@ import {useRoute} from "vue-router";
 
 const route = useRoute();
 
-// 当前tab
-const currentTab = ref("detail")
-
 // 题目对象
 const problem = ref<ProblemDetailView>();
 
@@ -308,6 +305,7 @@ onUnmounted(() => {
 
 
 <style lang="scss" scoped>
+@use "@/assets/styles/color" as *;
 
 ::v-deep(.table) {
   .header-cell {

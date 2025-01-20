@@ -1,4 +1,4 @@
-import {baseURL, get, getWithParams, post, put, resultNotify, service} from "@/utils/http.ts";
+import {addResultNotify, baseURL, get, getWithParams, post, put, resultNotify, service} from "@/utils/http.ts";
 import {ElNotification} from "element-plus";
 import __ from "lodash";
 import {remove} from "@/utils/simpleCRUD.ts";
@@ -38,16 +38,21 @@ export interface CloudFileForm {
     parentId: IdType;
 }
 
+/**
+ * 分片上传初始化参数
+ */
 export interface SpliceChunk {
     md5: string;
     chunk: File;
     chunkSize: number;
     fileName: string;
     index: number;
-    parentId: IdType;
     totalSize: number;
 }
 
+/**
+ * 初始化分片的结果
+ */
 export interface ChunkInfo {
     chunkId: IdType;
     chunkNum: number;
@@ -58,6 +63,9 @@ export interface ChunkInfo {
     fileSize: number;
 }
 
+/**
+ * 每次分片上传返回的结果
+ */
 export interface Splice extends ChunkInfo {
     finished: boolean;
     path: string;
@@ -143,6 +151,11 @@ export const deleteFile = (id: IdType) => {
     return remove(id, "/file")
 }
 
+export const addFile = async (md5: string, fileName: string, parentId: string) => {
+    const {data} = await service.post<boolean>(`/content-api/file/cloud/${md5}/${fileName}/${parentId}`);
+    addResultNotify(data);
+}
+
 export const download = (path: string, fileName: string) => {
 
     axios.get('/file', {
@@ -179,8 +192,8 @@ export const initSlice = async (spliceChunk: SpliceChunk) => {
     return data;
 }
 
-export const getProgress = async (md5: string, parentId: IdType) => {
-    const {data} = await get<Splice>(`/file/progress/${md5}/${parentId}`);
+export const getProgress = async (md5: string) => {
+    const {data} = await get<Splice>(`/file/progress/${md5}`);
     return data;
 }
 

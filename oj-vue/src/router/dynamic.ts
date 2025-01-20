@@ -29,6 +29,17 @@ export const dynamicRoute: RouteRecordRaw = {
             }
         },
         {
+            path: 'user-module/class-manage/student/:classId',
+            name: 'student-manage',
+            component: () => import("@/views/backend/user-module/class-manage/user/StudentManage.vue"),
+            meta: {
+                has: ['user:class:edit'],
+                name: "学生管理",
+                component: 'StudentManage',
+                noKeepAlive: true,
+            }
+        },
+        {
             path: 'problem-module/problem-edit/edit-problem',
             name: 'edit-problem',
             strict: true,
@@ -49,6 +60,17 @@ export const dynamicRoute: RouteRecordRaw = {
                 has: ["problem:problem:add", "problem:problem:remove"],
                 name: "列表题目编辑",
                 component: 'ListProblem',
+                noKeepAlive: true,
+            }
+        },
+        {
+            path: 'teacher/contest-manage/user/joined/:contestId',
+            name: 'user-joined',
+            component: () => import("@/views/backend/teacher/contest-manage/user-joined/UserJoined.vue"),
+            meta: {
+                has: ['problem:contest:edit'],
+                name: "参加管理",
+                component: 'UserJoined',
                 noKeepAlive: true,
             }
         },

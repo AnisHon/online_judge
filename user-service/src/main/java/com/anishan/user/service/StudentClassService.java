@@ -19,4 +19,6 @@ public interface StudentClassService extends IService<StudentClassRelation> {
     List<Long> listClassIdsOfUser(Long userId);
 
     List<Long> listStudentIdsByClass(Long classId);
+
+    boolean saveIgnore(List<StudentClassRelation> relations);
 }

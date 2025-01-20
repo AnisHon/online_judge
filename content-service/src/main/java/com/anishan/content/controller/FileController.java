@@ -144,16 +144,10 @@ public class FileController {
     }
 
     @ApiModelProperty("查看是否存在，用于断点续传，秒传")
-    @GetMapping("/file/progress/{md5}/{parentId}")
+    @GetMapping("/file/progress/{md5}")
     @PreAuthorize("hasAuthority('content:file:add')")
-    public R<SpliceVo> getFileProgress(@PathVariable String md5, @PathVariable Long parentId) {
+    public R<SpliceVo> getFileProgress(@PathVariable String md5) {
         SpliceVo spliceVo = cloudFilesService.getSlice(md5);
-
-        try {
-            cloudFilesService.saveCloudFileBySpliceVo(spliceVo, parentId);
-        }  catch (DuplicateKeyException e) {
-            return R.badRequest("文件名重复");
-        }
 
         // 不为null就直接添加
         return R.success(spliceVo);
@@ -164,12 +158,6 @@ public class FileController {
     @PreAuthorize("hasAuthority('content:file:add')")
     public R<SpliceVo> initUpload(@Validated @RequestBody SpliceChunk spliceChunk) {
         SpliceVo spliceVo = cloudFilesService.initSpliceUpload(spliceChunk);
-
-        try {
-            cloudFilesService.saveCloudFileBySpliceVo(spliceVo, spliceChunk.getParentId());
-        }  catch (DuplicateKeyException e) {
-            return R.badRequest("文件名重复");
-        }
         return R.success(spliceVo);
     }
 
@@ -192,6 +180,7 @@ public class FileController {
 
     @ApiOperation("合并文件")
     @PostMapping("/file/merge/{md5}")
+    @PreAuthorize("hasAuthority('content:file:add')")
     public R<Object> mergeFile(@PathVariable("md5") String md5) {
         ChunkUploadDto chunkUpload = chunkUploadService.getByMd5(md5);
         if (chunkUpload == null) {
@@ -199,6 +188,19 @@ public class FileController {
         }
         cloudFilesService.merge(chunkUpload);
         return R.success(null);
+    }
+
+
+    @ApiOperation("添加文件")
+    @PostMapping("/file/cloud/{md5}/{fileName}/{parentId}")
+    @PreAuthorize("hasAuthority('content:file:add')")
+    public R<Object> addCloudFile(@PathVariable String md5, @PathVariable String fileName, @PathVariable Long parentId) {
+        SpliceVo spliceVo = cloudFilesService.getSlice(md5);
+        try {
+            return R.success(cloudFilesService.saveCloudFileBySpliceVo(spliceVo, parentId, fileName));
+        }  catch (DuplicateKeyException e) {
+            return R.badRequest("文件名重复");
+        }
     }
 
     @ApiOperation("添加文件夹")

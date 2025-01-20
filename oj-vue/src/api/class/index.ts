@@ -2,11 +2,12 @@ import {
     type PagedResponse,
     type SortedPagedType,
 } from "@/api/pagedType";
-import {type successCallback} from "@/utils/http";
+import {addResultNotify, get, removeResultNotify, service, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, remove, update} from "@/utils/simpleCRUD";
 import type {IdType} from "@/api/common.ts";
+import type {UserView} from "@/api/user";
 
 interface ClassView {
     classId: IdType;
@@ -73,6 +74,23 @@ const debouncedGetClass = (queryData: QueryClass, success: successCallback<Paged
     }, 500);
     return {loading, isLoading, get};
 }
+
+export const getUserByClass = async (classId: IdType) => {
+    const {data} = await get<UserView[]>("/user-api/class/user", classId);
+    return data;
+}
+
+export const addUserForClass = async (classId: IdType, userIds: IdType | IdType[]) => {
+    const {data} = await service.post<boolean>(`/user-api/class/user/${classId}/${userIds}`);
+    addResultNotify(data);
+}
+
+export const removeUserForClass = async (classId: IdType, userIds: IdType | IdType[]) => {
+    const {data} = await service.delete<boolean>(`/user-api/class/user/${classId}/${userIds}`);
+    removeResultNotify(data);
+}
+
+
 
 export type {
     QueryClass,

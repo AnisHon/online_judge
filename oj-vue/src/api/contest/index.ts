@@ -4,7 +4,7 @@ import {
 import {get, getWithParams, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, pagedFetch, remove, update} from "@/utils/simpleCRUD";
+import {add, remove, update} from "@/utils/simpleCRUD";
 import type {IdType} from "@/api/common.ts";
 
 enum ContestAuth {
@@ -53,6 +53,8 @@ interface JoinContestResponse {
     success: boolean;
     message: string;
 }
+
+export type PageContest = PagedType & {type: string}
 
 const dict = {
     contestAuth: [
@@ -153,12 +155,12 @@ const debouncedUpdateContest = (form: ContestForm, success: successCallback<void
 }
 
 const getContest = async (page: PagedType): Promise<PagedResponse<ContestView>> => {
-    const { data } = await getWithParams<PagedResponse<ContestView>, PagedType>("/problem-api/contest/page", page);
+    const { data } = await getWithParams<PagedResponse<ContestView>, typeof page>("/problem-api/contest/page", page);
     return data;
 }
 
 
-const debouncedGetContest = (page: PagedType, success: successCallback<PagedResponse<ContestView>>) => {
+const debouncedGetContest = (page: PageContest, success: successCallback<PagedResponse<ContestView>>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce(() => {
         getContest(page)
@@ -168,11 +170,13 @@ const debouncedGetContest = (page: PagedType, success: successCallback<PagedResp
     return {loading, isLoading, get};
 }
 
-const getContestAdmin = async (page: PagedType): Promise<PagedResponse<ContestView>> => {
-    return await pagedFetch(page, "/problem-api/contest/adminPage");
+const getContestAdmin = async (page: PageContest): Promise<PagedResponse<ContestView>> => {
+
+    const {data} = await getWithParams<PagedResponse<ContestView>, PageContest>("/problem-api/contest/adminPage", page);
+    return data;
 }
 
-const debouncedGetContestAdmin = (page: PagedType, success: successCallback<PagedResponse<ContestView>>) => {
+const debouncedGetContestAdmin = (page: PageContest, success: successCallback<PagedResponse<ContestView>>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce(() => {
         getContestAdmin(page)

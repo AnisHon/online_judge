@@ -1,6 +1,5 @@
 <template>
   <el-dialog v-model="open" title="上传文件">
-
     <el-upload
         drag
         class="upload"
@@ -20,19 +19,18 @@
       <el-button type="success" @click="onSubmit">开始上传</el-button>
     </template>
   </el-dialog>
-
-
-
 </template>
 <script setup lang="ts">
 import {UploadFilled} from "@element-plus/icons-vue";
 import {ref} from "vue";
 import {ElNotification, type UploadInstance, type UploadRequestOptions} from "element-plus";
 import {md5} from "@/utils/md5.ts";
-import {getProgress, initSlice, mergeFile, type Splice, upload} from "@/api/file";
+import {addFile, getProgress, initSlice, mergeFile, type Splice, upload} from "@/api/file";
 import type {IdType} from "@/api/common.ts";
 import to from "await-to-js";
 import {round} from "lodash";
+
+const emit = defineEmits<{(e: "finished"): void}>()
 
 const open = defineModel<boolean>();
 
@@ -52,42 +50,45 @@ const onClear = () => {
 const sendUpload = async (option: UploadRequestOptions) => {
 
   const file = option.file
+
+  // 获取或初始文件参数
   const slice = await getSlice(file);
-  console.log(slice);
-  if (slice) {
-    const {finished, path, fileMd5} = slice
-    if (finished) {
-      return path;
-    } else {
 
-      const [err] = await to(handleUpload(file, slice, option))
-      if (err) {
-        ElNotification.error({
-          title: '文件上传错误',
-          message: '部分分片上次失败，请尝试重新上传文件'
-        })
-        return;
-      }
-
-
-      const [err2] = await to(mergeFile(fileMd5))
-
-      if (err2) {
-        ElNotification.error({
-          title: '文件上传错误',
-          message: err2.message
-        })
-      }
-
-    }
-  } else {
+  // 初始化错误
+  if (!slice) {
     ElNotification.error({
       title: '文件上传错误',
       message: '获取上传任务失败'
     })
+    return;
   }
 
+  const {finished, path, fileMd5} = slice
+  if (!finished) {
+    // 没做完需要继续上传
+    const [err] = await to(handleUpload(file, slice, option))
 
+    if (err) {
+      ElNotification.error({
+        title: '文件上传错误',
+        message: '部分分片上次失败，请尝试重新上传文件'
+      })
+      return;
+    }
+
+    // 上传结束后合并
+    const [err2] = await to(mergeFile(fileMd5))
+    if (err2) {
+      ElNotification.error({
+        title: '文件上传错误',
+        message: err2.message
+      })
+      return;
+    }
+  }
+  // 添加最终文件
+  await addFile(fileMd5, file.name, parentId);
+  emit("finished");
 }
 
 /**
@@ -96,7 +97,7 @@ const sendUpload = async (option: UploadRequestOptions) => {
 const getSlice = async (file: File) => {
   const fileMd5: string = await md5(file)
 
-  let [err, splice] = await to(getProgress(fileMd5, parentId))
+  let [err, splice] = await to(getProgress(fileMd5))
   if (err) {
     ElNotification.error({
       title: '文件上传错误',
@@ -114,7 +115,6 @@ const getSlice = async (file: File) => {
       chunk: file,
       index: 0,
       chunkSize: 5 * 1024 * 1024,
-      parentId: parentId,
       totalSize: file.size,
     }))
     splice = data;
@@ -134,23 +134,8 @@ const getSlice = async (file: File) => {
  */
 const handleUpload = async (file: File, splice: Splice, options: UploadRequestOptions) => {
 
-  console.log(splice)
   let lastUploadedSize = 0; // 上次断点续传时上传的总大小
-  let uploadedSize = 0 // 已上传的大小
-  const fileSize = file.size || 0 // 文件总大小
-  let startMs = new Date().getTime(); // 开始上传的时间
   const {partHashes, chunkNum, chunkSize, fileMd5} = splice
-  console.log(chunkSize)
-  // 获取从开始上传到现在的平均速度（byte/s）
-  const getSpeed = () => {
-    // 已上传的总大小 - 上次上传的总大小（断点续传）= 本次上传的总大小（byte）
-    const intervalSize = uploadedSize - lastUploadedSize
-    const nowMs = new Date().getTime()
-    // 时间间隔（s）
-    const intervalTime = (nowMs - startMs) / 1000
-    return intervalSize / intervalTime
-  }
-
 
   const uploadNext = async (md5: string, partNumber: number) => {
     const start = Number(chunkSize) * (partNumber - 1)
@@ -167,7 +152,6 @@ const handleUpload = async (file: File, splice: Splice, options: UploadRequestOp
   }
 
   const queue = []
-
 
   for (let partNumber = 1; partNumber <= chunkNum; partNumber++) {
     const exitPart = (partHashes || []).find(partHash => partHash.chuckIndex == partNumber)

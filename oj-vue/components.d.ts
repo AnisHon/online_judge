@@ -13,6 +13,7 @@ declare module 'vue' {
     BackendMenu: typeof import('./src/layout-backend/component/BackendMenu/BackendMenu.vue')['default']
     ChoiceChoose: typeof import('./src/components/DetailProblem/ChoiceChoose.vue')['default']
     CodeEditor: typeof import('./src/components/EnhancedCodeEdior/CodeEditor/CodeEditor.vue')['default']
+    ContestProblems: typeof import('./src/components/ContestProblems/ContestProblems.vue')['default']
     CustomBreadCrumb: typeof import('./src/layout-backend/component/CustomBreadCrumb/CustomBreadCrumb.vue')['default']
     CustomCard: typeof import('./src/components/CustomCard/CustomCard.vue')['default']
     CustomElMessage: typeof import('./src/components/CustomElMessage.vue')['default']
@@ -108,6 +109,7 @@ declare module 'vue' {
     SolutionsComponent: typeof import('./src/views/solutions/component/SolutionsComponent/SolutionsComponent.vue')['default']
     SubFormItem: typeof import('./src/layout/component/menu/SubFormItem.vue')['default']
     ThemeTrigger: typeof import('./src/components/ThemeTrigger/ThemeTrigger.vue')['default']
+    UserViewer: typeof import('./src/components/user-viewer/UserViewer.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

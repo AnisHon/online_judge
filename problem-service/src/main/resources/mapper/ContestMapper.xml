@@ -18,5 +18,13 @@
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
     </resultMap>
+    <delete id="deleteBatchUserContestRelations">
+        delete from user_contest
+        where (user_id, contest_id) in 
+        <foreach collection="relations" item="relation" open="(" separator="," close=")" >
+            (#{relation.userId}, #{relation.contestId})
+        </foreach>
+    </delete>
+
 
 </mapper>

@@ -1,31 +1,39 @@
 package com.anishan.problem.controller;
 
+import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.enumeration.ContestType;
 import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.problem.domain.dto.ContestDto;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
 import com.anishan.problem.domain.entity.SupplementContest;
+import com.anishan.problem.domain.entity.UserContestRelation;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.SupplementContestVo;
 import com.anishan.problem.service.ContestService;
 import com.anishan.api.util.CacheUtil;
+import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotNull;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @Api("比赛相关接口")
@@ -34,6 +42,7 @@ import java.util.List;
 public class ContestController {
 
     private final ContestService contestService;
+    private final UserContestService userContestService;
 
     @GetMapping("/{id}")
     @ApiOperation("通过id获取比赛")
@@ -52,16 +61,16 @@ public class ContestController {
 
     @GetMapping("/page")
     @ApiOperation("分页获取contest,没有详细信息")
-    public R<PagedResult<ContestVo>> listContests(@Validated PagedQuery<Contest> pagedQuery) {
-        PagedResult<ContestVo> contestVoPagedResult = contestService.listContests(pagedQuery);
+    public R<PagedResult<ContestVo>> listContests(@Validated PagedQuery<Contest> pagedQuery, @NotNull ContestType type) {
+        PagedResult<ContestVo> contestVoPagedResult = contestService.listContests(pagedQuery, type);
         return contestVoPagedResult.toR();
     }
 
     @GetMapping("/adminPage")
     @ApiOperation("分页获取contest,管理用,有详细信息")
     @PreAuthorize("hasAuthority('problem:contest:list')")
-    public R<PagedResult<ContestVo>> listContestsAdmin(@Validated PagedQuery<Contest> pagedQuery) {
-        PagedResult<ContestVo> contestVoPagedResult = contestService.listContestsAdmin(pagedQuery);
+    public R<PagedResult<ContestVo>> listContestsAdmin(@Validated PagedQuery<Contest> pagedQuery,  @NotNull ContestType type) {
+        PagedResult<ContestVo> contestVoPagedResult = contestService.listContestsAdmin(pagedQuery, type);
         return contestVoPagedResult.toR();
     }
 
@@ -139,6 +148,47 @@ public class ContestController {
         );
         return R.success(b);
     }
+
+
+    @GetMapping("/user/{contestId}")
+    @ApiOperation("获取所有参加用户的信息")
+    @PreAuthorize("hasAnyAuthority('problem:contest:list', 'user:user:list')")
+    public R<List<UserVo>> getJoinedUser(@PathVariable Long contestId) {
+        return R.success(contestService.getJoinedUser(contestId));
+    }
+
+    @PostMapping("/user/{contestId}/{userIds}")
+    @ApiOperation("向比赛添加用户")
+    @PreAuthorize("hasAuthority('problem:contest:edit')")
+    @Transactional
+    public R<Boolean> addUser(@PathVariable Long contestId, @PathVariable List<Long> userIds) {
+        List<UserContestRelation> relations = userIds.stream()
+                .map(x -> new UserContestRelation(x, contestId))
+                .collect(Collectors.toList());
+
+        boolean b = userContestService.saveIgnore(relations);
+
+        return R.success(b);
+    }
+
+    @DeleteMapping("/user/{contestId}/{userIds}")
+    @ApiOperation("删除比赛用户")
+    @PreAuthorize("hasAuthority('problem:contest:edit')")
+    public R<Boolean> removeUser(@PathVariable Long contestId, @PathVariable List<Long> userIds) {
+        boolean b = contestService.removeUser(contestId, userIds);
+        return R.success(b);
+    }
+
+    @PostMapping("/user/{contestId}/class/{classId}")
+    @ApiOperation("通过班级添加用户")
+    @PreAuthorize("hasAuthority('problem:contest:edit')")
+    public R<Boolean> addUserByClass(@PathVariable Long contestId, @PathVariable Long classId) {
+        boolean b = contestService.addUserByClass(contestId, classId);
+        return R.success(b);
+    }
+
+
+
 
     @PostMapping("/join")
     @ApiOperation("用户参加比赛接口")

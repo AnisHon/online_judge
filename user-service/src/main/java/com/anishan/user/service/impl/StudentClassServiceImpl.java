@@ -1,5 +1,6 @@
 package com.anishan.user.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.user.domain.entity.StudentClassRelation;
@@ -17,6 +18,12 @@ import java.util.List;
 @Service
 public class StudentClassServiceImpl extends ServiceImpl<StudentClassMapper, StudentClassRelation>
     implements StudentClassService{
+
+    private final StudentClassMapper studentClassMapper;
+
+    public StudentClassServiceImpl(StudentClassMapper studentClassMapper) {
+        this.studentClassMapper = studentClassMapper;
+    }
 
     @Override
     public boolean joinClass(Long userId, Long classId) {
@@ -53,6 +60,15 @@ public class StudentClassServiceImpl extends ServiceImpl<StudentClassMapper, Stu
                 .select(StudentClassRelation::getStudentId)
                 .eq(StudentClassRelation::getClassId, classId)
         );
+    }
+
+    @Override
+    public boolean saveIgnore(List<StudentClassRelation> relations) {
+        if (CollUtil.isEmpty(relations)) {
+            return false;
+        }
+        int count = studentClassMapper.insertIgnore(relations);
+        return count > 0;
     }
 
 }

@@ -152,7 +152,7 @@ getList();
 </script>
 
 <style lang="scss" scoped>
-
+@use "@/assets/styles/color" as *;
 ::v-deep(.table) {
   .header-cell {
     height: 64px;

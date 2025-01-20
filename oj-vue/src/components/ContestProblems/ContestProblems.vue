@@ -72,7 +72,7 @@ import {Pane, Splitpanes} from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import {type ComponentInstance, computed, onMounted, onUnmounted, reactive, ref} from "vue";
 import type {ProblemInListView} from "@/api/list";
-import {debouncedGetProblems} from "@/api/list/problem";
+import {debouncedGetProblems} from "@/api/list/problem.ts";
 import {useRoute} from "vue-router";
 import DetailProblem from "@/components/DetailProblem/DetailProblem.vue";
 import {ElTable} from "element-plus";

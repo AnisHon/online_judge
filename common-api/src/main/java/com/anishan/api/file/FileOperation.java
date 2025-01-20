@@ -19,7 +19,6 @@ public interface FileOperation {
 
     /**
      * 分配一个路径
-     * @return
      */
     static String assignPath(String basePath) {
         String format = DateUtil.format(DateUtil.date(), "/yyyy/MM/dd/");

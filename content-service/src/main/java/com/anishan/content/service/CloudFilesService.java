@@ -38,5 +38,5 @@ public interface CloudFilesService extends IService<CloudFiles> {
 
     SpliceVo getSlice(String md5);
 
-    void saveCloudFileBySpliceVo(SpliceVo spliceVo, Long parentId);
+    boolean saveCloudFileBySpliceVo(SpliceVo spliceVo, Long parentId, String fileName);
 }

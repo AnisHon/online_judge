@@ -2,6 +2,9 @@ package com.anishan.user.mapper;
 
 import com.anishan.user.domain.entity.StudentClassRelation;
 import com.github.yulichang.base.MPJBaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author anishan
@@ -11,6 +14,7 @@ import com.github.yulichang.base.MPJBaseMapper;
 */
 public interface StudentClassMapper extends MPJBaseMapper<StudentClassRelation> {
 
+    int insertIgnore(@Param("relations") List<StudentClassRelation> relations);
 }
 
 

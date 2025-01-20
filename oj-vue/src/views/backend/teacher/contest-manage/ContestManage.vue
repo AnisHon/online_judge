@@ -1,5 +1,18 @@
 <template>
   <div class="contest-container">
+    <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
+      <el-form-item label="类型" label-position="left">
+        <el-radio-group v-model="queryParams.type">
+          <el-radio value="CONTEST">比赛</el-radio>
+          <el-radio value="HOMEWORK">作业</el-radio>
+        </el-radio-group>
+
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="search"  @click="getList">搜索</el-button>
+      </el-form-item>
+    </el-form>
+
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
@@ -62,7 +75,7 @@
       <el-table-column label="列表ID" align="center" prop="listId" v-if="columns[7].visible" show-overflow-tooltip />
       <el-table-column label="描述" align="center" prop="description" v-if="columns[8].visible" show-overflow-tooltip />
       <el-table-column label="参加人数" align="center" prop="joinedNumber" v-if="columns[9].visible" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
         <template v-slot:default="scope">
           <el-link
               size="small"
@@ -84,6 +97,10 @@
             <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
             <template #dropdown>
               <el-dropdown-menu>
+                <div>
+                  <el-dropdown-item command="handleJoinedUser" icon="Connection"
+                  >参赛管理</el-dropdown-item>
+                </div>
                 <div v-has="'problem:contest:statistic'">
                   <el-dropdown-item command="handleProblemStatistic" icon="PieChart"
                   >题目统计</el-dropdown-item>
@@ -92,7 +109,7 @@
                   <el-dropdown-item command="handleUserStatistic" icon="TrendCharts"
                   >用户统计</el-dropdown-item>
                 </div>
-                <div v-has="'problem:contest:edit'" >
+                <div v-if="scope.row.type === ContestType.HOMEWORK" v-has="'problem:contest:edit'" >
                   <el-dropdown-item command="handleSupplement" icon="UserFilled"
                   >设置迟交</el-dropdown-item>
                 </div>
@@ -204,14 +221,13 @@ import {
   debouncedAddContest,
   debouncedGetContestAdmin,
   debouncedUpdateContest,
-  dict, removeContest
+  dict, type PageContest, removeContest
 } from "@/api/contest";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {ElDialog, ElMessageBox} from "element-plus";
 import __ from "lodash";
-import type {PagedType} from "@/api/pagedType";
 import ListView from "@/components/ListView/ListView.vue";
 import {authTagType, authText} from "@/utils/contest";
 import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
@@ -223,9 +239,10 @@ const router = useRouter();
 const openSelectList = ref(false);
 
 // 查询需要的表单数据
-const queryParams = reactive<PagedType>({
+const queryParams = reactive<PageContest>({
   currentPage: 1,
   pageSize: 20,
+  type: "CONTEST"
 });
 
 const form = reactive<ContestForm>({
@@ -292,18 +309,14 @@ const handleSelectionChange = (selection: ContestView[]) => {
 }
 
 const handleCommand = (command: string, row: ContestView) => {
-
-  if (command === "handleProblemStatistic") {
-    //题目统计
-    router.push({name: "problem-statistic", params: {contestId: row.contestId}});
-
-  } else if (command === "handleUserStatistic") {
-    // 用户统计
-    router.push({name: "user-statistic", params: {contestId: row.contestId}});
-
-  } else if (command === "handleSupplement") {
-    router.push({name: "supplement", params: {contestId: row.contestId}});
+  const commandMap: Record<string, Function> = {
+    "handleJoinedUser": () => {router.push({name: "user-joined", params: {contestId: row.contestId}})},
+    "handleProblemStatistic": () => {router.push({name: "problem-statistic", params: {contestId: row.contestId}});}, //题目统计
+    "handleUserStatistic": () => {router.push({name: "user-statistic", params: {contestId: row.contestId}});}, // 用户统计
+    "handleSupplement": () => {router.push({name: "supplement", params: {contestId: row.contestId}});},
   }
+
+  commandMap[command](row);
 }
 
 const handleDelete = (row: ContestView | Event) => {

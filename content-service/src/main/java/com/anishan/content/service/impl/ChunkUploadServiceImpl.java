@@ -45,8 +45,11 @@ public class ChunkUploadServiceImpl extends ServiceImpl<ChunkUploadMapper, Chunk
     @Override
     @Transactional
     public Long saveChunkUpload(ChunkUploadDto chunkUploadDto) {
-
         long id = IdWorker.getId();
+        if (chunkUploadDto.getChunkId() != null) {
+            id = chunkUploadDto.getChunkId();
+        }
+
         String filePath = chunkUploadDto.getFilePath();
 
         String suffix = FileNameUtil.getSuffix(filePath);
@@ -68,10 +71,13 @@ public class ChunkUploadServiceImpl extends ServiceImpl<ChunkUploadMapper, Chunk
                 .setChunkSize(chunkUploadDto.getChunkSize())
                 .setChunkNum(chunkUploadDto.getChunkNum());
 
-        Db.save(fileInfo);
-        this.save(chunkUpload);
+        Db.saveOrUpdate(fileInfo);
+        this.saveOrUpdate(chunkUpload);
         return id;
     }
+
+
+
 }
 
 

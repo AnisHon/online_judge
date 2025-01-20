@@ -1,5 +1,9 @@
 package com.anishan.user.controller;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -7,19 +11,25 @@ import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.user.domain.dto.ClassDto;
 import com.anishan.user.domain.dto.ClassPagedQuery;
 import com.anishan.user.domain.dto.UserClassQuery;
+import com.anishan.user.domain.entity.StudentClassRelation;
 import com.anishan.user.domain.entity.SysClass;
 import com.anishan.user.domain.vo.ClassVo;
 import com.anishan.api.client.user.domain.vo.UserVo;
+import com.anishan.user.service.StudentClassService;
 import com.anishan.user.service.SysClassService;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/class")
@@ -28,9 +38,12 @@ public class ClassController {
 
 
     private final SysClassService sysClassService;
+    private final StudentClassService studentClassService;
+
     @Autowired
-    public ClassController(SysClassService sysClassService) {
+    public ClassController(SysClassService sysClassService, StudentClassService studentClassService) {
         this.sysClassService = sysClassService;
+        this.studentClassService = studentClassService;
     }
 
 
@@ -115,5 +128,56 @@ public class ClassController {
         boolean b =  sysClassService.existUser(classId, userId);
         return R.success(b);
     }
+
+    @PostMapping("/user/{classId}/{userIds}")
+    @PreAuthorize("hasAuthority('user:class:edit')")
+    @Transactional
+    public R<Boolean> addUser(@PathVariable Long classId, @PathVariable List<Long> userIds) {
+        List<StudentClassRelation> relations = userIds.stream()
+                .map(userId -> new StudentClassRelation(userId, classId))
+                .collect(Collectors.toList());
+
+        boolean save = studentClassService.saveIgnore(relations);
+        return R.success(save);
+    }
+
+
+    @DeleteMapping("/user/{classId}/{userIds}")
+    @PreAuthorize("hasAuthority('user:class:edit')")
+    @Transactional
+    public R<Boolean> removeUser(@PathVariable Long classId, @PathVariable List<Long> userIds) {
+        boolean b;
+        if (CollUtil.isEmpty(userIds)) {
+            b = false;
+        } else {
+            b = Db.remove(
+                    Wrappers.lambdaQuery(StudentClassRelation.class)
+                            .eq(StudentClassRelation::getClassId, classId)
+                            .in(StudentClassRelation::getStudentId, userIds)
+            );
+        }
+        return R.success(b);
+    }
+
+    @GetMapping("/user/{classId}")
+    @PreAuthorize("hasAnyAuthority('user:class:list', 'user:user:list')")
+    public R<List<UserVo>> listUser(@PathVariable Long classId) {
+        List<Long> userIds = Db.listObjs(
+                Wrappers.lambdaQuery(StudentClassRelation.class)
+                        .select(StudentClassRelation::getStudentId)
+                        .eq(StudentClassRelation::getClassId, classId),
+                StudentClassRelation::getStudentId
+        );
+        List<UserVo> userVo;
+        if (CollUtil.isEmpty(userIds)) {
+            userVo = ListUtil.empty();
+        } else {
+            List<SysUser> users = Db.listByIds(userIds, SysUser.class);
+            userVo = BeanUtil.copyToList(users, UserVo.class);
+        }
+        return R.success(userVo);
+    }
+
+
 
 }

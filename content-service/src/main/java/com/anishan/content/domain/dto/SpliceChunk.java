@@ -31,8 +31,4 @@ public class SpliceChunk {
     @ApiModelProperty("文件名")
     private String fileName;
 
-    @NotNull
-    @ApiModelProperty("父文件夹Id")
-    private Long parentId;
-
 }

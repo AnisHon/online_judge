@@ -48,5 +48,4 @@ public class FileInfoController {
         return R.success(b);
     }
 
-
 }

@@ -73,7 +73,7 @@
       </el-form>
       <template #footer>
         <el-button type="primary" @click="submit" >确 定</el-button>
-        <el-button @click="open = false">取 消</el-button>
+        <el-button @click="() => open = false">取 消</el-button>
       </template>
     </el-dialog>
   </div>
@@ -87,16 +87,16 @@ import {
   type ContestView,
   debouncedGetContest,
   debouncedIsJoined, debouncedJoin,
-  type JoinContestRequest
+  type JoinContestRequest, type PageContest
 } from "@/api/contest";
 import {reactive, ref} from "vue";
-import type {PagedType} from "@/api/pagedType";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {Calendar, Clock} from "@element-plus/icons-vue";
 import {authTagType, authText, differ, isContestOver, isNotStart} from "@/utils/contest";
 import {useRouter} from "vue-router";
 import {formatDate} from "compatx";
 import {ElNotification} from "element-plus";
+import type {IdType} from "@/api/common.ts";
 
 
 const router = useRouter();
@@ -106,22 +106,23 @@ const list = reactive<ContestView[]>([]);
 const open = ref(false);
 
 const total = ref(0);
-const page = reactive<PagedType>({
+const page = reactive<PageContest>({
   pageSize: 10,
   currentPage: 1,
+  type: 'CONTEST'
 });
 
 const form = reactive<JoinContestRequest>({
-  contestId: -1,
+  contestId: '',
   password: undefined
 })
 
-const enter = (contestId: number) => {
+const enter = (contestId: IdType) => {
 
   router.push({name: "contest-problems", params: {id: contestId}});
 }
 
-const {isLoading, loading, get} = debouncedGetContest(page, (data) => {
+const {isLoading, loading, get} = debouncedGetContest(page,(data) => {
   total.value = data.totalRecords;
   list.length = 0;
   list.push(...data.data);

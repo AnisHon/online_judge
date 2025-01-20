@@ -4,9 +4,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anishan.problem.mapper.UserContestMapper">
 
-    <resultMap id="BaseResultMap" type="com.anishan.problem.domain.entity.UserContestRelation">
-            <id property="userId" column="user_id" jdbcType="BIGINT"/>
-            <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
-    </resultMap>
+    <insert id="insertBatchIgnore">
+        <foreach collection="relations" item="relation" separator=";">
+            insert ignore into user_contest(user_id, contest_id) values (#{relation.userId}, #{relation.contestId})
+        </foreach>
+    </insert>
 
 </mapper>
