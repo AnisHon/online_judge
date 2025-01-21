@@ -257,15 +257,20 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
-    public boolean getStatus(Long userId, String contestId) {
+    public boolean getStatus(Long userId, Long contestId) {
         LocalDateTime now = LocalDateTimeUtil.now();
+
         Contest contest = this.getById(contestId);
         SupplementContest supplementContest = Db.getOne(
-                Wrappers
-                        .lambdaQuery(SupplementContest.class)
+                Wrappers.lambdaQuery(SupplementContest.class)
                         .eq(SupplementContest::getContestId, contestId)
                         .eq(SupplementContest::getUserId, userId)
         );
+        boolean joined = isUserJoined(contestId, userId);
+        // 没参加
+        if (!joined) {
+            return false;
+        }
 
         // 当前日期是否早于结束日期
         boolean status = now.isBefore(contest.getEndTime());

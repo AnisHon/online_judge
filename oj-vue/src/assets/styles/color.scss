@@ -4,6 +4,7 @@
   --regular-text: #606266;
   --darker-fill: #E6E8EB;
   --brand-color: #409EFF;
+  --darker-border: #CDD0D6;
 }
 
 html.dark {
@@ -11,9 +12,24 @@ html.dark {
   --darker-fill: #424243;
   --regular-text: #CFD3DC;
   --brand-color: #409EFF;
+  --darker-border: #636466;
 }
 
 
 $table-header-color: var(--el-fill-color-dark);
 $table-row-color: var(--el-fill-color-extra-light);
-$table-header-text-color: var(--el-text-color-primary)
+$table-header-text-color: var(--el-text-color-primary);
+
+$darker-border-color: var(--el-border-color-darker);
+$dark-border-color: var(--el-border-color-dark);
+$base-border-color: var(--el-border-color);
+$light-border-color: var(--el-border-color-light);
+$lighter-border-color: var(--el-border-color-lighter);
+$extra-light-border-color: var(--el-border-color-extra-light);
+
+
+$primary-text-color: var(--el-text-color-primary);
+$regular-text-color: var(--el-text-color-regular);
+$secondary-text-color: var(--el-text-color-secondary);
+$placeholder-text-color: var(--el-text-color-placeholder);
+$disabled-text-color: var(--el-text-color-disabled);

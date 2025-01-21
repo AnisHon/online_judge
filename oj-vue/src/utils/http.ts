@@ -181,6 +181,25 @@ export const removeResultNotify = (result: boolean | undefined, successMsg = "�
     resultNotify(result, successMsg, errorMsg);
 }
 
+export const getFormData = <T> (object: T): FormData => {
+    const formData = new FormData();
+    Object.keys(object as object).forEach((key) => {
+
+        const value = object[key as keyof object];
+
+        if (value === undefined || value === null) {
+            return;
+        }else if(Array.isArray(value)) {
+            (<Array<any>>value).forEach((subValue, i) => {
+                formData.append(key + `[${i}]`, subValue)
+            })
+        } else {
+            formData.append(key, value);
+        }
+    })
+    return formData;
+}
+
 
 // 导出封装的方法
 export {

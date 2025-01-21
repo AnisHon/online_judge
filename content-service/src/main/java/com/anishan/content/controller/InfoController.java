@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/info")
@@ -32,16 +32,13 @@ public class InfoController {
     @ApiOperation("剩余空间/总内存 free total")
     @GetMapping("/free")
 //    @PreAuthorize("hasAuthority('content:info')")
-    public R<Map<String, Long>> free() {
-        R<Map<String, Long>> result = R.withMap();
-        Map<String, Long> data = result.getData();
+    public R<HashMap<String, Integer>> disk() {
+        HashMap<String, Integer> data = new HashMap<>();
 
-        data.put("free", 100L);
-        data.put("total", 500L);
-
-        return result;
+        data.put("free", 100);
+        data.put("total", 500);
+        return R.success(data);
     }
-
 
 
 }

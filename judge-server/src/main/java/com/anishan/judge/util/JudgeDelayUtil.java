@@ -2,6 +2,7 @@ package com.anishan.judge.util;
 
 import com.anishan.judge.config.JudgeConfig;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ public class JudgeDelayUtil {
     private static JudgeConfig judgeConfig;
 
 
+    @Autowired
     public JudgeDelayUtil(StringRedisTemplate stringRedisTemplate, JudgeConfig judgeConfig) {
         JudgeDelayUtil.judgeConfig = judgeConfig;
         JudgeDelayUtil.stringRedisTemplate = stringRedisTemplate;

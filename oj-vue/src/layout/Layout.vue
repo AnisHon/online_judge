@@ -4,21 +4,22 @@
       <el-header class="header" >
         <MenuBar/>
       </el-header>
-      <el-main ref="elMainRef" id="main-box" style="box-sizing: border-box; height: var(--content-height);">
-        <div>
-          <router-view v-slot="{Component}">
+      <el-scrollbar height="var(--content-height)">
+        <el-main ref="elMainRef" id="main-box" style="box-sizing: border-box;">
+            <div>
+              <router-view v-slot="{Component}">
 
-            <transition name="el-zoom-in-top" mode="out-in">
-              <keep-alive include="Home,ProblemSet,Contest,List,Homework,Solution">
-                <component :is="Component" />
-              </keep-alive>
+                <transition name="el-zoom-in-top" mode="out-in">
+                  <keep-alive include="Home,ProblemSet,Contest,List,Homework,Solution">
+                    <component :is="Component" />
+                  </keep-alive>
 
-            </transition>
+                </transition>
 
-          </router-view>
-        </div>
-
-      </el-main>
+              </router-view>
+            </div>
+        </el-main>
+      </el-scrollbar>
     </el-container>
 
 

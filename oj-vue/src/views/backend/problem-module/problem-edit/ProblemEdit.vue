@@ -85,7 +85,7 @@
     <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip/>
-      <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
+      <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" show-overflow-tooltip/>
       <el-table-column label="问题描述" align="center" prop="description" v-if="columns[2].visible" show-overflow-tooltip />
 
       <el-table-column label="问题来源" align="center" prop="source" v-if="columns[3].visible" />
@@ -100,7 +100,7 @@
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[6].visible" />
-      <el-table-column label="提示" width="60" align="center" prop="hint" v-if="columns[7].visible" />
+      <el-table-column label="提示" width="60" align="center" prop="hint" v-if="columns[7].visible" show-overflow-tooltip />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
@@ -126,7 +126,12 @@
                   <el-dropdown-item command="handleCard" icon="Postcard"
                   >设置标签</el-dropdown-item>
                 </div>
+                <div v-has="'problem:problem:edit'" >
+                  <el-dropdown-item command="handleCase" icon="UploadFilled"
+                  >设置例题</el-dropdown-item>
+                </div>
               </el-dropdown-menu>
+
             </template>
 
           </el-dropdown>
@@ -219,6 +224,7 @@ import {UploadFilled} from "@element-plus/icons-vue";
 import type {UploadAjaxError} from "element-plus/es/components/upload/src/ajax";
 import type {AjaxResult} from "@/utils/http";
 import type {IdType} from "@/api/common.ts";
+import CaseEdit from "@/views/backend/problem-module/problem-edit/case-edit/CaseEdit.vue";
 
 const router = useRouter();
 
@@ -241,6 +247,8 @@ const resetQuery = () => {
 
   getList();
 };
+
+const caseDialogRef = ref<typeof CaseEdit>();
 
 const uploadRef = ref<UploadInstance>();
 const showSearch = ref(true);
@@ -429,11 +437,11 @@ const manageTag = (id: IdType) => {
 }
 
 const handleCommand = (command: string, row: ProblemView) => {
-
-  if (command === 'handleCard') {
-    manageTag(row.problemId);
-    currentProblemId.value = row.problemId;
+  const map: Record<string, Function> = {
+    "handleCase": () => {router.push({name: 'case-edit', params: {problemId: row.problemId}})},
+    "handleCard": () => {manageTag(row.problemId);currentProblemId.value = row.problemId;}
   }
+  map[command]();
 }
 
 const getTag = () => {

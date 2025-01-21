@@ -1,6 +1,8 @@
 package com.anishan.api.client.problem.domain.vo;
 
 import com.anishan.commons.enumeration.ValidationGroup;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,6 +18,7 @@ import java.math.BigDecimal;
 public class OjProblemCaseVo implements Serializable {
 
     @ApiModelProperty("主键id")
+    @JsonSerialize(using = ToStringSerializer.class)
     @NotNull(groups = {ValidationGroup.Update.class})
     private Long caseId;
 
@@ -30,5 +33,11 @@ public class OjProblemCaseVo implements Serializable {
     @Min(value = 0, groups = {ValidationGroup.Insert.class})
     @ApiModelProperty("答对的分数")
     private BigDecimal score;
+
+    @ApiModelProperty("文件大小")
+    private Long inputSize;
+
+    @ApiModelProperty("文件大小")
+    private Long outputSize;
 
 }

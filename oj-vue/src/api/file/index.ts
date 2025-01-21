@@ -183,7 +183,7 @@ export const preview = (path: string) => {
     window.open(`${baseURL}/file?path=${path}`);
 }
 
-const saveAs_ = (text: any, name: string, opts?: any) => {
+export const saveAs_ = (text: any, name: string, opts?: any) => {
     saveAs(text, name, opts);
 }
 

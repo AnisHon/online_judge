@@ -22,7 +22,7 @@ public class SubmitLog implements Serializable {
     /**
      * 提交ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long submitId;
 
     /**

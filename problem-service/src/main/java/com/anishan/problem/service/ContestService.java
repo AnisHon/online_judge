@@ -50,7 +50,7 @@ public interface ContestService extends IService<Contest> {
 
     BigDecimal getScore(Long contestId, Long ProblemId);
 
-    boolean getStatus(Long userId, String contestId);
+    boolean getStatus(Long userId, Long contestId);
 
     boolean addLateSubmission(SupplementContest supplementContest);
 

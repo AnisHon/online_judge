@@ -139,6 +139,17 @@ export const dynamicRoute: RouteRecordRaw = {
                 component: 'Supplement',
                 noKeepAlive: true,
             }
+        },
+        {
+            path: 'problem-module/problem-edit/case-edit/:problemId',
+            name: 'case-edit',
+            component: () => import("@/views/backend/problem-module/problem-edit/case-edit/CaseEdit.vue"),
+            meta: {
+                has: ['problem:problem:edit', 'problem:problem:list'],
+                name: "题例编辑",
+                component: 'CaseEdit',
+                noKeepAlive: true,
+            }
         }
     ]
 }

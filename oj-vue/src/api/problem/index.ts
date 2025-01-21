@@ -8,7 +8,6 @@ import {remove, update} from "@/utils/simpleCRUD";
 import {type LogSubmit} from "@/api/problem/judge";
 import type {IdType} from "@/api/common.ts";
 
-
 // 1 OJ, 2 FILL, 3 CHOICE
 export enum ProblemType {
     OJ = 1,
@@ -21,10 +20,6 @@ enum ProblemAuth {
     PUBLIC = 1,
     CONTEST
 }
-
-
-
-
 
 // 难度 (0 未分类, 1 简单, 2 中等, 3 困难),可用值:0,1,2,3
 export enum Difficulty {
@@ -127,8 +122,6 @@ interface AdminQueryProblem extends PagedType{
     type?: ProblemType;
 }
 
-
-
 interface Answer {
     answerId?: IdType;
     answerText?: string;
@@ -139,8 +132,11 @@ interface Answer {
 
 interface OjCase {
     caseId?: IdType;
+    problemId?: IdType;
     input?: string;
     output?: string;
+    inputFile?: File;
+    outputFile?: File;
     score?: number;
 }
 
@@ -217,7 +213,6 @@ const debouncedAdminGetProblem = (id: IdType | undefined, success: successCallba
     return {loading, isLoading, get};
 }
 
-
 async function removeProblems(ids: IdType | IdType[]) {
     await remove(ids, "/problem-api/problem");
 }
@@ -250,7 +245,6 @@ const debouncedUpdateProblem = (form: ProblemForm, success: successCallback<void
     }, 1000);
     return {loading, isLoading, update};
 }
-
 
 async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
     const param: ProblemParam = {currentPage: 0, pageSize: 0}
@@ -295,7 +289,6 @@ const debouncedGetDetailProblem = (success: successCallback<ProblemDetailView>) 
     }, 500);
     return {get, isLoading, loading}
 }
-
 
 export type {
     AdminQueryProblem,

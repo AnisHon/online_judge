@@ -5,6 +5,7 @@ import com.anishan.commons.domain.R;
 import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.dto.TestRequest;
 import com.anishan.problem.domain.vo.ProblemJudgeResult;
+import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.JudgeService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
@@ -22,13 +23,22 @@ public class JudgeController {
 
 
     private final JudgeService judgeService;
+    private final ContestService contestService;
 
     @PostMapping
     @ApiOperation("判题")
-    public R<ProblemJudgeResult> judge(
+    public R<Object> judge(
             @RequestHeader("user-id") Long userId,
             @RequestBody @Validated JudgeRequest judgeRequest
     ) {
+
+        Long contestId = judgeRequest.getContestId();
+        if (contestId != null) {
+            boolean status = contestService.getStatus(userId, contestId);
+            if (!status) {
+                return R.badRequest("已经不能交卷了");
+            }
+        }
 
         ProblemJudgeResult judge = judgeService.judge(userId, judgeRequest);
         return R.success(judge);

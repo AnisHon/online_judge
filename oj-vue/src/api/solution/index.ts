@@ -151,3 +151,8 @@ export const lowDown = async (id: IdType): Promise<boolean> => {
     const {data} = await put<undefined, boolean>("/problem-api/solution/admin/lowDown/" + id, undefined);
     return data;
 }
+
+export const recentSolution = async () => {
+    const {data} = await get<Solution[]>("/problem-api/solution/recent");
+    return data;
+}

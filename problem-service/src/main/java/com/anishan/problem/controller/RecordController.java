@@ -63,8 +63,21 @@ public class RecordController {
             @RequestHeader("user-id") Long userId,
             @RequestBody @Validated JudgeRequest judgeRequest
     ) {
-        Long problemId = judgeRequest.getProblemId();
+        Long contestId = judgeRequest.getContestId();
 
+        if (contestId == null) {
+            return R.success(false);
+        }
+
+        boolean status = contestService.getStatus(userId, contestId);
+
+        // 不能提交了
+        if (!status) {
+            return R.success(false);
+        }
+
+
+        Long problemId = judgeRequest.getProblemId();
         ProblemType type = Db.getById(problemId, Problem.class).getType();
 
 
@@ -75,7 +88,7 @@ public class RecordController {
         } else  {
             Records records = new Records(
                     null,
-                    judgeRequest.getContestId(),
+                    contestId,
                     userId,
                     problemId,
                     null,

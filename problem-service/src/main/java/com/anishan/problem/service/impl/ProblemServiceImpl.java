@@ -153,7 +153,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
      * @param in 是输入还是输出（true->.in false->.out）
      * @return OSS路径
      */
-    private String getPath(Long problemId, Long caseId, boolean in) {
+    private static String getPath(Long problemId, Long caseId, boolean in) {
         return problemId + "/" + caseId + "." + (in ? "in" : "out");
     }
 

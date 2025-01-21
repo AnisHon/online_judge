@@ -1,137 +1,139 @@
 <template>
   <div v-loading="problemIsLoading">
     <el-row justify="center" v-if="problem !== undefined" :gutter="20">
-      <el-col class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
-        <div class="header">
-          <h1>{{ problem?.problemVo.title }}</h1>
-          <div class="tags">
-            <el-space v-if="problemType === ProblemType.OJ">
-              <el-tag type="danger">
-                难度: {{ difficulty }}
-              </el-tag>
-              <el-tag type="info">
-                空间限制: {{ memoryLimit }}MiB
-              </el-tag>
-              <el-tag type="info">
-                时间限制: {{ timeLimit }}ms
-              </el-tag>
-              <el-tag type="info">
-                栈空间限制: {{ stackLimit }}MiB
-              </el-tag>
-            </el-space>
-          </div>
-          <div class="tags">
-            <el-space>
-              <el-tag>
-                {{ problem?.problemVo.source }}
-              </el-tag>
-              <el-tag>
-                {{ stringProblemType }}
-              </el-tag>
-              <el-tag v-for="item of problem?.tagVo" :key="item.tagId" :color="item.tagColor">
+
+      <el-col style="padding: 0" class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
+        <el-scrollbar style="padding: 0 10px" height="var(--in-main-content-height)">
+          <div class="header">
+            <h1>{{ problem?.problemVo.title }}</h1>
+            <div class="tags">
+              <el-space v-if="problemType === ProblemType.OJ">
+                <el-tag type="danger">
+                  难度: {{ difficulty }}
+                </el-tag>
+                <el-tag type="info">
+                  空间限制: {{ memoryLimit }}MiB
+                </el-tag>
+                <el-tag type="info">
+                  时间限制: {{ timeLimit }}ms
+                </el-tag>
+                <el-tag type="info">
+                  栈空间限制: {{ stackLimit }}MiB
+                </el-tag>
+              </el-space>
+            </div>
+            <div class="tags">
+              <el-space>
+                <el-tag>
+                  {{ problem?.problemVo.source }}
+                </el-tag>
+                <el-tag>
+                  {{ stringProblemType }}
+                </el-tag>
+                <el-tag v-for="item of problem?.tagVo" :key="item.tagId" :color="item.tagColor">
                 <span class="common-tag-text-color">
                   {{ item.tagName }}
                 </span>
-              </el-tag>
-            </el-space>
-          </div>
-
-        </div>
-        <el-tabs
-            v-model="currentTab"
-            type="card"
-            class="demo-tabs"
-        >
-          <el-tab-pane
-              name="detail"
-          >
-            <template #label>
-              <el-icon><Document /></el-icon>
-              <span>&nbsp;题目</span>
-            </template>
-            <div class="content">
-              <h2>题目描述</h2>
-              <p class="description">
-                <markdown-preview :text="description" />
-              </p>
-
-              <div class="detail-problem">
-                <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
-                <fill-blank-problem v-model="judgeForm"  v-else-if="isFillProblem" />
-                <choice-choose-problem :problem-view="problem" v-model="judgeForm" v-else-if="isChoiceProblem" />
-              </div>
-
-              <div v-if="!isOjProblem">
-                <div class="submit">
-                  <el-button type="success" :disabled="isShowResult || disableSubmit" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
-                </div>
-
-
-
-              </div>
-
-
-              <div class="hint" v-if="hint">
-                <h2>提示</h2>
-                <div>
-                  <markdown-preview :text="hint" />
-                </div>
-              </div>
-
-              <div class="result" v-if="isShowResult && !isOjProblem">
-                <ProblemResult :type="problemType" :result="judgeResult"/>
-              </div>
-
+                </el-tag>
+              </el-space>
             </div>
-          </el-tab-pane>
 
-          <el-tab-pane
-              name="log"
-              v-if="isOjProblem"
+          </div>
+          <el-tabs
+              v-model="currentTab"
+              type="card"
+              class="demo-tabs"
           >
-            <template #label>
-              <el-icon><ChatLineSquare /></el-icon>
-              <span>&nbsp;提交记录</span>
-            </template>
-            <el-table :data="submitLogs">
-              <el-table-column prop="submitId" label="提交ID"/>
-              <el-table-column prop="userId" label="用户ID"/>
-              <el-table-column prop="problemId" label="题目ID"/>
-              <el-table-column prop="language" label="语言"/>
-              <el-table-column prop="status" label="结果">
-                <template v-slot="scope">
-                  <el-tooltip content="AC 通过 WA 答案错误 CE 编译错误 RE 运行时错误 TLE 超时 MLE 内存过限">
-                    <el-tag type="info" v-if="scope.row.status === OJResult.QUEUE">排队中</el-tag>
-                    <el-tag type="primary" v-else-if="scope.row.status === OJResult.COMPILING">编译中</el-tag>
-                    <el-tag type="success" v-else-if="scope.row.status === OJResult.ACCEPT">AC</el-tag>
-                    <el-tag type="danger" v-else>{{ scope.row.status }}</el-tag>
-                  </el-tooltip>
-                </template>
-              </el-table-column >
-              <el-table-column prop="time" label="时间(ms)"/>
-              <el-table-column prop="memory" label="内存(MiB)"/>
-            </el-table>
-          </el-tab-pane>
+            <el-tab-pane
+                name="detail"
+            >
+              <template #label>
+                <el-icon><Document /></el-icon>
+                <span>&nbsp;题目</span>
+              </template>
+              <div class="content">
+                <h2>题目描述</h2>
+                <p class="description">
+                  <markdown-preview :text="description" />
+                </p>
 
-          <el-tab-pane
-              name="solution"
-              v-if="!contestId"
-              lazy
-          >
-            <template #label>
-              <el-icon><Notebook /></el-icon>
-              <span>&nbsp;题解</span>
-            </template>
+                <div class="detail-problem">
+                  <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
+                  <fill-blank-problem v-model="judgeForm"  v-else-if="isFillProblem" />
+                  <choice-choose-problem :problem-view="problem" v-model="judgeForm" v-else-if="isChoiceProblem" />
+                </div>
 
-            <solutions
-                v-model:param="solutionParam"
-                :scroll-element="contentRef?.$el"
-            />
+                <div v-if="!isOjProblem">
+                  <div class="submit">
+                    <el-button type="success" :disabled="isShowResult || disableSubmit" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
+                  </div>
 
-          </el-tab-pane>
 
-        </el-tabs>
 
+                </div>
+
+
+                <div class="hint" v-if="hint">
+                  <h2>提示</h2>
+                  <div>
+                    <markdown-preview :text="hint" />
+                  </div>
+                </div>
+
+                <div class="result" v-if="isShowResult && !isOjProblem">
+                  <ProblemResult :type="problemType" :result="judgeResult"/>
+                </div>
+
+              </div>
+            </el-tab-pane>
+
+            <el-tab-pane
+                name="log"
+                v-if="isOjProblem"
+            >
+              <template #label>
+                <el-icon><ChatLineSquare /></el-icon>
+                <span>&nbsp;提交记录</span>
+              </template>
+              <el-table :data="submitLogs">
+                <el-table-column prop="submitId" label="提交ID" align="center" show-overflow-tooltip/>
+                <el-table-column prop="userId" label="用户ID" align="center" show-overflow-tooltip/>
+                <el-table-column prop="problemId" label="题目ID" align="center" show-overflow-tooltip/>
+                <el-table-column prop="language" label="语言" align="center" />
+                <el-table-column prop="status" label="结果" align="center">
+                  <template v-slot="scope">
+                    <el-tooltip content="AC 通过 WA 答案错误 CE 编译错误 RE 运行时错误 TLE 超时 MLE 内存过限">
+                      <el-tag type="info" v-if="scope.row.status === OJResult.QUEUE">排队中</el-tag>
+                      <el-tag type="primary" v-else-if="scope.row.status === OJResult.COMPILING">编译中</el-tag>
+                      <el-tag type="success" v-else-if="scope.row.status === OJResult.ACCEPT">AC</el-tag>
+                      <el-tag type="danger" v-else>{{ scope.row.status }}</el-tag>
+                    </el-tooltip>
+                  </template>
+                </el-table-column >
+                <el-table-column prop="time" label="时间(ms)" align="center"/>
+                <el-table-column prop="memory" label="内存(MiB)" align="center"/>
+              </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane
+                name="solution"
+                v-if="!contestId"
+                lazy
+            >
+              <template #label>
+                <el-icon><Notebook /></el-icon>
+                <span>&nbsp;题解</span>
+              </template>
+
+              <solutions
+                  v-model:param="solutionParam"
+                  :scroll-element="contentRef?.$el"
+              />
+
+            </el-tab-pane>
+
+          </el-tabs>
+        </el-scrollbar>
       </el-col>
 
 
@@ -153,8 +155,10 @@
         />
         <el-row ref="testInputRowRef" :gutter="20" style="max-height: 80px">
           <el-col :span="12">
-            <h4 style="margin: 0">标准输入</h4>
-            <el-input type="textarea" v-model="stdin" />
+            <el-scrollbar>
+              <h4 style="margin: 0">标准输入</h4>
+              <el-input type="textarea" v-model="stdin" />
+            </el-scrollbar>
           </el-col>
           <el-col :span="12">
             <h4 style="margin: 0">输出</h4>
@@ -440,6 +444,10 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
     offSse(SseEvent.UPDATE_JUDGE_STATE, handler);
     setTimeout(instance.close, 1000);
     finish();
+    if (!isTest) {
+      getLogs()
+      openLog();
+    }
     if (judgeMessage.state != OJResult.ACCEPT) {
       openErrorDialog.value = true;
     }
@@ -656,11 +664,6 @@ initSSE();
 
 <style scoped>
 
-.problem-content {
-  padding: 0 20px;
-  height: var(--in-main-content-height);
-  overflow: auto;
-}
 
 .submit {
   display: flex;

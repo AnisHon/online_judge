@@ -1,5 +1,8 @@
 package com.anishan.problem.controller;
 
+import com.anishan.api.client.judgeserver.domain.OjProblemCaseDto;
+import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
+import com.anishan.api.util.CacheUtil;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ValidationGroup;
@@ -10,9 +13,9 @@ import com.anishan.problem.domain.vo.AdminDetailProblem;
 import com.anishan.problem.domain.vo.DetailProblem;
 import com.anishan.problem.domain.vo.ProblemVo;
 import com.anishan.problem.domain.vo.TaggedProblemVo;
+import com.anishan.problem.service.OjProblemCaseService;
 import com.anishan.problem.service.ProblemService;
 import com.anishan.problem.service.TagService;
-import com.anishan.api.util.CacheUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -35,7 +39,7 @@ public class ProblemController {
     private final ProblemService problemService;
     private final TagService tagService;
 
-    private final CacheUtil cacheUtil;
+    private final OjProblemCaseService ojProblemCaseService;
 
     @PostMapping("/upload")
     @ApiOperation("上传题目")
@@ -43,6 +47,37 @@ public class ProblemController {
     public R<Boolean> upload(@RequestParam("file") MultipartFile[] files) {
         boolean b = problemService.saveMultiParts(files);
         return R.success(b);
+    }
+
+    @GetMapping("/case/{problemId}")
+    @ApiOperation("列出题目所有的测试用例")
+    @PreAuthorize("hasAuthority('problem:problem:list')")
+    public R<List<OjProblemCaseVo>> listCases(@PathVariable Long problemId) {
+        List<OjProblemCaseVo> ojProblemCases = ojProblemCaseService.getCaseVoById(problemId);
+        return R.success(ojProblemCases);
+    }
+
+    @PostMapping("/case")
+    @ApiOperation("添加测试用例")
+    @PreAuthorize("hasAuthority('problem:problem:edit')")
+    public R<Boolean> uploadCase(OjProblemCaseDto ojProblemCase) {
+        boolean b = ojProblemCaseService.addOjProblemCase(ojProblemCase);
+        return R.success(b);
+    }
+
+    @DeleteMapping("/case/{caseId}")
+    @ApiOperation("删除")
+    @PreAuthorize("hasAuthority('problem:problem:edit')")
+    public R<Boolean> deleteCase(@PathVariable List<Long> caseId) {
+        boolean b = ojProblemCaseService.removeCase(caseId);
+        return R.success(b);
+    }
+
+    @GetMapping("/download")
+    @ApiOperation("下载题例")
+    @PreAuthorize("hasAuthority('problem:problem:list')")
+    public void download(@NotNull String path, HttpServletResponse response) {
+        ojProblemCaseService.download(path, response);
     }
 
     @GetMapping("/recentProblems/{limit}")
@@ -143,7 +178,7 @@ public class ProblemController {
     @PreAuthorize("hasAuthority('problem:problem:remove')")
     public R<Boolean> removeBatchProblem(@PathVariable @NotEmpty List<Long> ids) {
 
-        cacheUtil.clearAllCaches("problem:detail:", ids);
+        CacheUtil.clearAllCaches("problem:detail:", ids);
 
         boolean b = problemService.removeByIds(ids);
         problemService.removeCaseFiles(ids);
