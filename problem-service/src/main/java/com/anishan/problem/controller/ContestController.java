@@ -1,6 +1,8 @@
 package com.anishan.problem.controller;
 
+import cn.hutool.core.date.LocalDateTimeUtil;
 import com.anishan.api.client.user.domain.vo.UserVo;
+import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -11,6 +13,7 @@ import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
 import com.anishan.problem.domain.entity.SupplementContest;
 import com.anishan.problem.domain.entity.UserContestRelation;
+import com.anishan.problem.domain.entity.UserSubmit;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
@@ -46,6 +49,8 @@ public class ContestController {
 
     @GetMapping("/{id}")
     @ApiOperation("通过id获取比赛")
+
+
 
     public R<ContestVo> getContestById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
         ContestVo clazz = contestService.getContestById(id);
@@ -118,6 +123,24 @@ public class ContestController {
     public R<Boolean> getStatus(@RequestHeader("user-id") Long userId, @PathVariable Long contestId) {
         boolean b = contestService.getStatus(userId, contestId);
         return R.success(b);
+    }
+
+    @PostMapping("/submit/{contestId}")
+    @ApiOperation("交卷")
+    @Transactional
+    public R<Object> submit(@PathVariable Long contestId) {
+        Long userId = AuthUtil.getUserId();
+        boolean status = contestService.getStatus(userId, contestId);
+        if (!status) {
+            return R.badRequest("不可以交卷");
+        }
+        boolean save = Db.save(
+                new UserSubmit()
+                        .setContestId(contestId)
+                        .setUserId(userId)
+                        .setSubmitTime(LocalDateTimeUtil.now())
+        );
+        return R.success(save);
     }
 
     @PostMapping("/lateSubmission")

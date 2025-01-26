@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -99,6 +100,7 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     @Override
     public boolean addProblemList(List<ProblemListRelationDto> relations) {
         List<ProblemProblemListRelation> list = BeanUtil.copyToList(relations, ProblemProblemListRelation.class);
+        list.forEach(x -> x.setScore(BigDecimal.TEN));
 
         return problemProblemListService.saveBatch(list);
 

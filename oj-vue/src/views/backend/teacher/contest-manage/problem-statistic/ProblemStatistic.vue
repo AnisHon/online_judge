@@ -8,16 +8,16 @@
           </el-text>
         </el-col>
         <el-col :span="6">
-          <div class="absoluteCenter">
-            <el-progress
-                type="circle"
-                :percentage="averageCorrect"
-                :width="150"
-            />
-            <el-text type="info" size="large" >
-              <h3>平均正确率</h3>
-            </el-text>
-          </div>
+<!--          <div class="absoluteCenter">-->
+<!--            <el-progress-->
+<!--                type="circle"-->
+<!--                :percentage="averageCorrect"-->
+<!--                :width="150"-->
+<!--            />-->
+<!--            <el-text type="info" size="large" >-->
+<!--              <h3>平均正确率</h3>-->
+<!--            </el-text>-->
+<!--          </div>-->
         </el-col>
 
         <el-col :span="6">
@@ -56,9 +56,9 @@
             <el-text type="success" size="large">{{ scope.row.rightNum }}</el-text>
           </template>
         </el-table-column>
-        <el-table-column label="错误人数" prop="wrongNum" align="center">
+        <el-table-column label="错误人数（错误+未交）" prop="wrongNum" align="center">
           <template v-slot="scope">
-            <el-text type="danger" size="large">{{ scope.row.wrongNum }}</el-text>
+            <el-text type="danger" size="large">{{ scope.row.wrongNum + scope.row.absentNum }}</el-text>
           </template>
         </el-table-column>
         <el-table-column label="未做人数" prop="absentNum" align="center">

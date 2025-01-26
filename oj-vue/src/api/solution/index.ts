@@ -1,5 +1,5 @@
 import type {PagedResponse, SortedPagedType} from "@/api/pagedType.ts";
-import {type finallyCallback, get, post, put, query, type successCallback} from "@/utils/http.ts";
+import {type finallyCallback, get, post, put, query, resultNotify, type successCallback} from "@/utils/http.ts";
 import {remove} from "@/utils/simpleCRUD.ts";
 import {ElNotification} from "element-plus";
 import __ from "lodash";
@@ -64,11 +64,7 @@ export const debouncedAddSolution = (success: successCallback<boolean>, final: f
 
 const addSolution = async (form: SolutionForm) => {
     const {data} = await post<SolutionForm, boolean>("/problem-api/solution", form);
-    if (data) {
-        ElNotification.success("发送了一个题解");
-    } else {
-        ElNotification.warning("题解发送失败");
-    }
+    resultNotify(data, "发送了一个题解", "题解发送失败")
     return data;
 }
 
@@ -82,11 +78,7 @@ export const debouncedAddSolutionAdmin = (success: successCallback<boolean>, fin
 
 const addSolutionAdmin = async (form: SolutionForm) => {
     const {data} = await post<SolutionForm, boolean>("/problem-api/solution/admin", form);
-    if (data) {
-        ElNotification.success("发送了一个题解");
-    } else {
-        ElNotification.warning("题解发送失败");
-    }
+    resultNotify(data, "发送了一个题解", "题解发送失败")
     return data;
 }
 
@@ -100,11 +92,7 @@ export const debouncedEditSolution = (success: successCallback<boolean>, final: 
 
 const editSolution = async (form: SolutionForm) => {
     const {data} = await put<SolutionForm, boolean>("/problem-api/solution", form);
-    if (data) {
-        ElNotification.success("编辑了一个题解");
-    } else {
-        ElNotification.warning("题解编辑失败");
-    }
+    resultNotify(data, "编辑了一个题解", "题解编辑失败")
     return data;
 }
 
@@ -118,11 +106,7 @@ export const debouncedEditSolutionAdmin = (success: successCallback<boolean>, fi
 
 const editSolutionAdmin = async (form: SolutionForm) => {
     const {data} = await put<SolutionForm, boolean>("/problem-api/solution/admin", form);
-    if (data) {
-        ElNotification.success("编辑了一个题解");
-    } else {
-        ElNotification.warning("题解编辑失败");
-    }
+    resultNotify(data, "编辑了一个题解", "题解编辑失败")
     return data;
 }
 

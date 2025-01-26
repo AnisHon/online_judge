@@ -1,11 +1,10 @@
 <template>
   <splitpanes class="app-container">
     <pane min-size="10" max-size="30" v-loading="isLoading"  ref="problemsPane" class="problem-list" >
-      <el-table
+      <el-scrollbar>
+        <el-table
             :data="sortedProblemList"
             ref="tableRef"
-            height="100%"
-            :max-height="maxProblemListHeight"
             @row-click="selectProblem"
             row-class-name="problem-row"
             highlight-current-row
@@ -14,6 +13,26 @@
           <el-table-column label="题目" prop="title"/>
           <el-table-column label="分数" prop="score"/>
         </el-table>
+        <el-button
+            v-if="isContestEnabled"
+            :disabled="!isContestEnabled"
+            type="warning"
+            size="large"
+            style="width: 100%"
+            @click="handIn"
+            plain
+        >提交</el-button>
+        <el-button
+          :disabled="true"
+          type="success"
+          size="large"
+          style="width: 100%"
+          @click="handIn"
+          plain
+          v-else
+        >已交卷</el-button>
+      </el-scrollbar>
+
     </pane>
     <pane>
 
@@ -75,8 +94,8 @@ import type {ProblemInListView} from "@/api/list";
 import {debouncedGetProblems} from "@/api/list/problem.ts";
 import {useRoute} from "vue-router";
 import DetailProblem from "@/components/DetailProblem/DetailProblem.vue";
-import {ElTable} from "element-plus";
-import {type ContestView, fetchContestById, getScore} from "@/api/contest";
+import {ElMessageBox, ElTable} from "element-plus";
+import {type ContestView, fetchContestById, getContestStatus, getScore, handInPaper} from "@/api/contest";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {authTagType, authText, formatDate, isContestOver, isNotStart} from "@/utils/contest";
 
@@ -103,13 +122,15 @@ const contest = ref<ContestView>();
 
 const score = ref<number | null>(null);
 
+const isSubmitted = ref(true);
+
 const sortedProblemList = computed(() => {
   problemList.sort((a, b) => <number>a.problemOrder - <number>b.problemOrder);
   return problemList;
 })
 
 const isContestEnabled = computed(() => {
-  return !isContestOver(contest.value?.endTime) && !isNotStart(contest.value?.startTime);
+  return !isContestOver(contest.value?.endTime) && !isNotStart(contest.value?.startTime) && isSubmitted.value;
 })
 
 const {isLoading, loading, get} = debouncedGetProblems((data) => {
@@ -138,17 +159,31 @@ const selectProblem = (row: ProblemInListView) => {
   currentRow.value = row;
 }
 
+const getStatus = () => {
+  getContestStatus(contestId.value)
+      .then(status => isSubmitted.value = status)
+
+}
 
 const setMaxHeight = () => {
   maxProblemListHeight.value = (<HTMLElement>problemsPane.value?.$el).clientHeight;
 }
 
+// 交卷
+const handIn = () => {
+  ElMessageBox.confirm("您确认要交卷？交卷后无法提交", {cancelButtonText: "取消", confirmButtonText: "确定"})
+      .then(() => {
+        handInPaper(contestId.value)
+        .then(getStatus)
+      }).catch(() => {})
+}
 
 
 // created
 getProblems();
 
-
+// 获取当前是否可以写
+getStatus();
 
 onMounted(() => {
   setMaxHeight();

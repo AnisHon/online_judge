@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 用户提交表
@@ -14,6 +15,7 @@ import lombok.Data;
  */
 @TableName(value ="user_submit")
 @Data
+@Accessors(chain = true)
 public class UserSubmit {
     /**
      * 用户ID

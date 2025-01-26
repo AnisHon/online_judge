@@ -7,6 +7,7 @@ import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.client.problem.client.ProblemInternalClient;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.judge.domain.entity.SubmitLog;
+import com.anishan.judge.judge.Judge;
 import com.anishan.judge.judge.JudgeRun;
 import com.anishan.judge.service.SubmitLogService;
 import com.anishan.judge.util.JudgeNotifyUtil;
@@ -19,6 +20,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -29,6 +32,7 @@ public class JudgeListener {
     private final SubmitLogService submitLogService;
     private final ProblemInternalClient problemInternalClient;
     private final JudgeNotifyUtil judgeNotifyUtil;
+    private final Judge judge;
 
 
     private void logSubmit(JudgeScore judge, JudgeInfo judgeInfo) {
@@ -62,6 +66,12 @@ public class JudgeListener {
         judgeScore.setLanguageId(judgeInfo.getLanguageId());
         judgeScore.setCode(judgeInfo.getCode());
         judgeScore.setLanguageId(judgeInfo.getLanguageId());
+
+
+
+
+
+
     }
 
     @RabbitListener(

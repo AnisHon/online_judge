@@ -1,7 +1,7 @@
 -- ----------------------------
 -- 题目服务的数据库
 -- ----------------------------
-
+drop database if exists db_problem;
 create database db_problem character set utf8mb4;
 use db_problem;
 
@@ -84,11 +84,11 @@ CREATE TABLE oj_problem (
 -- ----------------------------
 drop table if exists oj_problem_case;
 CREATE TABLE oj_problem_case (
-    case_id     bigint(20)  not null                comment '主键id',
-    problem_id  bigint(20)  not null                comment '题目id',
+    case_id     bigint(20)      not null                comment '主键id',
+    problem_id  bigint(20)      not null                comment '题目id',
     input       longtext                            comment '测试样例的输入',
     output      longtext                            comment '测试样例的输出',
-    score       decimal(3, 2) default 0             comment '答对的分数',
+    score       decimal(10, 3)  default 1.00          comment '答对的分数',
     del_flag    boolean default 0 not null          comment '删除标记',
     create_time datetime default now(),
     update_time datetime default now() on update now(),
@@ -109,7 +109,7 @@ CREATE TABLE choice_fill_answers (
     problem_id bigint(20)       not null                comment '题目id',
     answer_text text            default null            comment '选项或填空答案',
     is_correct  bool            default false           comment '是否为正确答案（选择题专用）默认false',
-    score       decimal(3, 2)   default 0 not null      comment '分数',
+    score       decimal(10, 3)  default 1 not null      comment '分数',
     blank_index int             null                    comment '填空题空格索引, 选择题ABCD索引 1表示A',
     del_flag    boolean         default 0 not null      comment '删除标记',
     create_time datetime        default now() not null ,
@@ -143,7 +143,7 @@ CREATE TABLE problem_problem_list (
     list_id         bigint(20)      not null            comment '单子id',
     problem_id      bigint(20)      not null            comment '题目id',
     problem_order   int(11)         not null            comment '题目顺序',
-    score           decimal(4,2)    default 10 not null comment '每道题对应分数',
+    score           decimal(10,3)   default 10 not null comment '每道题对应分数',
     primary key (list_id, problem_id),
     constraint problem_list_problem_id_fk foreign key problem_problem_list(problem_id)
         references problem(problem_id) on delete cascade,
@@ -206,7 +206,7 @@ CREATE TABLE problem_tag (
         references problem(problem_id) on delete cascade,
     constraint problem_tag_tag_id_fk foreign key problem_tag(tag_id)
         references tag(tag_id) on delete cascade
-)ENGINE=InnoDB default charset=ut comment '标签 题目关系表';
+)ENGINE=InnoDB default charset=utf8mb4 comment '标签 题目关系表';
 create index problem_tag_tag_id_idx on problem_tag(tag_id);
 
 -- ----------------------------
@@ -259,7 +259,7 @@ create table records(
     user_id     bigint(20)      not null                 comment '用户ID',
     problem_id  bigint(20)      not null                 comment '题目id',
     status      boolean         not null                 comment '是否正确',
-    score       DECIMAL(3, 2)   null                     comment '最终得分',
+    score       DECIMAL(10, 3)  null                     comment '最终得分',
     answer      json            null                     comment '答案',
     primary key (record_id),
     constraint folder_contest_id_fk foreign key records(contest_id)
@@ -285,9 +285,9 @@ create table contest_records(
     user_id     bigint(20)      not null                 comment '用户ID',
     problem_id  bigint(20)      not null                 comment '题目id',
     status      boolean         not null                 comment '是否正确',
-    score       DECIMAL(3, 2)   null                     comment '最终得分',
+    score       DECIMAL(10, 3)  null                     comment '最终得分',
     primary key (record_id),
-    unique key (record_id, user_id, problem_id),
+    unique key (contest_id, user_id, problem_id),
     constraint contest_records_contest_id_fk foreign key contest_records(contest_id)
         references contest(contest_id) on delete cascade,
     constraint contest_records_problem_id_fk foreign key contest_records(problem_id)

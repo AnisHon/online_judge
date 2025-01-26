@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
+
 
 @Data
 @ApiModel("用户判题信息类")
@@ -23,6 +25,11 @@ public class JudgeInfo {
 
     private Long contestId;
     private Long languageId;
+
+    /**
+     * 题单设置的score
+     */
+    private BigDecimal listScore;
 
     /**
      * 代码

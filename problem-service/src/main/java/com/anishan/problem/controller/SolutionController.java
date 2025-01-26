@@ -21,7 +21,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
+import java.util.Objects;
 
 @Api("题解接口")
 @RestController
@@ -64,17 +66,25 @@ public class SolutionController {
 
     @PostMapping
     @ApiOperation("普通用户发送题解")
-    public R<Boolean> add(@RequestHeader("user-id") Long userId, @Validated @RequestBody DetailSolutionDto detailSolutionDto) {
-        boolean b = solutionExplanationService.add(userId, detailSolutionDto);
-        return R.success(b);
+    public R<Object> add(@RequestHeader("user-id") Long userId, @Validated @RequestBody DetailSolutionDto detailSolutionDto) {
+        try {
+            boolean b = solutionExplanationService.add(userId, detailSolutionDto);
+            return R.success(b);
+        } catch (Exception e) {
+            return R.badRequest("题目不存在");
+        }
     }
 
     @PostMapping("/admin")
     @ApiOperation("管理员发送题解")
     @PreAuthorize("hasAuthority('problem:solution:add')")
-    public R<Boolean> adminAdd(@RequestHeader("user-id") Long userId, @Validated @RequestBody DetailSolutionDto detailSolutionDto) {
-        boolean b = solutionExplanationService.adminAdd(userId, detailSolutionDto);
-        return R.success(b);
+    public R<Object> adminAdd(@RequestHeader("user-id") Long userId, @Validated @RequestBody DetailSolutionDto detailSolutionDto) {
+        try {
+            boolean b = solutionExplanationService.adminAdd(userId, detailSolutionDto);
+            return R.success(b);
+        } catch (Exception e) {
+            return R.badRequest("题目不存在");
+        }
     }
 
     @PutMapping
@@ -135,7 +145,7 @@ public class SolutionController {
 
     @GetMapping("/recent")
     @ApiOperation("最近题解")
-    @Cacheable("problem:solution:recent:")
+    @Cacheable(value = "problem:solution:", key = "'recent'")
     public R<List<SolutionExplanation>> recent() {
         Page<SolutionExplanation> page = Page.of(1, 20);
         LambdaQueryWrapper<SolutionExplanation> queryWrapper = Wrappers.lambdaQuery(SolutionExplanation.class)

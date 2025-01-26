@@ -6,6 +6,7 @@ import com.anishan.problem.domain.entity.ProblemComplete;
 import com.anishan.problem.service.ProblemCompleteService;
 import com.anishan.problem.mapper.ProblemCompleteMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
 * @author anishan
@@ -26,6 +27,7 @@ public class ProblemCompleteServiceImpl extends ServiceImpl<ProblemCompleteMappe
     }
 
     @Override
+    @Transactional
     public boolean finish(Long userId, Long problemId) {
         ProblemComplete problemComplete = new ProblemComplete();
         problemComplete.setUserId(userId);
@@ -33,10 +35,10 @@ public class ProblemCompleteServiceImpl extends ServiceImpl<ProblemCompleteMappe
 
 
         // 忽略主键冲突异常
-        boolean save = false;
-        try {
+        boolean save = true;
+        if (!exists(userId, problemId)) {
             save = this.save(problemComplete);
-        } catch (Exception ignore) {}
+        }
 
         return save;
     }

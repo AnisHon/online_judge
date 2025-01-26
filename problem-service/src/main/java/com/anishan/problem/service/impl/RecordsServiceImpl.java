@@ -7,10 +7,13 @@ import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.ContestAnswerRecords;
 import com.anishan.problem.domain.entity.ContestRecords;
+import com.anishan.problem.domain.entity.UserContestRelation;
 import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.ProblemCompleteService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.Records;
 import com.anishan.problem.service.RecordsService;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -113,21 +117,19 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         } else {
             // 不是比赛从contest记录中拿
 
+            ContestRecords contestRecords = Db.getOne(
+                    Wrappers.lambdaQuery(ContestRecords.class)
+                            .eq(ContestRecords::getContestId, records.getContestId())
+                            .eq(ContestRecords::getUserId, records.getUserId())
+                            .eq(ContestRecords::getProblemId, records.getProblemId())
 
-            ContestRecords contestRecords = new ContestRecords();
-            contestRecords.setRecordId(records.getRecordId());
-            contestRecords.setContestId(records.getContestId());
-            contestRecords.setUserId(records.getUserId());
-            contestRecords.setProblemId(records.getProblemId());
-
-
-            contestRecords = Db.getOne(contestRecords);
+            );
             one = BeanUtil.copyProperties(contestRecords, Records.class);
         }
 
         doAddPoint(records, one);
 
-        return Optional.ofNullable(one).map(Records::getRecordId).orElse(null);
+        return Optional.ofNullable(one).map(Records::getRecordId).orElse(IdWorker.getId());
     }
 
 
@@ -139,6 +141,13 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     @Transactional
     @Override
     public boolean addRecord(Records records) {
+        BigDecimal score = records.getScore();
+        if (score != null) {
+            score = score.setScale(2, RoundingMode.HALF_DOWN);
+            records.setScore(score);
+        }
+
+
         Long recordId = addPoint(records);
 
         records.setRecordId(recordId);
@@ -153,8 +162,8 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         // 比赛需要加入比赛表
         if (records.getContestId() != null) {
             ContestRecords contestRecords = BeanUtil.copyProperties(records, ContestRecords.class);
+            contestRecords.setRecordId(recordId);
             b = Db.saveOrUpdate(contestRecords);
-
 
             // 存答案
             ContestAnswerRecords answerRecords = new ContestAnswerRecords();
@@ -211,7 +220,18 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
      */
     @Override
     public List<ProblemStatistic> getProblemStatistic(Long contestId) {
-        return recordsMapper.selectProblemStatistic(contestId);
+
+        long count = Db.count(Wrappers.lambdaQuery(UserContestRelation.class)
+                .eq(UserContestRelation::getContestId, contestId));
+        List<ProblemStatistic> problemStatistics = recordsMapper.selectProblemStatistic(contestId);
+
+        problemStatistics.forEach(x -> {
+            Integer rightNum = Optional.ofNullable(x.getRightNum()).orElse(0);
+            Integer wrongNum = Optional.ofNullable(x.getWrongNum()).orElse(0);
+            x.setAbsentNum((int) (count - rightNum - wrongNum));
+        });
+
+        return problemStatistics;
     }
 
     /**
@@ -242,11 +262,10 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         if (userAnswerRequest.getContestId() == null) {
             return null;
         }
-        ContestRecords one = new ContestRecords();
-        one.setContestId(userAnswerRequest.getContestId());
-        one.setUserId(userId);
-        one.setProblemId(userAnswerRequest.getProblemId());
-        one = Db.getOne(one);
+        ContestRecords one = Db.getOne(Wrappers.lambdaQuery(ContestRecords.class)
+                .eq(ContestRecords::getContestId, userAnswerRequest.getContestId())
+                .eq(ContestRecords::getUserId, userId)
+                .eq(ContestRecords::getProblemId, userAnswerRequest.getProblemId()));
 
         if (one == null) {
             return null;

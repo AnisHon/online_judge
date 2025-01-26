@@ -2,6 +2,7 @@ package com.anishan.api.util;
 
 import cn.hutool.captcha.AbstractCaptcha;
 import cn.hutool.captcha.CaptchaUtil;
+import cn.hutool.core.util.StrUtil;
 import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.domain.entity.SysUser;
@@ -84,6 +85,10 @@ public class AuthUtil {
 
     private static final String WHITE_LIST_KEY = "user-service:token:whiteList";
 
+    private static String getWhiteListTokenKey(String token) {
+        return StrUtil.format("{}:{}", WHITE_LIST_KEY, token);
+    }
+
     @NotNull
     @Contract(pure = true)
     public static AbstractCaptcha generateCaptchaCode(CaptchaCodeType captchaType) {
@@ -150,19 +155,19 @@ public class AuthUtil {
     }
 
     public void cacheToken(@NotNull String token) {
-        stringRedisTemplate.opsForSet().add(WHITE_LIST_KEY, token);
+        stringRedisTemplate.opsForValue().set(getWhiteListTokenKey(token), "", JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
 
     }
     public void removeToken(@NotNull String token) {
         log.info("删除token: {}", token);
-        stringRedisTemplate.opsForSet().remove(WHITE_LIST_KEY, token);
+        stringRedisTemplate.delete(getWhiteListTokenKey(token));
     }
 
     public boolean existToken(String token) {
         if (token == null) {
             return true;
         }
-        return Boolean.TRUE.equals(stringRedisTemplate.opsForSet().isMember(WHITE_LIST_KEY, token));
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(getWhiteListTokenKey(token)));
     }
 
 

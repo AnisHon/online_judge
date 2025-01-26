@@ -19,13 +19,13 @@
             p.title                         as title,
             ppl.score                       as score,
             sum(IF(status = 1, 1, 0))       as right_num,
-            sum(IF(status = 1, 0, 1))       as wrong_num,
-            sum(IF(ISNULL(status), 1, 0))   as absent_num,
+            sum(IF(status = 0, 1, 0))       as wrong_num,
             avg(r.score)                    as average
         from problem_problem_list ppl
         left join contest c on c.list_id = ppl.list_id
             and c.del_flag = 0
         left join contest_records r on r.problem_id = ppl.problem_id
+            and r.contest_id = #{contestId}
         left join problem p on p.problem_id = ppl.problem_id
         where
             c.contest_id = #{contestId}
@@ -35,31 +35,45 @@
     </select>
 
     <select id="selectUserStatistic" resultType="com.anishan.problem.domain.vo.UserStatistic">
-        select
-            uc.user_id                      as user_id,
-            sum(IF(status = 1, 1, 0))       as right_num,
-            sum(IF(status = 1, 0, 1))       as wrong_num,
-            sum(IF(ISNULL(status), 1, 0))   as absent_num,
-            sum(cr.score)                   as score
+        select uc.user_id                          as user_id,
+               (select count(*)
+                from contest_records cr
+                where cr.contest_id = #{contestId}
+                  and cr.user_id = uc.user_id
+                  and cr.status = 1)               as right_num,
+               (select count(*)
+                from contest_records cr
+                where cr.contest_id = #{contestId}
+                  and cr.user_id = uc.user_id
+                  and cr.status = 0)               as wrong_num,
+               (select count(*) - right_num - wrong_num
+                from problem_problem_list ppl
+                         left join contest c on c.list_id = ppl.list_id
+                where c.contest_id = #{contestId}) as absent_num,
+               (select sum(cr.score)
+                from contest_records cr
+                where cr.contest_id = #{contestId}
+                  and cr.user_id = uc.user_id)     as score,
+               IF(ISNULL(ub.user_id), 0, 1)        as submitted,
+               IF(ISNULL(ub.submit_time), 0, ub.submit_time > c.end_time) as late
 
         from user_contest uc
-        left join contest_records cr on uc.contest_id = cr.contest_id
-        left join problem p on p.problem_id = cr.problem_id
-        where
-            uc.contest_id = #{contestId}
-        and
-            p.del_flag = 0
-        group by uc.user_id
+        left join contest c on c.contest_id = uc.contest_id
+        left join user_submit ub on ub.contest_id = uc.contest_id
+            and ub.user_id = uc.user_id
+        where uc.contest_id = #{contestId}
     </select>
     <select id="selectProblemScore" resultType="com.anishan.problem.domain.vo.ProblemScore">
         select
             c.user_id           as userId,
-            cr.status           as correct,
+            if(cr.status, 1, 0) as correct,
             cr.score            as score
         from user_contest c
         left join contest_records cr on cr.user_id = c.user_id
-           and cr.problem_id = ${problemId}
-           and c.contest_id = #{contestId}
+           and cr.problem_id = #{problemId}
+           and cr.contest_id = #{contestId}
+        where
+            c.contest_id = #{contestId}
     </select>
     <select id="selectUserScore" resultType="com.anishan.problem.domain.vo.UserScore">
         select

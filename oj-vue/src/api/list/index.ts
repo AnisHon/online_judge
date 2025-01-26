@@ -2,10 +2,10 @@ import {
     type PagedResponse, type PagedType,
     type SortedPagedType,
 } from "@/api/pagedType";
-import {get, getWithParams, post, type successCallback} from "@/utils/http";
+import {get, getWithParams, post, put, removeResultNotify, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
-import {add, postedRemove, remove, update} from "@/utils/simpleCRUD";
+import {add, remove, update} from "@/utils/simpleCRUD";
 import {ProblemType, type ProblemView} from "@/api/problem";
 import type {IdType} from "@/api/common.ts";
 
@@ -48,7 +48,8 @@ interface ProblemInListView extends ProblemView {
 
 
 const delProblemFromList = async (relations: ProblemListRelation[]) => {
-    await postedRemove(relations, '/problem-api/list/delProblem', '/problem-api/list/del-problem');
+    const {data} = await put<ProblemListRelation[], boolean>('/problem-api/list/delProblem', relations);
+    removeResultNotify(data);
 }
 
 const addProblemToList = async (relations: ProblemListRelation[]) => {

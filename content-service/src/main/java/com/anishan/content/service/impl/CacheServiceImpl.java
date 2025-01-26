@@ -31,6 +31,7 @@ public class CacheServiceImpl implements CacheService {
 
     @Override
     public CacheVo get(String key) {
+
         String value = stringRedisTemplate.opsForValue().get(key);
         Long expire = stringRedisTemplate.getExpire(key, TimeUnit.SECONDS);
 

@@ -260,6 +260,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     public boolean getStatus(Long userId, Long contestId) {
         LocalDateTime now = LocalDateTimeUtil.now();
 
+        boolean submitted = Db.count(Wrappers.lambdaQuery(UserSubmit.class)
+                .eq(UserSubmit::getUserId, userId)
+                .eq(UserSubmit::getContestId, contestId)) > 0;
+
         Contest contest = this.getById(contestId);
         SupplementContest supplementContest = Db.getOne(
                 Wrappers.lambdaQuery(SupplementContest.class)
@@ -269,6 +273,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
         boolean joined = isUserJoined(contestId, userId);
         // 没参加
         if (!joined) {
+            return false;
+        }
+
+        if (submitted) {
             return false;
         }
 

@@ -51,6 +51,8 @@ const sendUpload = async (option: UploadRequestOptions) => {
 
   const file = option.file
 
+  // @ts-ignore
+  option.onProgress({percent: 0});
   // 获取或初始文件参数
   const slice = await getSlice(file);
 

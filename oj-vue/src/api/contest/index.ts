@@ -1,7 +1,7 @@
 import {
     type PagedResponse, type PagedType,
 } from "@/api/pagedType";
-import {get, getWithParams, post, type successCallback} from "@/utils/http";
+import {get, getWithParams, post, resultNotify, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, remove, update} from "@/utils/simpleCRUD";
@@ -189,6 +189,16 @@ const debouncedGetContestAdmin = (page: PageContest, success: successCallback<Pa
 const getScore = async (contestId: IdType) => {
     const {data} = await get<number | null>("/problem-api/record/score", contestId);
     return data;
+}
+
+export const getContestStatus = async (contestId: IdType) => {
+    const {data} = await get<boolean>("/problem-api/contest/status", contestId);
+    return data;
+}
+
+export const handInPaper = async (contestId: IdType) => {
+    const {data} = await post<void, boolean>(`/problem-api/contest/submit/${contestId}`, undefined);
+    resultNotify(data, "交卷成功", "交卷失败");
 }
 
 export type {

@@ -13,7 +13,7 @@ declare module 'vue' {
     BackendMenu: typeof import('./src/layout-backend/component/BackendMenu/BackendMenu.vue')['default']
     ChoiceChoose: typeof import('./src/components/DetailProblem/ChoiceChoose.vue')['default']
     CodeEditor: typeof import('./src/components/EnhancedCodeEdior/CodeEditor/CodeEditor.vue')['default']
-    ContestProblems: typeof import('./src/components/ContestProblems/ContestProblems.vue')['default']
+    ContestProblems: typeof import('./src/views/contest/ContestProblems/ContestProblems.vue')['default']
     Copybtn: typeof import('./src/components/DetailProblem/component/copybtn.vue')['default']
     CopyLink: typeof import('./src/components/DetailProblem/component/CopyLink.vue')['default']
     CopyLnk: typeof import('./src/components/DetailProblem/component/CopyLnk.vue')['default']

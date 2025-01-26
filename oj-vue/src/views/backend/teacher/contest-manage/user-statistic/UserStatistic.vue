@@ -37,11 +37,11 @@
             <el-tag type="danger" v-if="!scope.row.submitted">
               未交
             </el-tag>
-            <el-tag type="success" v-else-if="scope.row.submitted">
-              迟交
+            <el-tag type="success" v-else-if="!scope.row.late">
+              未迟交
             </el-tag>
             <el-tag type="warning" v-else>
-              补交
+              迟交
             </el-tag>
           </template>
         </el-table-column>

@@ -170,7 +170,7 @@ export const constRoutes =  [
       {
         path: "contest/problems/:id",
         name: "contest-problems",
-        component: () => import('@/components/ContestProblems/ContestProblems.vue'),
+        component: () => import('@/views/contest/ContestProblems/ContestProblems.vue'),
         meta: {
           name: "比赛中"
         }

@@ -31,6 +31,7 @@ public class CacheController {
     static {
         cacheTypes = ListUtil
                 .toList(
+                        new CacheTypeVo(0, "user-service:", "用户登录缓存"),
                         new CacheTypeVo(1, "problem:tag:", "题目标签缓存"),
                         new CacheTypeVo(2, "problem:contest:", "比赛标签缓存"),
                         new CacheTypeVo(3, "user:role:", "用户角色Id缓存"),
@@ -40,7 +41,8 @@ public class CacheController {
                         new CacheTypeVo(7, "contest:problem:", "比赛题目列表缓存"),
                         new CacheTypeVo(8, "user:rank:", "比赛题目列表缓存"),
                         new CacheTypeVo(8, "problem:choice-fill:", "填空选择答案缓存"),
-                        new CacheTypeVo(9, "content:file:", "文件缓存")
+                        new CacheTypeVo(9, "content:file:", "文件缓存"),
+                        new CacheTypeVo(9, "problem:solution:", "题解缓存")
                         );
     }
 

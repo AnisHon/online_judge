@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -108,17 +109,18 @@ public class DefaultJudgeImpl implements JudgeRun {
 
     /**
      * 最终分数计算
+     *
      * @param futureTasks 判题任务列表
-     * @param judgeScore 输出参数JudgeScore
+     * @param judgeScore  输出参数JudgeScore
      */
-    public void judgeFinalScore(List<CompletableFuture<JudgeRunResultScore>> futureTasks, JudgeScore judgeScore) throws ExecutionException, InterruptedException {
+    public void judgeFinalScore(List<CompletableFuture<JudgeRunResultScore>> futureTasks, JudgeScore judgeScore, BigDecimal totalScore, JudgeInfo judgeInfo) throws ExecutionException, InterruptedException {
         if (CollUtil.isEmpty(futureTasks)) {
             return;
         }
 
         judgeScore.setResult(JudgeResult.ACCEPT);
 
-        BigDecimal totalScore = BigDecimal.ZERO;
+        BigDecimal score = BigDecimal.ZERO;
         long runtime = 0;
         long memory = 0;
 
@@ -140,7 +142,7 @@ public class DefaultJudgeImpl implements JudgeRun {
             }
 
             // 算总分
-            totalScore = totalScore.add(judgeRunResultScore.getScore());
+            score = score.add(judgeRunResultScore.getScore());
 
             // 设置结果 报错信息
             if (judgeRunResultScore.getJudgeResult() != JudgeResult.ACCEPT) {
@@ -149,7 +151,18 @@ public class DefaultJudgeImpl implements JudgeRun {
             }
         }
 
-        judgeScore.setScore(totalScore);   // 设置分数
+        if (judgeInfo.getContestId() != null && judgeInfo.getListScore() != null) {
+            if (BigDecimal.ZERO.equals(totalScore)) {
+                score = BigDecimal.ZERO;
+            } else {
+                BigDecimal temp = score.divide(totalScore,RoundingMode.FLOOR);
+                BigDecimal ttt = judgeInfo.getListScore();
+                score =  temp.multiply(ttt);
+            }
+        }
+
+
+        judgeScore.setScore(score);   // 设置分数
         judgeScore.setRuntime(runtime);    // 设置最大运行时间
         judgeScore.setMemory(memory);      // 设置最大内存
     }
@@ -205,7 +218,7 @@ public class DefaultJudgeImpl implements JudgeRun {
             });
 
             // 统计最后得分
-            judgeFinalScore(futureTasks, judgeScore);
+            judgeFinalScore(futureTasks, judgeScore, judgeCases.getTotalScore(), judgeInfo);
         } catch (SystemError e) {
             judgeScore
                     .setResult(JudgeResult.COMPILE_ERROR)

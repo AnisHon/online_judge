@@ -1,4 +1,14 @@
-import {del, get, getWithParams, post, put, query} from "@/utils/http";
+import {
+    addResultNotify,
+    del,
+    get,
+    getWithParams,
+    post,
+    put,
+    query,
+    removeResultNotify,
+    updateResultNotify
+} from "@/utils/http";
 import {
     onlyPagedData,
     type PagedResponse,
@@ -19,11 +29,7 @@ export const remove = async (id: IdType | IdType[] | string | string[], url: str
 
     const {data} = await del<boolean, number | number[] | string | string[]>(url, id);
 
-    if (!data) {
-        ElNotification.warning("删除失败");
-    } else {
-        ElNotification.success("删除成功");
-    }
+    addResultNotify(data);
 };
 
 const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: string) => {
@@ -36,11 +42,7 @@ const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: strin
         const {data} = await post <T, boolean>(singleUrl, id);
         success = data;
     }
-    if (!success) {
-        ElNotification.warning("删除失败");
-    } else {
-        ElNotification.success("删除成功");
-    }
+    removeResultNotify(success);
 };
 export const putRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: string) => {
 
@@ -52,11 +54,8 @@ export const putRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: s
         const {data} = await put <T, boolean>(singleUrl, id);
         success = data;
     }
-    if (!success) {
-        ElNotification.warning("删除失败");
-    } else {
-        ElNotification.success("删除成功");
-    }
+
+    removeResultNotify(success);
 };
 
 /**
@@ -67,11 +66,7 @@ export const putRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: s
 const add = async <T> (form: T, url: string) => {
     const {data} = await post<T, boolean>(url, form);
 
-    if (!data) {
-        ElNotification.warning("添加失败");
-    } else {
-        ElNotification.success("添加成功");
-    }
+    addResultNotify(data);
 };
 
 
@@ -84,11 +79,7 @@ const batchAdd = async <T> (form: T| T[], batchUrl: string, singleUrl: string) =
         const {data} = await post <T, boolean>(singleUrl, form);
         success = data;
     }
-    if (!success) {
-        ElNotification.warning("添加失败");
-    } else {
-        ElNotification.success("添加成功");
-    }
+    addResultNotify(success);
 };
 
 /**
@@ -98,11 +89,7 @@ const batchAdd = async <T> (form: T| T[], batchUrl: string, singleUrl: string) =
  */
 const update = async <T> (form: T, url: string) => {
     const {data} = await put<T, boolean>(url, form);
-    if (!data) {
-        ElNotification.warning("更改失败");
-    } else {
-        ElNotification.success("更改成功");
-    }
+    updateResultNotify(data);
 };
 
 

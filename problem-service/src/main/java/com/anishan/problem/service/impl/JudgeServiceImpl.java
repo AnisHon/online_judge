@@ -7,7 +7,6 @@ import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.util.RedisJudgeTestUtil;
 import com.anishan.problem.domain.dto.TestRequest;
-import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.commons.enumeration.ProblemType;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.JudgeAnswer;
@@ -19,7 +18,6 @@ import com.anishan.problem.domain.vo.UserAnswer;
 import com.anishan.problem.service.*;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +38,6 @@ public class JudgeServiceImpl implements JudgeService {
     private final OjProblemService ojProblemService;
     private final ChoiceFillAnswersService choiceFillAnswersService;
     private final SysLanguageService sysLanguageService;
-    private final RabbitTemplate rabbitTemplate;
     private final RedisJudgeTestUtil redisJudgeTestUtil;
     private final JudgeClient judgeClient;
 
@@ -59,22 +56,25 @@ public class JudgeServiceImpl implements JudgeService {
 //        problemJudgeResult.setSubmitId(submitId);
 
 
-        JudgeInfo info = new JudgeInfo();
-        info.setUserId(userId);
-        info.setUuid(judgeRequest.getUuid());
-        info.setProblemId(problem.getProblemId());
-        info.setContestId(judgeRequest.getContestId());
-        info.setLanguageId(judgeRequest.getLanguageId());
-        info.setCode(judgeRequest.getCode());
-        info.setLanguage(languageName);
-        info.setTimeLimit(ojProblem.getTimeLimit());
-        info.setMemoryLimit(ojProblem.getMemoryLimit());
-        info.setStackLimit(ojProblem.getStackLimit());
+        BigDecimal score = contestService.getScore(judgeRequest.getContestId(), problem.getProblemId());
+
+        JudgeInfo info = new JudgeInfo()
+                .setUserId(userId)
+                .setUuid(judgeRequest.getUuid())
+                .setProblemId(problem.getProblemId())
+                .setContestId(judgeRequest.getContestId())
+                .setLanguageId(judgeRequest.getLanguageId())
+                .setCode(judgeRequest.getCode())
+                .setLanguage(languageName)
+                .setTimeLimit(ojProblem.getTimeLimit())
+                .setMemoryLimit(ojProblem.getMemoryLimit())
+                .setStackLimit(ojProblem.getStackLimit())
+                .setListScore(score);
 
 
         boolean isSuccess = judgeClient.judge(info).getData();
 
-        ThrowUtil.illegalState(!isSuccess, "请等待10秒后再提交");
+        ThrowUtil.illegalState(!isSuccess, "冷却中，请稍后提交");
 
 
         return problemJudgeResult;
@@ -274,15 +274,6 @@ public class JudgeServiceImpl implements JudgeService {
 
         return fullMark;
     }
-
-    private BigDecimal calcOjFullMark(List<OjProblemCase> answers) {
-        BigDecimal fullMark = BigDecimal.ZERO;
-        for (OjProblemCase answer : answers) {
-            fullMark = fullMark.add(answer.getScore());
-        }
-        return fullMark;
-    }
-
 
 
     private ProblemJudgeResult judge(Long userId, Problem problem, JudgeRequest judgeRequest) {

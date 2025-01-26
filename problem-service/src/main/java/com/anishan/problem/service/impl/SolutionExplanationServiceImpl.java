@@ -23,6 +23,9 @@ import com.github.yulichang.toolkit.MPJWrappers;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@CacheConfig(cacheNames = "problem:solution:")
 public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanationMapper, SolutionExplanation> implements SolutionExplanationService {
 
     private final SolutionExplanationMapper solutionExplanationMapper;
@@ -77,6 +81,7 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
      * @return DetailSolutionVo
      */
     @Override
+    @Cacheable(key = "#id")
     public DetailSolutionVo get(Long id, Long userId) {
 
         DetailSolutionVo solution = doGet(id);
@@ -181,6 +186,7 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
 
     @Override
     @Transactional
+    @CacheEvict(key = "#detailSolutionDto.solutionId")
     public boolean update(Long userId, DetailSolutionDto detailSolutionDto) {
 
         SolutionExplanation solutionExplanation = BeanUtil.copyProperties(detailSolutionDto, SolutionExplanation.class);
@@ -206,6 +212,7 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
 
     @Override
     @Transactional
+    @CacheEvict(key = "#detailSolutionDto.solutionId")
     public boolean adminUpdate(DetailSolutionDto detailSolutionDto) {
         return saveOrUpdateSolution(null, detailSolutionDto);
     }
