@@ -10,7 +10,4 @@
             <result property="submitTime" column="submit_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        user_id,contest_id,submit_time
-    </sql>
 </mapper>

@@ -22,9 +22,7 @@
         <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        role_id,menu_id
-    </sql>
+
     <delete id="deleteBatch">
         delete from sys_role_menu
         where (role_id, menu_id) in

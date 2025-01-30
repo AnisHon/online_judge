@@ -18,9 +18,5 @@ public interface SseService {
 
     void sendMessage(String uuid, SseEvent sseEvent, Object message);
 
-//    void sendMessage(Long userId, SseEvent sseEvent, Object message);
-//
-//    void sendMessage(SseEvent sseEvent, Object message);
-
     void close(String uuid);
 }

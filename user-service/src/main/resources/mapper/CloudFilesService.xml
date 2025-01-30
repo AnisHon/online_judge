@@ -13,10 +13,4 @@
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
             <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
-
-    <sql id="Base_Column_List">
-        role_id,role_name,status,
-        del_flag,create_time,update_time,
-        remark
-    </sql>
 </mapper>

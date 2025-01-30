@@ -10,9 +10,4 @@ public interface Enumerator<T> {
     @JsonValue
     T value();
 
-//    /**
-//     * 获取枚举描述
-//     * @return
-//     */
-//    String desc();
 }

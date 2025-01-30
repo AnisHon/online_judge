@@ -339,7 +339,7 @@ public class SandboxRunImpl implements SandboxRun {
         cmd.set("stackLimit", maxStack * 1024 * 1024L);
 
         JSONObject exeFile = new JSONObject();
-        if (!StringUtils.isEmpty(fileId)) {
+        if (!StrUtil.isEmpty(fileId)) {
             exeFile.set("fileId", fileId);
         } else {
             exeFile.set("content", fileContent);

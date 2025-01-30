@@ -17,14 +17,5 @@ public class RabbitConfig {
         return jackson2JsonMessageConverter;
     }
 
-//    @Bean
-//    public SimpleMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory,
-//                                                                   MessageListener messageListener) {
-//        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-//        container.setConnectionFactory(connectionFactory);
-//        container.setMessageListener(messageListener);
-//        container.setAcknowledgeMode(AcknowledgeMode.MANUAL);  // 设置手动确认
-//        return container;
-//    }
 
 }

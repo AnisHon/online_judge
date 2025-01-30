@@ -3,6 +3,7 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import com.anishan.api.client.user.client.UserInternalClient;
+import com.anishan.api.util.NikeNameUtil;
 import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
 import com.anishan.problem.domain.entity.ContestAnswerRecords;
@@ -201,17 +202,7 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     public List<UserStatistic> getUserStatistic(Long contestId) {
 
         List<UserStatistic> scores = recordsMapper.selectUserStatistic(contestId);
-
-        List<Long> userIds = scores.stream().map(UserStatistic::getUserId).collect(Collectors.toList());
-
-        if (CollUtil.isEmpty(userIds)) {
-            return Collections.emptyList();
-        }
-
-        Map<Long, String> map = userInternalClient.nikeName(userIds).getData();
-
-        scores.forEach(x -> x.setNikeName(map.get(x.getUserId())));
-
+        NikeNameUtil.setNikeName(scores);
         return scores;
     }
 
@@ -245,15 +236,7 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     @Override
     public List<ProblemScore> getProblemScores(Long problemId, Long contestId) {
         List<ProblemScore> problemScores = recordsMapper.selectProblemScore(problemId, contestId);
-        List<Long> userIds = problemScores.stream().map(ProblemScore::getUserId).collect(Collectors.toList());
-
-        if (CollUtil.isEmpty(userIds)) {
-            return Collections.emptyList();
-        }
-
-        Map<Long, String> map = userInternalClient.nikeName(userIds).getData();
-
-        problemScores.forEach(x -> x.setNikeName(map.get(x.getUserId())));
+        NikeNameUtil.setNikeName(problemScores);
         return problemScores;
     }
 

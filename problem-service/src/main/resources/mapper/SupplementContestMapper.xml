@@ -10,7 +10,5 @@
             <result property="deadline" column="deadline" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        user_id,contest_id,deadline
-    </sql>
+
 </mapper>

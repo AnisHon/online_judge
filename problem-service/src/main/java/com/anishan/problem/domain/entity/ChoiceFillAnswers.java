@@ -31,7 +31,7 @@ public class ChoiceFillAnswers implements Serializable {
     private String answerText;
 
     /**
-     * 填空题空格索引, 选择题ABCD索引 1表示A
+     * 填空题空格索引, 选择题A B C D索引 1表示A
      */
     private Boolean isCorrect;
 

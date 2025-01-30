@@ -13,8 +13,4 @@
             <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        class_id,class_name,del_flag,
-        create_time,update_time,remark
-    </sql>
 </mapper>

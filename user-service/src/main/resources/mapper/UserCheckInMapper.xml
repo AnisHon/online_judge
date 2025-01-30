@@ -12,8 +12,4 @@
             <result property="continuityDays" column="continuity_days" jdbcType="INTEGER"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,user_id,reward_point,
-        sign_time,continuity_days
-    </sql>
 </mapper>

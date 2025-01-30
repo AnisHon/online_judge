@@ -17,10 +17,4 @@
             <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        menu_id,menu_name,parent_id,
-        router,menu_type,perms, order_num,
-        icon,create_time,update_time,
-        remark
-    </sql>
 </mapper>

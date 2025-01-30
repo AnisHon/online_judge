@@ -7,9 +7,7 @@
           icon="download"
           @click="handleDownload()"
           round
-      >
-        下载文件
-      </el-button>
+      >下载文件</el-button>
 
       <el-button-group>
         <el-button
@@ -18,18 +16,14 @@
             @click="openUpload = true"
             plain
             round
-        >
-          上传文件
-        </el-button>
+        >上传文件</el-button>
         <el-button
             type="primary"
             icon="DocumentAdd"
             @click="handleAddDir"
             plain
             round
-        >
-          新建文件夹
-        </el-button>
+        >新建文件夹</el-button>
       </el-button-group>
 
       <span class="select-text">

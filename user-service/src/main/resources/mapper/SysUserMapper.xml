@@ -17,12 +17,6 @@
             <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        user_id ,user_name,email,
-        nike_name,password,status,
-        create_time,update_time,del_flag,
-        remark
-    </sql>
 
 <!--    List<SysUser> selectByTeacherIdLimit(Long teacherId,  Long currentPage, Long pageSize);-->
 
