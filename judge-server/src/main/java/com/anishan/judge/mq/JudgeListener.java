@@ -20,7 +20,9 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.swing.text.html.Option;
 import java.math.BigDecimal;
+import java.util.Optional;
 
 
 @Component
@@ -103,6 +105,9 @@ public class JudgeListener {
         // 通知完成
         JudgeResult result = judge == null ? JudgeResult.RUNTIME_ERROR : judge.getResult();
         String stderr = judge == null ? "" : judge.getErrorMessage();
+
+        // 没有结果，可能是人为因素
+        result = Optional.ofNullable(result).orElse(JudgeResult.RUNTIME_ERROR);
 
         judgeNotifyUtil.notify(info.getUuid(), result, stderr);
 
