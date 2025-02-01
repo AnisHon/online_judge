@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpStatus;
+import com.anishan.api.client.content.domain.OSSFileInfo;
 import com.anishan.api.client.content.domain.OssFileInputStream;
 import com.anishan.api.file.FileOperation;
 import com.anishan.commons.domain.R;
@@ -35,6 +36,10 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
+import java.io.BufferedOutputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -225,6 +230,92 @@ public class FileController {
         return R.success(b);
     }
 
+    @GetMapping("/file/download")
+    public void download(String fileName, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        if (fileName == null) {
+            return;
+        }
+
+        OutputStream os = null;
+        OssFileInputStream stream = null;
+
+        try {
+
+            OSSFileInfo fileInfo = fileOperation.getFileInfo(fileName);
+
+            // 分片下载
+            long fSize = fileInfo.getSize();// 获取长度
+            response.setContentType("application/octet-stream");
+            String urlFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+            response.addHeader("Content-Disposition", "attachment;filename=" + urlFileName);
+            //根据前端传来的Range 判断支不支持分片下载
+            response.setHeader("Accept-Range", "bytes");
+            //文件大小
+            response.setHeader("fSize", String.valueOf(fSize));
+            //文件名称
+            response.setHeader("fName", fileName);
+            response.setCharacterEncoding("UTF-8");
+            // 定义下载的开始和结束位置
+            long startPos = 0;
+            long lastPos = fSize - 1;
+            //判断前端需不需要使用分片下载
+            if (null != request.getHeader("Range")) {
+                response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+                String numRange = request.getHeader("Range").replaceAll("bytes=", "");
+                System.out.println("请求头：" + request.getHeader("Range"));
+                String[] strRange = numRange.split("-");
+                if (strRange.length == 2) {
+                    startPos = Long.parseLong(strRange[0].trim());
+                    lastPos = Long.parseLong(strRange[1].trim());
+                    // 若结束字节超出文件大小 取文件大小
+                    if (lastPos >= fSize - 1) {
+                        lastPos = fSize - 1;
+                        System.out.println("请求头last："+ lastPos);
+                    }
+                } else {
+                    // 若只给一个长度 开始位置一直到结束
+                    startPos = Long.parseLong(numRange.replaceAll("-", "").trim());
+                }
+            }
+
+            //要下载的长度
+            long rangeLength = lastPos - startPos + 1;
+            //组装断点下载基本信息
+            String contentRange = "bytes" + startPos + "-" + lastPos + "/" + fSize;
+            response.setHeader("Content-Range", contentRange);
+            response.setHeader("Content-Length", String.valueOf(rangeLength));
+            os = new BufferedOutputStream(response.getOutputStream());
+
+            //minio上获取文件信息
+            stream = fileOperation.getFile(fileName, startPos, rangeLength);
+
+            os = new BufferedOutputStream(response.getOutputStream());
+
+            //将读取的文件写入到OutputStream中
+            byte[] buffer = new byte[1024];
+            long bytesWritten = 0;
+            int bytesRead;
+            while ((bytesRead = stream.read(buffer)) != -1) {
+                //已经读取的长度和本次读取的长度之和是否大于需要读取的长度（实质就是判断是否最后一行）
+                if (bytesWritten + bytesRead > rangeLength) {
+                    os.write(buffer, 0, (int) (rangeLength - bytesWritten));
+                    break;
+                } else {
+                    os.write(buffer, 0, bytesRead);
+                    bytesWritten += bytesRead;
+                }
+            }
+            os.flush();
+            response.flushBuffer();
+        } finally {
+            if (os != null) {
+                os.close();
+            }
+            if(stream != null){
+                stream.close();
+            }
+        }
+    }
 
 
 }

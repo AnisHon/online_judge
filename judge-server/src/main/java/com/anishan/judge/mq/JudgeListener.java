@@ -126,7 +126,6 @@ public class JudgeListener {
         TestResult testResult;
         try {
             testResult = judgeRun.judgeTest(info);
-
         } catch (Exception e) {
              testResult = new TestResult()
                      .setJudgeResult(JudgeResult.RUNTIME_ERROR);

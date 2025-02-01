@@ -15,8 +15,9 @@ import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,24 +25,30 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
+@Slf4j
 @Configuration
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class MinioConfig {
-    @Value("${oj.minio.url}")
-    private String minioUrl;
 
-    @Value("${oj.minio.access-key}")
-    private String accessKey;
-
-    @Value("${oj.minio.secret-key}")
-    private String secretKey;
-
-    @Value("${oj.minio.bucket-name}")
-    private String bucketName;
+    private final MinioConfigProperties minio;
 
     @Bean
     public MinioClient minioClient() throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        final String url = minio.getUrl();
+
+        final String accessKey = minio.getAccessKey();
+
+        final String secretKey = minio.getSecretKey();
+
+        final String bucketName = minio.getBucketName();
+
+        log.info("minioUrl: {}", url);
+        log.info("accessKey: {}", accessKey);
+        log.info("secretKey: {}", secretKey);
+        log.info("bucketName: {}", bucketName);
+
         MinioClient client = MinioClient.builder()
-                .endpoint(minioUrl)
+                .endpoint(url)
                 .credentials(accessKey, secretKey)
                 .build();
 
@@ -55,6 +62,20 @@ public class MinioConfig {
 
     @Bean
     public AmazonS3 s3Client () {
+
+        final String url = minio.getUrl();
+
+        final String accessKey = minio.getAccessKey();
+
+        final String secretKey = minio.getSecretKey();
+
+        final String bucketName = minio.getBucketName();
+
+        log.info("s3 Url: {}", url);
+        log.info("s3 Key: {}", accessKey);
+        log.info("s3 Key: {}", secretKey);
+        log.info("s3 bucketName: {}", bucketName);
+
         //设置连接时的参数
         ClientConfiguration config = new ClientConfiguration();
         //设置连接方式为HTTP，可选参数为HTTP和HTTPS
@@ -65,7 +86,7 @@ public class MinioConfig {
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
         //设置Endpoint
         AwsClientBuilder.EndpointConfiguration endPoint =
-                new AwsClientBuilder.EndpointConfiguration(minioUrl, Regions.US_EAST_1.name());
+                new AwsClientBuilder.EndpointConfiguration(url, Regions.US_EAST_1.name());
 
         return AmazonS3ClientBuilder.standard()
                 .withClientConfiguration(config)
@@ -77,6 +98,7 @@ public class MinioConfig {
     @Bean
     @Autowired
     public FileOperation defaultFileOperation(MinioClient minioClient, AmazonS3 s3Client) {
+        final String bucketName = minio.getBucketName();
         return new MinioFileOperationImpl(minioClient, bucketName, s3Client);
     }
 

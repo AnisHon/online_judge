@@ -91,6 +91,29 @@ public class MinioFileOperationImpl implements FileOperation {
     }
 
     @Override
+    public OssFileInputStream getFile(String path, Long offset, Long length) {
+        OssFileInputStream inputStream = null;
+        try {
+            GetObjectResponse stream = minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(path)
+                            .offset(offset)
+                            .length(length)
+                            .build()
+            );
+            inputStream = new OssFileInputStream(stream, stream.headers(), stream.bucket(), stream.region(), stream.bucket());
+
+        } catch (InternalException | NoSuchAlgorithmException | ServerException | InvalidKeyException | XmlParserException e) {
+            log.error("Minio内部出现错误：",e);
+        } catch (InsufficientDataException | IOException | InvalidResponseException | ErrorResponseException e) {
+            throw new RuntimeException(e);
+        }
+        return inputStream;
+    }
+
+
+    @Override
     public void saveFile(String path, InputStream inputStream) {
         try {
             minioClient.putObject(

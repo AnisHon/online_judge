@@ -35,6 +35,8 @@ public interface FileOperation {
 
     OssFileInputStream getFile(String path);
 
+    OssFileInputStream getFile(String path, Long offset, Long length);
+
     void saveFile(String path, InputStream inputStream);
 
     void saveFile(String path, InputStream inputStream, String contentType);

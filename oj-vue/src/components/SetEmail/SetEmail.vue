@@ -43,10 +43,10 @@ const open = computed({
 
   get() {
     return false;
-    if (!userStore.user) {
-      return false;
-    }
-    return !userStore.user.email;
+    // if (!userStore.user) {
+    //   return false;
+    // }
+    // return !userStore.user.email;
   },
   set(value) {
   }

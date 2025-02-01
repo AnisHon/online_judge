@@ -73,12 +73,13 @@ import {computed, onMounted, reactive, ref} from "vue";
 import {getAllTags} from "@/api/problem/label";
 import {type TagView} from "@/api/problem/label"
 import type {ProblemType} from "@/api/problem";
+import type {IdType} from "@/api/common.ts";
 
 
 
-const tagsMap = new Map<number, TagView>();
+const tagsMap = new Map<IdType, TagView>();
 
-const queryForm = reactive<{id: string, tagIds: number[], title: string, type?: ProblemType}>({
+const queryForm = reactive<{id: IdType, tagIds: IdType[], title: string, type?: ProblemType}>({
   id: "",
   tagIds: [],
   title: "",
@@ -104,7 +105,7 @@ const input = computed({
   }
 })
 
-const getTag = (id: number): TagView => {
+const getTag = (id: IdType): TagView => {
   return <TagView>tagsMap.get(id)
 };
 
@@ -126,7 +127,7 @@ const onResetHandler = () => {
   queryForm.type = undefined;
 }
 
-const handleCheckTag = (id: number) => {
+const handleCheckTag = (id: IdType) => {
   const index = queryForm.tagIds.indexOf(id);
   if (index === -1) {
     queryForm.tagIds.push(id);

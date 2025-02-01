@@ -59,4 +59,9 @@ public class ProblemInListVo {
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;
 
+    @ApiModelProperty("得分")
+    private BigDecimal userScore;
+
+    @ApiModelProperty("是否正确")
+    private Boolean correct;
 }

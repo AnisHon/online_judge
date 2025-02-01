@@ -1,17 +1,23 @@
 spring:
   rabbitmq:
+    host: ${oj.mq.host:localhost}
     port: 5672
-    host: localhost
-    username: anishan
+    username: ${oj.mq.username:admin}
     password: change-this-db-password
     #这个配置是保证提供者确保消息推送到交换机中，不管成不成功，都会回调
     publisher-confirm-type: correlated
     #保证交换机能把消息推送到队列中
     publisher-returns: true
-    virtual-host: /judge
-    #这个配置是保证消费者会消费消息，手动确认，但是感觉没什么用，所以关掉了
+    virtual-host: ${oj.mq.v-host:/judge}
+    #这个配置是保证消费者会消费消息，手动确认
     listener:
       simple:
+        retry:
+          enabled: true # 是否开启消费者重试
+          max-attempts: 3 # 最大重试次数
+          initial-interval: 5000ms # 重试间隔时间（单位毫秒）
+          max-interval: 1200000ms # 重试最大时间间隔（单位毫秒）
+          multiplier: 2 # 间隔时间乘子，间隔时间*乘子=下一次的间隔时间，最大不能超过设
         # acknowledge-mode: manual
         prefetch: 1
     template:

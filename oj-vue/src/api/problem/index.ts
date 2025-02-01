@@ -69,6 +69,7 @@ export interface TaggedProblemView {
     title: string;
     type: ProblemType;
     tags: TagView[];
+    finish: boolean
 }
 
 export interface ProblemParam {

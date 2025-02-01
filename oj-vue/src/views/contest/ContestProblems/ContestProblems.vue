@@ -7,11 +7,18 @@
             ref="tableRef"
             @row-click="selectProblem"
             row-class-name="problem-row"
+            :row-style="rowColor"
             highlight-current-row
         >
           <el-table-column width="50" type="index" label="#"/>
-          <el-table-column label="题目" prop="title"/>
-          <el-table-column label="分数" prop="score"/>
+          <el-table-column label="题目" prop="title" show-overflow-tooltip/>
+          <el-table-column width="70" label="分数" prop="score" align="center" show-overflow-tooltip/>
+          <el-table-column width="70" label="得分" prop="score" align="center" show-overflow-tooltip v-if="!isContestEnabled">
+            <template v-slot="scope">
+              {{ isNullObj(scope.row.correct) ? '' : scope.row.userScore || 0 }}
+            </template>
+
+          </el-table-column>
         </el-table>
         <el-button
             v-if="isContestEnabled"
@@ -87,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+//@ts-ignore
 import {Pane, Splitpanes} from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import {type ComponentInstance, computed, onMounted, onUnmounted, reactive, ref} from "vue";
@@ -98,6 +106,7 @@ import {ElMessageBox, ElTable} from "element-plus";
 import {type ContestView, fetchContestById, getContestStatus, getScore, handInPaper} from "@/api/contest";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {authTagType, authText, formatDate, isContestOver, isNotStart} from "@/utils/contest";
+import {isNullObj} from "@/utils/valueutil.ts";
 
 const route = useRoute();
 
@@ -166,7 +175,7 @@ const getStatus = () => {
 }
 
 const setMaxHeight = () => {
-  maxProblemListHeight.value = (<HTMLElement>problemsPane.value?.$el).clientHeight;
+  maxProblemListHeight.value = (<HTMLElement>problemsPane.value?.$el)?.clientHeight;
 }
 
 // 交卷
@@ -176,6 +185,22 @@ const handIn = () => {
         handInPaper(contestId.value)
         .then(getStatus)
       }).catch(() => {})
+}
+
+const rowColor = (scope: any) => {
+  let color;
+  if (isContestEnabled.value) {
+    return;
+  }
+  if (isNullObj(scope.row.correct)) {
+  } else if (scope.row.correct) {
+    color = "var(--el-color-success)"
+  } else {
+    color = "var(--el-color-danger)"
+  }
+  return {
+    color: color,
+  }
 }
 
 
@@ -204,7 +229,14 @@ onUnmounted(() => {
   height: var(--in-main-content-height);
 }
 
-::v-deep(.splitpanes--vertical) > .splitpanes__splitter {
+
+</style>
+
+<style lang="scss">
+.splitpanes--vertical > .splitpanes__splitter {
   min-width: 6px;
+  background-color: $lighter-border-color;
+  cursor: e-resize;
 }
+
 </style>

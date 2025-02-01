@@ -26,7 +26,7 @@
         <result property="hint" column="hint" jdbcType="VARCHAR"/>
         <result property="auth" column="auth" jdbcType="INTEGER"/>
         <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-
+        <result property="finish" column="finish" javaType="Boolean"/>
         <collection property="tags" ofType="com.anishan.problem.domain.vo.TagVo">
             <id property="tagId" column="tag_id" jdbcType="BIGINT"/>
             <result property="tagName" column="tag_name" jdbcType="VARCHAR"/>
@@ -79,13 +79,13 @@
     <select id="selectTaggedProblemByProblemIdAndTagId" resultMap="TagProblemResultMap">
         select
             p.problem_id as problem_id,
-            oj_id, title, type, source, description, hint, auth,
-            p.problem_id as problem_id,
+            title, type, source, description, hint, auth,
             p.create_time as create_time,
             t2.tag_id as tag_id,
             t2.tag_name as tag_name,
             t2.tag_color as tag_color,
-            t2.create_time as t_create_time
+            t2.create_time as t_create_time,
+            exists(select 1 from problem_complete pc where pc.user_id = #{userId} and pc.problem_id = p.problem_id) as finish
         from problem p
             left join problem_tag t on t.problem_id = p.problem_id
             left join tag t2 on t2.tag_id = t.tag_id

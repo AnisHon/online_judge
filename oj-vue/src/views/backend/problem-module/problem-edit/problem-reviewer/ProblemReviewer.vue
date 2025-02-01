@@ -71,7 +71,7 @@ const {problem} = defineProps<{
   problem: ProblemForm
 }>();
 const problemId = computed(() => {
-  return  parseInt(<string>route.params.id)
+  return  <string>route.params.id
 })
 
 const count = computed(() => {

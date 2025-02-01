@@ -1,5 +1,6 @@
 <template>
   <div>
+
     <el-form :inline="true" ref="formRef" :model="codeForm">
       <el-form-item>
         <el-button-group>
@@ -39,6 +40,8 @@
 
     </el-form>
     <code-editor v-model="codeForm.code" :language="currLang" :theme="theme" :height="codeEditHeight" ref="codeEditorRef" />
+
+
   </div>
 </template>
 

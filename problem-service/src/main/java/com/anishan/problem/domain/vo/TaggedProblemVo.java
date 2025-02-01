@@ -43,6 +43,7 @@ public class TaggedProblemVo {
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;
 
+    private Boolean finish;
 
     private List<TagVo> tags;
 

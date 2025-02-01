@@ -1,6 +1,6 @@
 <template>
   <div class="app-container" v-loading="isGetLoading">
-    <el-scrollbar ref="scrollbarRef">
+    <el-scrollbar class="scroll" ref="scrollbarRef">
       <el-row style="width: 100%;" justify="center" :gutter="20">
         <el-col :span="editorSpan" v-show="!isShowPreview">
           <div class="absoluteCenter">
@@ -54,7 +54,6 @@
                 </el-col>
                 <el-col :span="24">
                   <el-form-item label="题目描述" prop="problem.description">
-                    <!--                <el-input type="textarea"  v-model="problem.problem.description" placeholder="题目描述"/>-->
                     <MarkDownEditor v-model="problem.problem.description"/>
                   </el-form-item>
                 </el-col>
@@ -135,12 +134,19 @@
                 </el-col>
 
                 <el-col :span="24" v-if="isChoiceProblem">
-                  <div v-for="item of problem.choices" >
-                    <el-row :gutter="20">
+                  <el-card class="card" v-for="item of problem.choices" >
+                    <template #header>
+                      <div class="card-header">
+                        <h3>选项 {{ numberToLetter(item.blankIndex as number) }}</h3>
 
+                        <el-button type="danger" @click="deleteChoice(item)" icon="Close" circle plain/>
+
+                      </div>
+                    </template>
+                    <el-row :gutter="20">
                       <el-col :span="12">
-                        <el-form-item :label="numberToLetter(<number>item.blankIndex)" prop="problem.hint">
-                          <el-input type="textarea" v-model="item.answerText" placeholder="输入用例"/>
+                        <el-form-item label="选项内容" prop="problem.hint">
+                          <el-input type="textarea" v-model="item.answerText" placeholder="输入内容"/>
                         </el-form-item>
                       </el-col>
                       <el-col :span="12">
@@ -153,17 +159,21 @@
                           <el-checkbox  v-model="item.isCorrect" label="是否是正确答案"/>
                         </el-form-item>
                       </el-col>
-                      <el-col :span="12" style="display: flex; justify-content: center;">
-                        <el-button type="danger" @click="deleteChoice(item)">删除</el-button>
-                      </el-col>
                     </el-row>
-                  </div>
+                  </el-card>
                 </el-col>
 
                 <el-col :span="24" v-if="isFillProblem">
-                  <div v-for="item of problem.choices" >
-                    <el-row>
+                  <el-card v-for="item of problem.choices" class="card" >
+                    <template #header>
+                      <div class="card-header">
+                        <h3>填空 {{ item.blankIndex }}</h3>
 
+                        <el-button type="danger" @click="deleteChoice(item)" icon="Close" circle plain/>
+
+                      </div>
+                    </template>
+                    <el-row>
                       <el-col :span="12">
                         <el-form-item label="填空索引" prop="problem.hint">
                           <el-input-number  v-model="item.blankIndex" :controls="false" />
@@ -179,15 +189,12 @@
                           <el-input-number :min="0" v-model="item.score" :precision="2" placeholder="分数"/>
                         </el-form-item>
                       </el-col>
-                      <el-col :span="12" style="display: flex; justify-content: center;">
-                        <el-button type="danger" @click="deleteChoice(item)">删除</el-button>
-                      </el-col>
 
                     </el-row>
-                  </div>
+                  </el-card>
                 </el-col>
 
-                <el-col :span="24" v-if="isShowOjCaseEditor && enableInput">
+                <el-col :span="24" v-if="enableInput || !isOjProblem">
                   <el-button type="success" plain icon="Plus" class="add-btn" @click="addMore">
                   </el-button>
                 </el-col>
@@ -215,13 +222,15 @@
         </el-col>
 
       </el-row>
+
+
+
     </el-scrollbar>
 
 
+    <el-backtop target=".el-main" :right="100" :bottom="100"/>
 
-    <el-affix class="affix" :offset="120" position="bottom">
-      <el-button type="primary" @click="handleTop" circle size="large" icon="ArrowUpBold"/>
-    </el-affix>
+
   </div>
 </template>
 
@@ -239,7 +248,7 @@ import {numberToLetter} from "@/utils/stringUtils";
 import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
 import {useTabStore} from "@/stores/useTabStore.ts";
 import type {IdType} from "@/api/common.ts";
-import {ElScrollbar} from "element-plus";
+import {ElNotification, ElScrollbar} from "element-plus";
 
 const route = useRoute();
 const router = useRouter();
@@ -279,6 +288,7 @@ const problem = reactive<ProblemForm>({
 });
 
 const enableInput = ref(false);
+
 
 const editorSpan = computed(() => {
   return isShowPreview.value ? 12 : 24
@@ -393,6 +403,8 @@ const addMore = () => {
       newAnswer.blankIndex = (max.blankIndex || 1) + 1;
     }
     problem.choices.push(newAnswer);
+  } else {
+    ElNotification.warning("请先选择题目类型");
   }
 }
 
@@ -451,6 +463,11 @@ if (isAdd.value) {
 }
 
 .oj-raw {
+  margin: 20px 0;
+}
+
+.card {
+  width: 100%;
   margin: 20px 0;
 }
 

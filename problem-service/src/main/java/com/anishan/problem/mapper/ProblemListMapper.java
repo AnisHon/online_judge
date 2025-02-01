@@ -1,7 +1,11 @@
 package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.ProblemList;
+import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.github.yulichang.base.MPJBaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -12,6 +16,7 @@ import com.github.yulichang.base.MPJBaseMapper;
 public interface ProblemListMapper extends MPJBaseMapper<ProblemList> {
 
 
+    List<ProblemInListVo> selectProblemByListId(@Param("contestId") Long contestId, @Param("userId") Long userId, @Param("listId") Long listId);
 }
 
 

@@ -12,6 +12,36 @@
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
     </resultMap>
+    <select id="selectProblemByListId" resultType="com.anishan.problem.domain.vo.ProblemInListVo">
+        select
+            ppl.score as score,
+            ppl.problem_order as problemOrder,
+            ppl.problem_id as problemId,
+            p.title as title,
+            p.type as type,
+            p.source as source,
+            p.description as description,
+            p.hint as hint,
+            p.auth as auth,
+            p.create_time as createTime,
+            cr.score as userScore,
+            cr.status as correct
+        from contest c
+        left join problem_problem_list ppl on c.list_id = ppl.list_id
+        left join problem p on p.problem_id = ppl.problem_id
+            and p.del_flag = 0
+        left join contest_records cr on cr.problem_id = ppl.problem_id
+            and cr.contest_id = #{contestId}
+            and cr.user_id = #{userId}
+
+        where
+            not isnull(p.problem_id)
+        and
+            ppl.list_id = #{listId}
+        <if test="contestId != null">
+            and c.contest_id = #{contestId}
+        </if>
+    </select>
 
 
 </mapper>

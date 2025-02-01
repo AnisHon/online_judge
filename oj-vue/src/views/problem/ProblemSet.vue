@@ -2,7 +2,6 @@
   <div class="problem-set common-max-width-page" >
     <ProblemListForm @query="doQuery"/>
     <ProblemList :param="currentPage"
-
         @load-finish="handleLoadFinish"
     />
     <div>
@@ -38,9 +37,10 @@
 <script setup lang="ts">
 import ProblemList from "@/components/problemset/ProblemList.vue";
 import {type ProblemParam, ProblemType} from "@/api/problem"
-import {type Component, type ComponentInstance, inject, reactive} from "vue";
+import {inject, reactive} from "vue";
 import ProblemListForm from "@/components/problemset/ProblemListForm.vue";
 import {scrollTo} from "@/utils/scroll-to";
+import type {IdType} from "@/api/common.ts";
 
 
 const pageNav = reactive({
@@ -67,7 +67,7 @@ const pageNav = reactive({
   }
 
 
-  const doQuery = (value: {id: string, tagIds: number[], title: string, type: ProblemType}) => {
+  const doQuery = (value: {id: string, tagIds: IdType[], title: string, type: ProblemType}) => {
     currentPage.problemId = value.id;
     currentPage.tagIds = value.tagIds.slice();
     currentPage.title = value.title

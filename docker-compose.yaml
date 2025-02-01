@@ -3,6 +3,7 @@ services:
     build:
       context: resources/sql
       dockerfile: Dockerfile
+      network: host
     container_name: oj-mysql
     ports:
       - "3306:3306"
@@ -97,8 +98,6 @@ services:
       context: resources/sandbox
       dockerfile: Dockerfile
       network: host
-    command:
-      - "--addr-http=0.0.0.0:5050"
     container_name: oj-sandbox
 #    depends_on:
 #      - oj-minio
@@ -124,15 +123,40 @@ services:
     environment:
       - JUDGE_URL=oj-sandbox:5050
       - NACOS_URL=oj-nacos:8848
+      - MINIO_URL=http://oj-minio:9000
       - DB_HOST=oj-mysql
       - REDIS_HOST=oj-redis
       - MQ_HOST=oj-mq
       - MQ_USERNAME=admin
       - MQ_PASSWORD=admin
-      - MQ_V_HOST=/
+      - MQ_V_HOST=/judge
       - MQ_CONCURRENCY=6
       - MQ_MAX_CONCURRENCY=12
       - GIN_MODE=release
+
+    networks:
+      - default
+      - oj-net
+
+  content-service:
+    build:
+      context: content-service
+      dockerfile: Dockerfile
+      network: host
+    container_name: content-service
+    depends_on:
+      - oj-nacos
+      - oj-redis
+    restart: always
+    environment:
+      - NACOS_URL=oj-nacos:8848
+      - MINIO_URL=http://oj-minio:9000
+      - DB_HOST=oj-mysql
+      - REDIS_HOST=oj-redis
+      - MQ_HOST=oj-mq
+      - MQ_USERNAME=admin
+      - MQ_PASSWORD=admin
+      - MQ_V_HOST=/judge
     networks:
       - default
       - oj-net
@@ -141,6 +165,7 @@ services:
     build:
       context: problem-service
       dockerfile: Dockerfile
+      network: host
     container_name: problem-service
     depends_on:
       - oj-nacos
@@ -148,12 +173,13 @@ services:
     restart: always
     environment:
       - NACOS_URL=oj-nacos:8848
+      - MINIO_URL=http://oj-minio:9000
       - DB_HOST=oj-mysql
       - REDIS_HOST=oj-redis
       - MQ_HOST=oj-mq
       - MQ_USERNAME=admin
       - MQ_PASSWORD=admin
-      - MQ_V_HOST=/
+      - MQ_V_HOST=/judge
     networks:
       - default
       - oj-net
@@ -162,6 +188,7 @@ services:
     build:
       context: user-service
       dockerfile: Dockerfile
+      network: host
     container_name: user-service
     depends_on:
       - oj-nacos
@@ -169,10 +196,13 @@ services:
     restart: always
     environment:
       - NACOS_URL=oj-nacos:8848
+      - MINIO_URL=http://oj-minio:9000
       - DB_HOST=oj-mysql
       - REDIS_HOST=oj-redis
-
-
+      - MQ_HOST=oj-mq
+      - MQ_USERNAME=admin
+      - MQ_PASSWORD=admin
+      - MQ_V_HOST=/judge
     networks:
       - default
       - oj-net
@@ -181,6 +211,7 @@ services:
     build:
       context: gateway-server
       dockerfile: Dockerfile
+      network: host
     container_name: gateway-server
     depends_on:
       - oj-nacos
@@ -198,6 +229,7 @@ services:
     build:
       context: oj-vue
       dockerfile: Dockerfile
+      network: host
     container_name: oj-vue
     depends_on:
       - gateway-server

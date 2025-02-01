@@ -7,6 +7,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.api.annotation.EnableCache;
 import com.anishan.api.file.FileOperation;
+import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.enumeration.ProblemType;
 import com.anishan.problem.domain.CaseParam;
 import com.anishan.problem.domain.dto.*;
@@ -118,6 +119,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
     @Override
     public PagedResult<TaggedProblemVo> listTaggerProblems(PagedProblem pagedProblem) {
+        Long userId = AuthUtil.getUserId();
         Page<Problem> page = pagedProblem.page();
         Integer type = null;
         if (pagedProblem.getType() != null) {
@@ -129,7 +131,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                         pagedProblem.getProblemId(),
                         pagedProblem.getTagIds(),
                         pagedProblem.getTitle(),
-                        type
+                        type,
+                        userId
                 );
         return PagedResult.fromPage(page, taggedProblemVos, page.getTotal());
     }

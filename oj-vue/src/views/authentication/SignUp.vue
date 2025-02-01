@@ -7,6 +7,7 @@
       status-icon
       :rules="rules"
       :aria-autocomplete="false"
+      @submit="submitSignUp(formRef)"
   >
     <el-form-item>
       <h1 style="margin: 0; color: #303133; text-align: center; width: 100%;">注册</h1>

@@ -147,6 +147,7 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 # menu_id 4 系统管理 system-manage
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (41, '缓存管理', 1, 4, 'cache-manage', 'I', '#', 'RefreshRight', 'backend/system/cache-manage/CacheManage');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (42, '文件管理', 2, 4, 'file-manage', 'I', '#', 'Files', 'backend/system/file-manage/FileManage');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (43, '通知管理', 3, 4, 'notice-manage', 'I', '#', 'Notification', 'backend/system/notice-manage/NoticeManage');
 
 
 # menu_id 10 题目编辑
@@ -234,6 +235,11 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 # 文件管理 menu_id 42
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (420, '列出文件', 1, 42, '#', 'B', 'content:file:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (421, '删除文件', 2, 42, '#', 'B', 'content:file:remove', '#');
+
+# 通知管理 menu_id 43
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (431, '添加公告', 1, 43, '#', 'B', 'content:notice:add', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (432, '编辑公告', 2, 43, '#', 'B', 'content:notice:edit', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (433, '删除公告', 3, 43, '#', 'B', 'content:notice:remove', '#');
 
 
 # 文件上传下载删除

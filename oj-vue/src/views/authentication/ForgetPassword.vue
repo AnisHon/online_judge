@@ -6,6 +6,7 @@
       status-icon
       :rules="rules"
       :aria-autocomplete="false"
+      @submit="submitResetPassword(formRef)"
   >
     <el-form-item>
       <h1 style="margin: 0; color: #303133; text-align: center; width: 100%;">忘记密码</h1>

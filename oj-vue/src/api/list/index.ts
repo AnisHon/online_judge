@@ -41,6 +41,8 @@ interface ProblemInListView extends ProblemView {
     score?: number;
     tempOrder?: number;
     tempScore?: number;
+    userScore?: number;
+    correct?: boolean;
 }
 
 

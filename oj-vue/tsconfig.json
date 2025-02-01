@@ -9,7 +9,7 @@
     }
   ],
   "compilerOptions": {
-    "strict": false,
+    "strict": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "paths": {
@@ -23,4 +23,5 @@
       "es2015.collection"
     ]
   },
+
 }

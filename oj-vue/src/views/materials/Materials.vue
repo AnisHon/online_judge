@@ -39,7 +39,7 @@
     <div class="breadcrumb">
       <el-breadcrumb>
         <el-breadcrumb-item v-for="[index, item] of path.entries()" :key="item.id" @click="jumpTo(index)">
-          <el-text>
+          <el-text style="cursor: pointer;">
             {{ item.path }}
           </el-text>
 
@@ -147,7 +147,7 @@ import {
   type CloudFile,
   debouncedAddDir,
   deleteFile,
-  download,
+  download, downloadFile,
   listFiles, preview,
   type QueryCloudFile,
   updateFile
@@ -203,6 +203,7 @@ const selectable = (row: CloudFile) => {
 
 // 获取列表
 const getList = async () => {
+  list.value.length = 0;
   list.value = await listFiles(query.value);
   list.value.sort((a, b) => +a.dir - +b.dir);
 }
@@ -222,6 +223,10 @@ const jumpTo = (index: number) => {
   if (index === path.value.length - 1) {
     return;
   }
+  if (path.value[index].id === query.value.parentId) {
+    return;
+  }
+
   path.value.length = index + 1;
   query.value.parentId = path.value[index].id;
 
@@ -296,6 +301,7 @@ const handleClickRow = (row: CloudFile) => {
   }
 
   if (row.dir) {
+
     path.value.push({
       id: row.cloudFileId,
       path: row.fileName
@@ -315,13 +321,14 @@ const handleRename = (row: CloudFile) => {
 // 处理下载文件
 const handleDownload = (row?: CloudFile) => {
   if (row) {
-    download(<string>row.filePath, row.fileName)
+    downloadFile(<string>row.filePath, row.fileName)
   } else {
     ids.value.forEach(
         item => {
           const result = list.value.find((value) => value.cloudFileId === item);
           if (result) {
-            download(<string>result.filePath, result.fileName);
+            // download(<string>result.filePath, result.fileName);
+            downloadFile(<string>result.filePath, result.fileName)
           }
         }
     )

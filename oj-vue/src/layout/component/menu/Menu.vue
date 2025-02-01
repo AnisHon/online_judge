@@ -6,10 +6,10 @@
       router
   >
     <el-menu-item index="/index">
-      <img
-          style="width: 100px"
-          src="https://element-plus.org/images/element-plus-logo.svg"
-          alt="Element logo"
+      <el-image
+          style="width: 200px"
+          src="/code_logo.png"
+          alt="logo"
       />
     </el-menu-item>
     <recursive-menu-item v-for="item of constMenu" :route="item"/>

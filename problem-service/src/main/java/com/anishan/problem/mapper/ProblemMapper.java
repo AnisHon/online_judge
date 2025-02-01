@@ -23,7 +23,8 @@ public interface ProblemMapper extends MPJBaseMapper<Problem> {
             @Param("problemId") Long problemId,
             @Param("tagIds") List<Long> tagIds,
             @Param("title") String title,
-            @Param("type") Integer type
+            @Param("type") Integer type,
+            @Param("userId") Long userId
     );
     Long selectTaggedProblemCountByProblemIdAndTagId(
             @Param("problemId") Long problemId,

@@ -236,7 +236,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
                 x -> (Long) x
         );
 
-        return problemListService.getProblemsForUser(listId);
+        return problemListService.getProblemsForUser(listId, contestId);
     }
 
 

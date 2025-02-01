@@ -6,7 +6,20 @@
       <el-col class="cards-wrapper" :span="16">
 
           <custom-card class="card" icon="Notification" title="公告" more @show-more="notificationShowMore">
-            <p v-for="i in 4" :key="i"><el-link type="primary">item {{i}}</el-link> </p>
+            <el-table :data="notices" :show-header="false">
+              <el-table-column prop="title" >
+                <template v-slot="scope">
+                  <el-link
+                      :underline="false"
+                      type="primary"
+                      @click="router.push({name: 'notice', params:{id: scope.row.noticeId}})"
+                  >
+                    {{ scope.row.title }}
+                  </el-link>
+                </template>
+              </el-table-column>
+              <el-table-column prop="createTime" align="right"/>
+            </el-table>
           </custom-card>
 
           <custom-card  class="card"  icon="EditPen" title="最近题解" more @show-more="solutionShowMore">
@@ -67,20 +80,28 @@ import {useRouter} from "vue-router";
 import {type ProblemView, recentProblem} from "@/api/problem";
 import {problemTypeToString} from "@/utils/problem";
 import {recentSolution, type Solution} from "@/api/solution";
+import {type Notice, recentNotices} from "@/api/notice";
 
-const ranks = ref<UserView[]>([])
+const ranks = ref<UserView[]>([]);
 
-const problems = ref<ProblemView[]>([])
+const problems = ref<ProblemView[]>([]);
 
-const solutions = ref<Solution[]>([])
+const solutions = ref<Solution[]>([]);
+
+const notices = ref<Notice[]>([]);
 
 const router = useRouter();
 
 // created
 rank(20)
     .then((data) => {
-      data.length = Math.min(data.length, 10);
+      data.length = Math.min(data.length, 20);
       ranks.value = data;
+    })
+
+recentNotices()
+    .then(data => {
+      notices.value = data;
     })
 
 

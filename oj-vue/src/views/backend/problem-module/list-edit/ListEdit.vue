@@ -49,7 +49,7 @@
             icon="delete"
             size="small"
             :disabled="multiple"
-            @click="handleDelete"
+            @click="handleDelete()"
             v-has="'problem:list:remove'"
         >删除</el-button>
       </el-col>
@@ -146,11 +146,8 @@ import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {ElDialog, ElMessageBox} from "element-plus";
 import __ from "lodash";
-import {useRoute, useRouter} from "vue-router";
+import {useRouter} from "vue-router";
 import type {IdType} from "@/api/common.ts";
-
-
-const route = useRoute();
 
 const router = useRouter();
 // 查询需要的表单数据
@@ -224,24 +221,15 @@ const handleSelectionChange = (selection: ListView[]) => {
 
 
 
-const handleDelete = (row: ListView | Event) => {
-  if (row instanceof Event) {
-    ElMessageBox.confirm(`您是否要删除ID为${ids.value}的数据项？`, {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          removeList(ids.value).then(getList);
-        })
-  } else {
-    ElMessageBox.confirm('是否确认删除名称为"' + row.listName + '"的数据项？', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          removeList(row.listId).then(getList);
-        })
-  }
+const handleDelete = (row?: ListView) => {
+  const id = row ? row.listId : ids.value
+  ElMessageBox.confirm(`您是否要删除ID为${id}的数据项？`, {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  })
+      .then(() => {
+        removeList(ids.value).then(getList);
+      })
 }
 
 // 搜索按钮

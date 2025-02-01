@@ -3,6 +3,7 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.anishan.api.annotation.EnableCache;
+import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.problem.domain.dto.PagedProblemList;
@@ -138,17 +139,9 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
     @Override
-    @EnableCache(name = "contest:problem:")
-    public List<ProblemInListVo> getProblemsForUser(Long listId) {
-        MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
-                .selectAll(Problem.class)
-                .select(ProblemProblemListRelation::getProblemOrder, ProblemProblemListRelation::getScore)
-                .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
-                .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
-                .eq(ProblemList::getListId, listId)
-                .eq(Problem::getAuth, ProblemAuth.PUBLIC)
-                .isNotNull(Problem::getProblemId);
-        return problemListMapper.selectJoinList(ProblemInListVo.class, wrapper);
+    public List<ProblemInListVo> getProblemsForUser(Long listId, Long contestId) {
+        Long userId = AuthUtil.getUserId();
+        return problemListMapper.selectProblemByListId(contestId, userId, listId);
     }
 }
 

@@ -1,9 +1,13 @@
 package com.anishan.api.advice;
 
 import cn.hutool.http.HttpStatus;
+import com.anishan.commons.config.SharedConfig;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.exception.IllegalTokenException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -24,24 +28,29 @@ import java.util.Objects;
 
 @ControllerAdvice
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GlobalExceptionAdvice {
+
+    private final SharedConfig sharedConfig;
 
     @ResponseBody
     @ExceptionHandler(value = Exception.class)
     public R<String> handleException(Exception e) {
-        Throwable temp = e;
-        StringBuilder builder = new StringBuilder();
+        log.error(e.getMessage(), e);
+        if (sharedConfig.isProduct()) {
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误，请联系管理员");
+        } else {
+            Throwable temp = e;
+            StringBuilder builder = new StringBuilder();
+            while (temp != null) {
+                builder.append(temp.getMessage()).append("\n");
+                temp = temp.getCause();
+            }
 
-        while (temp != null) {
-            builder.append(temp.getMessage()).append("\n");
-            temp = temp.getCause();
+            return R.error(HttpStatus.HTTP_INTERNAL_ERROR, builder.toString());
         }
 
-        if (e != null) {
-            log.error(e.getMessage(), e);
-        }
 
-        return R.error(HttpStatus.HTTP_INTERNAL_ERROR, builder.toString());
     }
 
     @ResponseBody
@@ -102,30 +111,41 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(DuplicateKeyException.class)
     @ResponseStatus(org.springframework.http.HttpStatus.CONFLICT)
     public R<String> handleDuplicateKeyException(DuplicateKeyException e) {
-        log.error(e.getMessage(), e);
+        log.debug(e.getMessage(), e);
         return R.error(HttpStatus.HTTP_CONFLICT, "字段冲突，请查对后再提交");
     }
 
     @ResponseBody
     @ExceptionHandler(ConstraintViolationException.class)
     public R<String> handleConstraintViolationException(ConstraintViolationException e) {
-        log.error(e.getMessage(), e);
+        log.debug(e.getMessage(), e);
         return R.error(HttpStatus.HTTP_BAD_REQUEST, "使用了不存在的对象，请检查后重试");
     }
 
     @ResponseBody
     @ExceptionHandler(RuntimeException.class)
     public R<String> handleRuntimeException(RuntimeException e) {
-        // todo
-        log.error(e.getMessage(), e);
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+
+        log.debug(e.getMessage(), e);
+        if (sharedConfig.isProduct()) {
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误");
+        } else {
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+
+        }
     }
 
     @ResponseBody
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public R<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
-        log.error(e.getMessage(), e);
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, "JSON语法错误" + e.getMessage());
+        log.debug(e.getMessage(), e);
+        if (sharedConfig.isProduct()) {
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, "请求错误");
+
+        } else {
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, "JSON语法错误" + e.getMessage());
+
+        }
     }
 
     @ResponseBody
@@ -136,11 +156,11 @@ public class GlobalExceptionAdvice {
     }
 
 
-//
-//    @ResponseBody
-//    @ExceptionHandler(MismatchedInputException.class)
-//    public R<String> handleMismatchedInputException(MismatchedInputException e) {
-//        return R.error(HttpStatus.HTTP_BAD_REQUEST, "JSON语法错误");
-//    }
+
+    @ResponseBody
+    @ExceptionHandler(MismatchedInputException.class)
+    public R<String> handleMismatchedInputException(MismatchedInputException e) {
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误");
+    }
 
 }

@@ -4,9 +4,9 @@
 
     <template #title>
       <el-icon :size="20">
-        <component :is="router.meta.icon" />
+        <component :is="router?.meta?.icon" />
       </el-icon>
-      <span>{{ router.meta.name }}</span>
+      <span>{{ router.meta?.name }}</span>
     </template>
     <sub-form-item v-for="item of router.children" :router="item" />
   </el-sub-menu>
@@ -15,9 +15,9 @@
 
     <template #title>
       <el-icon :size="20">
-        <component :is="router.meta.icon" />
+        <component :is="router?.meta?.icon" />
       </el-icon>
-      <span>{{ router.meta.name }}</span>
+      <span>{{ router.meta?.name }}</span>
     </template>
   </el-menu-item>
 
@@ -25,14 +25,14 @@
 
 <script setup lang="ts">
 
-import type {RouterType} from "@/router/dynamic.ts";
 import {computed} from "vue";
 import {MenuType} from "@/api/auth/menu.ts";
 import __ from 'lodash';
+import type {RouteRecordRaw} from "vue-router";
 
 
 const isItem = computed(() => {
-  return router.meta.type === MenuType.MENU_ITEM;
+  return router?.meta?.type === MenuType.MENU_ITEM;
 })
 
 const isShow = computed(() => {
@@ -40,7 +40,7 @@ const isShow = computed(() => {
 })
 
 const {router} = defineProps<{
-  router: RouterType
+  router: RouteRecordRaw
 }>()
 
 </script>

@@ -63,7 +63,11 @@ service.interceptors.response.use(
         if (code === 200) {
             return response.data;
         } if (code == 400) {
-            ElNotification.error(response.data.message);
+            if (response.data.message && response.data.message !== "null") {
+                ElNotification.error(response.data.message);
+            }
+        } else if (code == 401) {
+
         } else if (code === 403) {
             error403();
         } else {

@@ -9,14 +9,16 @@
   >
     <el-button class="float-button" @click="toggleDrawer" color="#fff" style="padding: 0 5px 0 0; outline: none; border: 1px solid #0095FF; border-radius: 8px;">
 
-      <el-icon style="background-color: #0095FF; border-radius: 8px" size="32px" color="white"><Coin /></el-icon>
+      <el-icon style="background-color: #0095FF; border-radius: 8px" size="32px" color="white">
+        <IconCoin/>
+      </el-icon>
 
 
-      <span style="color: #0095FF">积分：{{point}}</span>
+      <span style="color: #0095FF">bit币：{{point}}</span>
 
     </el-button>
     <el-drawer
-        title="不知道有什么用"
+        title="设置"
         v-model="drawerVisible"
         direction="rtl"
         size="30%"
@@ -35,9 +37,10 @@ import {Coin} from "@element-plus/icons-vue";
 import DrawerContent from "@/layout/component/FloatingBall/DrawerContent.vue";
 import {onSse, SseEvent} from "@/utils/sse";
 import {getMyPoint} from "@/api/user/index.ts";
+import IconCoin from "@/assets/icons/IconCoin.vue";
 
 export default {
-  components: {DrawerContent, Coin},
+  components: {IconCoin, DrawerContent, Coin},
   data() {
     return {
       position: { x: window.innerWidth - 150, y: window.innerHeight / 2 },

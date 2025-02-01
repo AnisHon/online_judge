@@ -191,6 +191,14 @@ export const constRoutes =  [
           name: "题解编辑"
         }
       },
+      {
+        path: "notification/notice/:id",
+        name: "notice",
+        component: () => import('@/views/notification/notice/Notice.vue'),
+        meta: {
+          name: "通知"
+        },
+      },
       ...constMenu
     ]
   },

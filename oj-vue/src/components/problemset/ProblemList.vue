@@ -33,6 +33,23 @@
 
     <template #default>
       <el-table table-layout="auto" :data="problems" stripe style="width: 100%">
+        <el-table-column prop="finish" label="状态">
+          <template v-slot="scope">
+            <el-tooltip v-if="scope.row.finish" content="已完成" placement="top">
+              <el-icon color="var(--el-color-success)">
+                <CircleCheck/>
+              </el-icon>
+            </el-tooltip>
+            <div v-else></div>
+          </template>
+
+        </el-table-column>
+        <el-table-column prop="id" label="题目ID" show-overflow-tooltip />
+        <el-table-column prop="title" label="题目名称" show-overflow-tooltip>
+          <template #default="scope">
+            <router-link target="_blank" :to="{name: 'problem', params: {id: scope.row.id}}" class="router-link">{{ scope.row.title }}</router-link>
+          </template>
+        </el-table-column>
         <el-table-column prop="type" label="题目类型">
           <template #default="scope">
             <el-tag type="success">
@@ -40,13 +57,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="id" label="题目ID" />
-        <el-table-column prop="title" label="题目名称">
-          <template #default="scope">
-            <router-link target="_blank" :to="{name: 'problem', params: {id: scope.row.id}}" class="router-link">{{ scope.row.title }}</router-link>
-          </template>
-        </el-table-column>
-        <el-table-column prop="author" label="标签">
+        <el-table-column prop="author" label="标签" show-overflow-tooltip>
           <template #default="scope">
             <el-space wrap>
               <el-tag  v-for="item of scope.row.tag" :color="item.tagColor" :key="item.tagId">
@@ -71,6 +82,7 @@ import {computed, ref, watch} from "vue";
 import type {TagView} from "@/api/problem/label";
 import {debounce} from "@/utils/debounce";
 import {problemTypeToString} from "@/utils/problem";
+import {Checked, CircleCheck} from "@element-plus/icons-vue";
 
 interface ProblemTableView {
   id: number;
@@ -78,6 +90,7 @@ interface ProblemTableView {
   title: string;
   tag: TagView[];
   source: string;
+  finish: boolean;
 }
 
 const problems = ref<ProblemTableView[]>([]);
@@ -101,14 +114,13 @@ const doGetProblems = () => {
             title: item.title,
             tag: item.tags,
             source: item.source,
+            finish: item.finish
           })
         })
         problems.value = tempProblems
         emit('loadFinish', currentPage, pageSize, totalRecords)
       })
-      .catch((e) => {
-
-      })
+      .catch(() => {})
       .finally(() => {loading.value = false});
 }
 

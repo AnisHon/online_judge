@@ -22,8 +22,6 @@
       </el-scrollbar>
     </el-container>
 
-
-
     <floating-ball/>
   </div>
 </template>
