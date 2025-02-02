@@ -32,7 +32,7 @@ const removeClass = async (id: IdType | IdType[]) => {
 }
 
 const addClass = async (form: ClassForm) => {
-    await add(form, "/user-api/class/add");
+    await add(form, "/user-api/class");
 }
 
 const debouncedAddClass = (form: ClassForm, success: successCallback<void>) => {

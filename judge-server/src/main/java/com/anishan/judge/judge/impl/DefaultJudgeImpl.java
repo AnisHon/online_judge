@@ -99,8 +99,17 @@ public class DefaultJudgeImpl implements JudgeRun {
         try {
             runResult = runJudge(caseContent, judgeInfo, judgeParam);
         } catch (SystemError e) {
-            log.error("严重错误，判题机出错", e);
-            return null;
+            log.error("严重错误，判题机出错 stderr:{}", e.getStderr());
+            log.error("严重错误，判题机出错 stdout:{}", e.getStdout());
+            log.error("严重错误，判题机出错 message:{}", e.getMessage());
+            return JudgeRunResultScore.builder()
+                    .score(BigDecimal.ZERO)
+                    .judgeResult(JudgeResult.RUNTIME_ERROR)
+                    .passed(false)
+                    .runtime(0L)
+                    .memory(0L)
+                    .errorMessage("系统异常, 请联系管理员")
+                    .build();
         }
 
         return gradeSubmission.judgeScore(runResult, caseContent);

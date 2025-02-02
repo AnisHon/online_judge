@@ -3,6 +3,8 @@ package com.anishan.api.client.problem.domain.vo;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.util.Date;
@@ -13,6 +15,7 @@ public class SubmitLogVo {
      * 提交ID
      */
     @TableId(type = IdType.AUTO)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long submitId;
 
     /**

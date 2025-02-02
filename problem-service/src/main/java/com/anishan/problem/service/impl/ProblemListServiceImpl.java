@@ -2,7 +2,7 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
-import com.anishan.api.annotation.EnableCache;
+import com.anishan.api.config.ConstConfig;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ProblemAuth;
@@ -46,6 +46,7 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     private final ProblemProblemListService problemProblemListService;
     private final ProblemListMapper problemListMapper;
     private final ProblemProblemListMapper problemProblemListMapper;
+    private final ConstConfig constConfig;
 
     @Override
     public List<ProblemVo> getProblemListByListId(Long id) {
@@ -101,7 +102,8 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     @Override
     public boolean addProblemList(List<ProblemListRelationDto> relations) {
         List<ProblemProblemListRelation> list = BeanUtil.copyToList(relations, ProblemProblemListRelation.class);
-        list.forEach(x -> x.setScore(BigDecimal.TEN));
+        BigDecimal score = constConfig.getListDefaultScore();
+        list.forEach(x -> x.setScore(score));
 
         return problemProblemListService.saveBatch(list);
 
@@ -139,9 +141,15 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
     @Override
-    public List<ProblemInListVo> getProblemsForUser(Long listId, Long contestId) {
+    public List<ProblemInListVo> getContestProblemsByListId(Long listId, Long contestId) {
         Long userId = AuthUtil.getUserId();
-        return problemListMapper.selectProblemByListId(contestId, userId, listId);
+        return problemListMapper.selectContestProblemByListId(contestId, userId, listId);
+    }
+
+    @Override
+    public List<ProblemInListVo> getProblemByListId(Long id) {
+        Long userId = AuthUtil.getUserId();
+        return problemListMapper.selectProblemByListId(userId, id);
     }
 }
 

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
@@ -18,9 +19,11 @@ public class RoleDto {
     private Long roleId;
 
     @ApiModelProperty("角色名称")
+    @NotEmpty
     private String roleName;
 
     @ApiModelProperty("角色状态（0正常 1停用）")
+    @NotNull
     private Integer status;
 
     @ApiModelProperty("创建时间")

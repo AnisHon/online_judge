@@ -6,7 +6,10 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -24,11 +27,10 @@ public class ProblemListDto {
     private Long listId;
 
     @ApiModelProperty("题单名字，必须唯一")
-    @NotNull(groups = ValidationGroup.Insert.class)
+    @NotEmpty(groups = ValidationGroup.Insert.class)
     private String listName;
 
     @ApiModelProperty("题单说明，字数不应该太多")
-    @NotNull(groups = ValidationGroup.Insert.class)
     private String description;
 
 }

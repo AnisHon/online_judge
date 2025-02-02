@@ -82,7 +82,7 @@ public class RoleController {
     @PutMapping
     @PreAuthorize("hasAuthority('user:role:edit')")
     @ApiOperation("更新Role，不能更改roleId")
-    public R<Boolean> update(@RequestBody RoleDto roleDto) {
+    public R<Boolean> update(@RequestBody @Validated(ValidationGroup.Update.class) RoleDto roleDto) {
         boolean b = sysRoleService.updateRole(roleDto);
         return R.success(b);
     }
@@ -98,7 +98,7 @@ public class RoleController {
     @PostMapping
     @PreAuthorize("hasAuthority('user:role:add')")
     @ApiOperation("添加role")
-    public R<Boolean> addRole(@RequestBody @Validated(ValidationGroup.Update.class) RoleDto roleDto) {
+    public R<Boolean> addRole(@RequestBody @Validated(ValidationGroup.Insert.class) RoleDto roleDto) {
 
         boolean b;
         try {

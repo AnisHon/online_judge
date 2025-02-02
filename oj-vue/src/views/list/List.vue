@@ -11,7 +11,7 @@
           <template #default="{node, data}" style="margin-top: 20px">
 
             <span style="font-size: 20px;">
-              <el-icon v-if="!data.file" size="large"><Folder /></el-icon>
+              <el-icon v-if="!isFile(data.folder.folderType)" size="large"><Folder /></el-icon>
               <el-icon v-else size="large"><Document /></el-icon>
               <span>
                 {{ node.label }}
@@ -23,14 +23,24 @@
         </el-tree>
       </el-col>
       <el-col :span="16" class="content">
-        <el-table v-loading="isLoading" :data="orderedTableList" v-show="tableList.length > 0" stripe>
-          <el-table-column label="问题ID" align="center" prop="problemId"/>
+        <el-table v-loading="isLoading" :data="orderedTableList" v-show="tableList.length > 0" table-layout="auto" stripe>
+          <el-table-column label="状态" align="center" prop="finish">
+            <template v-slot="scope">
+              <el-tooltip v-if="scope.row.finish" content="已完成" placement="top">
+                <el-icon color="var(--el-color-success)">
+                  <CircleCheck/>
+                </el-icon>
+              </el-tooltip>
+              <div v-else></div>
+            </template>
+          </el-table-column>
+          <el-table-column label="问题ID" align="center" prop="problemId" show-overflow-tooltip/>
           <el-table-column label="题目" prop="title">
             <template v-slot="scope">
               <el-link type="primary"  @click="handleClickProblem(scope.row.problemId)">{{ scope.row.title }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column label="问题来源" align="center" prop="source" />
+          <el-table-column label="问题来源" align="center" prop="source" show-overflow-tooltip />
           <el-table-column label="问题类型" align="center" prop="type">
             <template v-slot="scope">
               <el-tag type="primary">{{ problemTypeToString(scope.row.type) }}</el-tag>
@@ -39,20 +49,17 @@
         </el-table>
         <el-empty class="empty-status" v-show="tableList.length === 0" description="这里空空如野"/>
       </el-col>
-
     </el-row>
-
-
   </div>
 </template>
 
 <script lang="ts" setup>
 import {computed, reactive, ref} from 'vue'
-import {getTreedFolderView, type TreedFolderView} from "@/api/folder";
+import {FolderType, getTreedFolderView, type TreedFolderView} from "@/api/folder";
 import {getProblems, type ProblemInListView} from "@/api/list";
 import {useRouter} from "vue-router";
 import {problemTypeToString} from "@/utils/problem";
-import {Document, Folder} from "@element-plus/icons-vue";
+import {CircleCheck, Document, Folder} from "@element-plus/icons-vue";
 
 const router = useRouter();
 const defaultProps = {
@@ -71,6 +78,10 @@ const orderedTableList = computed(() => {
 
 const isLoading = ref<boolean>(false);
 
+const isFile = (type: string) => {
+  return type === FolderType.FILE;
+}
+
 const handleClickProblem = (id: number) => {
   const routeUrl = router.resolve({
     name: "problem",
@@ -80,7 +91,7 @@ const handleClickProblem = (id: number) => {
 }
 
 const handleNodeClick = (node: TreedFolderView) => {
-  if (node.file) {
+  if (isFile(node.folder.folderType)) {
     getProblems(node.folder.listId)
         .then(data => {
           tableList.length = 0;

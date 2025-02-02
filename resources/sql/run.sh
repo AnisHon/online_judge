@@ -21,6 +21,7 @@ done
 
 echo "MySQL is ready. Running the SQL script..."
 mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_problem.sql"
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_content.sql"
 
 # shellcheck disable=SC2181
 if [ $? -eq 0 ]; then
@@ -43,6 +44,7 @@ touch "$FILE_PATH"
 rm -f /opt/db_problem.sql
 rm -f /opt/db_user.sql
 rm -f /opt/nacos.sql
+rm -f /opt/db_content.sql
 
 # 保持 MySQL 服务运行
 tail -f /dev/null

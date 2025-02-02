@@ -44,9 +44,7 @@
               type="card"
               class="demo-tabs"
           >
-            <el-tab-pane
-                name="detail"
-            >
+            <el-tab-pane name="detail">
               <template #label>
                 <el-icon><Document /></el-icon>
                 <span>&nbsp;题目</span>
@@ -61,15 +59,20 @@
                   <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
                   <fill-blank-problem v-model="judgeForm"  v-else-if="isFillProblem" />
                   <choice-choose-problem :problem-view="problem" v-model="judgeForm" v-else-if="isChoiceProblem" />
+                  <el-skeleton v-else animated>
+                    <el-skeleton-item variant="p"/>
+                    <el-skeleton-item variant="p"/>
+                    <el-skeleton-item variant="p"/>
+                    <el-skeleton-item variant="p"/>
+                    <el-skeleton-item variant="p"/>
+                  </el-skeleton>
                 </div>
+
 
                 <div v-if="!isOjProblem">
                   <div class="submit">
                     <el-button type="success" :disabled="isShowResult || disableSubmit" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
                   </div>
-
-
-
                 </div>
 
 

@@ -203,6 +203,11 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
 
         List<UserStatistic> scores = recordsMapper.selectUserStatistic(contestId);
         NikeNameUtil.setNikeName(scores);
+        scores.forEach(score -> {
+            if (score.getScore() == null) {
+                score.setScore(BigDecimal.ZERO);
+            }
+        });
         return scores;
     }
 

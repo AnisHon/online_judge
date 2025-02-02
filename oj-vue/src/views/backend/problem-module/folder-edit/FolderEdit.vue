@@ -100,9 +100,9 @@
                   ref="treeRef"
                   node-key="id"
                   :props="defaultProps"
-                  :data="tableList"
+                  :data="treeList"
                   show-checkbox
-                  :check-strictly="true"
+                  check-strictly
                   :filter-node-method="filterNode"
                   @check="handleCheckChange"
 
@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
+import {computed, nextTick, reactive, ref} from "vue";
 import {
   debouncedAddFolder,
   debouncedGetTreedFolder,
@@ -140,7 +140,7 @@ import {
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import {ElDialog, ElMessageBox, type ElTree} from "element-plus";
-import __ from "lodash";
+import __, {forEach} from "lodash";
 import ListView from "@/components/ListView/ListView.vue";
 import type {IdType} from "@/api/common.ts";
 
@@ -184,6 +184,7 @@ const resetForm = () => {
   form.parentId = undefined;
   form.listId = undefined;
   form.folderType = undefined;
+  treeRef.value?.setCheckedKeys([]);
 }
 
 const setNodeKey = (node: TreedFolderView[]) => {
@@ -205,6 +206,26 @@ const {loading, isLoading, get: getFolder} = debouncedGetTreedFolder((data) => {
 
 const tableList = reactive<TreedFolderView[]>([]);
 
+const getTreeList = (list: TreedFolderView[]): TreedFolderView[] => {
+  const newList: TreedFolderView[] = [];
+  if (list) {
+    list.forEach(x => {
+      if (x.folder.folderType !== FolderType.FILE) {
+        x = Object.assign({}, x);
+        x.children = getTreeList(x.children);
+        newList.push(x);
+      }
+
+    })
+  }
+
+  return newList;
+}
+
+const treeList = computed(() => {
+  return tableList;
+})
+
 // 获取列表
 const getList = () => {
   loading();
@@ -212,13 +233,35 @@ const getList = () => {
 
 }
 
-// 过滤
-const filterNode = (value: IdType | undefined, data: TreedFolderView) => {
-  let result = true;
-  if (value) {
-    result = (data.folder.folderId !== value)
+const isParent = (value: TreedFolderView, data: TreedFolderView): boolean => {
+  if (!data) {
+    return false;
   }
-  return result && !data.file;
+  if (value.folder.folderId === data.folder.folderId) {
+    return true;
+  } else {
+    if (!value.children) {
+      return false;
+    }
+
+    for (let child of value.children) {
+      const result = isParent(child, data);
+      if (result) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+// 过滤
+const filterNode = (value: TreedFolderView | undefined, data: TreedFolderView) => {
+  const notFile = data.folder?.folderType !== FolderType.FILE;
+  if (value) {
+    return !isParent(value, data) && notFile;
+  } else {
+    return notFile;
+  }
 }
 
 const handleCheckChange = (data: TreedFolderView, checked: boolean, indeterminate: boolean) => {
@@ -292,19 +335,19 @@ const title = computed(() => {
   return dialogState.value === 1 ? "添加" : "修改";
 })
 const handleAdd = () => {
-  treeRef.value?.filter(-1)
+  treeRef.value?.filter(null)
   dialogState.value = 1;
   open.value = true;
 }
 const handleUpdate = (data: TreedFolderView) => {
-  treeRef.value?.filter(data?.folder.folderId)
   open.value = true;
-  dialogState.value = 2;
+  resetForm();
+  nextTick(() => {
+    treeRef.value?.filter(data)
+    treeRef.value?.setChecked(data.folder.parentId, true, false);
+  })
 
-  // if (data instanceof Event) {
-  //   const id = ids.value[0];
-  //   data = __.find(tableList, x => x.folder.folderId === id)
-  // }
+  dialogState.value = 2;
   __.assign(form, data.folder)
 }
 

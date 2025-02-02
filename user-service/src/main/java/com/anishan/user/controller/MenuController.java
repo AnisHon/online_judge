@@ -1,5 +1,6 @@
 package com.anishan.user.controller;
 
+import com.anishan.api.annotation.ControllerLog;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -83,6 +84,7 @@ public class MenuController {
     @PutMapping
     @PreAuthorize("hasAuthority('user:menu:edit')")
     @ApiOperation("更新Menu，不能更改menuId")
+    @ControllerLog(api = "/menu", desc = "更新Menu")
     public R<Boolean> update(@RequestBody @Validated(ValidationGroup.Update.class) MenuDto menuDto) {
         boolean b = sysMenuService.updateMenu(menuDto);
         return R.success(b);
@@ -92,6 +94,7 @@ public class MenuController {
     @DeleteMapping("/{ids}")
     @PreAuthorize("hasAuthority('user:menu:remove')")
     @ApiOperation("删除menu")
+    @ControllerLog(api = "/menu", desc = "删除Menu")
     public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
         boolean b = sysMenuService.removeBatchByIds(ids);
         return R.success(b);
@@ -100,6 +103,7 @@ public class MenuController {
     @PostMapping
     @PreAuthorize("hasAuthority('user:menu:add')")
     @ApiOperation("添加menu")
+    @ControllerLog(api = "/menu", desc = "添加Menu")
     public R<Boolean> addMenu(@RequestBody @Validated(ValidationGroup.Insert.class) MenuDto menuDto) {
 
         try {
@@ -113,6 +117,7 @@ public class MenuController {
     @PutMapping("/revoke")
     @PreAuthorize("hasAuthority('user:menu:revoke')")
     @ApiOperation("撤销权限")
+    @ControllerLog(api = "/menu/revoke", desc = "撤销角色权限")
     public R<Boolean> revoke(@RequestBody @Validated(ValidationGroup.Insert.class) RoleMenuRelationDto relation) {
 
         boolean b = sysRoleMenuService.remove(new LambdaQueryWrapper<SysRoleMenuRelation>()
@@ -125,6 +130,7 @@ public class MenuController {
     @PostMapping("/batchRevoke")
     @PreAuthorize("hasAuthority('user:menu:revoke')")
     @ApiOperation("撤销权限")
+    @ControllerLog(api = "/menu/batchRevoke", desc = "撤销角色权限")
     public R<Boolean> revoke(@RequestBody @Validated(ValidationGroup.Insert.class) List<RoleMenuRelationDto> relations) {
 
       sysRoleMenuService.removeBatch(relations);
@@ -134,6 +140,7 @@ public class MenuController {
     @PostMapping("/grant")
     @PreAuthorize("hasAuthority('user:menu:grant')")
     @ApiOperation("授予权限")
+    @ControllerLog(api = "/menu/grant", desc = "授予角色权限")
     public R<Boolean> grant(@RequestBody @Validated List<RoleMenuRelationDto> relation) {
 
         boolean b = sysMenuService.grant(relation);

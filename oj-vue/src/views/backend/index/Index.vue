@@ -113,8 +113,11 @@
           </custom-card>
 
           <custom-card style="margin-top: 40px" title="公告">
-            <el-card v-for="i of 20">
-              132
+            <el-card v-for="item of notices" style="margin-bottom: 20px" shadow="hover">
+              <el-link type="primary" @click="router.push({name: 'notice', params: {id: item.noticeId}})">
+                {{ item.title }}
+              </el-link>
+              <el-tag v-if="item.topUp" type="danger">重要</el-tag>
             </el-card>
           </custom-card>
 
@@ -139,6 +142,10 @@ import {ElNotification} from "element-plus";
 import {copyTextToClipboard} from "@/utils/clipboard.ts";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {countOnline, freeDisk} from "@/api/file";
+import {type Notice, recentNotices} from "@/api/notice";
+import {useRouter} from "vue-router";
+
+const router = useRouter();
 
 const help = `
 #### 安装SSh
@@ -180,6 +187,8 @@ netstat -aon|findstr "需要查看的端口"
 
 > 注意：使用SSH链接服务器需要在服务器的authorized_keys里注册自己的公钥，或者使用服务器的私钥，服务器关闭了密码登录
 `
+
+const notices = ref<Notice[]>([])
 
 // 复制ssh链接用的button
 const copyButtons = ref([
@@ -284,12 +293,18 @@ const handleCopy = (ports: number[]) => {
 
 }
 
+const getNotice = async () => {
+  notices.value = await recentNotices();
+}
+
 const init = async () => {
   problemNumber.value = await countProblems();
   online.value = await countOnline();
   const {free, total} = await freeDisk();
   freeMemory.value = free;
   totalMemory.value = total;
+
+  await getNotice();
 }
 
 

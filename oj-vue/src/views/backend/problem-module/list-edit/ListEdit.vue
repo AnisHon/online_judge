@@ -228,7 +228,7 @@ const handleDelete = (row?: ListView) => {
     cancelButtonText: '取消'
   })
       .then(() => {
-        removeList(ids.value).then(getList);
+        removeList(id).then(getList);
       })
 }
 

@@ -12,7 +12,7 @@
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
     </resultMap>
-    <select id="selectProblemByListId" resultType="com.anishan.problem.domain.vo.ProblemInListVo">
+    <select id="selectContestProblemByListId" resultType="com.anishan.problem.domain.vo.ProblemInListVo">
         select
             ppl.score as score,
             ppl.problem_order as problemOrder,
@@ -41,6 +41,27 @@
         <if test="contestId != null">
             and c.contest_id = #{contestId}
         </if>
+    </select>
+    <select id="selectProblemByListId" resultType="com.anishan.problem.domain.vo.ProblemInListVo">
+        select
+            ppl.score as score,
+            ppl.problem_order as problemOrder,
+            ppl.problem_id as problemId,
+            p.title as title,
+            p.type as type,
+            p.source as source,
+            p.description as description,
+            p.hint as hint,
+            p.auth as auth,
+            p.create_time as createTime,
+            exists(select 1 from problem_complete pc where pc.problem_id = ppl.problem_id and pc.user_id = #{userId}) as finish
+        from problem_problem_list ppl
+        left join problem p on p.problem_id = ppl.problem_id
+
+        where
+            not isnull(p.problem_id)
+        and
+            ppl.list_id = #{listId}
     </select>
 
 

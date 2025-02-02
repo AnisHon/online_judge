@@ -39,7 +39,7 @@ export interface ForgetPasswordResponse {
 
 
 async function checkAvailableEmail(email: string) {
-    const {data} = await put("/user-api/user/email", email);
+    const {data} = await get("/user-api/user/email", email);
     return data;
 }
 

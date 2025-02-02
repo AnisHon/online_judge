@@ -40,13 +40,13 @@
                 from contest_records cr
                 where cr.contest_id = #{contestId}
                   and cr.user_id = uc.user_id
-                  and cr.status = 1)               as right_num,
+                  and cr.status = 1)               as correct_num,
                (select count(*)
                 from contest_records cr
                 where cr.contest_id = #{contestId}
                   and cr.user_id = uc.user_id
                   and cr.status = 0)               as wrong_num,
-               (select count(*) - right_num - wrong_num
+               (select count(*) - correct_num - wrong_num
                 from problem_problem_list ppl
                          left join contest c on c.list_id = ppl.list_id
                 where c.contest_id = #{contestId}) as absent_num,

@@ -88,16 +88,16 @@
         <el-row>
           <el-col :span="24">
             <el-form-item label="ID">
-              <el-input v-model="form.noticeId" placeholder="请输入题单名称" disabled/>
+              <el-input v-model="form.noticeId" placeholder="通知ID" disabled/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="通知名称">
-              <el-input v-model="form.title" placeholder="请输入题单名称"/>
+              <el-input v-model="form.title" placeholder="请输入通知标题"/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="重要">
+            <el-form-item label="标记为重要">
               <el-switch v-model="form.topUp"/>
             </el-form-item>
           </el-col>
@@ -201,7 +201,7 @@ const handleDelete = (row?: Notice) => {
     cancelButtonText: '取消'
   })
       .then(() => {
-        removeNotice(ids.value).then(getList);
+        removeNotice(id).then(getList);
       })
 }
 

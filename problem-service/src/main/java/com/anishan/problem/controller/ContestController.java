@@ -27,14 +27,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -102,7 +100,7 @@ public class ContestController {
     @PreAuthorize("hasAuthority('problem:contest:add')")
     @ApiOperation("添加contest")
     public R<Boolean> addContest(
-            @RequestBody @Validated ContestDto contestDto,
+            @RequestBody @Validated(ValidationGroup.Insert.class) ContestDto contestDto,
             @RequestHeader("user-id") Long userId) {
         contestDto.setUserId(userId);
         boolean b = contestService.addContest(contestDto);

@@ -166,6 +166,7 @@
               <el-date-picker
                   v-model="form.startTime"
                   type="datetime"
+                  :disabled-date="beginTimeDisable"
                   placeholder="开始时间"
                   format="YYYY-MM-DD HH:mm:ss"
                   date-format="MMM DD, YYYY"
@@ -178,6 +179,7 @@
               <el-date-picker
                   v-model="form.endTime"
                   type="datetime"
+                  :disabled-date="endTimeDisable"
                   placeholder="结束时间"
                   format="YYYY-MM-DD HH:mm:ss"
                   date-format="MMM DD, YYYY"
@@ -392,7 +394,23 @@ const cancel = () => {
 // created -> 获取列表
 getList();
 
+const beginTimeDisable = (date: Date) => {
+  const current = new Date();
+  let b = false;
+  if (form.endTime) {
+    b = date > form.endTime;
+  }
+  return b || date < current;
+}
 
+const endTimeDisable = (date: Date) => {
+  const current = new Date();
+  let b = false;
+  if (form.startTime) {
+    b = date < form.startTime;
+  }
+  return b || date < current;
+}
 
 
 </script>

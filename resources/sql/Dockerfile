@@ -9,6 +9,7 @@ WORKDIR /opt
 COPY run.sh /opt
 COPY db_problem.sql /opt
 COPY db_user.sql /opt
+COPY db_content.sql /opt
 COPY nacos.sql /opt
 
 RUN chmod +x /opt/run.sh

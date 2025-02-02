@@ -68,7 +68,7 @@ services:
       - oj-net
 
   oj-nacos:
-    image: nacos/nacos-server
+    image: nacos/nacos-server:v2.4.2
     container_name: oj-nacos
     depends_on:
       - oj-mysql
@@ -78,6 +78,7 @@ services:
       - "9849:9849"
     volumes:
       - /opt/nacos/logs:/home/nacos/logs
+      - /opt
     environment:
       - PREFER_HOST_MODE=hostname
       - MODE=standalone
@@ -87,6 +88,7 @@ services:
       - MYSQL_SERVICE_PORT=3306
       - MYSQL_SERVICE_USER=root
       - MYSQL_SERVICE_PASSWORD=change-this-db-password
+      - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=True
     restart: always
     privileged: true
     networks:
@@ -99,10 +101,12 @@ services:
       dockerfile: Dockerfile
       network: host
     container_name: oj-sandbox
-#    depends_on:
-#      - oj-minio
+    depends_on:
+      - oj-minio
     privileged: true
-    shm_size: 256
+    shm_size: 512m
+    environment:
+      - MINIO_URL=http://oj-minio:9000
     ports:
       - "5050:5050"
     networks:
@@ -231,6 +235,9 @@ services:
       dockerfile: Dockerfile
       network: host
     container_name: oj-vue
+    volumes:
+      - /opt/nginx/conf.d:/etc/nginx/conf.d
+#      - /opt/nginx/ssl:/etc/ssl
     depends_on:
       - gateway-server
       - judge-server
@@ -239,6 +246,7 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     networks:
       - default
       - oj-net

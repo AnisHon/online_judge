@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://${oj.db.host:127.0.0.1}:${oj.db.port:3306}/${oj.db.database}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${oj.db.host:127.0.0.1}:${oj.db.port:3306}/${oj.db.database}? rewriteBatchedStatements=true&allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${oj.db.un:root}
     password: change-this-db-password

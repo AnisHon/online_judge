@@ -16,7 +16,10 @@ import java.util.List;
 public interface ProblemListMapper extends MPJBaseMapper<ProblemList> {
 
 
-    List<ProblemInListVo> selectProblemByListId(@Param("contestId") Long contestId, @Param("userId") Long userId, @Param("listId") Long listId);
+    List<ProblemInListVo> selectContestProblemByListId(@Param("contestId") Long contestId, @Param("userId") Long userId, @Param("listId") Long listId);
+
+    List<ProblemInListVo> selectProblemByListId(@Param("userId") Long userId, @Param("listId") Long listId);
+
 }
 
 

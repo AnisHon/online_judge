@@ -99,10 +99,10 @@ public class ClassController {
         return R.success(b);
     }
 
-    @PostMapping("/add")
+    @PostMapping
     @PreAuthorize("hasAuthority('user:class:add')")
     @ApiOperation("添加class")
-    public R<Boolean> addClass(@RequestBody @Validated ClassDto classDto) {
+    public R<Boolean> addClass(@RequestBody @Validated({ValidationGroup.Insert.class}) ClassDto classDto) {
 
         try {
             sysClassService.addClass(classDto);

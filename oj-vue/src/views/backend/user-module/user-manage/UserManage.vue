@@ -276,7 +276,7 @@ const roles = reactive<RoleView[]>([])
 const rules = {
   userName: [
     {required: true, message: "用户名不能为空", trigger: "blur"},
-    {patten: /^[a-zA-Z0-9_-]{4,16}$/, message: "用户名只能由 字母 数字 _ -构成", trigger: 'blur'}
+    {pattern: /^[a-zA-Z0-9_-]{4,16}$/, message: "用户名只能由 字母 数字 _ -构成", trigger: 'blur'}
   ],
   email: [
     {required: false, message: "请输入邮箱", trigger: 'blur'},

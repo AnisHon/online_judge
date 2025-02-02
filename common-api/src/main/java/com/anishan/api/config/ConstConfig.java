@@ -4,6 +4,8 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Data
 @Component
 @ConfigurationProperties(prefix = "common.config")
@@ -19,5 +21,8 @@ public class ConstConfig {
     private String fileBaseUrl = "/opt/oj_files";
 
     private String casesFolder = "problem_case";
+
+    private BigDecimal listDefaultScore = new BigDecimal("100");
+
 
 }

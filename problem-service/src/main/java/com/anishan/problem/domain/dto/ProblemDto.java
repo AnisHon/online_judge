@@ -2,10 +2,14 @@ package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.enumeration.ProblemType;
+import com.anishan.commons.enumeration.ValidationGroup;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 
 /**
@@ -25,11 +29,13 @@ public class ProblemDto {
     /**
      * 题目名称
      */
+    @NotEmpty(groups = ValidationGroup.Insert.class)
     private String title;
 
     /**
      * 题目类型，
      */
+    @NotNull(groups = ValidationGroup.Insert.class)
     private ProblemType type;
 
     /**
@@ -40,6 +46,7 @@ public class ProblemDto {
     /**
      * 题目描述
      */
+    @NotEmpty(groups = ValidationGroup.Insert.class)
     private String description;
 
     /**

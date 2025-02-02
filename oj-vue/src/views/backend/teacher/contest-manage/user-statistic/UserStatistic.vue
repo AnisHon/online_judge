@@ -53,7 +53,7 @@
 
         <el-table-column label="正确题数" prop="correctNum" align="center">
           <template v-slot="scope">
-            <el-text type="success" size="large">{{ scope.row.rightNum }}</el-text>
+            <el-text type="success" size="large">{{ scope.row.correctNum }}</el-text>
           </template>
         </el-table-column>
         <el-table-column label="错误题数" prop="wrongNum" align="center">

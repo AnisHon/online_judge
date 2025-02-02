@@ -51,14 +51,14 @@
       <el-table-column label="用户名称" align="center" prop="userName" v-if="columns[1].visible" />
       <el-table-column label="用户昵称" align="center" prop="nikeName" v-if="columns[3].visible" />
       <el-table-column label="邮箱地址" align="center" prop="email" v-if="columns[2].visible" />
-      <el-table-column label="用户状态" align="center" prop="icon" v-if="columns[4].visible">
-        <template v-slot="scope">
-          <el-tag type="danger" v-if="scope.row.status === 1">封禁</el-tag>
-          <el-tag type="success" v-else>正常</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[5].visible" />
-      <el-table-column label="标记" align="center" prop="remark" v-if="columns[6].visible" />
+<!--      <el-table-column label="用户状态" align="center" prop="icon" v-if="columns[4].visible">-->
+<!--        <template v-slot="scope">-->
+<!--          <el-tag type="danger" v-if="scope.row.status === 1">封禁</el-tag>-->
+<!--          <el-tag type="success" v-else>正常</el-tag>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
+      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[4].visible" />
+      <el-table-column label="标记" align="center" prop="remark" v-if="columns[5].visible" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <div v-has="'user:role:revoke'">
@@ -109,7 +109,9 @@ const userDialog = ref(false);
 
 const classDialog = ref(false);
 
-const {columns} = useColumn(['用户id', '用户名称', '邮箱地址', '用户昵称', '用户状态', '创建时间', '标记']);
+const {columns} = useColumn(['用户id', '用户名称', '邮箱地址', '用户昵称',
+  // '用户状态',
+  '创建时间', '标记']);
 
 const showSearch = ref(true);
 

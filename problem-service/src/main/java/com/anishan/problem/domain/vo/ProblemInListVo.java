@@ -64,4 +64,7 @@ public class ProblemInListVo {
 
     @ApiModelProperty("是否正确")
     private Boolean correct;
+
+    @ApiModelProperty("是否完成")
+    private Boolean finish;
 }

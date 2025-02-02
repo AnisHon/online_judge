@@ -34,7 +34,6 @@ public class JudgeListener {
     private final SubmitLogService submitLogService;
     private final ProblemInternalClient problemInternalClient;
     private final JudgeNotifyUtil judgeNotifyUtil;
-    private final Judge judge;
 
 
     private void logSubmit(JudgeScore judge, JudgeInfo judgeInfo) {
@@ -68,12 +67,6 @@ public class JudgeListener {
         judgeScore.setLanguageId(judgeInfo.getLanguageId());
         judgeScore.setCode(judgeInfo.getCode());
         judgeScore.setLanguageId(judgeInfo.getLanguageId());
-
-
-
-
-
-
     }
 
     @RabbitListener(

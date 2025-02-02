@@ -1,12 +1,16 @@
 package com.anishan.problem.domain.dto;
 
 import com.anishan.commons.enumeration.Difficulty;
+import com.anishan.commons.enumeration.ValidationGroup;
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -27,31 +31,37 @@ public class OjProblemDto {
     /**
      * 单位ms
      */
+    @Min(value = 1, groups = ValidationGroup.Insert.class)
     private Integer timeLimit;
 
     /**
      * 难度 (0 未分类, 1 简单, 2 中等, 3 困难)
      */
+    @NotNull(groups = ValidationGroup.Insert.class)
     private Difficulty difficulty;
 
     /**
      * 单位kb
      */
+    @Min(value = 1, groups = ValidationGroup.Insert.class)
     private Integer memoryLimit;
 
     /**
      * 单位mb
      */
+    @Min(value = 1, groups = ValidationGroup.Insert.class)
     private Integer stackLimit;
 
     /**
      * 输入描述
      */
+    @NotEmpty(groups = ValidationGroup.Insert.class)
     private String input;
 
     /**
      * 输出描述
      */
+    @NotEmpty(groups = ValidationGroup.Insert.class)
     private String output;
 
     /**
@@ -62,6 +72,7 @@ public class OjProblemDto {
     /**
      * 输出样例
      */
+    @NotEmpty(groups = ValidationGroup.Insert.class)
     private String outputExample;
 
     /**

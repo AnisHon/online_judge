@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -17,14 +18,13 @@ public class MenuDto {
     @NotNull(groups = ValidationGroup.Update.class)
     @ApiModelProperty("菜单ID，插入时不管用，不用设置")
     @JsonSerialize(using = ToStringSerializer.class)
-
     private Long menuId;
 
-    @NotNull(groups = ValidationGroup.Update.class)
+    @NotEmpty
     @ApiModelProperty("菜单名称")
     private String menuName;
 
-    @NotNull(groups = ValidationGroup.Update.class)
+    @NotNull(groups = ValidationGroup.Insert.class)
     @ApiModelProperty("路由排序")
     private Integer orderNum;
 
@@ -39,7 +39,7 @@ public class MenuDto {
     @ApiModelProperty("组件路径")
     private String component;
 
-    @NotNull(groups = ValidationGroup.Update.class)
+    @NotNull(groups = ValidationGroup.Insert.class)
     @ApiModelProperty("菜单类型（I菜单项item M菜单栏MenuBar B按钮）")
     private MenuType menuType;
 

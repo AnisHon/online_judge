@@ -1,5 +1,6 @@
 package com.anishan.api.domain.entity;
 
+import com.anishan.commons.enumeration.ValidationGroup;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
@@ -7,6 +8,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 
 /**
  * OJ判题测试用例
@@ -30,16 +34,19 @@ public class OjProblemCase implements Serializable {
     /**
      * 测试样例的输入
      */
+    @NotEmpty(groups = ValidationGroup.Insert.class)
     private String input;
 
     /**
      * 测试样例的输出
      */
+    @NotEmpty(groups = ValidationGroup.Insert.class)
     private String output;
 
     /**
      * 答对的分数
      */
+    @Min(value = 0, groups = ValidationGroup.Insert.class)
     private BigDecimal score;
 
     /**

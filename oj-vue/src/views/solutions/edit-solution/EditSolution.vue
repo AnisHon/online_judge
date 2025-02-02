@@ -2,10 +2,16 @@
   <div class="common-max-width-page app-container">
     <el-page-header @back="router.back" title="返回" content="编辑题解"/>
     <div class="header">
-      <el-form size="large" label-position="left">
+      <el-form
+          size="large"
+          label-position="left"
+          :rules="rules"
+          :model="form"
+          ref="formRef"
+      >
         <el-row :gutter="20">
           <el-col :span="24">
-            <el-form-item>
+            <el-form-item prop="title" required>
               <div class="solution-title">
                 <el-input
                     style="flex-grow: 1; margin-right: 20px"
@@ -24,7 +30,7 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item>
+            <el-form-item prop="problemId">
               <el-input v-model="form.problemId" :disabled="fromProblemPage" placeholder="题目"/>
             </el-form-item>
           </el-col>
@@ -51,7 +57,7 @@
 
 <script setup lang="ts">
 import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
-import {computed, reactive} from "vue";
+import {computed, reactive, ref} from "vue";
 import {
   debouncedAddSolution,
   debouncedAddSolutionAdmin, debouncedEditSolution, debouncedEditSolutionAdmin,
@@ -64,6 +70,9 @@ import __ from "lodash";
 import {hasPerm} from "@/utils/authUtil.ts";
 import useLoading from "@/hooks/useLoading.ts";
 import type {IdType} from "@/api/common.ts";
+import {type FormInstance, type FormRules} from "element-plus";
+import type {ValidateFieldsError} from "async-validator";
+import {notifyValidate} from "@/utils/validate.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -93,6 +102,16 @@ const form = reactive<SolutionForm>({
 \`\`\`c++
 /* 代码 */
 \`\`\``,
+})
+
+const formRef = ref<FormInstance>()
+
+const rules = reactive<FormRules<typeof form>>({
+  title: [{required: true, message: "请填写题目", trigger: "blur"}],
+  problemId:[
+    {required: true, message: "请填写题目ID", trigger: "blur"},
+    {pattern: /^\d+$/, message: '题目ID只能是数字', trigger: "blur" },
+  ],
 })
 
 const {loading, isLoading, finish} = useLoading();
@@ -131,6 +150,16 @@ const isAdd = computed(() => {
 
 
 const submit = async () => {
+
+  let ok = false;
+  if (!formRef.value) return
+  await formRef.value.validate((valid, invalidFields?: ValidateFieldsError) => {
+    ok = valid;
+    notifyValidate(invalidFields);
+  })
+  if (!ok) {
+    return;
+  }
   loading();
   const isAdmin = hasPerm("problem:solution:list");
   if (isAdd.value) {

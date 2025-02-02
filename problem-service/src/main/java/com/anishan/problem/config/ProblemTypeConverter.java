@@ -1,6 +1,5 @@
 package com.anishan.problem.config;
 
-import cn.hutool.core.util.EnumUtil;
 import com.anishan.commons.enumeration.ProblemType;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.convert.converter.Converter;

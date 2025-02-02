@@ -1,7 +1,7 @@
 -- ----------------------------
 -- 资源服务的数据库
 -- ----------------------------
-drop database if exists db_content;
+# drop database if exists db_content;
 create database if not exists db_content character set utf8mb4;
 use db_content;
 

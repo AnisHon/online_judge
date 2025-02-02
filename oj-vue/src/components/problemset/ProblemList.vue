@@ -69,7 +69,7 @@
 
           </template>
         </el-table-column>
-        <el-table-column prop="source" label="题目来源"/>
+        <el-table-column prop="source" label="题目来源" show-overflow-tooltip/>
       </el-table>
     </template>
   </el-skeleton>

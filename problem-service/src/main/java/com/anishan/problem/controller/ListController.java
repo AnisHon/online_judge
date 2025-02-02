@@ -31,7 +31,7 @@ public class ListController {
     private final ProblemListService problemListService;
     private final ProblemProblemListService problemProblemListService;
 
-    @PostMapping("/add")
+    @PostMapping
     @PreAuthorize("hasAuthority('problem:list:add')")
     @ApiOperation("添加题单")
     public R<Boolean> add(@RequestBody @Validated(ValidationGroup.Insert.class) ProblemListDto problemListDto) {
@@ -107,7 +107,7 @@ public class ListController {
     @GetMapping("/problems/{id}")
     @ApiOperation("用户题单获取，可能由于存在比赛题目题单返回空集合")
     public R<List<ProblemInListVo>> getListProblems(@PathVariable("id") Long id) {
-        List<ProblemInListVo> problems = problemListService.getProblemsForUser(id, null);
+        List<ProblemInListVo> problems = problemListService.getProblemByListId(id);
         return R.success(problems);
     }
 

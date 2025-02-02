@@ -1,6 +1,5 @@
 <template>
   <div class="app-container common-max-width-page" ref="container" style="margin: auto">
-
     <h1>公告</h1>
     <el-divider/>
     <el-table :data="list" :show-header="false">

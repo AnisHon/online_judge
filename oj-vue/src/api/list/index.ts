@@ -131,11 +131,11 @@ interface QueryList extends SortedPagedType{
 }
 
 const removeList = async (id: IdType | IdType[]) => {
-    await remove(id, "/problem-api/list/del");
+    await remove(id, "/problem-api/list");
 }
 
 const addList = async (form: ListForm) => {
-    await add(form, "/problem-api/list/add");
+    await add(form, "/problem-api/list");
 }
 
 const debouncedAddList = (form: ListForm, success: successCallback<void>) => {
