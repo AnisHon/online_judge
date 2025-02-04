@@ -82,7 +82,7 @@ import {computed, ref, watch} from "vue";
 import type {TagView} from "@/api/problem/label";
 import {debounce} from "@/utils/debounce";
 import {problemTypeToString} from "@/utils/problem";
-import {Checked, CircleCheck} from "@element-plus/icons-vue";
+import {CircleCheck} from "@element-plus/icons-vue";
 
 interface ProblemTableView {
   id: number;
@@ -133,6 +133,8 @@ const debouncedGetProblems = debounce(doGetProblems, 1000)
 watch(() => param, () => {
   loading.value = true;
   debouncedGetProblems()
+  //@ts-ignore
+  scrollTo(0, 800, undefined, elMain?.elMainRef.value?.$el);
 }, {immediate: true, deep: true})
 
 </script>

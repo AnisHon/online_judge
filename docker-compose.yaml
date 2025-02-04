@@ -124,6 +124,8 @@ services:
       - oj-sandbox
     restart: always
     privileged: true
+    volumes:
+      - /opt/logs/judge-server:/opt/logs/judge-server
     environment:
       - JUDGE_URL=oj-sandbox:5050
       - NACOS_URL=oj-nacos:8848
@@ -152,6 +154,8 @@ services:
       - oj-nacos
       - oj-redis
     restart: always
+    volumes:
+      - /opt/logs/content-service:/opt/logs/content-service
     environment:
       - NACOS_URL=oj-nacos:8848
       - MINIO_URL=http://oj-minio:9000
@@ -175,6 +179,8 @@ services:
       - oj-nacos
       - oj-redis
     restart: always
+    volumes:
+      - /opt/logs/problem-service:/opt/logs/problem-service
     environment:
       - NACOS_URL=oj-nacos:8848
       - MINIO_URL=http://oj-minio:9000
@@ -198,6 +204,8 @@ services:
       - oj-nacos
       - oj-redis
     restart: always
+    volumes:
+      - /opt/logs/user-service:/opt/logs/user-service
     environment:
       - NACOS_URL=oj-nacos:8848
       - MINIO_URL=http://oj-minio:9000

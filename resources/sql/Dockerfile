@@ -13,6 +13,7 @@ COPY db_content.sql /opt
 COPY nacos.sql /opt
 
 RUN chmod +x /opt/run.sh
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 
 RUN echo "[mysqld]\n\

@@ -23,12 +23,12 @@ public class LanguageConfig {
     private String exeName;
 
     /**
-     * 编译最大cpu运行时间 s
+     * 编译最大cpu运行时间 ms
      */
     private Long maxCpuTime;
 
     /**
-     * 编译最大真实运行时间 s
+     * 编译最大真实运行时间 ms
      */
     private Long maxRealTime;
 

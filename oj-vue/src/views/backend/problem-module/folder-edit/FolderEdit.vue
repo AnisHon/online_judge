@@ -40,6 +40,7 @@
       <el-table-column label="文件夹类型" align="center" prop="folder.folderType" v-if="columns[1].visible" />
       <el-table-column label="题单ID" align="center" prop="folder.listId" v-if="columns[3].visible" />
       <el-table-column label="父文件ID" align="center" prop="folder.parentId" v-if="columns[4].visible" />
+      <el-table-column label="顺序" align="center" prop="folder.order" v-if="columns[5].visible" />
       <el-table-column label="操作" align="center" folder-name="folder.small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
@@ -85,6 +86,16 @@
                   :controls="false"
                   :disabled="form.folderType !== FolderType.FILE"
                   placeholder="请输入题单ID"
+              />
+
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="顺序" prop="order" >
+              <el-input-number
+                  v-model="form.order"
+                  :controls="false"
+                  placeholder="请输入顺序"
               />
 
             </el-form-item>
@@ -140,7 +151,7 @@ import {
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import {ElDialog, ElMessageBox, type ElTree} from "element-plus";
-import __, {forEach} from "lodash";
+import __ from "lodash";
 import ListView from "@/components/ListView/ListView.vue";
 import type {IdType} from "@/api/common.ts";
 
@@ -153,6 +164,7 @@ const form = reactive<FolderForm>({
   folderName: '',
   folderType: undefined,
   listId: undefined,
+  order: 0,
   parentId: undefined,
 });
 
@@ -174,7 +186,7 @@ const rules = ref();
 const open = ref(false);
 const openSelectList = ref(false);
 
-const {columns} = useColumn(['文件夹ID', '文件夹名称', '文件夹类型', "题单ID", '父文件夹ID']);
+const {columns} = useColumn(['文件夹ID', '文件夹名称', '文件夹类型', "题单ID", '父文件夹ID', '顺序']);
 
 
 // 重置表单
@@ -184,6 +196,7 @@ const resetForm = () => {
   form.parentId = undefined;
   form.listId = undefined;
   form.folderType = undefined;
+  form.order = 0;
   treeRef.value?.setCheckedKeys([]);
 }
 

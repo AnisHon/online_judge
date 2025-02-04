@@ -7,13 +7,13 @@ public class ThrowUtil {
 
     public static void runtime(boolean b, String msg) {
         if (b) {
-            throw new RuntimeException(msg);
+            throw new BusinessException(msg);
         }
     }
 
     public static void illegalArgument(boolean b, String msg) {
         if (b) {
-            throw new IllegalArgumentException(msg);
+            throw new BusinessException(msg);
         }
     }
 
@@ -25,7 +25,7 @@ public class ThrowUtil {
 
     public static void illegalState(boolean b, String msg) {
         if (b) {
-            throw new IllegalStateException(msg);
+            throw new BusinessException(msg);
         }
     }
 

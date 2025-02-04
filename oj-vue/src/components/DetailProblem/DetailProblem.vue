@@ -160,12 +160,15 @@
           <el-col :span="12">
             <el-scrollbar>
               <h4 style="margin: 0">标准输入</h4>
-              <el-input type="textarea" v-model="stdin" />
+              <el-input type="textarea" v-model="stdin" resize="none" />
             </el-scrollbar>
           </el-col>
           <el-col :span="12">
             <h4 style="margin: 0">输出</h4>
-            <p style="white-space: pre; font-family: monospace" v-text="stdout"></p>
+            <el-scrollbar :height="50">
+              <p style="white-space: pre; font-family: monospace" v-text="stdout"></p>
+
+            </el-scrollbar>
           </el-col>
         </el-row>
 
@@ -226,12 +229,12 @@ import ChoiceChooseProblem from "./ChoiceChoose.vue";
 import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
 import __ from "lodash";
 import {letterToNumber} from "@/utils/stringUtils";
-import {ElMessage, type MessageHandler} from "element-plus";
+import {ElMessage, ElNotification, type MessageHandler} from "element-plus";
 import CustomElMessage from "@/components/CustomElMessage.vue";
 import {ChatLineSquare, Document, Notebook} from "@element-plus/icons-vue";
 import Solutions from "@/views/solutions/component/SolutionsComponent/SolutionsComponent.vue";
 import type {QuerySolution} from "@/api/solution";
-import {getUuid, initSSE, offSse, onSse, SseEvent} from "@/utils/sse";
+import {getUuid, initSSE, isSseConnected, offSse, onSse, SseEvent} from "@/utils/sse";
 import type {IdType} from "@/api/common.ts";
 
 const errorTitle = ref("");
@@ -373,6 +376,10 @@ const openLog = () => {
 
 // 发送OJ测试
 const submitTest = () => {
+  if (!isSseConnected()) {
+    ElNotification.error({title: "测试失败", message: "连接已断开，请尝试刷新网页"})
+    return;
+  }
   handleTestSubmit();
   judgeForm.uuid = getUuid();
 }
@@ -502,8 +509,12 @@ const doJudge = getDebouncedJudge(judgeForm,
 // 显示答案
 const showAnswers = ref(false);
 
-// 提交答案
+// 提交Oj答案
 const onHandleSubmit = () => {
+  if (!isSseConnected()) {
+    ElNotification.error({title: "测试失败", message: "连接已断开，请尝试刷新网页"})
+    return;
+  }
   stdout.value = "";
   errMsg.value = undefined;
 
@@ -679,7 +690,7 @@ initSSE();
 }
 
 .stderr {
-  color: red;
+  color: var(--el-color-error);
   padding: 20px;
   font-size: 16px;
   white-space: pre-wrap;

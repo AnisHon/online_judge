@@ -1,8 +1,5 @@
-
-
 <template>
   <div>
-
     <el-avatar v-if="!path" icon="UserFilled"/>
     <el-avatar v-else class="portrait" :shape="shape" :src="path" @error="path = undefined"/>
   </div>

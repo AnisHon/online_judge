@@ -73,8 +73,8 @@ public class JudgeImpl implements Judge {
     @Override
     public RunResult doJudge(JudgeContent content) throws SystemError {
         LanguageConfig languageConfig = content.getLanguageConfig();
-        Long maxTime = Math.min(content.getMaxTime(), languageConfig.getMaxRealTime() * 1000);
-        Long maxMemory = Math.min(content.getMaxTime(), languageConfig.getMaxMemory());
+        Long maxTime = Math.min(content.getMaxTime(), languageConfig.getMaxRealTime());           // ms
+        Long maxMemory = Math.min(content.getMaxMemory(), languageConfig.getMaxMemory() / 1024);  // kb
         List<String> args = JudgeUtils.translateCommandline(languageConfig.getRunCommand());
         List<String> env = languageConfig.getRunEnvs();
         Long maxOutputSize = Math.max(content.getMaxOutputSize(), 32 * 1024 * 1024L);

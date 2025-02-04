@@ -118,7 +118,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12"  v-show="!useUpload">
-            <el-form-item prop="input" label="输入题例">
+            <el-form-item prop="input" label="输出题例">
               <el-input type="textarea" v-model="form.output" :rows="10" />
             </el-form-item>
           </el-col>
@@ -187,7 +187,7 @@ const form = ref<OjCase>({
   output: undefined,
   inputFile: undefined,
   outputFile: undefined,
-  score: undefined
+  score: 1
 })
 
 const showSearch = ref(true);

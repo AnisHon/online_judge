@@ -14,6 +14,7 @@ enum FolderType {
 interface FolderView {
     folderId: IdType;
     folderName: string;
+    order: number;
     folderType: FolderType;
     listId: IdType;
     parentId: IdType;
@@ -23,6 +24,7 @@ interface FolderForm {
     folderId?: IdType;
     folderName?: string;
     folderType?: FolderType;
+    order?: number;
     listId?: IdType;
     parentId?: IdType;
 }

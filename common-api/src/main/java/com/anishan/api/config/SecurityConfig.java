@@ -43,9 +43,13 @@ public class SecurityConfig {
             "/auth/forget-pass",
             "/auth/send-email-code",
             "/auth/captcha-code",
+            "/user/username/**",
+            "/user/email/**",
             "/version",
             "/test",
-            "/internal/**"
+            "/internal/**",
+            "/avatar/**",
+            "/image/**"
     };
 
     @Bean

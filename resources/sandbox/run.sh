@@ -1,2 +1,2 @@
-s3fs case /mnt/minio/case -o passwd_file=/etc/passwd-s3fs -o url="${MINIO_URL}" -o use_path_request_style
+s3fs case /mnt/minio/case -o passwd_file=/etc/passwd-s3fs -o url="${MINIO_URL}" -o allow_other -o use_path_request_style -o use_cache=/tmp/cache -o parallel_count=10
 /opt/go-judge --http-addr=:5050 --silent=true --file-timeout=5m

@@ -187,6 +187,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         sysUser.setUserName(registrationForm.getUserName());
         sysUser.setNikeName(registrationForm.getNikeName());
         sysUser.setPassword(passwordEncoder.encode(registrationForm.getPassword()));
+        sysUser.setEmail(registrationForm.getEmail());
 
         LoginUser loginUser = doBuildLoginUser(sysUser);
 

@@ -170,8 +170,9 @@ const validatePassword = (rule: any, value: string, callback: any) => {
 }
 
 const validateUsername = (rule: any, value: string, callback: any) => {
-  if (value === '') {
-    callback(new Error("请输入用户名"))
+  const pattern = /^[a-zA-Z0-9_-]{3,15}$/;
+  if (!pattern.test(value)) {
+    callback(new Error("只能由数字、字母_、-组成，长度3-15"))
   } else {
     checkAvailableUsername(value)
         .then((data) => {

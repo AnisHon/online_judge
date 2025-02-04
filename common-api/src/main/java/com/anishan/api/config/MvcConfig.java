@@ -36,11 +36,9 @@ public class MvcConfig {
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(StringRedisSerializer.UTF_8))
                 //设置value序列化方式采用jackson方式序列化
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer))
-                //当value为null时不进行缓存
-                .disableCachingNullValues()
                 // 配置缓存空间名称的前缀 没设置
 
-                //全局配置缓存过期时间【可以不配置】
+                //全局配置缓存过期时间
                 .entryTtl(Duration.ofMinutes(30L));
         //专门指定某些缓存空间的配置，如果过期时间【主要这里的key为缓存空间名称】
         Map<String, RedisCacheConfiguration> map = new HashMap<>();

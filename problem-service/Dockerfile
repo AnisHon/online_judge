@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM openjdk:17
 LABEL authors=anishan
 LABEL version=1.0
 LABEL description=ProblemService
@@ -6,13 +6,8 @@ LABEL description=ProblemService
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Shanghai
 
-RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
-    apt-get update && apt-get upgrade -y && \
-    apt-get install -y \
-    openjdk-17-jdk \
-    && apt-get clean
-
 WORKDIR /opt
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY target/problem-service-1.0.0-beta.jar /opt
 

@@ -27,6 +27,9 @@ public class Folder implements Serializable {
      */
     private String folderName;
 
+    @TableField(value = "order_")
+    private Integer order;
+
     /**
      * 类型(D directory 目录，F file 文件, M 菜单栏)
      */
@@ -41,11 +44,6 @@ public class Folder implements Serializable {
      * 题单，如果是D类型则应该为空
      */
     private Long listId;
-
-    /**
-     * 逻辑删除
-     */
-    private Integer delFlag;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

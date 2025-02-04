@@ -21,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.PermitAll;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
@@ -56,6 +57,7 @@ public class UserController {
 
     @GetMapping("/email/{email}")
     @ApiOperation("查看邮箱是否可用")
+    @PermitAll
     public R<Boolean> availableEmail(@PathVariable("email") @NotNull String email) {
         boolean b = sysUserService.existsEmail(email);
         return R.success(!b);
@@ -63,6 +65,7 @@ public class UserController {
 
     @GetMapping("/point")
     @ApiOperation("获取自己的point")
+    @PermitAll
     public R<BigDecimal> getUserPoint(@RequestHeader("user-id") String userId) {
         BigDecimal point = sysUserService.getObj(
                 new LambdaQueryWrapper<SysUser>()

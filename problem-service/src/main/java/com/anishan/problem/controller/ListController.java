@@ -63,7 +63,7 @@ public class ListController {
         return R.success(b);
     }
 
-    @PostMapping("/updateProblem")
+    @PutMapping("/updateProblem")
     @PreAuthorize("hasAuthority('problem:list:add-problem')")
     @ApiOperation("修改题单题目顺序之类的")
     public R<Boolean> updateProblem(@RequestBody ProblemProblemListRelation relation) {

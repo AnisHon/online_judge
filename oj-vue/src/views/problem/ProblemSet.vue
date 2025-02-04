@@ -50,43 +50,41 @@ const pageNav = reactive({
     pageCount: 0,
   })
 
-  const currentPage = reactive<ProblemParam>({
-    currentPage: 1,
-    pageSize: pageNav.pageSize,
-    problemId: null,
-    title: "",
-    type: undefined,
-    tagIds: []
-  });
+const currentPage = reactive<ProblemParam>({
+  currentPage: 1,
+  pageSize: pageNav.pageSize,
+  problemId: null,
+  title: "",
+  type: undefined,
+  tagIds: []
+});
 
-  const handleTotalPageChange = () => {
-    currentPage.currentPage = 1;
-    currentPage.pageSize = pageNav.pageSize;
-    //@ts-ignore
-    scrollTo(0, 800, undefined, elMain?.elMainRef.value?.$el);
-  }
+const handleTotalPageChange = () => {
+  currentPage.currentPage = 1;
+  currentPage.pageSize = pageNav.pageSize;
+  //@ts-ignore
+  scrollTo(0, 800, undefined, elMain?.elMainRef.value?.$el);
+}
 
 
-  const doQuery = (value: {id: string, tagIds: IdType[], title: string, type: ProblemType}) => {
-    currentPage.problemId = value.id;
-    currentPage.tagIds = value.tagIds.slice();
-    currentPage.title = value.title
-    currentPage.type = value.type
-  }
+const doQuery = (value: {id: string, tagIds: IdType[], title: string, type: ProblemType}) => {
+  currentPage.problemId = value.id;
+  currentPage.tagIds = value.tagIds.slice();
+  currentPage.title = value.title
+  currentPage.type = value.type
+}
 
-  const elMain = inject("elMain");
+const elMain = inject("elMain");
 
-  const handlePageChange = (value: number) => {
-    currentPage.currentPage = value
-    //@ts-ignore
-    scrollTo(0, 800, undefined, elMain?.elMainRef.value?.$el);
-  }
+const handlePageChange = (value: number) => {
+  currentPage.currentPage = value
+}
 
-  const handleLoadFinish = (currentPage: number, pageSize: number, totalRecords: number) => {
+const handleLoadFinish = (currentPage: number, pageSize: number, totalRecords: number) => {
 
-    pageNav.pageCount = Math.ceil(totalRecords / pageSize)
-    pageNav.totalRecords = totalRecords
-  }
+  pageNav.pageCount = Math.ceil(totalRecords / pageSize)
+  pageNav.totalRecords = totalRecords
+}
 
 
 </script>

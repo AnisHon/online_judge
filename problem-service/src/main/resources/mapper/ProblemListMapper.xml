@@ -57,6 +57,7 @@
             exists(select 1 from problem_complete pc where pc.problem_id = ppl.problem_id and pc.user_id = #{userId}) as finish
         from problem_problem_list ppl
         left join problem p on p.problem_id = ppl.problem_id
+            and p.del_flag = 0
 
         where
             not isnull(p.problem_id)

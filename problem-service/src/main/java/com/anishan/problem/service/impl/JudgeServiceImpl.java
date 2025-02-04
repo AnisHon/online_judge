@@ -74,7 +74,7 @@ public class JudgeServiceImpl implements JudgeService {
 
         boolean isSuccess = judgeClient.judge(info).getData();
 
-        ThrowUtil.illegalState(!isSuccess, "冷却中，请稍后提交");
+        ThrowUtil.businessError(!isSuccess, "冷却中，请稍后提交");
 
 
         return problemJudgeResult;
@@ -299,14 +299,14 @@ public class JudgeServiceImpl implements JudgeService {
 
 
     private void beforeJudgeCheck(Problem problem, JudgeRequest judgeRequest, Long userId) {
-        ThrowUtil.runtime(problem == null, "题目不存在");
+        ThrowUtil.businessError(problem == null, "题目不存在");
         if (judgeRequest.getContestId() == null || userId == null) {
             return;
         }
         boolean joined = contestService.isUserJoined(judgeRequest.getContestId(), userId);
         boolean isEnabled = contestService.isContestEnable(judgeRequest.getContestId());
         ThrowUtil.permissionDeny(!joined, "非法访问");
-        ThrowUtil.illegalArgument(!isEnabled, "不允许提交题目");
+        ThrowUtil.businessError(!isEnabled, "不允许提交题目");
     }
 
     private void record(JudgeRequest judgeRequest, Long userId, ProblemJudgeResult judgeResult) {
@@ -384,7 +384,7 @@ public class JudgeServiceImpl implements JudgeService {
 
         Boolean isSuccess = judgeClient.test(runTestInfo).getData();
 
-        ThrowUtil.illegalState(!isSuccess, "请等待10秒后再提交");
+        ThrowUtil.businessError(!isSuccess, "冷却中，请稍后再试");
     }
 
     @Override

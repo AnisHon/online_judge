@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 @Slf4j
@@ -267,8 +268,8 @@ public class DefaultJudgeImpl implements JudgeRun {
         LanguageConfig languageConfig = configLoader.getLanguageConfigByName(language);
 
         JudgeInfo judgeInfo = new JudgeInfo()
-                .setMemoryLimit(languageConfig.getMaxMemory())
-                .setTimeLimit(languageConfig.getMaxRealTime() * 1000)
+                .setMemoryLimit(languageConfig.getMaxMemory() / 1024)
+                .setTimeLimit(languageConfig.getMaxRealTime())
                 .setStackLimit(128);
 
         String fileId = null;
@@ -301,11 +302,15 @@ public class DefaultJudgeImpl implements JudgeRun {
             RunResult runResult = future.get();
 
             testResult.setJudgeResult(JudgeUtils.judgeToStatus(runResult.getStatus()));
-
             if (runResult.getExitStatus() > 0 && runResult.getExitStatus() <= 31) {
                 testResult.setStderr(SandboxRunImpl.signals.get(runResult.getExitStatus()));
             }
-            testResult.setStdout(runResult.getFiles().getStdout());
+            RunResult.StdIoFile files = runResult.getFiles();
+            if (testResult.getJudgeResult() != JudgeResult.ACCEPT) {
+                files.setStdout(null);
+                files.setStderr(files.getStderr());
+            }
+            testResult.setStdout(files.getStdout());
         } catch (SystemError e) {
             log.error("判题机异常当前参数{}", judgeInfo, e);
         } catch (CompileError e) {

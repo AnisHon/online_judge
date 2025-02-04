@@ -1,7 +1,7 @@
 package com.anishan.judge.util;
 
+import cn.hutool.core.io.IoUtil;
 import com.anishan.commons.enumeration.JudgeResult;
-import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -102,7 +102,7 @@ public class JudgeUtils {
     public static boolean equals(InputStream is, String out) throws IOException {
         StringReader reader = new StringReader(out);
         InputStreamReader inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
-        return IOUtils.contentEquals(reader, inputStreamReader);
+        return IoUtil.contentEqualsIgnoreEOL(reader, inputStreamReader);
 
     }
 

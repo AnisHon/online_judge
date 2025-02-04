@@ -43,7 +43,7 @@ public class ProblemUploadUtil {
 
 
     private String formatAnswerString(String text) {
-        return text.replace("\r\n", "\n");
+        return text.replaceAll("\r\n?", "\n");
     }
 
 

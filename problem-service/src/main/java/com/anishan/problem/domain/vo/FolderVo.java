@@ -29,6 +29,8 @@ public class FolderVo implements Serializable {
     @ApiModelProperty("类型(D directory 目录，F file 文件, M 菜单栏)")
     private FolderType folderType;
 
+    private Integer order;
+
     @ApiModelProperty("父文件夹名，默认0表示没有父文件夹")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;

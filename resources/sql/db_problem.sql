@@ -242,6 +242,7 @@ create table folder(
     folder_name varchar(32) not null unique         comment '唯一文件夹名',
     folder_type char(1)     default 'M' not null    comment '类型(D directory 目录，F file 文件, M 菜单栏)',
     parent_id   bigint(20)  default 0 not null      comment '父文件夹名，默认0表示没有父文件夹',
+    order_      int         default 0 not null      comment '文件夹顺序',
     list_id     bigint(20)  null                    comment '题单，如果是D类型则应该为空',
     del_flag    boolean     default 0  not null     comment '逻辑删除',
     primary key (folder_id),

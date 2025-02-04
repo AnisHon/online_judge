@@ -34,6 +34,9 @@ public class FolderDto implements Serializable {
     @ApiModelProperty("类型(D directory 目录，F file 文件, M 菜单栏)")
     private FolderType folderType;
 
+    @ApiModelProperty("顺序")
+    private Integer order;
+
     @NotNull(groups = ValidationGroup.Insert.class, message = "不可以为空")
     @ApiModelProperty("父文件夹名，默认0表示没有父文件夹")
     @JsonSerialize(using = ToStringSerializer.class)

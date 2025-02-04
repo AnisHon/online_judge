@@ -62,10 +62,13 @@ const connectSse = (url: string) => {
 
     eventSource.onerror = (error) => {
         eventSource.close();
-        console.error("SSE 连接出错：", error);
+        console.error("SSE 连接断开：", error);
         const url1 = eventSource.url;
         connectSse(url1)
     };
+    eventSource.onopen = () => {
+        console.log("SSE 连接成功")
+    }
     sseMap.set(url2, eventSource);
     return eventSource;
 }
@@ -97,3 +100,8 @@ export const closeSse = (url: string | undefined) => {
 onSse(SseEvent.SET_UUID, (str: string) => {
     uuid.value = str;
 })
+
+export const isSseConnected = (url: string = SSE_URL) => {
+    const readyState = sseMap.get(url)?.readyState;
+    return readyState === EventSourcePolyfill.OPEN;
+}

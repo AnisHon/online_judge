@@ -1,6 +1,7 @@
 package com.anishan.judge.service;
 
 
+import cn.hutool.core.io.IoUtil;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.judge.config.LanguageConfigLoader;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
+import java.io.StringReader;
 
 @SpringBootTest
 public class TestT {
@@ -27,36 +29,15 @@ public class TestT {
     @SneakyThrows
     public void test() {
 
-        JudgeInfo judgeInfo = new JudgeInfo();
-        judgeInfo
-                .setUserId(4L)
-                .setUuid("123")
-                .setContestId(null)
-                .setProblemId(1880247920550653953L)
-                .setLanguage("C++")
-                .setCode("#include <iostream>\n" +
-                        "\n" +
-                        "int main() {\n" +
-                        "\tint a;\n" +
-                        "\tstd::cin >> a;\n" +
-                        "\tstd::cout << a;\n" +
-                        "\treturn 0;\n" +
-                        "}")
-                .setLanguage("C++")
-                .setTimeLimit(123123123213123L)
-                .setMemoryLimit(12312323123L)
-                .setStackLimit(123123123);
+        String str1 = "123\n123123 \n";
+        String str2 = "123\n123123 ";
 
+        StringReader reader = new StringReader(str1);
+        StringReader reader1 = new StringReader(str2);
+        boolean b = IoUtil.contentEqualsIgnoreEOL(reader1, reader);
+        System.out.println(b);
 
-        RunTestInfo runTestInfo = new RunTestInfo();
-        runTestInfo.setStdin("1 2 3");
-        runTestInfo.setCode(judgeInfo.getCode());
-        runTestInfo.setLanguage("C++");
-        runTestInfo.setUserId(123L);
-        runTestInfo.setUuid("123");
-
-        System.out.println(judgeRun.judgeTest(runTestInfo));
-
+        
 
 
     }

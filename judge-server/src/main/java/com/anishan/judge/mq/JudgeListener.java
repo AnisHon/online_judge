@@ -125,12 +125,13 @@ public class JudgeListener {
         try {
             testResult = judgeRun.judgeTest(info);
         } catch (Exception e) {
+
              testResult = new TestResult()
                      .setJudgeResult(JudgeResult.RUNTIME_ERROR);
         }
+
         // 通知完成
         judgeNotifyUtil.notify(info.getUuid(), testResult.getJudgeResult(), testResult.getStdout(), testResult.getStderr());
-
         log.debug("用户ID:{} 测试结束", info.getUserId());
     }
 

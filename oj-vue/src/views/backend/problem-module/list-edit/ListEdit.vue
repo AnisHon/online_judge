@@ -61,7 +61,7 @@
       <el-table-column label="题单ID" align="center" prop="listId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="题单名称" align="center" prop="listName" v-if="columns[1].visible" />
       <el-table-column label="题单描述" align="center" prop="description" v-if="columns[2].visible" />
-      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[2].visible" />
+      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[3].visible" />
       <el-table-column label="操作" align="center" list-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
@@ -170,7 +170,7 @@ const rules = ref();
 
 const open = ref(false);
 
-const {columns} = useColumn(['题单ID', '题单名称', '题单描述']);
+const {columns} = useColumn(['题单ID', '题单名称', '题单描述', '创建时间']);
 
 // 重制题单
 const resetQuery = () => {

@@ -7,7 +7,7 @@
 
           <custom-card class="card" icon="Notification" title="公告" more @show-more="notificationShowMore">
             <el-table :data="notices" :show-header="false">
-              <el-table-column prop="title" >
+              <el-table-column prop="title"  show-overflow-tooltip >
                 <template v-slot="scope">
                   <el-link
                       :underline="false"
@@ -24,7 +24,7 @@
 
           <custom-card  class="card"  icon="EditPen" title="最近题解" more @show-more="solutionShowMore">
             <el-table :data="solutions" :show-header="false">
-              <el-table-column prop="title" >
+              <el-table-column prop="title" show-overflow-tooltip>
                 <template v-slot="scope">
                   <el-link
                       :underline="false"
@@ -41,12 +41,12 @@
 
           <custom-card  class="card"  icon="Notification" title="最近题目" more @show-more="problemShowMore">
             <el-table :show-header="false" :data="problems">
-              <el-table-column prop="title" label="题目">
+              <el-table-column prop="title" label="题目" show-overflow-tooltip>
                 <template #default="scope">
                   <el-link target="_blank" type="primary" @click="router.push({name: 'problem', params: {id: scope.row.problemId}})">{{ scope.row.title }}</el-link>
                 </template>
               </el-table-column>
-              <el-table-column label="问题来源" align="center" prop="source" />
+              <el-table-column label="问题来源" align="center" prop="source" show-overflow-tooltip />
               <el-table-column label="问题类型" align="center" prop="type" >
                 <template v-slot="scope">
                   <el-tag type="primary">{{ problemTypeToString(scope.row.type) }}</el-tag>

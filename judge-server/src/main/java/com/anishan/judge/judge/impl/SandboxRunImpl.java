@@ -273,8 +273,9 @@ public class SandboxRunImpl implements SandboxRun {
      * @param testCasePath    题目数据的输入文件路径
      * @param testCaseContent 题目数据的输入数据（与testCasePath二者选一）
      * @param maxTime         评测的最大限制时间 ms
-     * @param maxOutputSize   评测的最大输出大小 kb
+     * @param maxOutputSize   评测的最大输出大小 b
      * @param maxStack        评测的最大限制栈空间 mb
+     * @param maxMemory       评测的最大限制栈空间 kb
      * @param exeName         评测的用户程序名称
      * @param fileId          评测的用户程序文件id
      * @param fileContent     评测的用户程序文件内容，如果userFileId存在则为null
@@ -334,7 +335,7 @@ public class SandboxRunImpl implements SandboxRun {
         cmd.set("cpuLimit", maxTime * 1000 * 1000L);
         cmd.set("clockLimit", maxTime * 1000 * 1000L * 3);
         // byte
-        cmd.set("memoryLimit", (maxMemory + 100) * 1024 * 1024L);
+        cmd.set("memoryLimit", maxMemory * 1024L);
         cmd.set("procLimit", maxProcessNumber);
         cmd.set("stackLimit", maxStack * 1024 * 1024L);
 

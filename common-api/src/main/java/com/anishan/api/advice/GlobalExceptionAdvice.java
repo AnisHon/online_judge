@@ -3,7 +3,9 @@ package com.anishan.api.advice;
 import cn.hutool.http.HttpStatus;
 import com.anishan.commons.config.SharedConfig;
 import com.anishan.commons.domain.R;
+import com.anishan.commons.exception.BusinessException;
 import com.anishan.commons.exception.IllegalTokenException;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,37 +59,51 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
     public R<String> handleIllegalArgumentException(IllegalArgumentException e) {
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+        log.debug("IllegalArgumentException", e);
+        if (sharedConfig.isProduct()) {
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+        } else {
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误");
+        }
     }
 
     @ResponseBody
     @ExceptionHandler(IllegalTokenException.class)
     public R<String> handleIllegalTokenException(IllegalTokenException e) {
+        log.debug("IllegalTokenException", e);
         return R.error(HttpStatus.HTTP_UNAUTHORIZED, e.getMessage());
     }
 
     @ResponseBody
     @ExceptionHandler(PermissionDeniedDataAccessException.class)
     public R<String> handlePermissionDeniedDataAccessException(PermissionDeniedDataAccessException e) {
+        log.debug("PermissionDeniedDataAccessException", e);
         return R.error(HttpStatus.HTTP_UNAUTHORIZED, e.getMessage());
     }
 
     @ResponseBody
     @ExceptionHandler(MissingRequestHeaderException.class)
     public R<String> handleMissingRequestHeaderException(MissingRequestHeaderException e) {
+        log.debug("MissingRequestHeaderException", e);
         return R.error(HttpStatus.HTTP_UNAUTHORIZED, null);
     }
 
     @ResponseBody
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public R<String> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+        log.debug("MethodArgumentTypeMismatchException", e);
+        if (sharedConfig.isProduct()) {
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+        } else {
+            return R.error(HttpStatus.HTTP_UNAUTHORIZED, "出现错误");
+        }
     }
 
     @ResponseBody
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED)
     public R<String> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        log.debug("HttpRequestMethodNotSupportedException", e);
         return R.error(HttpStatus.HTTP_BAD_METHOD, e.getMessage());
     }
 
@@ -95,30 +111,33 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(org.springframework.http.HttpStatus.NOT_FOUND)
     public R<String> handleNoHandlerFoundException(NoHandlerFoundException e) {
+        log.debug("NoHandlerFoundException", e);
         return R.error(HttpStatus.HTTP_NOT_FOUND, e.getMessage());
     }
+
+
 
     @ResponseBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
     public R<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         String defaultMessage = Objects.requireNonNull(e.getFieldError()).getDefaultMessage();
-        String field = e.getFieldError().getField();
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, field + ":" + defaultMessage);
+        log.debug("MethodArgumentNotValidException", e);
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, defaultMessage);
     }
 
     @ResponseBody
     @ExceptionHandler(DuplicateKeyException.class)
     @ResponseStatus(org.springframework.http.HttpStatus.CONFLICT)
     public R<String> handleDuplicateKeyException(DuplicateKeyException e) {
-        log.debug(e.getMessage(), e);
+        log.debug("DuplicateKeyException", e);
         return R.error(HttpStatus.HTTP_CONFLICT, "字段冲突，请查对后再提交");
     }
 
     @ResponseBody
     @ExceptionHandler(ConstraintViolationException.class)
     public R<String> handleConstraintViolationException(ConstraintViolationException e) {
-        log.debug(e.getMessage(), e);
+        log.debug("ConstraintViolationException", e);
         return R.error(HttpStatus.HTTP_BAD_REQUEST, "使用了不存在的对象，请检查后重试");
     }
 
@@ -126,12 +145,11 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(RuntimeException.class)
     public R<String> handleRuntimeException(RuntimeException e) {
 
-        log.debug(e.getMessage(), e);
+        log.debug("RuntimeException", e);
         if (sharedConfig.isProduct()) {
             return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误");
         } else {
             return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
-
         }
     }
 
@@ -149,17 +167,33 @@ public class GlobalExceptionAdvice {
     }
 
     @ResponseBody
+    @ExceptionHandler(BusinessException.class)
+    public R<String> handleBusinessException(BusinessException e) {
+        log.debug("BusinessException", e);
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+    }
+
+    @ResponseBody
     @ExceptionHandler(AccessDeniedException.class)
     public R<String> handleAccessDeniedException(AccessDeniedException e) {
+        log.debug("AccessDeniedException", e);
 //        System.out.println(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return R.forbidden();
     }
 
+    @ResponseBody
+    @ExceptionHandler(JsonParseException.class)
+    @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
+    public R<String> handleJsonParseException(JsonParseException e) {
+        log.debug("JsonParseException", e);
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+    }
 
 
     @ResponseBody
     @ExceptionHandler(MismatchedInputException.class)
     public R<String> handleMismatchedInputException(MismatchedInputException e) {
+        log.debug("MismatchedInputException", e);
         return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误");
     }
 

@@ -497,11 +497,11 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     @Cacheable(cacheNames = "problem:detail:", key = "#id")
     public DetailProblem getDetailProblem(Long id) {
         Problem problem = doGetProblem(id);
-        ProblemVo problemVo = toVo(problem);
-
-        if (problemVo == null) {
+        if (problem == null) {
             return null;
         }
+
+        ProblemVo problemVo = toVo(problem);
         return doGetDetail(problemVo);
     }
 

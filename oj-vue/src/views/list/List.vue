@@ -60,6 +60,8 @@ import {getProblems, type ProblemInListView} from "@/api/list";
 import {useRouter} from "vue-router";
 import {problemTypeToString} from "@/utils/problem";
 import {CircleCheck, Document, Folder} from "@element-plus/icons-vue";
+import {isNullObj} from "@/utils/valueutil.ts";
+import {ElNotification} from "element-plus";
 
 const router = useRouter();
 const defaultProps = {
@@ -92,6 +94,10 @@ const handleClickProblem = (id: number) => {
 
 const handleNodeClick = (node: TreedFolderView) => {
   if (isFile(node.folder.folderType)) {
+    if (isNullObj(node.folder.listId)) {
+      ElNotification.info("该题单还未开放");
+      return;
+    }
     getProblems(node.folder.listId)
         .then(data => {
           tableList.length = 0;

@@ -32,6 +32,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.security.PermitAll;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -91,6 +92,7 @@ public class FileController {
 
     @ApiOperation("获取头像")
     @GetMapping("/avatar/{userId}")
+    @PermitAll
     public void getAvatar(@PathVariable Long userId, HttpServletResponse response) {
         String avatarPath = fileService.getAvatarPath(userId);
         responseFile(avatarPath, response);
@@ -117,6 +119,7 @@ public class FileController {
 
     @ApiOperation("获取图片")
     @GetMapping("/image/**")
+    @PermitAll
     public void getImage(HttpServletRequest req, @NotNull HttpServletResponse response) {
         String uri = StrUtil.subSuf(req.getRequestURI(), "/image/".length());
         responseFile(uri, response);
@@ -132,6 +135,7 @@ public class FileController {
 
     @ApiOperation("下载文件")
     @GetMapping("/file")
+    @PermitAll
     public void getFile(@NotNull String path, HttpServletResponse response) {
         responseFile(path, response);
     }

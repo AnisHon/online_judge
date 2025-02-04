@@ -45,6 +45,7 @@ public class FolderServiceImpl extends ServiceImpl<FolderMapper, Folder>
         List<TreedFolder> child = folders
                 .stream()
                 .filter(f -> Objects.equals(parent.getFolder().getFolderId(), f.getFolder().getParentId()))
+                .sorted(Comparator.comparingInt(a -> a.getFolder().getOrder()))
                 .collect(Collectors.toList());
 
         parent.setChildren(child);
@@ -73,7 +74,10 @@ public class FolderServiceImpl extends ServiceImpl<FolderMapper, Folder>
         Set<FolderVo> allFolders = new HashSet<>(getAllFolders());
         Set<FolderVo> headFolders = new HashSet<>(getHeadFolders());
         Set<TreedFolder> treeHeader = buildTree(allFolders, headFolders);
-        return new ArrayList<>(treeHeader);
+
+        ArrayList<TreedFolder> treedFolders = new ArrayList<>(treeHeader);
+        treedFolders.sort(Comparator.comparing(a -> a.getFolder().getOrder()));
+        return treedFolders;
 
     }
 
