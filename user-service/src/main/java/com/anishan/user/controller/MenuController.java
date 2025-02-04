@@ -127,7 +127,7 @@ public class MenuController {
         return R.success(true);
     }
 
-    @PostMapping("/batchRevoke")
+    @PutMapping("/batchRevoke")
     @PreAuthorize("hasAuthority('user:menu:revoke')")
     @ApiOperation("撤销权限")
     @ControllerLog(api = "/menu/batchRevoke", desc = "撤销角色权限")

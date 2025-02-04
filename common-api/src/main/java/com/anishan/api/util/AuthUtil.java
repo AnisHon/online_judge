@@ -96,16 +96,16 @@ public class AuthUtil {
         final int width = 150, height = 75;
         switch (captchaType) {
             case GIF:
-                captcha = CaptchaUtil.createGifCaptcha(width, height);
+                captcha = CaptchaUtil.createGifCaptcha(width, height, 4);
                 break;
             case LINE:
-                captcha = CaptchaUtil.createLineCaptcha(width, height);
+                captcha = CaptchaUtil.createLineCaptcha(width, height, 4, 150);
                 break;
             case SHEAR:
-                captcha = CaptchaUtil.createShearCaptcha(width, height);
+                captcha = CaptchaUtil.createShearCaptcha(width, height, 4, 1);
                 break;
             case CIRCLE:
-                captcha = CaptchaUtil.createCircleCaptcha(width, height);
+                captcha = CaptchaUtil.createCircleCaptcha(width, height, 4, 15);
                 break;
         }
         return captcha;

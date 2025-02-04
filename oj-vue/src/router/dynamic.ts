@@ -26,6 +26,7 @@ export const dynamicRoute: RouteRecordRaw = {
                 name: "用户角色",
                 parent: 'role-manage',
                 component: 'RoleAuth',
+                noKeepAlive: true
             }
         },
         {
