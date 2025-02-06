@@ -46,7 +46,7 @@ public class ContestRecords implements Serializable {
 
     @ApiModelProperty(value = "是否正确")
     @TableField("status")
-    private boolean status;
+    private Boolean status;
 
     @ApiModelProperty(value = "最终得分")
     @TableField("score")

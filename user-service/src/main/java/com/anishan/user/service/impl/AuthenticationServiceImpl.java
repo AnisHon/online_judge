@@ -245,7 +245,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthResultVo resetPassword(Long userId, String email, String code, String newPassword) {
-        AuthResultVo authResultVo = checkEmailCode(code);
+        AuthResultVo authResultVo = checkEmailCode(email, code);
         if (!authResultVo.isSuccess()) {
             return authResultVo;
         }

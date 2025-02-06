@@ -1,9 +1,9 @@
 import type {IdType} from "@/api/common.ts";
-import {get, getWithParams} from "@/utils/http.ts";
+import {get, getWithParams, resultNotify, service} from "@/utils/http.ts";
 import type {UserAnswer} from "@/api/problem/judge.ts";
 
 export interface ProblemStatistic {
-    problemId: number;
+    problemId: IdType;
     title: string;
     average: number;
     score: number;
@@ -13,7 +13,7 @@ export interface ProblemStatistic {
 }
 
 export interface UserScore {
-    problemId: number;
+    problemId: IdType;
     title: string;
     correct: boolean;
     score: number;
@@ -21,14 +21,14 @@ export interface UserScore {
 }
 
 export interface ProblemScore {
-    userId: number;
+    userId: IdType;
     nikeName: string;
     score: number;
     correct: boolean;
 }
 
 export interface UserStatistic {
-    userId: number;
+    userId: IdType;
     nikeName: string;
     submitted: boolean;
     late: boolean;
@@ -83,4 +83,9 @@ export const getUserAnswer = async (problemId: IdType, contestId: IdType, userId
         contestId
     });
     return data;
+}
+
+export const returnUserSubmit = async (contestId: IdType, userId: IdType): Promise<void> => {
+    const {data} = await service.delete(`/problem-api/contest/submit/${contestId}/${userId}`);
+    resultNotify(data, "退回成功", "退回失败")
 }

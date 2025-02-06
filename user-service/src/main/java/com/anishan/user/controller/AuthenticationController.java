@@ -19,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.PermitAll;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
@@ -142,9 +143,10 @@ public class AuthenticationController {
         );
         return authResultVo.toR();
     }
-
+    
     @PostMapping("/send-email-code")
     @ApiOperation("发送邮箱验证码")
+    @PermitAll
     public R<AuthResultVo> sendEmailCode(@RequestBody @Validated EmailCodeRequest emailCodeRequest) {
         AuthResultVo authResultVo = authenticationService.sendEmailCode(
                 emailCodeRequest.getEmail(),
@@ -157,6 +159,7 @@ public class AuthenticationController {
     @PostMapping("/send-forget-email-code")
     @ApiOperation("发送验证码，用于忘记密码，只需要提供用户名")
     @ControllerLog(api = "auth", operation = "send-forget-email-code", desc = "用户请求重设密码邮箱验证码")
+    @PermitAll
     public R<AuthResultVo> sendForgetEmailCode(@RequestBody @Validated ForgetEmailCodeRequest forgetEmailCodeRequest) {
 
         String email = sysUserService.getUserByUsernameOrEmail(forgetEmailCodeRequest.getUsername()).getEmail();

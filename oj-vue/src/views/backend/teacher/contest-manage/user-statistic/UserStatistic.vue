@@ -69,12 +69,21 @@
 
         <el-table-column label="操作" align="center">
           <template v-slot="scope">
-            <el-link
-                type="primary"
-                @click="toUserScore(scope.row)"
-            >
-              用户分数
-            </el-link>
+            <el-space>
+              <el-link
+                  type="primary"
+                  @click="toUserScore(scope.row)"
+              >
+                用户分数
+              </el-link>
+              <el-link
+                  :disabled="!scope.row.submitted"
+                  type="primary"
+                  @click="handleReturn(scope.row)"
+              >
+                退回提交
+              </el-link>
+            </el-space>
           </template>
         </el-table-column>
 
@@ -91,7 +100,8 @@
 import {useRoute, useRouter} from "vue-router";
 import {ref} from "vue";
 import type {IdType} from "@/api/common.ts";
-import {getUserStatistic, type UserStatistic} from "@/api/record"
+import {getUserStatistic, returnUserSubmit, type UserStatistic} from "@/api/record"
+import {ElMessageBox} from "element-plus";
 
 const route = useRoute();
 
@@ -107,6 +117,17 @@ const getList = async () => {
 
 const toUserScore = (row: UserStatistic) => {
   router.push({name: 'user-scores', params: {contestId: contestId.value, userId: row.userId}})
+}
+
+const handleReturn = (row: UserStatistic) => {
+  ElMessageBox.confirm(
+      `您确认要退回用户[${row.nikeName}](ID:${row.userId})的提交吗`,
+      {title: "确认退回", confirmButtonText: "确定", cancelButtonText: "取消"}
+  ).then(async () => {
+    await returnUserSubmit(contestId.value, row.userId);
+    await getList();
+  }).catch(() => {})
+
 }
 
 

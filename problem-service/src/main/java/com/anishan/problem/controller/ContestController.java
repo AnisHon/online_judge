@@ -141,6 +141,18 @@ public class ContestController {
         return R.success(save);
     }
 
+    @DeleteMapping("/submit/{contestId}/{userId}")
+    @ApiOperation("退回提交")
+    @Transactional
+    public R<Object> submit(@PathVariable Long contestId, @PathVariable Long userId) {
+        boolean remove = Db.remove(
+                Wrappers.lambdaQuery(UserSubmit.class)
+                        .eq(UserSubmit::getContestId, contestId)
+                        .eq(UserSubmit::getUserId, userId)
+        );
+        return R.success(remove);
+    }
+
     @PostMapping("/lateSubmission")
     @ApiOperation("设置补交")
     @PreAuthorize("hasAuthority('problem:contest:edit')")
@@ -229,6 +241,8 @@ public class ContestController {
         List<ProblemInListVo> problems = contestService.listProblemInContest(userId, id);
         return R.success(problems);
     }
+
+
 
 
 

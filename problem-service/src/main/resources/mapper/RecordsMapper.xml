@@ -80,13 +80,16 @@
             ppl.problem_id      as problemId,
             p.title             as title,
             cr.status           as correct,
-            cr.score            as score
+            cr.score            as score,
+            cr.contest_id
         from problem_problem_list ppl
         left join problem p on ppl.problem_id = p.problem_id
         left join contest_records cr on p.problem_id = cr.problem_id
             and cr.contest_id = #{contestId}
             and cr.user_id = #{userId}
         where
+            ppl.list_id = #{listId}
+        and
             p.del_flag = 0
     </select>
 </mapper>

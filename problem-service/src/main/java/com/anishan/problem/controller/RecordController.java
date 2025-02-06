@@ -16,6 +16,7 @@ import com.anishan.problem.service.JudgeService;
 import com.anishan.problem.service.RecordsService;
 import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -92,7 +93,7 @@ public class RecordController {
                     userId,
                     problemId,
                     null,
-                    false,
+                    null,
                     new UserAnswer(judgeRequest.getAnswers(), judgeRequest.getCode(), judgeRequest.getLanguageId())
             );
             boolean b = recordsService.addRecord(records);

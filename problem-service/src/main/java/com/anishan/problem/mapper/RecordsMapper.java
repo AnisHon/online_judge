@@ -7,6 +7,7 @@ import com.anishan.problem.domain.vo.UserScore;
 import com.anishan.problem.domain.vo.UserStatistic;
 import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.security.core.parameters.P;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public interface RecordsMapper extends MPJBaseMapper<Records> {
     /**
      * 用户每道题的正误情况
      */
-    List<UserScore> selectUserScore(@Param("userId") Long userId, @Param("contestId") Long contestId);
+    List<UserScore> selectUserScore(@Param("userId") Long userId, @Param("contestId") Long contestId, @Param("listId") Long listId);
 }
 
 

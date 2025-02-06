@@ -42,6 +42,7 @@ public class SecurityConfig {
             "/auth/registration",
             "/auth/forget-pass",
             "/auth/send-email-code",
+            "/auth/send-forget-email-code",
             "/auth/captcha-code",
             "/user/username/**",
             "/user/email/**",
@@ -49,7 +50,8 @@ public class SecurityConfig {
             "/test",
             "/internal/**",
             "/avatar/**",
-            "/image/**"
+            "/image/**",
+
     };
 
     @Bean

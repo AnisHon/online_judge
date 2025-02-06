@@ -53,7 +53,7 @@ public class Records implements Serializable {
     /**
      * 是否正确 0 1
      */
-    private boolean status;
+    private Boolean status;
 
     /**
      * 答案

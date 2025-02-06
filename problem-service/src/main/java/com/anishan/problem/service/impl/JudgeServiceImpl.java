@@ -338,7 +338,6 @@ public class JudgeServiceImpl implements JudgeService {
             return judgeResult;
         }
 
-
         // 添加做题记录
         record(judgeRequest, userId, judgeResult);
 

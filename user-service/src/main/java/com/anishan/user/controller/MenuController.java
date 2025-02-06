@@ -124,7 +124,7 @@ public class MenuController {
                 .eq(SysRoleMenuRelation::getMenuId, relation.getMenuId())
                 .eq(SysRoleMenuRelation::getRoleId, relation.getRoleId())
         );
-        return R.success(true);
+        return R.success(b);
     }
 
     @PutMapping("/batchRevoke")
@@ -133,8 +133,8 @@ public class MenuController {
     @ControllerLog(api = "/menu/batchRevoke", desc = "撤销角色权限")
     public R<Boolean> revoke(@RequestBody @Validated(ValidationGroup.Insert.class) List<RoleMenuRelationDto> relations) {
 
-      sysRoleMenuService.removeBatch(relations);
-        return R.success(true);
+        boolean b = sysRoleMenuService.removeBatch(relations);
+        return R.success(b);
     }
 
     @PostMapping("/grant")

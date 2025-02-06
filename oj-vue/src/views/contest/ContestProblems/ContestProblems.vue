@@ -60,7 +60,7 @@
             <div class="absoluteCenter">
               <h1 style="text-align: center">{{ contest.title }}</h1>
               <el-space wrap alignment="center">
-                <el-tag type="info">{{ formatDate(contest.startTime) }}</el-tag>
+                <el-tag type="info">{{ formatDate(contest?.startTime) }}</el-tag>
                 <el-tag type="info">{{ formatDate(contest.endTime) }}</el-tag>
                 <el-tag :type="authTagType(contest.auth)">{{ authText(contest.auth) }}</el-tag>
               </el-space>
@@ -82,7 +82,7 @@
 
 
           <div style="margin: 20px; overflow: auto; max-height: 65vh;">
-            <markdown-preview :text="contest.description"/>
+            <markdown-preview :text="contest?.description || ''"/>
           </div>
 
 

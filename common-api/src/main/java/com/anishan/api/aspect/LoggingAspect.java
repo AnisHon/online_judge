@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutorService;
 
@@ -149,8 +150,9 @@ public class LoggingAspect {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
         if (attributes != null) {
-            ip = attributes.getRequest().getRemoteAddr();
-            userId = attributes.getRequest().getHeader("user-id");
+            HttpServletRequest request = attributes.getRequest();
+            ip = request.getRemoteAddr();
+            userId = request.getHeader("user-id");
         }
 
         logBegin();

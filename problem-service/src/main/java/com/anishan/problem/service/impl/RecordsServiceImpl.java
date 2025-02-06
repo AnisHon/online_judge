@@ -6,9 +6,7 @@ import com.anishan.api.client.user.client.UserInternalClient;
 import com.anishan.api.util.NikeNameUtil;
 import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
-import com.anishan.problem.domain.entity.ContestAnswerRecords;
-import com.anishan.problem.domain.entity.ContestRecords;
-import com.anishan.problem.domain.entity.UserContestRelation;
+import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.service.ContestService;
 import com.anishan.problem.service.ProblemCompleteService;
@@ -16,7 +14,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.anishan.problem.domain.entity.Records;
 import com.anishan.problem.service.RecordsService;
 import com.anishan.problem.mapper.RecordsMapper;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
@@ -83,10 +80,10 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
     }
     
     private void doAddPoint(Records newRec, Records oldRec) {
-        boolean newStatus = newRec.isStatus();
+        boolean newStatus = Boolean.TRUE.equals(newRec.getStatus());
         boolean complete = problemCompleteService.exists(newRec.getUserId(), newRec.getProblemId());
         // 新纪录是正确的，旧记录没有或者不对，才加分
-        boolean isScoreAddable = !complete && newStatus && (oldRec == null || !oldRec.isStatus());
+        boolean isScoreAddable = !complete && newStatus && (oldRec == null || !oldRec.getStatus());
 
         if (!isScoreAddable) {
             return;
@@ -108,7 +105,7 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
         if (records.getContestId() == null) {
             // 不是比赛从普通记录中拿
             LambdaQueryWrapper<Records> wrapper = new LambdaQueryWrapper<Records>()
-                    .select(Records::getRecordId, Records::isStatus)
+                    .select(Records::getRecordId, Records::getStatus)
                     .eq(records.getRecordId() != null, Records::getRecordId, records.getRecordId())
                     .eq(Records::getProblemId, records.getProblemId())
                     .eq(Records::getUserId, records.getUserId())
@@ -147,7 +144,6 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
             score = score.setScale(2, RoundingMode.HALF_DOWN);
             records.setScore(score);
         }
-
 
         Long recordId = addPoint(records);
 
@@ -190,8 +186,11 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
                 .eq(Records::getUserId, userId);
 
         List<BigDecimal> score = recordsMapper.selectObjs(wrapper);
-
-        return score.stream().findFirst().orElse(null);
+        if (CollUtil.isNotEmpty(score)) {
+            return score.get(0);
+        } else  {
+            return BigDecimal.ZERO;
+        }
     }
 
     /**
@@ -235,7 +234,8 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
      */
     @Override
     public List<UserScore> getUserScores(Long userId, Long contestId) {
-        return recordsMapper.selectUserScore(userId, contestId);
+        Contest contest = Db.getById(contestId, Contest.class);
+        return recordsMapper.selectUserScore(userId, contestId, contest.getListId());
     }
 
     @Override
