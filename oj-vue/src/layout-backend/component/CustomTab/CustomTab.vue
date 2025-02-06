@@ -64,30 +64,26 @@ watch(route, setTabs, { immediate: true });
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .app-container {
   height: var(--tab-height);
 }
-</style>
-
-<style lang="scss">
-.tabs,
-.el-tabs__header,
-.el-tabs__nav-scroll {
+.app-container ::v-deep(.tabs),
+.app-container ::v-deep(.tabs) .el-tabs__header,
+.app-container ::v-deep(.tabs) .el-tabs__nav-scroll {
   height: var(--tab-height);
   margin: 0;
 }
 
-.el-tabs__content {
+.app-container ::v-deep(.tabs) .el-tabs__content {
   display: none;
 }
 
-.el-tabs__header .el-tabs__nav-scroll .el-tabs__nav {
+.app-container ::v-deep(.tabs) .el-tabs__header .el-tabs__nav-scroll .el-tabs__nav {
   border: none ;
 }
 
-.el-tabs__item {
+.app-container ::v-deep(.tabs) .el-tabs__item {
   height: 80%;
 }
-
 </style>

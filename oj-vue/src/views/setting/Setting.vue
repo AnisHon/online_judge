@@ -1,8 +1,8 @@
 <template>
 
 
-  <div class="common-max-width-page" style="margin: auto" v-if="!!userStore.user">
-    <el-card>
+  <div class="common-max-width-page" style="margin: auto;" v-if="!!userStore.user">
+    <el-card shadow="never">
       <header class="setting-header">
         <el-page-header @back="goBack" style="margin: 10px 0">
           <template #content>
@@ -38,10 +38,10 @@
           </el-descriptions-item>
         </el-descriptions>
       </header>
-      <el-tabs v-model="defaultActive">
-        <el-tab-pane label="角色信息" name="first">
+      <el-tabs  v-model="activeTab">
+        <el-tab-pane label="角色信息" name="first" lazy>
           <el-card class="tab-card absoluteCenter">
-            <el-form label-width="100" style="min-width: 500px">
+            <el-form label-width="100" style="min-width: 500px;" >
               <el-form-item label="用户编号">
                 <el-input v-model="userForm.userId" disabled/>
               </el-form-item>
@@ -65,7 +65,7 @@
             </el-form>
           </el-card>
         </el-tab-pane>
-        <el-tab-pane label="修改密码" name="second" >
+        <el-tab-pane label="修改密码" name="second" lazy >
           <el-card class="tab-card absoluteCenter">
             <el-form
                 label-width="100px"
@@ -323,7 +323,7 @@ const router = useRouter();
 
 const openUploadAvatarDialog = ref(false);
 
-const defaultActive = ref("first");
+const activeTab = ref("first");
 
 const userForm = reactive<UserForm>({
   userId: undefined,
@@ -473,6 +473,7 @@ onMounted(() => {
   userStore.getUser().then((user) => {
     __.assign(userForm, user);
   })
+  activeTab.value = "first";
 })
 
 
@@ -487,8 +488,4 @@ userStore.loadUser();
 .tab-card {
   height: 400px;
 }
-</style>
-
-<style>
-
 </style>
