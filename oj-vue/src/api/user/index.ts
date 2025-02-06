@@ -20,7 +20,7 @@ interface UserAddForm {
     email: string;
     password: string;
     status: UserStatus;
-    role: number;
+    role: IdType;
     remark: string;
 }
 

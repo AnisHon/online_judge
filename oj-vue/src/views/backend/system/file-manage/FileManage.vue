@@ -31,13 +31,23 @@
       <el-table-column label="上传时间" align="center" prop="uploadTime" v-if="columns[7].visible" show-overflow-tooltip />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
-          <el-link
-              size="small"
-              type="primary"
-              icon="delete"
-              @click="handleDelete(scope.row)"
-              v-has="'user:class:remove'"
-          >删除</el-link>
+          <el-space>
+            <el-link
+                size="small"
+                type="primary"
+                icon="delete"
+                @click="handleDelete(scope.row)"
+                v-has="'user:class:remove'"
+            >删除</el-link>
+            <el-link
+                size="small"
+                type="primary"
+                icon="download"
+                @click="handleDownload(scope.row)"
+                v-has="'user:class:remove'"
+            >下载</el-link>
+          </el-space>
+
         </template>
       </el-table-column>
     </el-table>
@@ -62,7 +72,8 @@ import {ElMessageBox} from "element-plus";
 import type {IdType} from "@/api/common.ts";
 import type {PagedType} from "@/api/pagedType.ts";
 import {type FileInfo, listFileInfo, removeFileInfo} from "@/api/file/fileInfo.ts";
-import {bytesToSize} from "../../../../utils/byte2size.ts";
+import {bytesToSize} from "@/utils/byte2size.ts";
+import {downloadFile} from "@/api/file";
 
 
 // 查询需要的表单数据
@@ -99,6 +110,14 @@ const handleSelectionChange = (selection: FileInfo[]) => {
   ids.value = selection.map(item => item.fileId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
+}
+
+const handleDownload = (row: FileInfo) => {
+  let filename = row.fileName;
+  if (row.fileType) {
+    filename += "." + row.fileType;
+  }
+  downloadFile(row.filePath, filename);
 }
 
 const handleDelete = (row?: FileInfo) => {

@@ -39,7 +39,6 @@ import ProblemList from "@/components/problemset/ProblemList.vue";
 import {type ProblemParam, ProblemType} from "@/api/problem"
 import {inject, reactive} from "vue";
 import ProblemListForm from "@/components/problemset/ProblemListForm.vue";
-import {scrollTo} from "@/utils/scroll-to";
 import type {IdType} from "@/api/common.ts";
 
 
@@ -59,11 +58,10 @@ const currentPage = reactive<ProblemParam>({
   tagIds: []
 });
 
+
 const handleTotalPageChange = () => {
   currentPage.currentPage = 1;
   currentPage.pageSize = pageNav.pageSize;
-  //@ts-ignore
-  scrollTo(0, 800, undefined, elMain?.elMainRef.value?.$el);
 }
 
 
@@ -74,7 +72,7 @@ const doQuery = (value: {id: string, tagIds: IdType[], title: string, type: Prob
   currentPage.type = value.type
 }
 
-const elMain = inject("elMain");
+
 
 const handlePageChange = (value: number) => {
   currentPage.currentPage = value

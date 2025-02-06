@@ -78,7 +78,7 @@
 
 <script lang="ts" setup>
 import {getProblems, type ProblemParam, type TaggedProblemView} from '@/api/problem'
-import {computed, ref, watch} from "vue";
+import {computed, inject, ref, watch} from "vue";
 import type {TagView} from "@/api/problem/label";
 import {debounce} from "@/utils/debounce";
 import {problemTypeToString} from "@/utils/problem";
@@ -129,6 +129,7 @@ const loadingArray = computed(() => {
 })
 
 const debouncedGetProblems = debounce(doGetProblems, 1000)
+const elMain = inject("elMain");
 
 watch(() => param, () => {
   loading.value = true;

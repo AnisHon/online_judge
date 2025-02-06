@@ -245,6 +245,7 @@ const handleDelete = (row?: OjCaseView) => {
 }
 
 const handleAdd = () => {
+  reset();
   title.value = "添加题解";
   openDialog.value = true;
 }

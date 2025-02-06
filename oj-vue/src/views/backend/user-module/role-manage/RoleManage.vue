@@ -202,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
+import {computed, nextTick, reactive, ref} from "vue";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
@@ -285,7 +285,6 @@ const total = ref<number>(0);
 const getList = () => {
   loading();
   getRole();
-
 }
 
 // 多选或者单选
@@ -351,12 +350,16 @@ const title = computed(() => {
   return dialogState.value === 1 ? "添加" : "修改";
 });
 const handleAdd = () => {
+  resetForm();
   dialogState.value = 1;
   open.value = true;
+  resetForm();
 };
 const handleUpdate = (data: RoleView | void) => {
+  resetForm();
   open.value = true;
   dialogState.value = 2;
+  resetForm();
   if (!data) {
     const id = ids.value[0];
     data = __.find(tableList, x => x.roleId === id)
@@ -365,10 +368,6 @@ const handleUpdate = (data: RoleView | void) => {
 };
 
 const submitForm = () => {
-
-
-
-
   if (dialogState.value === 1) {
     addLoading();
     // 添加
@@ -442,6 +441,7 @@ const init = () => {
   for (let key in treeRef.value?.getCheckedKeys()) {
     treeRef.value?.setChecked(key, false, true);
   }
+  treeRef.value?.setCheckedKeys([]);
 
 }
 
@@ -506,10 +506,12 @@ const handleMenu = (row: RoleView) => {
   listRoleMenu(row.roleId).then((data) => {
     original.value = data.map(x => x.menuId);
     loadingRole.value = false;
-    original.value.forEach(x => {
-      treeRef.value?.setChecked(x, true, true);
-    })
+    nextTick(() => {
 
+      original.value.forEach(x => {
+        treeRef.value?.setChecked(x, true, true);
+      })
+    })
   })
 };
 // created -> 获取列表

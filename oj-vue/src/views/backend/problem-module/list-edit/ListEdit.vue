@@ -256,10 +256,13 @@ const title = computed(() => {
   return dialogState.value === 1 ? "添加" : "修改";
 })
 const handleAdd = () => {
+  resetForm();
   dialogState.value = 1;
   open.value = true;
+
 }
 const handleUpdate = (data: ListView | void) => {
+  resetForm();
   open.value = true;
   dialogState.value = 2;
 

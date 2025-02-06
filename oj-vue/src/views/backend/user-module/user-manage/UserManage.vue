@@ -259,7 +259,7 @@ const addForm = reactive<UserAddForm>({
   email: '',
   password: '',
   status: UserStatus.NORMAL,
-  role: 1,
+  role: '1',
   remark: '',
 });
 const updateForm = reactive<UserUpdateForm>({
@@ -397,10 +397,12 @@ const title = computed(() => {
   return dialogState.value === 1 ? "添加" : "修改";
 })
 const handleAdd = () => {
+  resetForm();
   dialogState.value = 1;
   open.value = true;
 }
 const handleUpdate = (data: UserView | void) => {
+  resetForm();
   open.value = true;
   dialogState.value = 2;
   if (!data) {

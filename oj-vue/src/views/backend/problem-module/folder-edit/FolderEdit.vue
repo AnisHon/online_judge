@@ -348,13 +348,15 @@ const title = computed(() => {
   return dialogState.value === 1 ? "添加" : "修改";
 })
 const handleAdd = () => {
+  resetForm();
   treeRef.value?.filter(null)
   dialogState.value = 1;
   open.value = true;
 }
 const handleUpdate = (data: TreedFolderView) => {
-  open.value = true;
   resetForm();
+  open.value = true;
+
   nextTick(() => {
     treeRef.value?.filter(data)
     treeRef.value?.setChecked(data.folder.parentId, true, false);

@@ -85,7 +85,7 @@
       <el-table-column label="菜单ID" align="center" prop="menuId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="菜单名称" align="center" prop="menuName" v-if="columns[1].visible" />
       <el-table-column label="菜单类型" align="center" prop="menuType" v-if="columns[2].visible" />
-      <el-table-column label="父菜单ID" align="center" prop="parentId" v-if="columns[3].visible" />
+      <el-table-column label="父菜单ID" align="center" prop="parentId" v-if="columns[3].visible" show-overflow-tooltip />
       <el-table-column label="菜单图标" align="center" prop="icon" v-if="columns[4].visible">
         <template v-slot="scope">
           <div v-if="scope.row.icon !== '#'">
@@ -97,11 +97,11 @@
 
         </template>
       </el-table-column>
-      <el-table-column label="权限标识" align="center" prop="perms" v-if="columns[5].visible" />
-      <el-table-column label="路由路径" align="center" prop="router" v-if="columns[6].visible" />
-      <el-table-column label="顺序" width="60" align="center" prop="orderNum" v-if="columns[7].visible" />
-      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[8].visible" />
-      <el-table-column label="标注" align="center" prop="remark" v-if="columns[9].visible" />
+      <el-table-column label="权限标识" align="center" prop="perms" v-if="columns[5].visible" show-overflow-tooltip />
+      <el-table-column label="路由路径" align="center" prop="router" v-if="columns[6].visible" show-overflow-tooltip />
+      <el-table-column label="顺序" width="60" align="center" prop="orderNum" v-if="columns[7].visible" show-overflow-tooltip />
+      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[8].visible" show-overflow-tooltip />
+      <el-table-column label="标注" align="center" prop="remark" v-if="columns[9].visible" show-overflow-tooltip />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot:default="scope">
           <el-link
@@ -343,10 +343,12 @@ const title = computed(() => {
   return dialogState.value === 1 ? "添加" : "修改";
 })
 const handleAdd = () => {
+  resetForm();
   dialogState.value = 1;
   open.value = true;
 }
 const handleUpdate = (data: MenuView | void) => {
+  resetForm();
   open.value = true;
   dialogState.value = 2;
   if (!data) {
