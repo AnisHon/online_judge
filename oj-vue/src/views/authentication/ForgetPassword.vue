@@ -111,7 +111,7 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, reactive, ref} from 'vue'
+import {reactive, ref} from 'vue'
 import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
 import getCaptcha from '@/api/auth/captchaCode.ts'
 import {forgetPassword} from "@/api/auth/authentication.ts"
@@ -132,9 +132,10 @@ const forgetPasswordForm = reactive({
   emailCode: ""
 })
 
+// 验证码图片，base64编码内容
 const imgData = ref("")
 
-
+// 可替换成正则
 const validatePassword = (rule: any, value: string, callback: any) => {
   if (value === '') {
     callback(new Error('请输入密码'))
@@ -147,14 +148,7 @@ const validatePassword = (rule: any, value: string, callback: any) => {
   }
 }
 
-const validateUsername = (rule: any, value: string, callback: any) => {
-  if (value === '') {
-    callback(new Error("请输入用户名"))
-  } else {
-    callback()
-  }
-}
-
+// 可直接使用required
 const validateNotEmpty = (rule: any, value: string, callback: any) => {
   if (value === '') {
     callback(new Error("不能为空"))
@@ -162,6 +156,7 @@ const validateNotEmpty = (rule: any, value: string, callback: any) => {
     callback()
   }
 }
+
 
 const repeatPassword = (rule: any, value: string, callback: any) => {
   if (value !== forgetPasswordForm.password) {
@@ -172,13 +167,13 @@ const repeatPassword = (rule: any, value: string, callback: any) => {
 }
 
 const rules = reactive<FormRules<typeof forgetPasswordForm>>({
-  username: [{ validator: validateUsername, trigger: 'blur' }],
+  username: [{ required: true, message: "用户名不能为空", trigger: 'blur' }],
   password: [{ validator: validatePassword, trigger: 'blur' }],
-  // captchaCode: [{ validator: validateNotEmpty, trigger: 'blur' }],
   repeatPassword: [{validator: repeatPassword, trigger: 'blur' }],
-  emailCode: [{ validator: validateNotEmpty, trigger: 'blur' }]
+  emailCode: [{ required: true, message: "邮箱验证码不能为空", trigger: 'blur' }]
 })
 
+// 发送重置密码
 const doResetPassword = () => {
   forgetPassword({
     username: forgetPasswordForm.username,
@@ -191,25 +186,27 @@ const doResetPassword = () => {
       })
       .catch((msg) => {
         ElNotification.error(msg)
-        refreshCaptchaCode()
+        refreshCaptchaCode();
       })
       .finally(() => {
-        isLoading.value = false
+        isLoading.value = false;
       })
 }
 
+// 发送重置密码（表单验证）
 const submitResetPassword = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.validate((valid) => {
     if (valid) {
-      isLoading.value = true
-      doResetPassword()
+      isLoading.value = true;
+      doResetPassword();
     } else {
       ElNotification.warning("请确认表单")
     }
   })
 }
 
+// 发送邮箱验证码
 const sendEmailCode = () => {
   if (forgetPasswordForm.captchaCode === '') {
     ElNotification.error("请输入验证码")
@@ -221,21 +218,21 @@ const sendEmailCode = () => {
     }).then(() => {
       ElNotification.success("发送成功")
     }).catch((message) => {
-      refreshCaptchaCode()
-      ElNotification.warning(message)
+      refreshCaptchaCode();
+      ElNotification.warning(message);
     })
   }
 }
 
+// 刷新验证码
 const refreshCaptchaCode = async () => {
   const {image, token} = await getCaptcha()
-  imgData.value = image
-  forgetPasswordForm.token = token
+  imgData.value = image;
+  forgetPasswordForm.token = token;
 }
 
-onMounted(() => {
-  refreshCaptchaCode()
-})
+// created
+refreshCaptchaCode();
 
 </script>
 

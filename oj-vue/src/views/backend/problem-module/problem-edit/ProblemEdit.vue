@@ -64,7 +64,7 @@
             icon="delete"
             size="small"
             :disabled="multiple"
-            @click="handleDelete"
+            @click="handleDelete()"
             v-has="'problem:problem:remove'"
         >删除</el-button>
       </el-col>
@@ -224,7 +224,6 @@ import {UploadFilled} from "@element-plus/icons-vue";
 import type {UploadAjaxError} from "element-plus/es/components/upload/src/ajax";
 import type {AjaxResult} from "@/utils/http";
 import type {IdType} from "@/api/common.ts";
-import CaseEdit from "@/views/backend/problem-module/problem-edit/case-edit/CaseEdit.vue";
 
 const router = useRouter();
 
@@ -247,8 +246,6 @@ const resetQuery = () => {
 
   getList();
 };
-
-const caseDialogRef = ref<typeof CaseEdit>();
 
 const uploadRef = ref<UploadInstance>();
 const showSearch = ref(true);
@@ -328,24 +325,15 @@ const uploadError = (evt: UploadAjaxError) => {
   ElMessage.error(msg)
 }
 
-const handleDelete = (row: ProblemView | Event) => {
-  if (row instanceof Event) {
-    ElMessageBox.confirm(`您是否要删除ID为${ids.value}的数据项？`, {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          removeProblems(ids.value).then(getList);
-        })
-  } else {
-    ElMessageBox.confirm('是否确认删除题目为"' + row.title + '"的问题？', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          removeProblems(row.problemId).then(getList);
-        })
-  }
+const handleDelete = (row?: ProblemView) => {
+  const id = row ? row.problemId : ids.value[0];
+  ElMessageBox.confirm(`您是否要删除ID为${id}的数据项？`, {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  })
+      .then(() => {
+        removeProblems(id).then(getList);
+      })
 }
 
 // 搜索按钮

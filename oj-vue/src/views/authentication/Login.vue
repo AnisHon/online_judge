@@ -16,6 +16,7 @@
     <el-form-item prop="username">
       <el-input
           v-model="loginForm.username"
+          @keyup.enter="submitLogin(formRef)"
           type="text"
           autocomplete="off"
           placeholder="请输入用户名或邮箱"
@@ -25,6 +26,7 @@
     <el-form-item prop="password">
       <el-input
           v-model="loginForm.password"
+          @keyup.enter="submitLogin(formRef)"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
@@ -37,6 +39,7 @@
         <el-form-item prop="captchaCode">
           <el-input
               v-model="loginForm.captchaCode"
+              @keyup.enter="submitLogin(formRef)"
               type="text"
               autocomplete="off"
               placeholder="请输入验证码"
@@ -114,9 +117,9 @@ const validateNotEmpty = (rule: any, value: string, callback: any) => {
 }
 
 const rules = reactive<FormRules<typeof loginForm>>({
-  username: [{ validator: validateNotEmpty, trigger: 'blur' }],
+  username: [{ required: true, message: "用户名不能为空", trigger: 'blur' }],
   password: [{ validator: validatePassword, trigger: 'blur' }],
-  captchaCode: [{ validator: validateNotEmpty, trigger: 'blur' }]
+  captchaCode: [{ required: true, message: "验证码不能为空", trigger: 'blur' }]
 })
 
 const doLogin = () => {

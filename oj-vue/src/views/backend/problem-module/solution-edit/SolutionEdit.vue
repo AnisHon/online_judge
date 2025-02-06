@@ -269,8 +269,8 @@ const handleSelectionChange = (selection: Solution[]) => {
 
 
 
-const handleDelete = (row: Solution | Event) => {
-  const id = row instanceof Event? ids.value : row.solutionId;
+const handleDelete = (row?: Solution) => {
+  const id = row ? row.solutionId : ids.value[0];
   ElMessageBox.confirm(`您是否要删除ID为${id}的数据项？` , {
     confirmButtonText: '确定',
     cancelButtonText: '取消'

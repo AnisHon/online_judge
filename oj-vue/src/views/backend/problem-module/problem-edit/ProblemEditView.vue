@@ -194,7 +194,7 @@
                   </el-card>
                 </el-col>
 
-                <el-col :span="24" v-if="enableInput || !isOjProblem">
+                <el-col :span="24" v-if="enableInput && !isOjProblem">
                   <el-button type="success" plain icon="Plus" class="add-btn" @click="addMore">
                   </el-button>
                 </el-col>
@@ -227,10 +227,7 @@
 
     </el-scrollbar>
 
-
     <el-backtop target=".el-main" :right="100" :bottom="100"/>
-
-
   </div>
 </template>
 
@@ -329,9 +326,6 @@ const back = async () => {
   const name = <string>route.name;
   await router.push({name: "problem-edit"});
   tabStore.removeTab(name)
-}
-
-const handleTop = () => {
 }
 
 const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateProblem(problem, () => {})

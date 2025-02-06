@@ -29,7 +29,7 @@
             icon="delete"
             size="small"
             :disabled="multiple"
-            @click="handleDelete"
+            @click="handleDelete()"
             v-has="'problem:tag:remove'"
         >删除</el-button>
       </el-col>
@@ -168,24 +168,15 @@ const handleSelectionChange = (selection: TagView[]) => {
 
 
 
-const handleDelete = (row: TagView | Event) => {
-  if (row instanceof Event) {
-    ElMessageBox.confirm(`您是否要删除ID为${ids.value}的数据项？`, {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          removeTag(ids.value).then(getList);
-        })
-  } else {
-    ElMessageBox.confirm('是否确认删除名称为"' + row.tagName + '"的数据项？', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          removeTag(row.tagId).then(getList);
-        })
-  }
+const handleDelete = (row?: TagView) => {
+  const id = row ? row.tagId : ids.value[0];
+  ElMessageBox.confirm(`您是否要删除ID为${id}的数据项？`, {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  })
+      .then(() => {
+        removeTag(id).then(getList);
+      })
 
 
 }

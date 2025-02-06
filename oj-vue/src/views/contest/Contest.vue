@@ -202,6 +202,7 @@ getList();
     padding: 10px;
 
   }
+
   .card {
     margin: 10px 0;
   }
@@ -209,7 +210,6 @@ getList();
   .time {
     margin: 5px;
   }
-
 }
 
 </style>

@@ -305,7 +305,7 @@ const resetQuery = () => {
 const resetForm = () => {
   addForm.userName = '';
   addForm.email = '';
-  addForm.role = 1;
+  addForm.role = '1';
   addForm.nikeName = '';
   addForm.password = '';
   addForm.status = UserStatus.NORMAL;

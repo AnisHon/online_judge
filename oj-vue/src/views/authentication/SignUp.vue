@@ -16,6 +16,7 @@
     <el-form-item prop="username">
       <el-input
           v-model="signUpForm.username"
+          @keyup.enter="submitSignUp(formRef)"
           type="text"
           autocomplete="off"
           placeholder="请输入用户名"
@@ -26,6 +27,7 @@
     <el-form-item prop="nikeName">
       <el-input
           v-model="signUpForm.nikeName"
+          @keyup.enter="submitSignUp(formRef)"
           type="text"
           autocomplete="off"
           placeholder="请输入昵称"
@@ -35,6 +37,7 @@
     <el-form-item prop="email">
       <el-input
           v-model="signUpForm.email"
+          @keyup.enter="submitSignUp(formRef)"
           type="text"
           autocomplete="off"
           placeholder="请输入邮箱"
@@ -44,6 +47,7 @@
     <el-form-item prop="password">
       <el-input
           v-model="signUpForm.password"
+          @keyup.enter="submitSignUp(formRef)"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
@@ -54,6 +58,7 @@
     <el-form-item prop="repeatPassword">
       <el-input
           v-model="signUpForm.repeatPassword"
+          @keyup.enter="submitSignUp(formRef)"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
@@ -66,6 +71,7 @@
         <el-form-item prop="captchaCode">
           <el-input
               v-model="signUpForm.captchaCode"
+              @keyup.enter="submitSignUp(formRef)"
               type="text"
               autocomplete="off"
               placeholder="请输入验证码"
@@ -91,6 +97,7 @@
       <el-col :span="14" >
         <el-form-item prop="emailCode">
           <el-input
+              @keyup.enter="submitSignUp(formRef)"
               v-model="signUpForm.emailCode"
               type="text"
               autocomplete="off"
@@ -220,11 +227,11 @@ const validateEmail = (rule: any, value: string, callback: any) => {
 const rules = reactive<FormRules<typeof signUpForm>>({
   username: [{ validator: validateUsername, trigger: 'blur' }],
   password: [{ validator: validatePassword, trigger: 'blur' }],
-  nikeName: [{validator: validateNotEmpty, trigger: 'blur'}],
+  nikeName: [{required: true, message: "昵称不能为空", trigger: 'blur'}],
   email: [{ validator: validateEmail, trigger: 'blur' }],
   // captchaCode: [{ validator: validateNotEmpty, trigger: 'blur' }],
   repeatPassword: [{validator: repeatPassword, trigger: 'blur' }],
-  emailCode: [{ validator: validateNotEmpty, trigger: 'blur' }]
+  emailCode: [{ required: true, message: "邮箱验证码不能为空", trigger: 'blur' }]
 })
 
 const doSignUp = () => {
