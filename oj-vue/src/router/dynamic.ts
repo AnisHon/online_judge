@@ -250,6 +250,7 @@ export const loadDynamicRoutes = async () => {
 
     const treedMenus = await menuStore.getTree();
 
+    // 防重复加载，忘记怎么回事了
     if (len == menuTree.length) {
         menuTree.push(...recursiveBuildRoutes(treedMenus, "/backend"));
         dynamicRoute.children.push(...menuTree);

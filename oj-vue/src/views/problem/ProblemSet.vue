@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import ProblemList from "@/components/problemset/ProblemList.vue";
 import {type ProblemParam, ProblemType} from "@/api/problem"
-import {inject, reactive} from "vue";
+import {reactive} from "vue";
 import ProblemListForm from "@/components/problemset/ProblemListForm.vue";
 import type {IdType} from "@/api/common.ts";
 

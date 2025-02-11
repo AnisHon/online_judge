@@ -47,11 +47,27 @@ const dict = {
         {label: "选择题", value: ProblemType.CHOICE},
         {label: "多选题", value: ProblemType.MULTI_CHOICE},
     ],
+    problemTypeStr:[
+        {label: "OJ题", value: 'OJ'},
+        {label: "填空题", value: 'FILL'},
+        {label: "选择题", value: 'CHOICE'},
+        {label: "多选题", value: 'MULTI_CHOICE'},
+    ],
+    difficultyStr: [
+        {label: '不确定', value: 'UNKNOWN'},
+        {label: '简单', value: 'SIMPLE'},
+        {label: '中等', value: 'MEDIUM'},
+        {label: '困难', value: 'DIFFICULT'},
+    ],
     difficulty: [
         {label: '不确定', value: Difficulty.UNKNOWN},
         {label: '简单', value: Difficulty.SIMPLE},
         {label: '中等', value: Difficulty.MEDIUM},
         {label: '困难', value: Difficulty.DIFFICULT},
+    ],
+    problemAuthStr: [
+        {label: "公开题目", value: "PUBLIC"},
+        {label: "比赛题目", value: "CONTEST"},
     ],
     problemAuth: [
         {label: "公开题目", value: ProblemAuth.PUBLIC},

@@ -219,7 +219,7 @@ fillForm();
 </style>
 
 
-<style>
+<style lang="scss">
 .solution-title .el-input__wrapper {
   box-shadow: none;
   height: 32px;

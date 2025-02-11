@@ -221,7 +221,6 @@ import {
   saveUserAnswer,
   sendTest,
 } from "@/api/problem/judge";
-import {debounce} from "@/utils/debounce";
 import useLoading from "@/hooks/useLoading";
 import OnlineJudgeProblem from "./OnlineJudgeProblem.vue";
 import FillBlankProblem from "./FillBlank.vue";
@@ -347,7 +346,8 @@ const judgeForm = reactive<JudgeForm>({
   contestId: contestId,
   problemId: problemId,
   answers: [],
-  code: ""
+  code: "",
+  languageId: '1',
 });
 
 // 判题的表单的副本，用于比对
@@ -413,8 +413,6 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
     vnode?.component?.exposed?.update("运行中")
   }
 
-  console.log(judgeMessage)
-
   errMsg.value = judgeMessage.stderr;
   switch (judgeMessage.state) {
     case OJResult.ACCEPT:
@@ -430,7 +428,7 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
       break;
     case OJResult.WRONG_ANSWER:
       errorTitle.value = "WA";
-      errorText.value = "答案错误";
+      errorText.value = "答案错误\n";
       break;
     case OJResult.TIME_LIMIT_EXCEEDED:
       errorTitle.value = "TLE";
@@ -468,17 +466,17 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
 
 //
 const getOjResult = (isTest = false) => {
-  const vnode = createVNode(CustomElMessage)
+  const vNode = createVNode(CustomElMessage)
   const el = ElMessage(
       {
-        message: vnode,
+        message: vNode,
         duration: 60000
       }
   )
-  vnode?.component?.exposed?.update("排队中")
+  vNode?.component?.exposed?.update("排队中")
 
   const onUpdate = (judgeMessage: JudgeMessage) => {
-    onUpdateJudgeState(judgeMessage, onUpdate, el, vnode, isTest);
+    onUpdateJudgeState(judgeMessage, onUpdate, el, vNode, isTest);
   }
 
   onSse(SseEvent.UPDATE_JUDGE_STATE, onUpdate)
@@ -624,6 +622,7 @@ const getProblem = async () => {
 const getAnswer = async () => {
   const answer = await getUserAnswer({contestId: contestId, problemId: problemId})
   // answer是null表示还没有写
+
   if (!answer) return;
   judgeForm.code = <string>answer.code;
   answer.answers?.sort((a, b) => a.index - b.index);
@@ -657,7 +656,7 @@ watch(() => problemId, async () => {
 defineExpose<{isProblemLoading: Ref<boolean>}>({isProblemLoading: problemIsLoading})
 
 onMounted(() => {
-  const debounceFunc = debounce(getHeight, 100, false);
+  const debounceFunc = __.debounce(getHeight, 100);
   window.onresize = () => {
     debounceFunc()
   }

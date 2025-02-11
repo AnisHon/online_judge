@@ -87,8 +87,8 @@ public class JudgeListener {
             // 记录提交日志
             logSubmit(judge, info);
             // 提交Record信息
-            fillJudgeScore(judge, info);
-            problemInternalClient.judgeResult(judge);
+            fillJudgeScore(judge, info); // 构建
+            problemInternalClient.judgeResult(judge); // 提交
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -97,7 +97,11 @@ public class JudgeListener {
 
         // 通知完成
         JudgeResult result = judge == null ? JudgeResult.RUNTIME_ERROR : judge.getResult();
-        String stderr = judge == null ? "" : judge.getErrorMessage();
+        String stderr = Optional.ofNullable(judge).map(JudgeScore::getErrorMessage).orElse("");
+
+        if (result == JudgeResult.WRONG_ANSWER) {
+            stderr = "总共:" + judge.getTotalCount() + "\n通过:" + judge.getPassCount();
+        }
 
         // 没有结果，可能是人为因素
         result = Optional.ofNullable(result).orElse(JudgeResult.RUNTIME_ERROR);

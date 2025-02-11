@@ -1,5 +1,4 @@
 // 根据文件名后缀区分 文件类型
-
 export enum MatchType {
     OTHER = 'other',
     IMAGE = 'image',
@@ -27,6 +26,8 @@ export enum MatchType {
  * @param: 数据返回 9) 匹配 音频 - radio
  * @param: 数据返回 10) 匹配 压缩包 - zip
  * @param: 数据返回 11) 其他匹配项 - other
+ *
+ * 网上复制的，改过一遍了，他这代码有点抽象
  */
 export const matchType = (fileName: string): MatchType => {
     // 后缀获取
@@ -35,8 +36,8 @@ export const matchType = (fileName: string): MatchType => {
     let result: MatchType;
     let matched: boolean = false;
     try {
-        let flieArr = fileName.split('.');
-        suffix = flieArr[flieArr.length - 1];
+        let fileArr = fileName.split('.');
+        suffix = fileArr[fileArr.length - 1];
     } catch (err) {
         suffix = '';
     }

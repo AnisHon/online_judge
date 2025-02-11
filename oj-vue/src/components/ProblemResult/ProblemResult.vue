@@ -77,7 +77,7 @@ const resultText = computed(() => {
 
 const itemIndexText = (idx: number) => {
   if (type === ProblemType.FILL) {
-    return `__第${idx + 1}空__`
+    return `__第${idx}空__`
   } else {
     return "";
   }

@@ -1,6 +1,7 @@
 import type {ValidateFieldsError} from "async-validator";
 import {ElNotification} from "element-plus";
 
+// 表单验证错误提示
 export const notifyValidate = (validRecord?: ValidateFieldsError) => {
     if (validRecord) {
         const keys = Object.keys(validRecord);

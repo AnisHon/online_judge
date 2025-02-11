@@ -96,7 +96,6 @@ import EnhancedCodeEditor from '@/components/EnhancedCodeEdior/index.vue'
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {type Answer, type JudgeForm, type JudgeResponse,} from "@/api/problem/judge";
-import {debounce} from "@/utils/debounce";
 
 import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
 import {letterToNumber} from "@/utils/stringUtils";
@@ -106,6 +105,7 @@ import ChoiceChoose from "@/components/DetailProblem/ChoiceChoose.vue";
 import FillBlank from "@/components/DetailProblem/FillBlank.vue";
 import {getUserAnswer} from "@/api/record";
 import {useRoute} from "vue-router";
+import __ from "lodash";
 
 
 const route = useRoute();
@@ -287,7 +287,7 @@ getProblem();
 
 
 onMounted(() => {
-  const debounceFunc = debounce(getHeight, 100, false);
+  const debounceFunc = __.debounce(getHeight, 100);
   window.onresize = () => {
     debounceFunc()
   }

@@ -80,9 +80,9 @@
 import {getProblems, type ProblemParam, type TaggedProblemView} from '@/api/problem'
 import {computed, inject, ref, watch} from "vue";
 import type {TagView} from "@/api/problem/label";
-import {debounce} from "@/utils/debounce";
 import {problemTypeToString} from "@/utils/problem";
 import {CircleCheck} from "@element-plus/icons-vue";
+import __ from "lodash";
 
 interface ProblemTableView {
   id: number;
@@ -128,7 +128,7 @@ const loadingArray = computed(() => {
   return Array.from({length: param.pageSize})
 })
 
-const debouncedGetProblems = debounce(doGetProblems, 1000)
+const debouncedGetProblems = __.debounce(doGetProblems, 1000)
 const elMain = inject("elMain");
 
 watch(() => param, () => {

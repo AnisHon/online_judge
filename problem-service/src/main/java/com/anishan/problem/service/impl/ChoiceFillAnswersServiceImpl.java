@@ -57,11 +57,10 @@ public class ChoiceFillAnswersServiceImpl extends ServiceImpl<ChoiceFillAnswersM
     @Override
     @Cacheable(cacheNames = "problem:choice-fill:", key = "#problemId")
     public List<ChoiceFillAnswers> get(Long problemId) {
-        this.list(
+        return this.list(
                 new LambdaUpdateWrapper<ChoiceFillAnswers>()
-                        .eq(ChoiceFillAnswers::getProblemId,problemId)
+                        .eq(ChoiceFillAnswers::getProblemId, problemId)
         );
-        return List.of();
     }
 }
 

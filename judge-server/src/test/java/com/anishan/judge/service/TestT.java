@@ -2,10 +2,13 @@ package com.anishan.judge.service;
 
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.judge.config.LanguageConfigLoader;
 import com.anishan.judge.judge.JudgeRun;
+import com.anishan.judge.util.JudgeUtils;
+import com.anishan.judge.util.StringUtils;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,16 +32,13 @@ public class TestT {
     @SneakyThrows
     public void test() {
 
-        String str1 = "123\n123123 \n";
-        String str2 = "123\n123123 ";
+        String str1 = "123    \n123123                  \n";
+        String str2 = "123 \r\n123123 ";
 
         StringReader reader = new StringReader(str1);
         StringReader reader1 = new StringReader(str2);
-        boolean b = IoUtil.contentEqualsIgnoreEOL(reader1, reader);
+        boolean b = StringUtils.contentEqualsIgnoreBlankAndEOL(reader, reader1);
         System.out.println(b);
-
-        
-
 
     }
 

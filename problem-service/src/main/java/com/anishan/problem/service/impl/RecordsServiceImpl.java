@@ -151,8 +151,9 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
 
         UserAnswer answer = records.getAnswer();
 
-        // 普通做题不存答案
-        records.setAnswer(null);
+        // 客户需求普通题存答案
+//        普通做题不存答案
+//        records.setAnswer(null);
 
         boolean b;
 
@@ -247,25 +248,28 @@ public class RecordsServiceImpl extends ServiceImpl<RecordsMapper, Records>
 
     @Override
     public UserAnswer getAnswer(Long userId, UserAnswerRequest userAnswerRequest) {
+        UserAnswer userAnswer;
+
         if (userAnswerRequest.getContestId() == null) {
-            return null;
+            // 非比赛
+            Records one = Db.getOne(Wrappers.lambdaQuery(Records.class)
+                    .eq(Records::getUserId, userId)
+                    .eq(Records::getProblemId, userAnswerRequest.getProblemId()));
+            userAnswer = Optional.ofNullable(one).map(Records::getAnswer).orElse(null);
+        } else  {
+            // 比赛
+            ContestRecords one = Db.getOne(Wrappers.lambdaQuery(ContestRecords.class)
+                    .eq(ContestRecords::getContestId, userAnswerRequest.getContestId())
+                    .eq(ContestRecords::getUserId, userId)
+                    .eq(ContestRecords::getProblemId, userAnswerRequest.getProblemId()));
+
+            Long recordId = Optional.ofNullable(one).map(ContestRecords::getRecordId).orElse(0L);
+            ContestAnswerRecords contestAnswerRecords = Db.getById(recordId, ContestAnswerRecords.class);
+            userAnswer = Optional.ofNullable(contestAnswerRecords).map(ContestAnswerRecords::getAnswer).orElse(null);
         }
-        ContestRecords one = Db.getOne(Wrappers.lambdaQuery(ContestRecords.class)
-                .eq(ContestRecords::getContestId, userAnswerRequest.getContestId())
-                .eq(ContestRecords::getUserId, userId)
-                .eq(ContestRecords::getProblemId, userAnswerRequest.getProblemId()));
-
-        if (one == null) {
-            return null;
-        }
 
 
-        ContestAnswerRecords contestAnswerRecords = Db.getById(one.getRecordId(), ContestAnswerRecords.class);
-        if (contestAnswerRecords == null) {
-            return null;
-        }
-
-        return contestAnswerRecords.getAnswer();
+        return userAnswer;
     }
 }
 

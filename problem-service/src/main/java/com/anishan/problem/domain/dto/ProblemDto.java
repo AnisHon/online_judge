@@ -24,6 +24,7 @@ public class ProblemDto {
      * 主键
      */
     @JsonSerialize(using = ToStringSerializer.class)
+    @NotNull(groups = ValidationGroup.Update.class)
     private Long problemId;
 
     /**

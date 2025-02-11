@@ -99,7 +99,6 @@ const initLanguages = () => {
   languageStore.getLanguages()
       .then((languageArray) => {
         languages.value = languageArray;
-        codeForm.value.languageId = languageArray[0].languageId;
         setLanguage();
       })
 }

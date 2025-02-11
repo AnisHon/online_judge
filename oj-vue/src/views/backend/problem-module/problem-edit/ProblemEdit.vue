@@ -18,7 +18,7 @@
             style="width: 120px"
         >
           <el-option
-              v-for="item in dict.problemType"
+              v-for="item in dict.problemTypeStr"
               :key="item.value"
               :label="item.label"
               :value="item.value"

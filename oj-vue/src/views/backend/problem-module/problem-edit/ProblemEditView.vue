@@ -194,7 +194,7 @@
                   </el-card>
                 </el-col>
 
-                <el-col :span="24" v-if="enableInput && !isOjProblem">
+                <el-col :span="24" v-if="enableInput || !isOjProblem">
                   <el-button type="success" plain icon="Plus" class="add-btn" @click="addMore">
                   </el-button>
                 </el-col>
@@ -236,9 +236,15 @@ import {useRoute, useRouter} from "vue-router";
 import {computed, reactive, ref, watch} from "vue";
 import __ from "lodash";
 import {
-  type Answer, debouncedAddProblem,
-  debouncedAdminGetProblem, debouncedUpdateProblem, dict, type OjCase,
-  type ProblemForm, ProblemType,
+  type Answer,
+  debouncedAddProblem,
+  debouncedAdminGetProblem,
+  debouncedUpdateProblem,
+  dict,
+  type OjCase,
+  ProblemAuth,
+  type ProblemForm,
+  ProblemType,
 } from "@/api/problem";
 import ProblemReviewer from "@/views/backend/problem-module/problem-edit/problem-reviewer/ProblemReviewer.vue";
 import {numberToLetter} from "@/utils/stringUtils";
@@ -260,24 +266,24 @@ const isShowPreview = ref(false);
 
 const problem = reactive<ProblemForm>({
   problem: {
-    problemId: undefined,
-    title: undefined,
-    description: undefined,
-    source: undefined,
+    problemId: "",
+    title: "",
+    description: "",
+    source: "",
     type: undefined,
-    auth: undefined,
-    hint: undefined,
+    auth: ProblemAuth.PUBLIC,
+    hint: "",
   },
   ojProblem: {
     problemId: undefined,
     difficulty: undefined,
-    memoryLimit: undefined,
-    stackLimit: undefined,
-    timeLimit: undefined,
-    input: undefined,
-    output: undefined,
-    inputExample: undefined,
-    outputExample: undefined,
+    memoryLimit: 131072,
+    stackLimit: 128,
+    timeLimit: 1000,
+    input: "",
+    output: "",
+    inputExample: "",
+    outputExample: "",
     createTime: undefined,
   },
   choices: [],
@@ -330,7 +336,11 @@ const back = async () => {
 
 const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateProblem(problem, () => {})
 const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddProblem(problem, (id: IdType) => {
-  router.replace({name: "edit-problem", query: {id: id}});
+  if (id && id !== 'null') {
+    ElMessage.success("添加成功");
+    router.back();
+  }
+
 })
 
 const submit = () => {

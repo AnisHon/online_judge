@@ -1,6 +1,7 @@
 package com.anishan.judge.judge.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.anishan.api.client.gojudge.domain.RunResult;
 import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
@@ -28,6 +29,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.*;
 
 @Slf4j
@@ -133,6 +135,7 @@ public class DefaultJudgeImpl implements JudgeRun {
         BigDecimal score = BigDecimal.ZERO;
         long runtime = 0;
         long memory = 0;
+        int passCount = 0; // 通过数量
 
         for (CompletableFuture<JudgeRunResultScore> futureTask : futureTasks) {
             JudgeRunResultScore judgeRunResultScore = futureTask.get();
@@ -158,6 +161,8 @@ public class DefaultJudgeImpl implements JudgeRun {
             if (judgeRunResultScore.getJudgeResult() != JudgeResult.ACCEPT) {
                 judgeScore.setResult(judgeRunResultScore.getJudgeResult());
                 judgeScore.setErrorMessage(judgeRunResultScore.getErrorMessage());
+            } else  {
+                passCount++;
             }
         }
 
@@ -175,6 +180,7 @@ public class DefaultJudgeImpl implements JudgeRun {
         judgeScore.setScore(score);   // 设置分数
         judgeScore.setRuntime(runtime);    // 设置最大运行时间
         judgeScore.setMemory(memory);      // 设置最大内存
+        judgeScore.setPassCount(passCount); // 通过数量
     }
 
     /**
@@ -209,6 +215,11 @@ public class DefaultJudgeImpl implements JudgeRun {
 
             JudgeCases judgeCases = buildJudgeCase.buildJudgeCases(judgeInfo.getProblemId());
 
+            List<CaseContent> caseContents = Optional.ofNullable(judgeCases.getCaseContents()).orElse(new ArrayList<>());
+
+            // 题例总数
+            judgeScore.setTotalCount(caseContents.size());
+
             ArrayList<CompletableFuture<JudgeRunResultScore>> futureTasks = new ArrayList<>();
 
             JudgeParam judgeParam = JudgeParam
@@ -221,7 +232,7 @@ public class DefaultJudgeImpl implements JudgeRun {
 
             // 通知正在判题
             judgeNotifyUtil.notifyRunning(judgeInfo.getUuid());
-            judgeCases.getCaseContents().forEach(caseContent -> {
+            caseContents.forEach(caseContent -> {
                 CompletableFuture<JudgeRunResultScore> future =
                         CompletableFuture.supplyAsync(() -> judge(caseContent, judgeInfo, judgeParam), executorService);
                 futureTasks.add(future);

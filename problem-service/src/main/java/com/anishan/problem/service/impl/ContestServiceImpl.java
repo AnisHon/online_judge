@@ -271,11 +271,13 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
                         .eq(SupplementContest::getUserId, userId)
         );
         boolean joined = isUserJoined(contestId, userId);
+
         // 没参加
         if (!joined) {
             return false;
         }
 
+        // 已提交
         if (submitted) {
             return false;
         }

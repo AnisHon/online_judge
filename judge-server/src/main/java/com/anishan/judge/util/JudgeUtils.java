@@ -1,11 +1,16 @@
 package com.anishan.judge.util;
 
+import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.enumeration.JudgeResult;
+import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static com.anishan.judge.util.StringUtils.contentEqualsIgnoreBlankAndEOL;
 
 /**
  * @Author Himit_ZH
@@ -99,10 +104,11 @@ public class JudgeUtils {
     }
 
 
+
     public static boolean equals(InputStream is, String out) throws IOException {
         StringReader reader = new StringReader(out);
         InputStreamReader inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
-        return IoUtil.contentEqualsIgnoreEOL(reader, inputStreamReader);
+        return contentEqualsIgnoreBlankAndEOL(reader, inputStreamReader);
 
     }
 

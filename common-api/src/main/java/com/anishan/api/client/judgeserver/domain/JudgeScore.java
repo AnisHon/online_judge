@@ -24,6 +24,12 @@ public class JudgeScore {
     private Long memory;
     private String errorMessage;
 
+    // 总数
+    private Integer totalCount;
+
+    // 通过数
+    private Integer passCount;
+
 
     public JudgeScore runtimeSetter(RunResult runResult) {
         if (runResult != null) {

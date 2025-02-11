@@ -117,7 +117,7 @@ public class ContestController {
     }
 
     @GetMapping("/status/{contestId}")
-    @ApiOperation("判断能否答题")
+    @ApiOperation("判断能否答题，包含补交，是否已经结束，是否参加之类的")
     public R<Boolean> getStatus(@RequestHeader("user-id") Long userId, @PathVariable Long contestId) {
         boolean b = contestService.getStatus(userId, contestId);
         return R.success(b);

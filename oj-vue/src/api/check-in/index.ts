@@ -1,7 +1,7 @@
-import {debounce} from "@/utils/debounce";
 import {get} from "@/utils/http";
 import useLoading from "@/hooks/useLoading";
 import type {IdType} from "@/api/common.ts";
+import __ from "lodash";
 
 interface UserCheckIn {
     userId: IdType;
@@ -24,7 +24,7 @@ const isCheckedIn = async () => {
 }
 const checkInFetcher = (callback: (data :CheckInInfo) => void) => {
     const {loading, isLoading, finish} = useLoading()
-    const sendCheckIn = debounce(async () => {
+    const sendCheckIn = __.debounce(async () => {
         const {data} = await get<CheckInInfo>("user-api/check-in");
         if (data.success) {
             callback(data);
@@ -36,7 +36,7 @@ const checkInFetcher = (callback: (data :CheckInInfo) => void) => {
     return {isLoading, loading, sendCheckIn};
 }
 
-const checkIn = debounce(async (callback: (data :CheckInInfo) => void, loading: any ) => {
+const checkIn = __.debounce(async (callback: (data :CheckInInfo) => void, loading: any ) => {
 
     const {data} = await get<CheckInInfo>("user-api/check-in");
     if (data.success) {

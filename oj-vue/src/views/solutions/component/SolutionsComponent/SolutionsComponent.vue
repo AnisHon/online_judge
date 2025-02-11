@@ -87,7 +87,6 @@ import Pagination from "@/components/pageination/Pagination.vue";
 import {listSolution, type QuerySolution, type Solution} from "@/api/solution";
 import {DocumentAdd} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
-import {getAvatarPath} from "@/api/file";
 import type {IdType} from "@/api/common.ts";
 import Avatar from "@/components/Avatar/Avatar.vue";
 
@@ -157,7 +156,7 @@ getList();
 }
 </style>
 
-<style>
+<style lang="scss">
 .solution-card-body:hover {
   cursor: pointer;
 }

@@ -35,6 +35,7 @@ export const remove = async (id: IdType | IdType[] | string | string[], url: str
 const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: string) => {
 
     let success;
+    // 老代码没用RestFul，删除接口没合并，全是get时期的杰作，懒得改了
     if (id instanceof Array) {
         const {data} = await post<T[], boolean>(batchUrl, id);
         success = data;
@@ -47,6 +48,7 @@ const postedRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: strin
 export const putRemove =  async <T> (id: T | T[], batchUrl: string, singleUrl: string) => {
 
     let success;
+    // 老代码没用RestFul，删除接口没合并，全是get时期的杰作，懒得改了
     if (id instanceof Array) {
         const {data} = await put<T[], boolean>(batchUrl, id);
         success = data;
@@ -72,6 +74,7 @@ const add = async <T> (form: T, url: string) => {
 
 const batchAdd = async <T> (form: T| T[], batchUrl: string, singleUrl: string) => {
     let success;
+    // 老代码没用RestFul，删除接口没合并，全是get时期的杰作，懒得改了
     if (form instanceof Array) {
         const {data} = await post<T[], boolean>(batchUrl, form);
         success = data;
@@ -101,6 +104,7 @@ const update = async <T> (form: T, url: string) => {
  * @param queryUrl 复杂查询URL
  */
 const fetch =  async <T extends SortedPagedType, R> (queryData: T, simpleUrl: string, queryUrl: string) => {
+    // 兼容性和拓展性，可以后期改复杂查询
     if (onlyPagedData(queryData)) {
         const {data} = await query<R, PagedType>(simpleUrl, toPagedQueryData(queryData));
         return data;

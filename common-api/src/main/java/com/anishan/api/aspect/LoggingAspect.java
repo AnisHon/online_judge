@@ -106,20 +106,23 @@ public class LoggingAspect {
 
         Object[] args = joinPoint.getArgs();
 
-        logBegin();
+        synchronized (LoggingAspect.class) {
+            logBegin();
 
-        log.info("method: {}", methodSignature);
-        log.info("desc:{}", description);
-        logRuntime(runtime);
+            log.info("method: {}", methodSignature);
+            log.info("desc:{}", description);
+            logRuntime(runtime);
 
-        if (ArrayUtil.isNotEmpty(args)) {
-            log.info("args:");
-            for (Object arg : args) {
-                log.info(" - {}", arg.toString());
+            if (ArrayUtil.isNotEmpty(args)) {
+                log.info("args:");
+                for (Object arg : args) {
+                    log.info(" - {}", arg.toString());
+                }
             }
+
+            logEnd();
         }
 
-        logEnd();
     }
 
     private String argsToString(ProceedingJoinPoint joinPoint) {
@@ -155,18 +158,21 @@ public class LoggingAspect {
             userId = request.getHeader("user-id");
         }
 
-        logBegin();
+        // 保证顺序
+        synchronized (LoggingAspect.class) {
+            logBegin();
 
-        log.info("service: {}", service);
-        log.info("uri: {}", uri);
-        log.info("path: /{}/{}", api, operation);
-        logRuntime(runtime);
-        log.info("description: {}", description);
-        log.info("ip: {}", ip);
-        log.info("Id: {}", userId);
-        log.info("params: {}", params);
+            log.info("service: {}", service);
+            log.info("uri: {}", uri);
+            log.info("path: /{}/{}", api, operation);
+            logRuntime(runtime);
+            log.info("description: {}", description);
+            log.info("ip: {}", ip);
+            log.info("Id: {}", userId);
+            log.info("params: {}", params);
 
-        logEnd();
+            logEnd();
+        }
     }
 
     @Around("methodLoggingJoinPoint()")

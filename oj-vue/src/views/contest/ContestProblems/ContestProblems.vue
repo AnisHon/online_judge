@@ -13,7 +13,7 @@
           <el-table-column width="50" type="index" label="#"/>
           <el-table-column label="题目" prop="title" show-overflow-tooltip/>
           <el-table-column width="70" label="分数" prop="score" align="center" show-overflow-tooltip/>
-          <el-table-column width="70" label="得分" prop="score" align="center" show-overflow-tooltip v-if="!isContestEnabled">
+          <el-table-column width="70" label="得分" align="center" show-overflow-tooltip v-if="!isContestEnabled">
             <template v-slot="scope">
               {{ isNullObj(scope.row.correct) ? '' : scope.row.userScore || 0 }}
             </template>
@@ -26,7 +26,7 @@
             type="warning"
             size="large"
             style="width: 100%"
-            @click="handIn"
+            @click="handleHandIn"
             plain
         >提交</el-button>
         <el-button
@@ -34,7 +34,7 @@
           type="success"
           size="large"
           style="width: 100%"
-          @click="handIn"
+          @click="handleHandIn"
           plain
           v-else
         >已交卷</el-button>
@@ -52,7 +52,7 @@
       />
       <div v-else>
         <div v-if="!!contest" style="position: relative;">
-          <div style="position: absolute;left: 50px;top:50px;font-size: 36px; color: darkred; " v-if="score === 0 || !!score">
+          <div style="position: absolute;left: 50px;top:50px;font-size: 36px; color: var(--el-color-danger); " v-if="!isNotSubmitted">
             分数：{{ score }}
           </div>
 
@@ -103,7 +103,7 @@ import {debouncedGetProblems} from "@/api/list/problem.ts";
 import {useRoute} from "vue-router";
 import DetailProblem from "@/components/DetailProblem/DetailProblem.vue";
 import {ElMessageBox, ElTable} from "element-plus";
-import {type ContestView, fetchContestById, getContestStatus, getScore, handInPaper} from "@/api/contest";
+import {type ContestView, fetchContestById, getContestStatus, handInPaper} from "@/api/contest";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {authTagType, authText, formatDate, isContestOver, isNotStart} from "@/utils/contest";
 import {isNullObj} from "@/utils/valueutil.ts";
@@ -129,9 +129,15 @@ const problemList = reactive<ProblemInListView[]>([]);
 
 const contest = ref<ContestView>();
 
-const score = ref<number | null>(null);
+const score = computed(() => {
+  let total = 0;
+  problemList.forEach((problem: ProblemInListView) => {
+    total += problem.userScore || 0;
+  });
+  return total;
+})
 
-const isSubmitted = ref(true);
+const isNotSubmitted = ref(true);
 
 const sortedProblemList = computed(() => {
   problemList.sort((a, b) => <number>a.problemOrder - <number>b.problemOrder);
@@ -139,7 +145,10 @@ const sortedProblemList = computed(() => {
 })
 
 const isContestEnabled = computed(() => {
-  return !isContestOver(contest.value?.endTime) && !isNotStart(contest.value?.startTime) && isSubmitted.value;
+  if (isNotSubmitted.value) {
+    return true;
+  }
+  return !isContestOver(contest.value?.endTime) && !isNotStart(contest.value?.startTime) && isNotSubmitted.value;
 })
 
 const {isLoading, loading, get} = debouncedGetProblems((data) => {
@@ -151,11 +160,6 @@ const getProblems = async () => {
   loading();
   get(contestId.value);
   contest.value = await fetchContestById(contestId.value);
-  if (!isContestEnabled.value) {
-    getScore(contestId.value).then(data => {
-      score.value = !!data ? data : 0;
-    });
-  }
 }
 
 const selectProblem = (row: ProblemInListView) => {
@@ -170,7 +174,7 @@ const selectProblem = (row: ProblemInListView) => {
 
 const getStatus = () => {
   getContestStatus(contestId.value)
-      .then(status => isSubmitted.value = status)
+      .then(status => isNotSubmitted.value = status)
 
 }
 
@@ -179,11 +183,12 @@ const setMaxHeight = () => {
 }
 
 // 交卷
-const handIn = () => {
+const handleHandIn = () => {
   ElMessageBox.confirm("您确认要交卷？交卷后无法提交", {cancelButtonText: "取消", confirmButtonText: "确定"})
-      .then(() => {
-        handInPaper(contestId.value)
-        .then(getStatus)
+      .then(async () => {
+        await handInPaper(contestId.value)
+        location.reload();
+
       }).catch(() => {})
 }
 
