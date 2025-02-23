@@ -2,7 +2,7 @@
 <template>
 <div class="problem-result">
   <div>
-    <h3 :class="style">{{ resultText }}</h3>
+    <h3 :class="clazz">{{ resultText }}</h3>
   </div>
   <div>
     <strong>得分：</strong>
@@ -55,7 +55,7 @@ const groupResult = computed(() => {
   return __.groupBy(result.answers, (x) => x.index);
 })
 
-const style = computed(() => {
+const clazz = computed(() => {
   return correct.value ? "right" : "wrong";
 })
 
@@ -94,13 +94,13 @@ const itemText = (item: Answer): string => {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped >
 .wrong {
-  color: #F56C6C;
+  color: var(--el-color-danger);
 }
 
 .right {
-  color: #67C23A;
+  color: var(--el-color-success);
 }
 
 </style>

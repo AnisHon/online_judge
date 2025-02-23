@@ -2,6 +2,9 @@ package com.anishan.api.util;
 
 import cn.hutool.captcha.AbstractCaptcha;
 import cn.hutool.captcha.CaptchaUtil;
+import cn.hutool.captcha.generator.CodeGenerator;
+import cn.hutool.captcha.generator.MathGenerator;
+import cn.hutool.captcha.generator.RandomGenerator;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.api.config.ConstConfig;
 import com.anishan.api.domain.LoginUser;
@@ -31,6 +34,11 @@ import java.util.concurrent.TimeUnit;
 @DependsOn("constConfig")
 public class AuthUtil {
 
+    private static final CodeGenerator mathGenerator;
+
+    static {
+        mathGenerator = new MathGenerator(1);
+    }
 
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -38,6 +46,7 @@ public class AuthUtil {
 
     public final Long CODE_TIME_OUT_SECOND;
     public final Long CAPTCHA_TIME_OUT_SECOND;
+
 
     @Autowired
     public AuthUtil(
@@ -93,7 +102,8 @@ public class AuthUtil {
     @Contract(pure = true)
     public static AbstractCaptcha generateCaptchaCode(CaptchaCodeType captchaType) {
         AbstractCaptcha captcha = null;
-        final int width = 150, height = 75;
+        final int width = 200, height = 75;
+
         switch (captchaType) {
             case GIF:
                 captcha = CaptchaUtil.createGifCaptcha(width, height, 4);
@@ -106,6 +116,9 @@ public class AuthUtil {
                 break;
             case CIRCLE:
                 captcha = CaptchaUtil.createCircleCaptcha(width, height, 4, 15);
+                break;
+            case MATH:
+                captcha = CaptchaUtil.createShearCaptcha(width, height, mathGenerator, 1);
                 break;
         }
         return captcha;
@@ -193,9 +206,17 @@ public class AuthUtil {
      * @param inputCode    用户输入的验证码
      * @return             是否正确
      */
-    public boolean checkAndRemoveCaptchaCode(String captchaToken, String inputCode) {
+    public boolean checkAndRemoveCaptchaCode(String captchaToken, String inputCode, CaptchaCodeType type) {
         String code = getAndRemoveCaptchaCode(captchaToken);
-        return !Objects.equals(code.toLowerCase(), inputCode.toLowerCase());
+        if (code == null || inputCode == null) {
+            return false;
+        }
+
+        if (type == CaptchaCodeType.MATH) {
+            return mathGenerator.verify(code, inputCode);
+        } else {
+            return StrUtil.equalsIgnoreCase(code, inputCode);
+        }
     }
 
     public static String createToken(Long userId) {

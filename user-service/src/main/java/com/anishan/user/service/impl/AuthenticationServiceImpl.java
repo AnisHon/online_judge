@@ -293,7 +293,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private void captchaCheck(String captchaToken, String captchaCode) {
         ThrowUtil.businessError(!authUtil.hasCaptchaKey(captchaToken), "验证码已过期");
-        ThrowUtil.businessError(authUtil.checkAndRemoveCaptchaCode(captchaToken, captchaCode), "验证码错误");
+        ThrowUtil.businessError(!authUtil.checkAndRemoveCaptchaCode(captchaToken, captchaCode, userConfig.getCaptchaType()), "验证码错误");
     }
 
     private void doSendEmailCheck(String email, String captchaToken, String captchaCode) {

@@ -80,8 +80,9 @@ public class ProblemController {
         ojProblemCaseService.download(path, response);
     }
 
+    // todo 去除路径参数
     @GetMapping("/recentProblems/{limit}")
-    @ApiOperation("最近题目")
+    @ApiOperation("10个最近题目")
     public R<List<ProblemVo>> getRecentProblems(@NotNull @PathVariable Integer limit) {
         limit = 10;
         List<ProblemVo> problemVos = problemService.recentProblems(limit);

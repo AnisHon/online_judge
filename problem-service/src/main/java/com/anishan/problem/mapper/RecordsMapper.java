@@ -26,7 +26,6 @@ public interface RecordsMapper extends MPJBaseMapper<Records> {
 
     /**
      * 用户分数情况
-     * todo Contest没有完善
      */
     List<UserStatistic> selectUserStatistic(@Param("contestId") Long contestId);
 

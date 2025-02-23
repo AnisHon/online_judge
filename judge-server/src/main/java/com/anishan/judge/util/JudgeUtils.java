@@ -1,10 +1,6 @@
 package com.anishan.judge.util;
 
-import cn.hutool.core.io.IORuntimeException;
-import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.enumeration.JudgeResult;
-import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

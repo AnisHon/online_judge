@@ -15,7 +15,9 @@ import java.util.Map;
 public class JwtUtil {
 
     public static final String KEY_USER_ID = "user_id";
-//    todo
+
+
+    // todo 后期需要做到配置文件中
     private static final byte[] KEY_SIGN = "legacy-secret-redacted".getBytes();
     public static final int EXPIRE_HOUR = 7 * 24;
 

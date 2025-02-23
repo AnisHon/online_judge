@@ -1,7 +1,6 @@
 package com.anishan.judge.judge.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
 import com.anishan.api.client.gojudge.domain.RunResult;
 import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
@@ -28,7 +27,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.*;
 

@@ -31,7 +31,7 @@ public class Records implements Serializable {
     private Long recordId;
 
     /**
-     * 比赛ID，非比赛可不填
+     * 比赛ID，已经废弃
      */
     private Long contestId;
 

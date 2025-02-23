@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
+import com.anishan.api.client.user.client.UserClient;
 import com.anishan.api.client.user.client.UserInternalClient;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.problem.domain.dto.DetailSolutionDto;
@@ -49,6 +50,7 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
 
     private final SolutionExplanationMapper solutionExplanationMapper;
     private final UserInternalClient userInternalClient;
+    private final UserClient userClient;
 
 
     public DetailSolutionVo doGet(Long id) {
@@ -63,7 +65,8 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
         DetailSolutionVo solution = solutionExplanationMapper.selectJoinOne(DetailSolutionVo.class, wrapper);
 
         // 获取 id - nikeName 的 map
-        Map<Long, String> map = userInternalClient.nikeName(List.of(id)).getData();
+        Long userId = solution.getUserId();
+        Map<Long, String> map = userInternalClient.nikeName(List.of(userId)).getData();
 
         map
                 .values()
@@ -159,15 +162,11 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
         MPJLambdaWrapper<SolutionExplanation> wrapper = MPJWrappers.lambdaJoin(SolutionExplanation.class)
                 .eq(pagedSolution.getUserId() != null, SolutionExplanation::getUserId, pagedSolution.getUserId())
                 .eq( pagedSolution.getProblemId() !=null, SolutionExplanation::getProblemId, pagedSolution.getProblemId())
-                .and(consumer ->
-                        consumer
-                                .eq(SolutionExplanation::getPrivate_, false)
-                                .or()
-                                .eq(SolutionExplanation::getUserId, userId)
-                )
-
+                .eq(SolutionExplanation::getPrivate_, false)
+                .or(w -> w
+                        .eq(SolutionExplanation::getPrivate_, true)
+                        .eq(SolutionExplanation::getUserId, userId))
                 .orderByDesc(SolutionExplanation::getTopUp);
-
         return doQuery(page, wrapper);
     }
 

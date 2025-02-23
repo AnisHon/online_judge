@@ -12,7 +12,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -39,10 +38,11 @@ public class CacheController {
                         new CacheTypeVo(5, "problem:detail:", "题目缓存"),
                         new CacheTypeVo(6, "problem:recent:", "最近题目缓存"),
                         new CacheTypeVo(7, "contest:problem:", "比赛题目列表缓存"),
-                        new CacheTypeVo(8, "user:rank:", "比赛题目列表缓存"),
+                        new CacheTypeVo(8, "user:rank:", "用户排名缓存"),
                         new CacheTypeVo(8, "problem:choice-fill:", "填空选择答案缓存"),
                         new CacheTypeVo(9, "content:file:", "文件缓存"),
                         new CacheTypeVo(9, "problem:solution:", "题解缓存")
+
                         );
     }
 

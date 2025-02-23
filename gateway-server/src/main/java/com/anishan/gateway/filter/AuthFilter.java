@@ -2,7 +2,6 @@ package com.anishan.gateway.filter;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import com.anishan.commons.config.SharedConfig;
 import com.anishan.commons.util.JwtUtil;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;

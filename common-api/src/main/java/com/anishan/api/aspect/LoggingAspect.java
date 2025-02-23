@@ -99,7 +99,6 @@ public class LoggingAspect {
 
         MethodLog logAnnotation = method.getAnnotation(MethodLog.class);
 
-
         String description = logAnnotation.desc();
 
         String methodSignature = getMethodSignature(signature);
@@ -129,8 +128,23 @@ public class LoggingAspect {
         return ArrayUtil.toString(joinPoint.getArgs());
     }
 
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        // 处理多个代理 IP 的情况（取第一个）
+        return ip != null ? ip.split(",")[0].trim() : "";
+    }
+
     @SneakyThrows
-    private void logControllerPoint(ProceedingJoinPoint joinPoint, long runtime) {
+    private void logControllerPoint(ServletRequestAttributes attributes, ProceedingJoinPoint joinPoint, long runtime) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         method.setAccessible(true);
@@ -149,12 +163,9 @@ public class LoggingAspect {
         if (StrUtil.isEmpty(service)) {
             service = serviceName;
         }
-
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-
         if (attributes != null) {
             HttpServletRequest request = attributes.getRequest();
-            ip = request.getRemoteAddr();
+            ip = getClientIp(request);
             userId = request.getHeader("user-id");
         }
 
@@ -197,8 +208,9 @@ public class LoggingAspect {
         Object result = joinPoint.proceed();
 
         long end = System.currentTimeMillis();
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
-        Runnable runnable = () -> logControllerPoint(joinPoint, end - begin);
+        Runnable runnable = () -> logControllerPoint(attributes, joinPoint, end - begin);
 
         executorService.submit(runnable);
 

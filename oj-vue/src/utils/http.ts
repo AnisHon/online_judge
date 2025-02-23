@@ -84,6 +84,9 @@ service.interceptors.response.use(
             ElNotification.error(error.response?.data?.message);
         } else if (error.status == 404) {
             ElNotification.error("接口404 : " + error.config.url)
+        }
+        else if (error.status == 500) {
+            ElNotification.error("出现错误，请联系管理员")
         } else {
             ElNotification.error(error?.response?.data?.message);
         }

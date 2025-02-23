@@ -28,11 +28,6 @@
           <el-descriptions-item label="用户名">{{ user.userName }}</el-descriptions-item>
           <el-descriptions-item label="昵称">{{ user.nikeName }}</el-descriptions-item>
           <el-descriptions-item label="邮箱">{{ user.email }}</el-descriptions-item>
-          <el-descriptions-item label="身份">
-            <el-space wrap>
-              <el-tag size="small">School</el-tag>
-            </el-space>
-          </el-descriptions-item>
           <el-descriptions-item label="个性签名">
             <el-tag type="danger">未开放</el-tag>
           </el-descriptions-item>

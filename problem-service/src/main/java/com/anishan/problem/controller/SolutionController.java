@@ -15,15 +15,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
-import java.util.Objects;
 
 @Api("题解接口")
 @RestController
@@ -50,6 +47,7 @@ public class SolutionController {
 
     @GetMapping("/list")
     @ApiOperation("普通用户查询题解")
+    // todo 有bug数据权限没做好
     public R<PagedResult<SolutionVo>> list(@RequestHeader("user-id") Long userId, @Validated PagedSolution pagedSolution) {
         pagedSolution.setUserId(null);
         PagedResult<SolutionVo> pagedResult = solutionExplanationService.pagedQuery(userId, pagedSolution);
