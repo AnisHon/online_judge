@@ -37,7 +37,7 @@ for file in resources/config/*.yaml; do
   curl -fsS -X POST "http://127.0.0.1:${DEV_NACOS_PORT:-18848}/nacos/v1/cs/configs" \
     --data-urlencode "dataId=$(basename "$file")" \
     --data-urlencode 'group=DEFAULT_GROUP' --data-urlencode 'type=yaml' \
-    --data-urlencode "content@=$file" >/dev/null
+    --data-urlencode "content@$file" >/dev/null
 done
 
 "${COMPOSE[@]}" ps
