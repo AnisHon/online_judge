@@ -1,7 +1,7 @@
 import { fileURLToPath, URL } from 'node:url'
 
 /// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
@@ -9,7 +9,11 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:18000'
+
+  return {
   css: {
     preprocessorOptions: {
       scss: {
@@ -43,10 +47,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api':{
-        target: 'http://localhost:800',
+        target: apiProxyTarget,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
+  }
   }
 })
