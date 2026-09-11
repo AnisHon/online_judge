@@ -93,6 +93,15 @@ public class AuthenticationController {
         return R.success(login);
     }
 
+    @PostMapping("/refresh")
+    @ApiOperation("使用刷新令牌换取新的访问令牌")
+    @PermitAll
+    public R<LoginVo> refresh(@RequestBody java.util.Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+        if (refreshToken == null || refreshToken.isBlank()) return R.unauthorized("刷新令牌不能为空");
+        return R.success(authenticationService.refresh(refreshToken));
+    }
+
     @PostMapping("/registration")
     @ApiOperation("注册接口")
     @ControllerLog(api = "auth", operation = "registration", desc = "用户注册")
@@ -162,7 +171,12 @@ public class AuthenticationController {
     @PermitAll
     public R<AuthResultVo> sendForgetEmailCode(@RequestBody @Validated ForgetEmailCodeRequest forgetEmailCodeRequest) {
 
-        String email = sysUserService.getUserByUsernameOrEmail(forgetEmailCodeRequest.getUsername()).getEmail();
+        SysUser user = sysUserService.getUserByUsernameOrEmail(forgetEmailCodeRequest.getUsername());
+        // Do not reveal whether an account exists and avoid a null-pointer 500.
+        if (user == null || user.getEmail() == null) {
+            return R.success(AuthResultVo.success("如该帐号存在，验证码将发送至绑定邮箱"));
+        }
+        String email = user.getEmail();
         AuthResultVo authResultVo = authenticationService.sendEmailCode(
                 email,
                 forgetEmailCodeRequest.getCaptchaToken(),

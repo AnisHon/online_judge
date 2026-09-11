@@ -89,6 +89,9 @@ public class JudgeListener {
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+            // Let the container apply its retry/DLQ policy instead of acknowledging
+            // a submission whose result was not persisted.
+            throw new IllegalStateException("判题结果处理失败", e);
         }
 
 

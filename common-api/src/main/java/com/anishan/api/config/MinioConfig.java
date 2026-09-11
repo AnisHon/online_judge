@@ -43,8 +43,6 @@ public class MinioConfig {
         final String bucketName = minio.getBucketName();
 
         log.info("minioUrl: {}", url);
-        log.info("accessKey: {}", accessKey);
-        log.info("secretKey: {}", secretKey);
         log.info("bucketName: {}", bucketName);
 
         MinioClient client = MinioClient.builder()
@@ -72,8 +70,6 @@ public class MinioConfig {
         final String bucketName = minio.getBucketName();
 
         log.info("s3 Url: {}", url);
-        log.info("s3 Key: {}", accessKey);
-        log.info("s3 Key: {}", secretKey);
         log.info("s3 bucketName: {}", bucketName);
 
         //设置连接时的参数

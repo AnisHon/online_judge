@@ -7,6 +7,7 @@ import cn.hutool.http.HttpStatus;
 import com.anishan.api.client.content.domain.OSSFileInfo;
 import com.anishan.api.client.content.domain.OssFileInputStream;
 import com.anishan.api.file.FileOperation;
+import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.exception.BusinessException;
 import com.anishan.content.domain.dto.ChunkUploadDto;
@@ -77,12 +78,12 @@ public class FileController {
 
     @ApiOperation("头像上传")
     @PostMapping("/avatar")
-    public R<String> uploadAvatar(@RequestHeader("user-id") Long userId, @RequestParam("avatar") MultipartFile avatar) {
+    public R<String> uploadAvatar(@RequestParam("avatar") MultipartFile avatar) {
         if (avatar.isEmpty()) {
             return R.success(null);
         }
 
-        String b = fileService.uploadAvatar(avatar, userId);
+        String b = fileService.uploadAvatar(avatar, AuthUtil.getUserId());
 
         return R.success(b);
 

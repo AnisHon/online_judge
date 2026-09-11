@@ -215,6 +215,9 @@ services:
       - MQ_USERNAME=${RABBITMQ_DEFAULT_USER:-admin}
       - MQ_PASSWORD=${RABBITMQ_DEFAULT_PASS}
       - MQ_V_HOST=/judge
+      - OJ_JWT_SECRET=${OJ_JWT_SECRET:?set OJ_JWT_SECRET in .env}
+      - OJ_JWT_ACCESS_SECRET=${OJ_JWT_ACCESS_SECRET:?set OJ_JWT_ACCESS_SECRET in .env}
+      - OJ_JWT_REFRESH_SECRET=${OJ_JWT_REFRESH_SECRET:?set OJ_JWT_REFRESH_SECRET in .env}
     networks:
       - default
       - oj-net
@@ -233,6 +236,9 @@ services:
     environment:
       - NACOS_URL=oj-nacos:8848
       - SERVER_PORT=80
+      - OJ_JWT_SECRET=${OJ_JWT_SECRET:?set OJ_JWT_SECRET in .env}
+      - OJ_JWT_ACCESS_SECRET=${OJ_JWT_ACCESS_SECRET:?set OJ_JWT_ACCESS_SECRET in .env}
+      - OJ_JWT_REFRESH_SECRET=${OJ_JWT_REFRESH_SECRET:?set OJ_JWT_REFRESH_SECRET in .env}
     networks:
       - default
       - oj-net

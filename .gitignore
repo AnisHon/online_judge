@@ -39,3 +39,4 @@ logs/
 /resources/sql/temp
 .env
 .env.dev
+.env.local-dev

@@ -22,6 +22,11 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
         ServerHttpRequest request = exchange.getRequest();
 
+        // refresh 接口只接收请求体中的 refreshToken，不能把过期 access token 当成网关身份令牌解析。
+        if (request.getURI().getPath().endsWith("/auth/refresh")) {
+            return chain.filter(exchange);
+        }
+
         // token
         String token = null;
         List<String> headers = request.getHeaders().get("token");
@@ -30,15 +35,17 @@ public class AuthFilter implements GlobalFilter, Ordered {
             token = headers.get(0);
         }
 
+        ServerHttpRequest.Builder builder = request.mutate()
+                .headers(h -> h.remove("user-id"));
+
         if (StrUtil.isEmpty(token)) {
-            return chain.filter(exchange);
+            return chain.filter(exchange.mutate().request(builder.build()).build());
         }
 
-        Long userId = JwtUtil.parseJwt(token);
-
+        Long userId = JwtUtil.parseAccessJwt(token);
 
         ServerWebExchange ex = exchange.mutate()
-                .request(builder -> builder.header("user-id", userId.toString()))
+                .request(builder.header("user-id", userId.toString()).build())
                 .build();
         // 6.放行
         return chain.filter(ex);

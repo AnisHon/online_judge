@@ -17,5 +17,14 @@ public class LoginVo {
     @ApiModelProperty("登陆成功后的令牌")
     private String token;
 
+    @ApiModelProperty("短期访问令牌，默认30分钟")
+    private String accessToken;
+
+    @ApiModelProperty("长期刷新令牌，默认7天")
+    private String refreshToken;
+
+    @ApiModelProperty("访问令牌有效期，单位秒")
+    private long expiresIn;
+
 
 }

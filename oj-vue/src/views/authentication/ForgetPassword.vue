@@ -1,15 +1,19 @@
 <template>
   <el-form
       ref="formRef"
-      style="max-width: 600px"
+      class="auth-form"
       :model="forgetPasswordForm"
       status-icon
       :rules="rules"
       :aria-autocomplete="false"
-      @submit="submitResetPassword(formRef)"
+      @submit.prevent="submitResetPassword(formRef)"
   >
-    <el-form-item>
-      <h1 style="margin: 0; color: #303133; text-align: center; width: 100%;">忘记密码</h1>
+    <el-form-item class="title-item">
+      <div>
+        <p class="welcome-label">RESET PASSWORD</p>
+        <h1>找回密码</h1>
+        <p class="subtitle">验证身份后设置一个新的登录密码</p>
+      </div>
     </el-form-item>
 
     <el-form-item prop="username">
@@ -27,7 +31,7 @@
           v-model="forgetPasswordForm.password"
           type="password"
           autocomplete="off"
-          placeholder="请输入密码"
+          placeholder="请输入新密码"
           prefix-icon="Lock"
       />
     </el-form-item>
@@ -37,7 +41,7 @@
           v-model="forgetPasswordForm.repeatPassword"
           type="password"
           autocomplete="off"
-          placeholder="请输入密码"
+          placeholder="请再次输入新密码"
           prefix-icon="Lock"
       />
     </el-form-item>
@@ -59,8 +63,7 @@
       <el-col :span="10" style="position: relative;">
         <el-image
             :src="imgData"
-            style="width: 100px; position: absolute;
-              right: 0"
+              class="captcha-image"
             @click="refreshCaptchaCode"
         />
       </el-col>
@@ -85,7 +88,7 @@
       <el-col :span="10" style="position: relative;">
         <el-button
             @click="sendEmailCode()"
-            style="position: absolute; right: 0;"
+            class="code-button"
             :loading="isLoading"
             :disabled="isLoading"
         >
@@ -96,15 +99,15 @@
 
     </el-row>
 
-    <el-form-item>
+    <el-form-item class="submit-item">
       <el-button
           type="primary"
           @click="submitResetPassword(formRef)"
-          style="width: 80%; margin: auto"
+          class="submit-button"
           :loading="isLoading"
           :disabled="isLoading"
       >
-        重设密码
+          确认重设密码
       </el-button>
     </el-form-item>
   </el-form>
@@ -184,8 +187,8 @@ const doResetPassword = () => {
         ElNotification.success("重设成功")
         router.push({name: "login"})
       })
-      .catch((msg) => {
-        ElNotification.error(msg)
+      .catch((error: unknown) => {
+        ElNotification.error(error instanceof Error ? error.message : typeof error === "string" ? error : "重设密码失败")
         refreshCaptchaCode();
       })
       .finally(() => {
@@ -217,9 +220,9 @@ const sendEmailCode = () => {
       captchaToken: forgetPasswordForm.token,
     }).then(() => {
       ElNotification.success("发送成功")
-    }).catch((message) => {
+      }).catch((error: unknown) => {
       refreshCaptchaCode();
-      ElNotification.warning(message);
+      ElNotification.warning(error instanceof Error ? error.message : typeof error === "string" ? error : "验证码发送失败");
     })
   }
 }
@@ -237,4 +240,18 @@ refreshCaptchaCode();
 </script>
 
 <style scoped>
+.auth-form { width: 100%; }
+.title-item { margin-bottom: 28px; }
+.title-item :deep(.el-form-item__content) { display: block; }
+.welcome-label { margin: 0 0 8px; color: #2563eb; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+.title-item h1 { margin: 0; color: #172554; font-size: 32px; letter-spacing: -.04em; }
+.subtitle { margin: 10px 0 0; color: #94a3b8; font-size: 14px; }
+.auth-form :deep(.el-input__wrapper) { min-height: 46px; border-radius: 12px; box-shadow: 0 0 0 1px #e2e8f0 inset; transition: box-shadow .2s, background .2s; }
+.auth-form :deep(.el-input__wrapper.is-focus) { box-shadow: 0 0 0 2px #93c5fd inset; background: #f8fbff; }
+.auth-form :deep(.el-form-item) { margin-bottom: 18px; }
+.captcha-image { width: 100px; position: absolute; right: 0; border-radius: 10px; cursor: pointer; }
+.code-button { position: absolute; right: 0; border-radius: 10px; }
+.submit-item { margin-top: 8px; }
+.submit-button { width: 100%; height: 46px; border: 0; border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #2563eb, #4f46e5); box-shadow: 0 10px 22px rgba(37, 99, 235, .22); }
+.submit-button:hover { transform: translateY(-1px); box-shadow: 0 12px 25px rgba(37, 99, 235, .3); }
 </style>

@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -39,6 +40,7 @@ public class SecurityConfig {
     };
     private final String[] PERMIT_URI = {
             "/auth/login",
+            "/auth/refresh",
             "/auth/registration",
             "/auth/forget-pass",
             "/auth/send-email-code",
@@ -50,9 +52,6 @@ public class SecurityConfig {
             "/version",
             "/test",
             "/internal/**",
-            "/avatar/**",
-            "/image/**",
-
     };
 
     @Bean
@@ -79,6 +78,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(conf -> {
 
                     conf.antMatchers(PERMIT_URI).permitAll();
+                    conf.antMatchers(HttpMethod.GET, "/avatar/**", "/image/**").permitAll();
 
                     if (sharedConfig.isProduct()) {
                         conf.antMatchers(SWAGGER_API_URL).denyAll();

@@ -88,7 +88,6 @@ import getCaptcha from '@/api/auth/captchaCode.ts'
 import {login} from "@/api/auth/authentication.ts"
 import {type LoginForm} from "@/api/auth/authentication.ts"
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
-import router from "@/router";
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
@@ -133,8 +132,9 @@ const doLogin = () => {
       .then(()  => {
         ElNotification.success("欢迎登录")
       })
-      .catch((msg) => {
-        ElNotification.error(msg)
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : typeof error === "string" ? error : "登录失败，请稍后重试"
+        ElNotification.error(message)
         refreshCaptchaCode()
       })
       .finally(() => {

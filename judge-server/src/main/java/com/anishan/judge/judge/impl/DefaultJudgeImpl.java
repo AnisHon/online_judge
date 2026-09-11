@@ -46,7 +46,7 @@ public class DefaultJudgeImpl implements JudgeRun {
                 TimeUnit.SECONDS,// 结束线程时间单位
                 new LinkedBlockingDeque<>(200 * cpuNum), //阻塞队列，限制等候线程数
                 Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.DiscardOldestPolicy());//队列满了，尝试去和最早的竞争，也不会抛出异常！
+                new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
 
@@ -123,7 +123,7 @@ public class DefaultJudgeImpl implements JudgeRun {
      * @param futureTasks 判题任务列表
      * @param judgeScore  输出参数JudgeScore
      */
-    public void judgeFinalScore(List<CompletableFuture<JudgeRunResultScore>> futureTasks, JudgeScore judgeScore, BigDecimal totalScore, JudgeInfo judgeInfo) throws ExecutionException, InterruptedException {
+    public void judgeFinalScore(List<CompletableFuture<JudgeRunResultScore>> futureTasks, JudgeScore judgeScore, BigDecimal totalScore, JudgeInfo judgeInfo) throws ExecutionException, InterruptedException, TimeoutException {
         if (CollUtil.isEmpty(futureTasks)) {
             return;
         }
@@ -136,7 +136,7 @@ public class DefaultJudgeImpl implements JudgeRun {
         int passCount = 0; // 通过数量
 
         for (CompletableFuture<JudgeRunResultScore> futureTask : futureTasks) {
-            JudgeRunResultScore judgeRunResultScore = futureTask.get();
+            JudgeRunResultScore judgeRunResultScore = futureTask.get (2, TimeUnit.MINUTES);
 
             if (judgeRunResultScore == null) {
                 return;
@@ -168,7 +168,7 @@ public class DefaultJudgeImpl implements JudgeRun {
             if (BigDecimal.ZERO.equals(totalScore)) {
                 score = BigDecimal.ZERO;
             } else {
-                BigDecimal temp = score.divide(totalScore,RoundingMode.FLOOR);
+                BigDecimal temp = score.divide(totalScore, 8, RoundingMode.DOWN);
                 BigDecimal ttt = judgeInfo.getListScore();
                 score =  temp.multiply(ttt);
             }
@@ -251,7 +251,11 @@ public class DefaultJudgeImpl implements JudgeRun {
             judgeScore
                     .setResult(JudgeResult.COMPILE_ERROR)
                     .setErrorMessage(e.getStderr());
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error(e.getMessage(), e);
+            judgeScore.setResult(JudgeResult.RUNTIME_ERROR);
+        } catch (ExecutionException | TimeoutException e) {
             log.error(e.getMessage(), e);
             judgeScore.setResult(JudgeResult.RUNTIME_ERROR);
         } finally {

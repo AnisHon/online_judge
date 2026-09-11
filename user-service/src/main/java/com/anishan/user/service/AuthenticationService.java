@@ -21,6 +21,8 @@ public interface AuthenticationService {
     // login
     LoginVo login(LoginForm loginForm);
 
+    LoginVo refresh(String refreshToken);
+
     // registration
     LoginVo registration(RegistrationForm registrationForm);
 

@@ -7,7 +7,8 @@ import __ from 'lodash';
 export const useToken = defineStore('token', {
     state: () => {
         return {
-            token: ""
+            token: "",
+            refreshToken: ""
         }
     },
     actions: {
@@ -18,16 +19,21 @@ export const useToken = defineStore('token', {
             await user.loadUser();
         },
 
+        setTokens(accessToken: string, refreshToken?: string) {
+            this.token = accessToken;
+            if (refreshToken) this.refreshToken = refreshToken;
+        },
+
         hasToken() {
             return !__.isEmpty(this.token);
         },
 
         clearToken(){
             this.token = ''
+            this.refreshToken = ''
             useUserStore().clear()
         }
     },
 
     persist: true
 });
-

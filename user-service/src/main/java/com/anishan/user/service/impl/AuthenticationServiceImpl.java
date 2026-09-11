@@ -47,6 +47,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthUtil authUtil;
     private final CacheRoleService cacheRoleService;
     private final UserConfig userConfig;
+    private final AuthTokenService authTokenService;
 
     // 默认就是student
 
@@ -73,15 +74,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         authUtil.cacheLoginUser(loginUser);
     }
 
-    private String createLoginTokenAndCache(LoginUser loginUser) {
-        authUtil.cacheLoginUser(loginUser);
-        String token = AuthUtil.createToken(loginUser.getUser().getUserId());
-        // todo 后期用于白名单
-        authUtil.cacheToken(token);
-        return token;
-    }
-
-
     public Authentication doCheckLogin(LoginForm loginForm) {
 
 
@@ -103,27 +95,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public LoginVo login(LoginForm loginForm) {
-        LoginVo loginVo = new LoginVo();
-
-
         Authentication authenticate;
         try {
             authenticate = doCheckLogin(loginForm);
         } catch (RuntimeException e) {
+            LoginVo loginVo = new LoginVo();
             loginVo.setSuccess(false);
             loginVo.setMessage(e.getMessage());
             return loginVo;
         }
 
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
-
-        String token = createLoginTokenAndCache(loginUser);
-
-        loginVo.setSuccess(true);
-        loginVo.setMessage("登陆成功");
-        loginVo.setToken(token);
-        return loginVo;
+        return authTokenService.issue(loginUser);
     }
+
+    @Override
+    public LoginVo refresh(String refreshToken) { return authTokenService.refresh(refreshToken); }
 
 
 
@@ -191,8 +178,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         LoginUser loginUser = doBuildLoginUser(sysUser);
 
-        String token = createLoginTokenAndCache(loginUser);
-        loginVo.setToken(token);
+        LoginVo issued = authTokenService.issue(loginUser);
+        loginVo.setToken(issued.getToken());
+        loginVo.setAccessToken(issued.getAccessToken());
+        loginVo.setRefreshToken(issued.getRefreshToken());
+        loginVo.setExpiresIn(issued.getExpiresIn());
 
         return loginVo;
     }

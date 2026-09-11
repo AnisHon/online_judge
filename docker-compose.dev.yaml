@@ -1,56 +1,106 @@
+# 本机 IDEA 开发专用：只运行基础设施，所有 Java 服务和前端均在宿主机启动。
 services:
   oj-mysql:
-    container_name: oj-dev-mysql
-    ports: !override
-      - "13306:3306"
-  oj-redis:
-    container_name: oj-dev-redis
-    ports: !override
-      - "16379:6379"
-  oj-mq:
-    container_name: oj-dev-mq
-    ports: !override
-      - "15673:15672"
-      - "5673:5672"
-  oj-minio:
-    container_name: oj-dev-minio
-    ports: !override
-      - "19000:9000"
-      - "${MINIO_CONSOLE_PORT:-19091}:9090"
-  oj-nacos:
-    container_name: oj-dev-nacos
-    ports: !override
-      - "${DEV_NACOS_PORT:-18848}:8848"
-      - "19848:9848"
-      - "19849:9849"
-  oj-sandbox:
-    container_name: oj-dev-sandbox
-    ports: !override
-      - "15050:5050"
-  judge-server:
-    container_name: oj-dev-judge-server
-    environment:
-      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD:-dev-mysql-password}
-  content-service:
-    container_name: oj-dev-content-service
-    environment:
-      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD:-dev-mysql-password}
-  problem-service:
-    container_name: oj-dev-problem-service
-    environment:
-      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD:-dev-mysql-password}
-  user-service:
-    container_name: oj-dev-user-service
-    environment:
-      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD:-dev-mysql-password}
-  gateway-server:
-    container_name: oj-dev-gateway-server
-    ports: !override
-      - "18000:80"
-  oj-vue:
-    container_name: oj-dev-vue
     build:
-      context: oj-vue
-      dockerfile: Dockerfile.dev
-    ports: !override
-      - "${DEV_WEB_PORT:-8080}:80"
+      context: resources/sql
+      dockerfile: Dockerfile
+    container_name: oj-dev-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env.dev}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  oj-redis:
+    image: redis:7.4-alpine
+    container_name: oj-dev-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  oj-mq:
+    image: rabbitmq:3.13-management
+    container_name: oj-dev-mq
+    environment:
+      RABBITMQ_DEFAULT_VHOST: /judge
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS in .env.dev}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+  oj-minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: oj-dev-minio
+    command: server /data --console-address ":9090"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env.dev}
+    ports:
+      - "9000:9000"
+      - "${MINIO_CONSOLE_PORT:-9091}:9090"
+    volumes:
+      - minio-data:/data
+      - minio-config:/root/.minio
+    restart: unless-stopped
+
+  oj-nacos:
+    image: nacos/nacos-server:v2.4.2
+    container_name: oj-dev-nacos
+    depends_on:
+      oj-mysql:
+        condition: service_healthy
+    environment:
+      PREFER_HOST_MODE: hostname
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: oj-mysql
+      MYSQL_SERVICE_DB_NAME: nacos
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=True
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    volumes:
+      - nacos-logs:/home/nacos/logs
+    restart: unless-stopped
+
+  # 判题运行时沙箱。Java judge-server 由 IDEA 启动，不属于此 Compose。
+  oj-sandbox:
+    build:
+      context: resources/sandbox
+      dockerfile: Dockerfile
+    container_name: oj-dev-sandbox
+    depends_on:
+      - oj-minio
+    privileged: true
+    shm_size: 512m
+    environment:
+      MINIO_URL: http://oj-minio:9000
+    ports:
+      - "5050:5050"
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
+  minio-data:
+  minio-config:
+  nacos-logs:

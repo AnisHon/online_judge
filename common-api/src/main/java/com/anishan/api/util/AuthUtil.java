@@ -146,9 +146,7 @@ public class AuthUtil {
 
     public String getAndRemoveCaptchaCode(String captchaToken) {
         String captchaCodeKey = getCaptchaCodeKey(captchaToken);
-        String s = stringRedisTemplate.opsForValue().get(captchaCodeKey);
-        stringRedisTemplate.delete(captchaCodeKey);
-        return s;
+        return stringRedisTemplate.opsForValue().getAndDelete(captchaCodeKey);
     }
 
 
@@ -170,6 +168,10 @@ public class AuthUtil {
     public void cacheToken(@NotNull String token) {
         stringRedisTemplate.opsForValue().set(getWhiteListTokenKey(token), "", JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
 
+    }
+
+    public void cacheToken(@NotNull String token, long duration, TimeUnit unit) {
+        stringRedisTemplate.opsForValue().set(getWhiteListTokenKey(token), "", duration, unit);
     }
     public void removeToken(@NotNull String token) {
         log.info("删除token: {}", token);

@@ -2,7 +2,7 @@
   <main class="auth-page">
     <section class="brand-panel">
       <div class="brand-copy">
-        <div class="brand-mark">言</div>
+        <div class="brand-mark">延</div>
         <p class="eyebrow">ONLINE JUDGE PLATFORM</p>
         <h1>让每一次提交<br><span>都更接近答案</span></h1>
         <p class="brand-description">练习、竞赛与分享，构建属于你的编程成长空间。</p>
@@ -11,7 +11,7 @@
     </section>
     <section class="form-panel">
       <div class="form-shell">
-        <div class="mobile-brand"><div class="brand-mark small">言</div><span>{{ siteConfig.siteName || '言语代码' }}</span></div>
+        <div class="mobile-brand"><div class="brand-mark small">延</div><span>{{ siteConfig.siteName || '延拓Code' }}</span></div>
         <div class="header"><el-image src="/auth/auth_logo.webp" class="logo" fit="contain" /></div>
         <router-view v-slot="{ Component }">
           <transition name="el-fade-in" mode="out-in"><component :is="Component" /></transition>
@@ -22,8 +22,8 @@
           <el-col :span="12" v-show="showForgetPass"><router-link class="right-link" :to="{name: 'forget-password'}">忘记密码</router-link></el-col>
         </el-row>
         <footer class="auth-footer">
-          <span>{{ siteConfig.siteName || '言语代码' }}</span><span class="footer-dot">·</span>
-          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{ siteConfig.icpNumber || '津ICP备2025028121号-1' }}</a>
+          <span>{{ siteConfig.siteName || '请设置站点名' }}</span><span class="footer-dot">·</span>
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{ siteConfig.icpNumber || '请设置备案号' }}</a>
         </footer>
       </div>
     </section>

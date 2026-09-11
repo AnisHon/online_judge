@@ -1,5 +1,7 @@
 server:
-  port: 800
+  # 本机普通用户不能监听 800（该主机的 unprivileged_port_start=1024）。
+  # 线上 Compose 已设置 SERVER_PORT=80，因此不受本机默认值影响。
+  port: ${SERVER_PORT:18000}
 spring:
   application:
     name: gateway
@@ -89,6 +91,5 @@ oj:
       - "/*/v3/**"
       - "/*/doc.html"
       - "/*/webjars/**"
-
 
 

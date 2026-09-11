@@ -15,6 +15,13 @@ export interface AjaxResult<T> {
     data: T;
 }
 
+export class ApiError extends Error {
+    constructor(message: string, readonly code: number) {
+        super(message);
+        this.name = "ApiError";
+    }
+}
+
 type successCallback<T> =  (value: T) => void;
 type successPromiseCallback<T> =  (value: Promise<T>) => void;
 type failCallback = (msg: string, code: number) => void;
@@ -46,11 +53,33 @@ export const service = axios.create({
     withCredentials: true // 携带cookie
 });
 
+let refreshing: Promise<string> | null = null;
+
+const refreshAccessToken = async (): Promise<string> => {
+    const tokenStore = useToken();
+    if (!tokenStore.refreshToken) throw new Error("刷新令牌不存在");
+    if (!refreshing) {
+        refreshing = service.post('/user-api/auth/refresh', {refreshToken: tokenStore.refreshToken}, {
+            headers: {token: ''},
+            _skipAuthRefresh: true
+        } as any).then(response => {
+            const result = response.data as AjaxResult<any>;
+            const accessToken = result.data?.accessToken;
+            if (result.code !== 200 || !accessToken) throw new Error(result.message || "刷新登录状态失败");
+            tokenStore.setTokens(accessToken, result.data.refreshToken);
+            return accessToken;
+        }).finally(() => { refreshing = null; });
+    }
+    return refreshing;
+};
+
 // 请求拦截器
 service.interceptors.request.use(
     config => {
-        const token = useToken();
-        config.headers.set('token', token.token)
+        if (!config.url?.endsWith('/auth/refresh')) {
+            const token = useToken();
+            config.headers.set('token', token.token)
+        }
         return config;
     },
     error => {
@@ -62,33 +91,61 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     response => {
         const result = response.data as AjaxResult<unknown>;
+        if (!result || typeof result.code !== "number") {
+            return Promise.reject(new ApiError("服务返回了无法识别的数据", response.status));
+        }
+        const request = response.config as any;
+        if ((result?.code === 401 || response.status === 401) && !request._skipAuthRefresh && !request._retry) {
+            request._retry = true;
+            return refreshAccessToken().then(accessToken => {
+                request.headers.set('token', accessToken);
+                return service(request);
+            }).catch(() => {
+                error401();
+                return Promise.reject(new ApiError(result?.message || "登录已过期", 401));
+            });
+        }
         if (result?.code === 401 || response.status === 401) {
             error401();
-            return Promise.reject(new Error(result?.message || "登录已过期"));
+            return Promise.reject(new ApiError(result?.message || "登录已过期", 401));
         }
         if (result?.code === 403 || response.status === 403) {
             error403();
-            return Promise.reject(new Error(result?.message || "拒绝访问"));
+            return Promise.reject(new ApiError(result?.message || "拒绝访问", 403));
         }
-        // 业务错误仍返回 AjaxResult，由调用方决定提示方式，避免全局拦截器重复弹窗。
+        if (result.code !== 200) {
+            return Promise.reject(new ApiError(result.message || `请求失败（${result.code}）`, result.code));
+        }
         return result as any;
     },
     error => {
+        const request = isAxiosError(error) ? error.config as any : undefined;
+        if (isAxiosError(error) && error.response?.status === 401 && request && !request._skipAuthRefresh && !request._retry) {
+            request._retry = true;
+            return refreshAccessToken().then(accessToken => {
+                request.headers.set('token', accessToken);
+                return service(request);
+            }).catch(() => {
+                error401();
+                return Promise.reject(new ApiError("登录已过期", 401));
+            });
+        }
         const status = isAxiosError(error) ? error.response?.status : undefined;
         if (status === 401) {
             error401();
         } else if (status === 403) {
             error403();
         }
-        return Promise.reject(error);
+        const result = isAxiosError(error) ? error.response?.data as Partial<AjaxResult<unknown>> | undefined : undefined;
+        return Promise.reject(new ApiError(result?.message || error.message || "网络请求失败", status || 0));
     }
 );
 
 const failHandler = <T>(result: ResultPromise<T>, handle: typeof defaultFail) => {
     result
-        .catch(result => {
-            if (result.code != 200) {
-                handle(result.message, result.code);
+        .catch(error => {
+            if (error instanceof ApiError) {
+                handle(error.message, error.code);
             }
         })
 }

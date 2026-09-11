@@ -12,6 +12,7 @@ public class SharedConfig {
     @Autowired
     private ConfigurableEnvironment environment;
 
-    private boolean product = false;
+    // Fail closed if the configuration centre is unavailable or incomplete.
+    private boolean product = true;
 
 }
