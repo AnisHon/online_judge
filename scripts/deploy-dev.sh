@@ -25,7 +25,7 @@ echo '[2/4] 编译前端'
 (cd oj-vue && pnpm install --frozen-lockfile && pnpm run build)
 
 echo '[3/4] 构建并启动开发环境（纯 HTTP）'
-"${COMPOSE[@]}" up -d --build
+"${COMPOSE[@]}" up -d --build --force-recreate
 
 echo '[4/4] 等待 Nacos 并导入配置'
 for _ in $(seq 1 60); do
