@@ -38,3 +38,4 @@ logs/
 .pnpm-store/
 /resources/sql/temp
 .env
+.env.dev

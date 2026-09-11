@@ -1,0 +1,48 @@
+services:
+  oj-mysql:
+    container_name: oj-dev-mysql
+    ports: !override
+      - "13306:3306"
+  oj-redis:
+    container_name: oj-dev-redis
+    ports: !override
+      - "16379:6379"
+  oj-mq:
+    container_name: oj-dev-mq
+    ports: !override
+      - "15673:15672"
+      - "5673:5672"
+  oj-minio:
+    container_name: oj-dev-minio
+    ports: !override
+      - "19000:9000"
+      - "${MINIO_CONSOLE_PORT:-19091}:9090"
+  oj-nacos:
+    container_name: oj-dev-nacos
+    ports: !override
+      - "${DEV_NACOS_PORT:-18848}:8848"
+      - "19848:9848"
+      - "19849:9849"
+  oj-sandbox:
+    container_name: oj-dev-sandbox
+    ports: !override
+      - "15050:5050"
+  judge-server:
+    container_name: oj-dev-judge-server
+  content-service:
+    container_name: oj-dev-content-service
+  problem-service:
+    container_name: oj-dev-problem-service
+  user-service:
+    container_name: oj-dev-user-service
+  gateway-server:
+    container_name: oj-dev-gateway-server
+    ports: !override
+      - "18000:80"
+  oj-vue:
+    container_name: oj-dev-vue
+    build:
+      context: oj-vue
+      dockerfile: Dockerfile.dev
+    ports: !override
+      - "${DEV_WEB_PORT:-8080}:80"
