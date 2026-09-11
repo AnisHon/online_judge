@@ -29,12 +29,20 @@ services:
       - "15050:5050"
   judge-server:
     container_name: oj-dev-judge-server
+    environment:
+      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD:-dev-mysql-password}
   content-service:
     container_name: oj-dev-content-service
+    environment:
+      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD:-dev-mysql-password}
   problem-service:
     container_name: oj-dev-problem-service
+    environment:
+      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD:-dev-mysql-password}
   user-service:
     container_name: oj-dev-user-service
+    environment:
+      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD:-dev-mysql-password}
   gateway-server:
     container_name: oj-dev-gateway-server
     ports: !override
