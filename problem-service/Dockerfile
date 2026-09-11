@@ -1,4 +1,4 @@
-FROM openjdk:17
+FROM eclipse-temurin:17-jre-jammy
 LABEL authors=anishan
 LABEL version=1.0
 LABEL description=ProblemService

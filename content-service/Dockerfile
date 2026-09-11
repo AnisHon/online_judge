@@ -1,16 +1,9 @@
-FROM ubuntu:latest
+FROM eclipse-temurin:17-jre-jammy
 LABEL authors=anishan
 LABEL version=1.0
 LABEL description=ProblemService
 
-ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Shanghai
-
-RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
-    apt-get update && apt-get upgrade -y && \
-    apt-get install -y \
-    openjdk-17-jdk \
-    && apt-get clean
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 WORKDIR /opt

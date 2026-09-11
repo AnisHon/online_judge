@@ -1,0 +1,4 @@
+*
+!Dockerfile
+!target/
+!target/user-service-1.0.0-beta.jar

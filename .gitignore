@@ -35,4 +35,6 @@ build/
 **/logs/
 logs/
 **/node_modules/**
+.pnpm-store/
 /resources/sql/temp
+.env

@@ -1,10 +1,17 @@
-# 启动 MySQL 服务
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# 启动 MySQL 服务；数据卷已有标记时只启动数据库，不重复执行破坏性 SQL。
 echo "Starting MySQL service..."
 #service mysql start
 docker-entrypoint.sh mysqld &
 
 # 定义要检测的文件路径
-FILE_PATH="/opt/initialized"
+FILE_PATH="/var/lib/mysql/.oj-initialized"
+
+if [ -f "$FILE_PATH" ]; then
+  exec docker-entrypoint.sh mysqld
+fi
 
 ## 检测文件是否存在
 #if [ -f "$FILE_PATH" ]; then
@@ -22,21 +29,9 @@ done
 echo "MySQL is ready. Running the SQL script..."
 mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_problem.sql"
 mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_content.sql"
-
-# shellcheck disable=SC2181
-if [ $? -eq 0 ]; then
-  mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_user.sql"
-
-  if [ $? -eq 0 ]; then
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "nacos.sql"
-    echo "success!!!!!"
-  else
-    echo "Databases exists skip scripts."
-  fi
-
-else
-  echo "Databases exists skip scripts."
-fi
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "db_user.sql"
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "nacos.sql"
+echo "database initialization succeeded"
 
 # 创建文件
 touch "$FILE_PATH"

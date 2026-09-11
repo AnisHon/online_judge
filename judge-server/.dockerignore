@@ -1,0 +1,4 @@
+*
+!Dockerfile
+!target/
+!target/judge-server-1.0.0-beta.jar

@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!default.conf
+!yantuocode.cn_nginx.tar.gz
+!dist/
+!dist/**

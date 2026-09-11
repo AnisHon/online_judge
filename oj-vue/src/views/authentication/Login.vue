@@ -7,10 +7,15 @@
       status-icon
       :rules="rules"
       :aria-autocomplete="false"
-      @submit="submitLogin(formRef)"
+      class="login-form"
+      @submit.prevent="submitLogin(formRef)"
   >
-    <el-form-item>
-      <h1 style="margin: 0; color: #303133; text-align: center; width: 100%;">欢迎登录</h1>
+    <el-form-item class="title-item">
+      <div>
+        <p class="welcome-label">WELCOME BACK</p>
+        <h1>欢迎登录</h1>
+        <p class="subtitle">登录后继续你的编程旅程</p>
+      </div>
     </el-form-item>
 
     <el-form-item prop="username">
@@ -52,6 +57,7 @@
       <el-col :span="10" style="position: relative;">
         <el-image
             :src="imgData"
+            class="captcha-image"
             style="width: 100px; position: absolute;
               right: 0"
             @click="refreshCaptchaCode"
@@ -61,11 +67,11 @@
 
     </el-row>
 
-    <el-form-item>
+    <el-form-item class="submit-item">
       <el-button
           type="primary"
           @click="submitLogin(formRef)"
-          style="width: 80%; margin: auto"
+          class="submit-button"
           :loading="isLoading"
           :disabled="isLoading"
       >
@@ -161,6 +167,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.login-form { width: 100%; }
+.title-item { margin-bottom: 28px; }
+.title-item :deep(.el-form-item__content) { display: block; }
+.welcome-label { margin: 0 0 8px; color: #2563eb; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+.title-item h1 { margin: 0; color: #172554; font-size: 32px; letter-spacing: -.04em; }
+.subtitle { margin: 10px 0 0; color: #94a3b8; font-size: 14px; }
+.login-form :deep(.el-input__wrapper) { min-height: 46px; border-radius: 12px; box-shadow: 0 0 0 1px #e2e8f0 inset; transition: box-shadow .2s, background .2s; }
+.login-form :deep(.el-input__wrapper.is-focus) { box-shadow: 0 0 0 2px #93c5fd inset; background: #f8fbff; }
+.login-form :deep(.el-form-item) { margin-bottom: 18px; }
+.submit-item { margin-top: 8px; }
+.submit-button { width: 100%; height: 46px; border: 0; border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #2563eb, #4f46e5); box-shadow: 0 10px 22px rgba(37, 99, 235, .22); }
+.submit-button:hover { transform: translateY(-1px); box-shadow: 0 12px 25px rgba(37, 99, 235, .3); }
+.captcha-image { border-radius: 10px; cursor: pointer; }
 
 
 </style>

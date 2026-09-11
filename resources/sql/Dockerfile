@@ -1,9 +1,6 @@
 FROM mysql:8.0.27
 LABEL author=anishan
 ENV TZ=Asia/Shanghai
-ENV MYSQL_ROOT_PASSWORD=change-this-default-password
-ENV IS_INIT=FALSE
-
 WORKDIR /opt
 
 COPY run.sh /opt
@@ -29,5 +26,4 @@ EXPOSE 3306
 VOLUME /var/lib/mysql
 
 CMD ["bash", "/opt/run.sh"]
-
 

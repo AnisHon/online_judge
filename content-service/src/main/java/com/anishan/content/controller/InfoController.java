@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/info")
@@ -19,6 +21,21 @@ import java.util.HashMap;
 public class InfoController {
 
     private final SseService sseService;
+
+    @Value("${site.name:言语代码}")
+    private String siteName;
+
+    @Value("${site.icp-number:津ICP备2025028121号-1}")
+    private String icpNumber;
+
+    @ApiOperation("站点配置")
+    @GetMapping("/config")
+    public R<Map<String, String>> config() {
+        Map<String, String> data = new HashMap<>();
+        data.put("siteName", siteName);
+        data.put("icpNumber", icpNumber);
+        return R.success(data);
+    }
 
     @ResponseBody
     @ApiOperation("在线人数")
