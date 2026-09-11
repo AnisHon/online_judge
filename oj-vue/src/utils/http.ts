@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, {isAxiosError} from 'axios';
 import {useToken} from "@/stores/useToken";
 import {ElNotification} from "element-plus";
 import router from "@/router"
@@ -23,11 +23,15 @@ type ResultPromise<T> = Promise<AjaxResult<T>>;
 
 
 
+let isRedirectingToLogin = false;
+
 const error401 = () => {
+    if (isRedirectingToLogin) return;
+    isRedirectingToLogin = true;
     const token = useToken();
     token.clearToken();
     ElNotification.warning("令牌过期，请重新登录");
-    router.replace({name: 'login'});
+    router.replace({name: 'login'}).finally(() => { isRedirectingToLogin = false });
 };
 
 const error403 = () => {
@@ -57,40 +61,26 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
     response => {
-
-        const code = response?.data?.code || response.status;
-
-        if (code === 200) {
-            return response.data;
-        } if (code == 400) {
-            if (response.data.message && response.data.message !== "null") {
-                ElNotification.error(response.data.message);
-            }
-        } else if (code == 401) {
-
-        } else if (code === 403) {
-            error403();
-        } else {
-            ElNotification.error(response.data.code + ":" + response.data.message);
+        const result = response.data as AjaxResult<unknown>;
+        if (result?.code === 401 || response.status === 401) {
+            error401();
+            return Promise.reject(new Error(result?.message || "登录已过期"));
         }
-        return Promise;
+        if (result?.code === 403 || response.status === 403) {
+            error403();
+            return Promise.reject(new Error(result?.message || "拒绝访问"));
+        }
+        // 业务错误仍返回 AjaxResult，由调用方决定提示方式，避免全局拦截器重复弹窗。
+        return result as any;
     },
     error => {
-        // 处理错误
-        console.log(error)
-        if (error.status == 401) {
+        const status = isAxiosError(error) ? error.response?.status : undefined;
+        if (status === 401) {
             error401();
-        } else if (error.status == 400) {
-            ElNotification.error(error.response?.data?.message);
-        } else if (error.status == 404) {
-            ElNotification.error("接口404 : " + error.config.url)
+        } else if (status === 403) {
+            error403();
         }
-        else if (error.status == 500) {
-            ElNotification.error("出现错误，请联系管理员")
-        } else {
-            ElNotification.error(error?.response?.data?.message);
-        }
-        return error;
+        return Promise.reject(error);
     }
 );
 
@@ -105,8 +95,8 @@ const failHandler = <T>(result: ResultPromise<T>, handle: typeof defaultFail) =>
 
 // 封装的 GET 和 POST 方法
 const get = <R, T = any>(url: string, params: T | undefined = undefined): ResultPromise<R> => {
-    if (params) {
-        url = url + '/' + params.toString();
+    if (params !== undefined && params !== null && params !== '') {
+        url = url + '/' + encodeURIComponent(params.toString());
     }
     return service.get<T, AjaxResult<R>>(url);
 };

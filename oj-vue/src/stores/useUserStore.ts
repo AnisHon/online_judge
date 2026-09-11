@@ -21,6 +21,10 @@ export const useUserStore = defineStore('user', () => {
         user.value = await getMe()
     }
 
+    const clear = () => {
+        user.value = null
+    }
+
     const getUser = async () => {
         if (user.value === null) {
             await loadUser();
@@ -38,6 +42,7 @@ export const useUserStore = defineStore('user', () => {
     return {
         user,
         loadUser,
+        clear,
         getAuths,
         getUser,
     }

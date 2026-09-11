@@ -24,10 +24,10 @@ export const useToken = defineStore('token', {
 
         clearToken(){
             this.token = ''
+            useUserStore().clear()
         }
     },
 
     persist: true
 });
-
 

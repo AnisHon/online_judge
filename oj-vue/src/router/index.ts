@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory, type NavigationGuardNext, type RouteLocationNormalizedGeneric} from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 import Index from "@/views/Index.vue";
 import Layout from "@/layout/Layout.vue";
 import Forbidden from "@/views/error/Forbidden.vue";
@@ -10,7 +10,6 @@ import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import {useToken} from "@/stores/useToken";
 import Home from "@/views/Home.vue";
-import __ from "lodash";
 
 // index不是home
 // index不是home
@@ -240,24 +239,13 @@ const router = createRouter({
 
 
 
-const loginGuard = (isMatched: boolean, needLogin: boolean, isLoginAccess: boolean, next: NavigationGuardNext, to: RouteLocationNormalizedGeneric) => {
-  if (!isMatched) {
-    next({name: '404', replace: true})
-  } else if (!needLogin && !isLoginAccess) {
-    next({name: '403', replace: true})
-  } else {
-    next();
-  }
-}
-
-router.beforeEach((to, from, next) => {
-
+router.beforeEach(async (to) => {
   try {
     NProgress.start()
   } catch (ignore) {}
   const needLogin = to.matched.some((v) => v.meta.requireAuth);
   const isLoginAccess = to.matched.some(v => v.meta.isLoginAccess);
-  const isMatched = !__.isEmpty(to.matched)
+  const isMatched = to.matched.length > 0;
 
   const menu = useMenuStore()
   const token = useToken();
@@ -267,23 +255,20 @@ router.beforeEach((to, from, next) => {
     if (!menu.isDynamicReady()) {
 
       // 动态路由没有加载成功，加载路由
-      loadDynamicRoutes().then(() => {
-        next({ ...to, replace: true })
-      })
-
-    } else {
-      loginGuard(isMatched, needLogin, isLoginAccess, next, to);
+      try {
+        await loadDynamicRoutes();
+        return { ...to, replace: true };
+      } catch (_) {
+        token.clearToken();
+        return {name: 'login', replace: true};
+      }
     }
-
-  } else {
-    if (needLogin || !isMatched) {
-    //   需要登录
-      next({name: 'login', replace: true});
-    } else {
-      next();
-    }
+    if (!isMatched) return {name: '404', replace: true};
+    if (!needLogin && !isLoginAccess) return {name: '403', replace: true};
+    return true;
   }
-
+  if (needLogin || !isMatched) return {name: 'login', replace: true};
+  return true;
 });
 
 router.afterEach((to) => {

@@ -104,10 +104,12 @@ async function resetPassword(data: {code: string, password: string}) {
 
 async function logout() {
     closeSse(SSE_URL);
-    await get("/user-api/auth/logout");
-    // const router = useRouter();
-    useToken().clearToken();
-    useMenuStore().clear();
+    try {
+        await get("/user-api/auth/logout");
+    } finally {
+        useToken().clearToken();
+        useMenuStore().clear();
+    }
     router.replace({name: "login"});
 }
 
@@ -121,5 +123,4 @@ export {
     forgetPassword,
     resetPassword
 }
-
 

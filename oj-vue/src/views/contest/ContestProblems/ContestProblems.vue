@@ -102,7 +102,7 @@ import type {ProblemInListView} from "@/api/list";
 import {debouncedGetProblems} from "@/api/list/problem.ts";
 import {useRoute} from "vue-router";
 import DetailProblem from "@/components/DetailProblem/DetailProblem.vue";
-import {ElMessageBox, ElTable} from "element-plus";
+import {ElMessageBox} from "element-plus";
 import {type ContestView, fetchContestById, getContestStatus, handInPaper} from "@/api/contest";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {authTagType, authText, formatDate, isContestOver, isNotStart} from "@/utils/contest";
@@ -110,7 +110,7 @@ import {isNullObj} from "@/utils/valueutil.ts";
 
 const route = useRoute();
 
-const tableRef = ref<typeof ElTable | undefined>(undefined);
+const tableRef = ref<{setCurrentRow: (row?: ProblemInListView) => void}>();
 
 const detailProblemRef = ref<typeof DetailProblem | undefined>(undefined);
 
