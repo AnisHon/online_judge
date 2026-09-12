@@ -154,22 +154,25 @@
         </Transition>
       </Teleport>
 
-      <div class="editor-host">
-        <enhanced-code-editor
-            :model-value="form"
-            @update:model-value="$emit('update:form', $event)"
-            :height-prop="editorHeight"
-            :disable-submit="disableSubmit"
-            :loading="loading"
-            @submit="$emit('submit')"
-            @test="$emit('test')"
-            @full-screen="$emit('full-screen')"
-            @open-log="openSubmissions"
-            @on-ready="measure"
-        />
-      </div>
+      <resizable-panel v-model:size="editorPanelSize" class="oj-code-split" :class="{ 'oj-code-split--test-collapsed': !testConsoleOpen }" direction="vertical" :min-size="42" :max-size="86">
+        <template #sidebar>
+          <div ref="editorHostRef" class="editor-host">
+            <enhanced-code-editor
+                :model-value="form"
+                @update:model-value="$emit('update:form', $event)"
+                :height-prop="editorHeight"
+                :disable-submit="disableSubmit"
+                :loading="loading"
+                @submit="$emit('submit')"
+                @test="$emit('test')"
+                @full-screen="$emit('full-screen')"
+                @open-log="openSubmissions"
+                @on-ready="measure"
+            />
+          </div>
+        </template>
 
-      <section ref="testConsoleRef" class="test-console" :class="{ 'test-console--collapsed': !testConsoleOpen }">
+        <section ref="testConsoleRef" class="test-console" :class="{ 'test-console--collapsed': !testConsoleOpen }">
         <header class="test-console__header">
           <div>
             <el-icon>
@@ -202,7 +205,8 @@
             <div v-else class="test-console__placeholder">运行结果会显示在这里</div>
           </div>
         </div>
-      </section>
+        </section>
+      </resizable-panel>
     </main>
   </section>
 </template>
@@ -227,6 +231,7 @@ import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import Solutions from "@/views/solutions/component/SolutionsComponent/SolutionsComponent.vue";
 import type {QuerySolution} from "@/api/solution";
 import EnhancedCodeEditor from "@/components/EnhancedCodeEdior/index.vue";
+import ResizablePanel from "@/components/ResizablePanel/ResizablePanel.vue";
 
 const props = defineProps<{
   problem: ProblemDetailView;
@@ -260,8 +265,10 @@ const statusVisible = ref(false);
 let statusDismissTimer: ReturnType<typeof setTimeout> | undefined;
 const problemPaneRef = ref<HTMLElement>();
 const codePaneRef = ref<HTMLElement>();
+const editorHostRef = ref<HTMLElement>();
 const testConsoleRef = ref<HTMLElement>();
 const editorHeight = ref(420);
+const editorPanelSize = ref(72);
 const resizeObserver = ref<ResizeObserver>();
 const solutionParam = reactive<QuerySolution>({
   asc: true,
@@ -351,9 +358,8 @@ watch(() => [props.activeSubmission?.submitId, props.activeSubmission?.status], 
 
 const measure = () => {
   nextTick(() => {
-    const codeHeight = codePaneRef.value?.clientHeight || 0;
-    const consoleHeight = testConsoleRef.value?.offsetHeight || 0;
-    editorHeight.value = Math.max(260, codeHeight - consoleHeight - 58);
+    // 编辑器高度直接取上方面板的实际高度，拖动分隔线时不会再叠加外层高度。
+    editorHeight.value = Math.max(260, editorHostRef.value?.clientHeight || 0);
   });
 };
 
@@ -361,6 +367,7 @@ onMounted(() => {
   measure();
   resizeObserver.value = new ResizeObserver(measure);
   if (codePaneRef.value) resizeObserver.value.observe(codePaneRef.value);
+  if (editorHostRef.value) resizeObserver.value.observe(editorHostRef.value);
 });
 
 onUnmounted(() => {
@@ -383,9 +390,19 @@ onUnmounted(() => {
 }
 
 .oj-workbench--fullscreen {
+  position: fixed;
+  z-index: 100;
+  top: var(--menu-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: block;
-  height: calc(100vh - var(--menu-height) - 24px);
+  width: auto;
+  height: auto;
+  box-sizing: border-box;
+  padding: 16px;
   max-height: none;
+  background: var(--el-bg-color-page);
 }
 
 .oj-problem-pane, .oj-code-pane {
@@ -664,6 +681,9 @@ onUnmounted(() => {
 
 .editor-host {
   display: flex;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -715,17 +735,26 @@ onUnmounted(() => {
 .judge-toast-enter-active, .judge-toast-leave-active { transition: opacity .22s ease, transform .22s ease; }
 .judge-toast-enter-from, .judge-toast-leave-to { opacity: 0; transform: translate(-50%, -18px); }
 
+.oj-code-split { width: 100%; min-height: 0; flex: 1; border: 1px solid var(--oj-border); border-radius: 16px; background: var(--el-bg-color); }
+.oj-code-split :deep(.resizable-panel__sidebar), .oj-code-split :deep(.resizable-panel__main) { box-sizing: border-box; }
+.oj-code-split :deep(.resizable-panel__sidebar) { padding: 9px; }
+.oj-code-split :deep(.resizable-panel__main) { padding: 9px; }
+.oj-code-split--test-collapsed :deep(.resizable-panel__sidebar) { height: 100%; flex-basis: 100%; }
+.oj-code-split--test-collapsed :deep(.resizable-panel__handle), .oj-code-split--test-collapsed :deep(.resizable-panel__main) { display: none; }
+
 .test-console {
-  flex: 0 0 auto;
-  margin-top: 10px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid var(--oj-border);
-  border-radius: 16px;
+  border: 0;
+  border-radius: 10px;
   background: var(--el-bg-color);
 }
 
 .test-console--collapsed {
-  height: 42px;
+  height: 100%;
 }
 
 .test-console__header {
@@ -757,13 +786,19 @@ onUnmounted(() => {
 
 .test-console__body {
   display: grid;
+  height: calc(100% - 42px);
+  min-height: 0;
+  box-sizing: border-box;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 0 12px 12px;
 }
 
 .test-console__field {
+  display: flex;
+  min-height: 0;
   min-width: 0;
+  flex-direction: column;
 }
 
 .test-console__field label {
@@ -774,12 +809,15 @@ onUnmounted(() => {
 }
 
 .test-console__field :deep(.el-textarea__inner) {
+  height: 100% !important;
   min-height: 82px !important;
   resize: none;
 }
 
 .test-console__output, .test-console__placeholder {
-  height: 82px;
+  height: auto;
+  min-height: 82px;
+  flex: 1;
   box-sizing: border-box;
   overflow: auto;
 }

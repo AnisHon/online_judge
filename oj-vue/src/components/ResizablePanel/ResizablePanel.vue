@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootRef" class="resizable-panel" :class="{ 'is-collapsed': collapsed, 'is-dragging': dragging }">
+  <div ref="rootRef" class="resizable-panel" :class="[{ 'is-collapsed': collapsed, 'is-dragging': dragging }, `is-${direction}`]">
     <aside class="resizable-panel__sidebar">
       <slot name="sidebar" />
     </aside>
@@ -8,8 +8,8 @@
       v-if="!collapsed"
       class="resizable-panel__handle"
       role="separator"
-      aria-label="调整侧栏宽度"
-      aria-orientation="vertical"
+      :aria-label="direction === 'vertical' ? '调整上下区域大小' : '调整侧栏宽度'"
+      :aria-orientation="direction"
       @pointerdown.prevent="startDragging"
     >
       <span />
@@ -33,11 +33,13 @@ const props = withDefaults(defineProps<{
   collapsed?: boolean
   minSize?: number
   maxSize?: number
+  direction?: 'horizontal' | 'vertical'
 }>(), {
   size: 25,
   collapsed: false,
   minSize: 18,
   maxSize: 42,
+  direction: 'horizontal',
 })
 
 const emit = defineEmits<{
@@ -60,12 +62,18 @@ function startDragging(event: PointerEvent) {
   dragging.value = true
   const handle = event.currentTarget as HTMLElement
   handle.setPointerCapture?.(event.pointerId)
-  const startX = event.clientX
+  const startPosition = props.direction === 'vertical' ? event.clientY : event.clientX
   const startSize = size.value
-  const width = rootRef.value.getBoundingClientRect().width
+  const bounds = rootRef.value.getBoundingClientRect()
+  const totalSize = props.direction === 'vertical' ? bounds.height : bounds.width
+  if (totalSize <= 0) {
+    dragging.value = false
+    return
+  }
 
   const move = (moveEvent: PointerEvent) => {
-    const next = clamp(startSize + ((moveEvent.clientX - startX) / width) * 100)
+    const currentPosition = props.direction === 'vertical' ? moveEvent.clientY : moveEvent.clientX
+    const next = clamp(startSize + ((currentPosition - startPosition) / totalSize) * 100)
     size.value = next
     emit('update:size', next)
   }
@@ -96,5 +104,15 @@ function restore() {
 .is-collapsed .resizable-panel__sidebar { width: 0; flex-basis: 0; }
 .resizable-panel__restore { position: absolute; z-index: 2; top: 50%; left: 8px; display: grid; width: 30px; height: 38px; place-items: center; border: 1px solid color-mix(in srgb, var(--el-border-color-light) 72%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--el-bg-color) 82%, transparent); color: var(--el-color-primary); box-shadow: 0 4px 14px rgb(15 23 42 / 8%); cursor: pointer; opacity: .3; transform: translateY(-50%); transition: opacity .18s ease, transform .18s ease, background-color .18s ease; }
 .resizable-panel__restore:hover, .resizable-panel__restore:focus-visible { background: var(--el-fill-color-light); opacity: 1; transform: translate(2px, -50%); }
+.resizable-panel.is-vertical { flex-direction: column; }
+.is-vertical .resizable-panel__sidebar { width: 100%; height: var(--panel-size); flex: 0 0 var(--panel-size); }
+.is-vertical .resizable-panel__main { width: 100%; height: auto; }
+.is-vertical .resizable-panel__handle { width: 100%; height: 12px; flex: 0 0 12px; cursor: row-resize; }
+.is-vertical .resizable-panel__handle span { width: 44px; height: 4px; }
+.is-vertical .resizable-panel__handle:hover span, .is-vertical.is-dragging .resizable-panel__handle span { width: 72px; height: 4px; }
+.is-vertical.is-collapsed .resizable-panel__sidebar { width: 100%; height: 0; flex-basis: 0; }
+.is-vertical.is-collapsed .resizable-panel__main { padding-top: 38px; padding-left: 0; }
+.is-vertical .resizable-panel__restore { top: 8px; left: 50%; transform: translateX(-50%); }
+.is-vertical .resizable-panel__restore:hover, .is-vertical .resizable-panel__restore:focus-visible { transform: translate(2px, 2px); }
 @media (max-width: 700px) { .resizable-panel__handle { width: 8px; flex-basis: 8px; }.resizable-panel__handle span { width: 3px; }.is-collapsed .resizable-panel__main { padding-left: 34px; }.resizable-panel__restore { left: 6px; } }
 </style>
