@@ -1,0 +1,28 @@
+:root {
+  --oj-auth-title: #172554;
+  --oj-auth-subtitle: #94a3b8;
+  --oj-auth-input-border: #e2e8f0;
+  --oj-auth-input-focus: #93c5fd;
+}
+
+html.dark {
+  --oj-auth-title: var(--el-text-color-primary);
+  --oj-auth-subtitle: var(--el-text-color-secondary);
+  --oj-auth-input-border: var(--el-border-color);
+  --oj-auth-input-focus: var(--el-color-primary);
+}
+
+.auth-form { width: 100%; }
+.auth-form .title-item { margin-bottom: 28px; }
+.auth-form .title-item .el-form-item__content { display: block; }
+.auth-form .welcome-label { margin: 0 0 8px; color: var(--el-color-primary); font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+.auth-form .title-item h1 { margin: 0; color: var(--oj-auth-title); font-size: 32px; letter-spacing: -.04em; }
+.auth-form .subtitle { margin: 10px 0 0; color: var(--oj-auth-subtitle); font-size: 14px; }
+.auth-form .el-input__wrapper { min-height: 46px; border-radius: 12px; box-shadow: 0 0 0 1px var(--oj-auth-input-border) inset; transition: box-shadow .2s, background .2s; }
+.auth-form .el-input__wrapper.is-focus { box-shadow: 0 0 0 2px var(--oj-auth-input-focus) inset; background: var(--el-fill-color-light); }
+.auth-form .el-form-item { margin-bottom: 18px; }
+.auth-form .submit-item { margin-top: 8px; }
+.auth-form .submit-button { width: 100%; height: 46px; border: 0; border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-dark-2)); box-shadow: 0 10px 22px color-mix(in srgb, var(--el-color-primary) 22%, transparent); }
+.auth-form .submit-button:hover { transform: translateY(-1px); box-shadow: 0 12px 25px color-mix(in srgb, var(--el-color-primary) 30%, transparent); }
+.auth-form .captcha-image { width: 100px; position: absolute; right: 0; border-radius: 10px; cursor: pointer; }
+.auth-form .code-button { position: absolute; right: 0; border-radius: 10px; }

@@ -1,11 +1,13 @@
 <template>
-  <MdPreview
-      :id="id"
-      :modelValue="text"
-      :theme="theme"
-      :previewTheme="previewTheme"
-      :codeTheme="codeTheme"
-      style="background-color: var(--el-bg-color)"/>
+  <div class="reading-preview-shell">
+    <MdPreview
+        :id="id"
+        :modelValue="text"
+        :theme="theme"
+        :previewTheme="previewTheme"
+        :codeTheme="codeTheme"
+        class="reading-preview"/>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -70,4 +72,15 @@ iframe {
   resize: both;
   overflow: auto;
 }
+
+.reading-preview-shell { overflow: hidden; border: 1px solid var(--el-border-color-lighter); border-radius: 16px; background: var(--el-bg-color); }
+.reading-preview-shell .md-editor-preview-wrapper,
+.reading-preview-shell .md-editor-preview { background: transparent !important; }
+.reading-preview-shell .md-editor-preview { max-width: none; padding: clamp(22px, 4vw, 48px); color: var(--el-text-color-primary); overflow-wrap: anywhere; }
+.reading-preview-shell .md-editor-preview p,
+.reading-preview-shell .md-editor-preview li { color: var(--el-text-color-regular); line-height: 1.9; }
+.reading-preview-shell .md-editor-preview h1,
+.reading-preview-shell .md-editor-preview h2,
+.reading-preview-shell .md-editor-preview h3 { color: var(--el-text-color-primary); }
+.reading-preview-shell .md-editor-preview pre { border: 1px solid var(--el-border-color-lighter); border-radius: 12px; }
 </style>

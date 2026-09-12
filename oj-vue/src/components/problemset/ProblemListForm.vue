@@ -1,14 +1,14 @@
 <template>
 
-  <div>
-    <el-form :inline="true" :model="queryForm" style="display: flex; justify-content: center; margin: 20px">
-      <el-form-item label="搜索ID">
-        <el-select style="width: 100px" :default-first-option="true" v-model="select" @change="onSelectChange">
+  <div class="problem-filter">
+    <el-form :inline="true" :model="queryForm" class="search-row">
+      <el-form-item label="搜索">
+        <el-select class="search-type" :default-first-option="true" v-model="select" @change="onSelectChange">
           <el-option value="1" label="标题" />
           <el-option value="2" label="ID" />
         </el-select>
       </el-form-item>
-      <el-form-item style="width: 20%">
+      <el-form-item class="search-input">
         <el-input v-model="input" placeholder="搜索" clearable  @keyup.enter="handleQuery"/>
       </el-form-item>
       <el-form-item>
@@ -23,9 +23,9 @@
 
 
 
-    <el-row justify="space-between" style="margin: 20px">
-      <div>
-        <span>题目类型： </span>
+    <el-row class="filter-row" justify="space-between">
+      <div class="type-filter">
+        <span class="filter-label">题目类型</span>
         <el-radio-group v-model="queryForm.type">
           <el-radio value="OJ">OJ</el-radio>
           <el-radio value="FILL">填空</el-radio>
@@ -33,8 +33,8 @@
           <el-radio value="MULTI_CHOICE">多选</el-radio>
         </el-radio-group>
       </div>
-      <el-col :span="18">
-        <span>选中标签：</span>
+      <el-col class="tag-filter" :span="18">
+        <span class="filter-label">选中标签</span>
         <el-space wrap>
           <el-tag v-for="tagId of queryForm.tagIds" :color="getTag(tagId).tagColor" :key="tagId">
               <span style="color: white">
@@ -44,11 +44,11 @@
           </el-tag>
         </el-space>
       </el-col>
-      <el-col :span="6">
+      <el-col class="tag-action" :span="6">
         <el-link @click="handleChooseTag" type="primary">选择标签</el-link>
       </el-col>
     </el-row>
-    <el-dialog v-model="tagDialogVisible" title="选择ID">
+    <el-dialog v-model="tagDialogVisible" title="选择标签">
       <el-space wrap>
         <el-check-tag
             v-for="[key, value] of tagsMap"
@@ -150,3 +150,8 @@ onMounted(() => {
 
 
 </script>
+
+<style scoped>
+.problem-filter { width: 100%; }.search-row { display: flex; justify-content: center; margin: 0 0 18px; }.search-type { width: 100px; }.search-input { width: min(360px, 35%); }.filter-row { align-items: center; gap: 16px; }.filter-label { display: inline-block; margin-right: 8px; color: var(--el-text-color-secondary); font-size: 13px; }.type-filter { white-space: nowrap; }.tag-filter { min-width: 0; }.tag-action { text-align: right; }.tag-filter :deep(.el-tag) { margin: 2px 4px 2px 0; }.problem-filter :deep(.el-form-item) { margin-bottom: 0; }
+@media (max-width: 700px) { .search-row { justify-content: stretch; }.search-input { width: auto; flex: 1; }.filter-row { display: block; }.type-filter { margin-bottom: 12px; white-space: normal; }.tag-action { margin-top: 10px; text-align: left; } }
+</style>

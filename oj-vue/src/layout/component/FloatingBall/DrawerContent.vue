@@ -1,6 +1,7 @@
 <template>
-  <div>
-    <el-form label-width="100">
+  <div class="drawer-content">
+    <div class="drawer-intro"><span class="intro-icon">Aa</span><div><strong>阅读与代码</strong><p>选择适合你的内容呈现方式</p></div></div>
+    <el-form label-position="top">
       <el-form-item label="富文本样式">
         <el-select v-model="config.previewTheme">
           <el-option label="默认" value="default"/>
@@ -54,5 +55,11 @@ __.assign(config, configHook.get);
 </script>
 
 <style scoped>
-
+.drawer-content { color: var(--el-text-color-primary); }
+.drawer-intro { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding: 15px; border: 1px solid var(--el-border-color-light); border-radius: 14px; background: var(--el-fill-color-lighter); }
+.intro-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 11px; color: #fff; background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success)); font-size: 16px; font-weight: 800; }
+.drawer-intro strong, .drawer-intro p { display: block; }
+.drawer-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }
+.drawer-content :deep(.el-form-item__label) { color: var(--el-text-color-regular); font-weight: 600; }
+.drawer-content :deep(.el-select__wrapper) { min-height: 44px; border-radius: 11px; }
 </style>

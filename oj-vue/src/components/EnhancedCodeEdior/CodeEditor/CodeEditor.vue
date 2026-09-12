@@ -145,8 +145,12 @@ defineExpose({code})
 </script>
 <style scoped>
 .CodeMirror,
+.CodeMirror pre,
+.CodeMirror textarea,
 .cm-component {
-  font-family: monospace;
+  font-family: "OJCodeFont", "JetBrains Mono", "Cascadia Code", Consolas,
+    "Liberation Mono", "DejaVu Sans Mono", monospace !important;
+  font-variant-ligatures: none;
 }
 
 
@@ -154,7 +158,7 @@ defineExpose({code})
 
 <style>
 .CodeMirror-scroll {
-  font-family: monospace !important;
+  font-family: "OJCodeFont", "JetBrains Mono", "Cascadia Code", Consolas,
+    "Liberation Mono", "DejaVu Sans Mono", monospace !important;
 }
 </style>
-

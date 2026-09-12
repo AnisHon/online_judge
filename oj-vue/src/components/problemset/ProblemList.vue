@@ -32,7 +32,7 @@
     </template>
 
     <template #default>
-      <el-table table-layout="auto" :data="problems" stripe style="width: 100%">
+      <el-table class="problem-table" table-layout="auto" :data="problems" stripe style="width: 100%">
         <el-table-column prop="finish" label="状态">
           <template v-slot="scope">
             <el-tooltip v-if="scope.row.finish" content="已完成" placement="top">
@@ -61,7 +61,7 @@
           <template #default="scope">
             <el-space wrap>
               <el-tag  v-for="item of scope.row.tag" :color="item.tagColor" :key="item.tagId">
-                <span style="color: white">
+                <span class="tag-text">
                   {{ item.tagName}}
                 </span>
               </el-tag>
@@ -141,13 +141,13 @@ watch(() => param, () => {
 </script>
 
 <style scoped>
-  .router-link,
+.router-link,
   .router-link:active,
   .router-link:focus
   {
-    color: #3498db;
+    color: var(--el-color-primary);
   }
-
+.problem-table :deep(.el-table__row) { transition: background-color .2s; }.problem-table :deep(.el-table__row:hover) { cursor: pointer; }.problem-table :deep(.el-table__cell) { padding: 12px 0; }.problem-table :deep(.el-table__inner-wrapper::before) { display: none; }.tag-text { color: #fff; }
 
 
 </style>
