@@ -801,6 +801,13 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+.test-console__field :deep(.el-textarea) {
+  display: flex;
+  min-height: 82px;
+  flex: 1;
+  flex-direction: column;
+}
+
 .test-console__field label {
   display: block;
   margin: 0 0 5px;
@@ -811,6 +818,7 @@ onUnmounted(() => {
 .test-console__field :deep(.el-textarea__inner) {
   height: 100% !important;
   min-height: 82px !important;
+  flex: 1;
   resize: none;
 }
 
