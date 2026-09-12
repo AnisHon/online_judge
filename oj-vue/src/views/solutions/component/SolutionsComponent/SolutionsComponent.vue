@@ -1,73 +1,13 @@
 <template>
-  <div class="app-container">
-    <el-card class="card" shadow="hover" >
-      <div class="share">
-         <span>
-        <span>
-          <el-icon size="24" style="margin: 0 5px">
-            <DocumentAdd/>
-          </el-icon>
-          <el-text type="info">
-            分享你的题解
-          </el-text>
-        </span>
-
-        <el-button type="success" @click="addSolution">
-          发布题解
-        </el-button>
-
-      </span>
+  <div class="solutions-list">
+    <el-card class="share-card" shadow="never">
+      <div class="share-card__content">
+        <div><el-icon size="24"><DocumentAdd /></el-icon><div><strong>分享你的解题思路</strong><small>把方法沉淀下来，也帮助更多同学</small></div></div>
+        <el-button type="primary" plain @click="addSolution">发布题解</el-button>
       </div>
-
     </el-card>
-    <el-empty v-if="total == 0" description="还没有人发题解"/>
-    <el-card
-        class="solution-card"
-        body-class="solution-card-body"
-        shadow="hover"
-        v-for="item of solutions"
-        :key="item.solutionId"
-        @click="detailSolution(item.solutionId)"
-    >
-      <el-row :gutter="20">
-        <el-col :span="2">
-          <avatar class="portrait" :user-id="item.userId"/>
-        </el-col>
-
-        <el-col class="main-content" :span=22>
-          <div class="author">
-            <el-text type="info">{{ item.nikeName }}</el-text>
-          </div>
-
-          <div>
-            <span class="solution-title">
-              {{ item.title }}
-              <el-tag v-if="item.topUp" type="warning">置顶</el-tag>
-            </span>
-          </div>
-
-          <div class="content">
-            <el-text line-clamp="1" type="info">{{ item.content }}</el-text>
-          </div>
-          <div class="footer">
-            <el-space>
-              <el-tag type="info">
-                发布日期: {{ item.createTime }}
-              </el-tag>
-
-              <el-tag type="info">
-                {{ item.private_ ? "私有" : "公开" }}
-              </el-tag>
-
-              <el-tag type="info">
-                题目: {{ item.problemTitle }}
-              </el-tag>
-            </el-space>
-          </div>
-        </el-col>
-
-      </el-row>
-    </el-card>
+    <el-empty v-if="total === 0" description="还没有人发题解" />
+    <solution-card v-for="item of solutions" :key="item.solutionId" :solution="item" @open="detailSolution" />
 
     <pagination
         v-show="total>0"
@@ -88,7 +28,7 @@ import {listSolution, type QuerySolution, type Solution} from "@/api/solution";
 import {DocumentAdd} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
 import type {IdType} from "@/api/common.ts";
-import Avatar from "@/components/Avatar/Avatar.vue";
+import SolutionCard from "@/components/SolutionCard/SolutionCard.vue";
 
 const router = useRouter();
 
@@ -126,38 +66,5 @@ getList();
 </script>
 
 <style scoped>
-.portrait {
-  margin: 5px;
-}
-.content {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis
-}
-
-.main-content div {
-  margin: 5px 0;
-}
-
-.card,
-.solution-card {
-  margin: 10px 5px;
-}
-
-.share>span {
-  display: flex;
-  justify-content: space-between;
-}
-
-.share>span>span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>
-
-<style lang="scss">
-.solution-card-body:hover {
-  cursor: pointer;
-}
+.solutions-list { display: flex; flex-direction: column; gap: 14px; }.share-card { border: 1px solid var(--el-border-color-light); border-radius: 16px; background: var(--el-color-primary-light-9); }.share-card__content, .share-card__content > div:first-child { display: flex; align-items: center; }.share-card__content { justify-content: space-between; gap: 16px; }.share-card__content > div:first-child { gap: 12px; color: var(--el-color-primary); }.share-card strong, .share-card small { display: block; }.share-card strong { color: var(--el-text-color-primary); }.share-card small { margin-top: 3px; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

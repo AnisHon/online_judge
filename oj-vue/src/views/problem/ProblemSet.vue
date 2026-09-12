@@ -1,11 +1,17 @@
 <template>
-  <div class="problem-set common-max-width-page" >
-    <ProblemListForm @query="doQuery"/>
-    <ProblemList :param="currentPage"
+  <main class="problem-set common-max-width-page" >
+    <header class="problem-header">
+      <div><p class="eyebrow">PRACTICE LIBRARY</p><h1>题库</h1><p>从基础练习到综合挑战，找到下一道值得解决的问题。</p></div>
+      <div class="problem-header__mark">#</div>
+    </header>
+    <section class="problem-toolbar"><ProblemListForm @query="doQuery"/></section>
+    <section class="problem-results">
+      <div class="result-heading"><strong>题目列表</strong><span>共 {{ pageNav.totalRecords }} 道题目</span></div>
+      <ProblemList :param="currentPage"
         @load-finish="handleLoadFinish"
-    />
-    <div>
-      <div class="footer">
+      />
+    </section>
+    <footer class="footer">
 
           <el-input-number
               style="position:absolute; left: 0;"
@@ -26,12 +32,8 @@
               @current-change="handlePageChange"
           />
 
-      </div>
-
-
-
-    </div>
-  </div>
+    </footer>
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -95,6 +97,8 @@ const handleLoadFinish = (currentPage: number, pageSize: number, totalRecords: n
 }
 .problem-set {
   margin: auto;
-
+  padding-bottom: 24px;
 }
+.problem-header { display: flex; justify-content: space-between; align-items: center; min-height: 132px; margin-bottom: 18px; padding: 24px 32px; overflow: hidden; border: 1px solid var(--el-border-color-light); border-radius: 18px; background: linear-gradient(135deg, var(--el-color-primary-light-9), var(--el-bg-color)); color: var(--el-text-color-primary); }.eyebrow { margin: 0 0 7px; color: var(--el-color-primary); font-size: 11px; font-weight: 800; letter-spacing: .18em; }.problem-header h1 { margin: 0; font-size: 30px; letter-spacing: -.04em; }.problem-header p:last-child { margin: 9px 0 0; color: var(--el-text-color-secondary); }.problem-header__mark { margin-right: 8%; color: var(--el-color-primary-light-5); font: 900 88px/1 var(--code-font-family, monospace); transform: rotate(-12deg); opacity: .42; }.problem-toolbar, .problem-results { padding: 18px 22px; border: 1px solid var(--el-border-color-light); border-radius: 16px; background: var(--el-bg-color); }.problem-results { margin-top: 14px; }.result-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: var(--el-text-color-primary); }.result-heading span { color: var(--el-text-color-secondary); font-size: 13px; }
+@media (max-width: 600px) { .problem-set { padding: 8px 12px 24px; }.problem-header { min-height: 108px; padding: 20px; }.problem-header h1 { font-size: 25px; }.problem-header p:last-child { font-size: 13px; }.problem-header__mark { display: none; }.problem-toolbar, .problem-results { padding: 14px; }.result-heading { margin-bottom: 8px; } }
 </style>

@@ -1,5 +1,10 @@
 <template>
-  <div class="common-max-width-page app-container">
+  <main class="common-max-width-page app-container">
+    <header class="materials-hero">
+      <div><span class="eyebrow">RESOURCE CENTER</span><h1>资料中心</h1><p>整理、查找并下载你的学习资料。</p></div>
+      <div class="hero-mark" aria-hidden="true">↗</div>
+    </header>
+    <section class="resource-panel">
     <div class="search-bar">
       <el-button
           :disabled="unselect"
@@ -34,7 +39,7 @@
           当前共有：{{ list.length }}条数据
         </el-text>
       </span>
-      <el-input style="max-width: 200px" placeholder="请输入文件名"/>
+      <el-input v-model="query.fileName" class="file-search" clearable placeholder="搜索文件名" @keyup.enter="getList"/>
     </div>
     <div class="breadcrumb">
       <el-breadcrumb>
@@ -136,9 +141,10 @@
 
       </el-table>
     </div>
+    </section>
 
     <upload :parent-id="query.parentId" v-model="openUpload" @finished="getList"/>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -425,6 +431,44 @@ getList();
     display: inline-block;
   }
 }
+
+.materials-hero { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 166px; margin: 10px 0 18px; padding: 28px 36px; overflow: hidden; border: 1px solid var(--el-border-color-light); border-radius: 20px; background: linear-gradient(135deg, var(--el-color-primary-light-9), var(--el-bg-color)); color: var(--el-text-color-primary); }
+.eyebrow { display: block; margin-bottom: 8px; color: var(--el-color-primary); font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+.materials-hero h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.05em; }
+.materials-hero p { margin: 10px 0 0; color: var(--el-text-color-secondary); font-size: 14px; }
+.hero-mark { display: grid; width: 112px; height: 112px; place-items: center; margin-right: 8%; border: 1px solid color-mix(in srgb, var(--el-color-primary) 22%, transparent); border-radius: 50%; color: var(--el-color-primary-light-5); font-size: 70px; font-weight: 200; transform: rotate(-18deg); opacity: .55; }
+.resource-panel { padding: 18px 20px 22px; border: 1px solid var(--el-border-color-light); border-radius: 18px; background: var(--el-bg-color); }
+.search-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 0 0 18px; padding-bottom: 17px; border-bottom: 1px solid var(--el-border-color-lighter); }
+.search-bar > * { margin-right: 0; }
+.search-bar .el-button { margin: 0; }
+.select-text { display: flex; flex: 1; justify-content: flex-end; gap: 3px; min-width: 160px; margin-left: 10px; }
+.file-search { width: 220px; }
+.breadcrumb { margin: 0 0 16px; padding: 9px 12px; border-radius: 10px; background: var(--el-fill-color-lighter); }
+.breadcrumb :deep(.el-breadcrumb__inner) { color: var(--el-text-color-secondary); font-size: 13px; }
+.files { overflow-x: auto; }
+.file-table { min-width: 760px; }
+.file-table :deep(.file-row) { background: var(--el-bg-color); transition: background .2s; }
+.file-table :deep(.file-row:hover) { background: var(--el-fill-color-lighter); }
+.file-table :deep(.file-header-cell) { background: var(--el-fill-color-lighter); color: var(--el-text-color-secondary); font-size: 12px; }
+.file-table :deep(.file-cell) { color: var(--el-text-color-regular); }
+.file { gap: 10px; }
+.file > * { margin-right: 0; }
+.file .icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--el-color-primary-light-9); }
+.filename { color: var(--el-text-color-primary); font-weight: 600; }
+.file-link { white-space: nowrap; }
+.file-link > * { margin: 0 7px; }
+@media (max-width: 720px) {
+  .materials-hero { min-height: 142px; padding: 24px; }
+  .hero-mark { width: 78px; height: 78px; margin-right: 0; font-size: 48px; }
+  .resource-panel { padding: 14px 12px 18px; }
+  .search-bar { align-items: stretch; }
+  .search-bar .el-button { flex: 1; }
+  .search-bar .el-button-group { display: flex; flex: 1; }
+  .search-bar .el-button-group .el-button { flex: 1; }
+  .select-text { order: 3; justify-content: flex-start; width: 100%; min-width: 0; margin: 0; }
+  .file-search { order: 4; width: 100%; }
+}
+@media (max-width: 480px) { .materials-hero { padding: 22px 18px; }.hero-mark { display: none; }.materials-hero p { font-size: 13px; }.file-link { display: inline-block !important; } }
 
 
 </style>

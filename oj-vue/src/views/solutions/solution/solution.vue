@@ -1,5 +1,5 @@
 <template>
-  <div class="common-max-width-page app-container">
+  <main class="common-max-width-page app-container">
     <el-page-header @back="router.back" title="返回" :content="solution?.title || ''">
       <template #extra>
         <el-button
@@ -17,27 +17,23 @@
         >修改题解</el-button>
       </template>
     </el-page-header>
-    <div class="header">
+    <article class="solution-article">
       <div v-if="solution">
 
           <div class="author">
-            <div style="margin-right: 5px">
+            <div class="author-avatar">
               <avatar :user-id="solution.userId" shape="circle"/>
 <!--              <el-avatar class="portrait" :src="getAvatarPath(solution.userId)"/>-->
             </div>
 
-            <div style="flex-grow: 1">
+            <div class="author-info">
               <div>
                 <el-text size="large">{{ solution.nikeName }}</el-text>
               </div>
 
               <div>
                 <el-text type="info">
-                  <el-icon>
-                    <Calendar/>
-
-                  </el-icon>
-                  发布日期: {{ solution.createTime }}
+                  <el-icon><Calendar/></el-icon> 发布于 {{ solution.createTime }}
                 </el-text>
               </div>
 
@@ -98,16 +94,16 @@
           </el-skeleton>
         </div>
       </div>
-    </div>
+    </article>
     <el-divider/>
-    <div class="content">
+    <div class="solution-content">
       <MarkdownPreview v-if="solution" :text="solution.content" />
       <el-skeleton v-else :count="10" >
         <el-skeleton-item variant="p"/>
       </el-skeleton>
     </div>
 
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -163,16 +159,9 @@ loadSolution();
 <style scoped>
 .app-container {
   margin: auto;
+  padding-bottom: 30px;
 }
-
-.header {
-  margin: 5px 0;
-}
-
-.author {
-  display: flex;
-  align-items: center;
-
-}
+.solution-article { margin-top: 18px; padding: 28px 34px 34px; border: 1px solid var(--el-border-color-light); border-radius: 18px; background: var(--el-bg-color); }.author { display: flex; align-items: center; gap: 12px; }.author-avatar { flex: 0 0 auto; }.author-info { flex: 1; }.footer { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--el-border-color-lighter); }.solution-content { margin-top: 8px;}.solution-content :deep(.md-editor-preview) { background: transparent; color: var(--el-text-color-primary); }
+@media (max-width: 600px) { .solution-article { margin-top: 12px; padding: 20px 16px 24px; }.solution-article :deep(.el-page-header__content) { max-width: 170px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }.solution-article :deep(.el-page-header__extra) { display: flex; gap: 6px; }.solution-article :deep(.el-page-header__extra .el-button) { padding: 7px 9px; }.solution-article :deep(.el-page-header__extra .el-button) { font-size: 0; }.solution-article :deep(.el-page-header__extra .el-button .el-icon) { margin: 0; font-size: 16px; } }
 
 </style>
