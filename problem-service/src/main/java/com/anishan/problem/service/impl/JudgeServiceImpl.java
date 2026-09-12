@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -59,11 +60,15 @@ public class JudgeServiceImpl implements JudgeService {
 //        problemJudgeResult.setSubmitId(submitId);
 
 
-        BigDecimal score = contestService.getScore(judgeRequest.getContestId(), problem.getProblemId());
+        BigDecimal score = null;
+        if (judgeRequest.getContestId() != null) {
+            score = contestService.getScore(judgeRequest.getContestId(), problem.getProblemId());
+            // 竞赛题必须真实属于该竞赛，不能仅凭请求中的 contestId 进入竞赛判题链路。
+            ThrowUtil.businessError(score == null, "题目不属于指定比赛");
+        }
 
         JudgeInfo info = new JudgeInfo()
                 .setUserId(userId)
-                .setUuid(judgeRequest.getUuid())
                 .setProblemId(problem.getProblemId())
                 .setContestId(judgeRequest.getContestId())
                 .setLanguageId(judgeRequest.getLanguageId())
@@ -335,13 +340,30 @@ public class JudgeServiceImpl implements JudgeService {
 
     private void beforeJudgeCheck(Problem problem, JudgeRequest judgeRequest, Long userId) {
         ThrowUtil.businessError(problem == null, "题目不存在");
-        if (judgeRequest.getContestId() == null || userId == null) {
+        ThrowUtil.businessError(userId == null, "用户身份无效");
+        if (judgeRequest.getContestId() == null) {
             return;
         }
+        ThrowUtil.businessError(judgeRequest.getContestId() <= 0, "比赛参数无效");
         boolean joined = contestService.isUserJoined(judgeRequest.getContestId(), userId);
         boolean isEnabled = contestService.isContestEnable(judgeRequest.getContestId());
         ThrowUtil.permissionDeny(!joined, "非法访问");
         ThrowUtil.businessError(!isEnabled, "不允许提交题目");
+    }
+
+    /**
+     * 按题型校验提交参数，避免空代码、未知语言和空答案在业务深处才以 NPE 或脏判题记录暴露出来。
+     */
+    private void validateJudgeRequest(Problem problem, JudgeRequest judgeRequest) {
+        ThrowUtil.businessError(judgeRequest.getProblemId() == null, "题目参数不能为空");
+        ThrowUtil.businessError(problem == null, "题目不存在");
+        if (problem.getType() == ProblemType.OJ) {
+            ThrowUtil.businessError(judgeRequest.getLanguageId() == null, "请选择编程语言");
+            ThrowUtil.businessError(!StringUtils.hasText(judgeRequest.getCode()), "请输入代码后再提交");
+            ThrowUtil.businessError(judgeRequest.getCode().length() > 512 * 1024, "提交代码不能超过 512KB");
+        } else {
+            ThrowUtil.businessError(judgeRequest.getAnswers() == null, "答案参数不能为空");
+        }
     }
 
     private void record(JudgeRequest judgeRequest, Long userId, ProblemJudgeResult judgeResult) {
@@ -360,9 +382,12 @@ public class JudgeServiceImpl implements JudgeService {
 
     @Override
     public ProblemJudgeResult judge(Long userId, JudgeRequest judgeRequest) {
+        ThrowUtil.businessError(judgeRequest == null, "提交参数不能为空");
+        ThrowUtil.businessError(judgeRequest.getProblemId() == null, "题目参数不能为空");
         Long problemId = judgeRequest.getProblemId();
 
         Problem problem = problemService.getById(problemId);
+        validateJudgeRequest(problem, judgeRequest);
         beforeJudgeCheck(problem, judgeRequest, userId);
 
 
@@ -371,6 +396,12 @@ public class JudgeServiceImpl implements JudgeService {
         // OJ题目不能在这里算分直接返回
         if (problem.getType() == ProblemType.OJ) {
             return judgeResult;
+        }
+
+        BigDecimal contestScore = null;
+        if (judgeRequest.getContestId() != null) {
+            contestScore = contestService.getScore(judgeRequest.getContestId(), problemId);
+            ThrowUtil.businessError(contestScore == null, "题目不属于指定比赛");
         }
 
         // 添加做题记录
@@ -382,7 +413,7 @@ public class JudgeServiceImpl implements JudgeService {
             judgeResult.setCorrect(false);
 
 //            比赛题目需要重新计算分数   (totalScore / fullMark) * score
-            BigDecimal score = contestService.getScore(judgeRequest.getContestId(), problemId);
+            BigDecimal score = contestScore;
 
             BigDecimal fullMark = judgeResult.getFullMark();
             BigDecimal totalScore = judgeResult.getTotalScore();
