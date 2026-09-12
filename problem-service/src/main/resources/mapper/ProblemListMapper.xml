@@ -25,7 +25,8 @@
             p.auth as auth,
             p.create_time as createTime,
             cr.score as userScore,
-            cr.status as correct
+            cr.status as correct,
+            cr.record_id is not null as finish
         from contest c
         left join problem_problem_list ppl on c.list_id = ppl.list_id
         left join problem p on p.problem_id = ppl.problem_id

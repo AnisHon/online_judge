@@ -29,7 +29,7 @@ public class SubmitLogUtil {
 
     public boolean isExist(Long userId) {
         String key = getSubmitLogKey(userId);
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        return redisTemplate.hasKey(key);
     }
 
     public void update(SubmitLog submitLog) {

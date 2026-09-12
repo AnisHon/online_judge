@@ -143,6 +143,7 @@ public class ContestController {
 
     @DeleteMapping("/submit/{contestId}/{userId}")
     @ApiOperation("退回提交")
+    @PreAuthorize("hasAuthority('problem:contest:edit')")
     @Transactional
     public R<Object> submit(@PathVariable Long contestId, @PathVariable Long userId) {
         boolean remove = Db.remove(

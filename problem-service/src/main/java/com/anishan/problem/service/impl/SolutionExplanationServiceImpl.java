@@ -52,6 +52,21 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
     private final UserInternalClient userInternalClient;
     private final UserClient userClient;
 
+    @Override
+    @Cacheable(key = "'recent-v2'")
+    public List<SolutionVo> recent() {
+        MPJLambdaWrapper<SolutionExplanation> wrapper = MPJWrappers.lambdaJoin(SolutionExplanation.class)
+                .selectAll(SolutionExplanation.class)
+                .selectAs(Problem::getTitle, SolutionVo::getProblemTitle)
+                .leftJoin(Problem.class, Problem::getProblemId, SolutionExplanation::getProblemId)
+                .eq(SolutionExplanation::getPrivate_, false)
+                .orderByDesc(SolutionExplanation::getTopUp, SolutionExplanation::getCreateTime)
+                .last("LIMIT 20");
+        List<SolutionVo> solutions = solutionExplanationMapper.selectJoinList(SolutionVo.class, wrapper);
+        fillNikeNames(solutions);
+        return solutions;
+    }
+
 
     public DetailSolutionVo doGet(Long id) {
         MPJLambdaWrapper<SolutionExplanation> wrapper = new MPJLambdaWrapper<SolutionExplanation>()
@@ -124,35 +139,26 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
                 .leftJoin(Problem.class, Problem::getProblemId, SolutionExplanation::getProblemId);
         page = solutionExplanationMapper.selectJoinPage(page, SolutionVo.class, wrapper);
 
-        // 获取所有的id
-        List<Long> ids = page
-                .getRecords()
-                .stream()
-                .map(SolutionVo::getUserId)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // 获取 id - nikeName 的 map
-        Map<Long, String> map;
-
-        if (!CollUtil.isEmpty(ids)){
-            map = userInternalClient.nikeName(ids).getData();
-        } else {
-            map = MapUtil.empty();
-        }
-
-
-
-        // 从map中拿nikeName放进去
+        fillNikeNames(page.getRecords());
         page.getRecords().forEach(x -> {
-            String nikeName = map.get(x.getUserId());
-            x.setNikeName(nikeName);
             if (StrUtil.length(x.getContent()) > 250) {
                 x.setContent(StrUtil.sub(x.getContent(), 0, 250));
             }
         });
 
         return PagedResult.build(page);
+    }
+
+    private void fillNikeNames(List<SolutionVo> solutions) {
+        List<Long> ids = solutions.stream()
+                .map(SolutionVo::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> names = CollUtil.isEmpty(ids)
+                ? MapUtil.empty()
+                : userInternalClient.nikeName(ids).getData();
+        solutions.forEach(solution -> solution.setNikeName(names.get(solution.getUserId())));
     }
 
     @Override

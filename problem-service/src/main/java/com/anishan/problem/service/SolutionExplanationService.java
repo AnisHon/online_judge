@@ -24,6 +24,8 @@ public interface SolutionExplanationService extends IService<SolutionExplanation
 
     DetailSolutionVo adminGet(Long id);
 
+    List<SolutionVo> recent();
+
     boolean delete(List<Long> ids, Long userId);
 
     PagedResult<SolutionVo> pagedQuery(Long userId, PagedSolution pagedSolution);

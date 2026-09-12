@@ -23,9 +23,8 @@ public class ContestUtil {
 
     public static boolean isInContest(@NotNull RedisTemplate<String, Object> redisTemplate, Long contestId) {
         String contestKey = getContestKey(contestId);
-        return Boolean.TRUE.equals(redisTemplate.hasKey(contestKey));
+        return redisTemplate.hasKey(contestKey);
     }
-
 
 
 }

@@ -70,6 +70,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
     }
 
     @Override
+    @CacheEvict(key = "'all-tag'", allEntries = true)
     public boolean addTag(TagDto tag) {
         doCheckName(tag);
 
@@ -152,7 +153,6 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
 
 
 }
-
 
 
 

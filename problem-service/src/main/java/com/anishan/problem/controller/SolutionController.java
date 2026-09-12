@@ -1,5 +1,4 @@
 package com.anishan.problem.controller;
-import com.anishan.api.annotation.EnableCache;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.problem.domain.dto.DetailSolutionDto;
@@ -8,14 +7,10 @@ import com.anishan.problem.domain.entity.SolutionExplanation;
 import com.anishan.problem.domain.vo.DetailSolutionVo;
 import com.anishan.problem.domain.vo.SolutionVo;
 import com.anishan.problem.service.SolutionExplanationService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -143,13 +138,8 @@ public class SolutionController {
 
     @GetMapping("/recent")
     @ApiOperation("最近题解")
-    @Cacheable(value = "problem:solution:", key = "'recent'")
-    public R<List<SolutionExplanation>> recent() {
-        Page<SolutionExplanation> page = Page.of(1, 20);
-        LambdaQueryWrapper<SolutionExplanation> queryWrapper = Wrappers.lambdaQuery(SolutionExplanation.class)
-                .eq(SolutionExplanation::getPrivate_, false)
-                .orderByDesc(SolutionExplanation::getTopUp, SolutionExplanation::getCreateTime);
-        List<SolutionExplanation> list = solutionExplanationService.list(page, queryWrapper);
+    public R<List<SolutionVo>> recent() {
+        List<SolutionVo> list = solutionExplanationService.recent();
         return R.success(list);
     }
 }
