@@ -1,328 +1,84 @@
 <template>
-  <div class="list-container">
-    <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="列表名称" prop="listName">
-        <el-input
-            v-model="queryParams.listName"
-            placeholder="请输入列表名称"
+  <ProblemModuleShell title="题单管理" kicker="PROBLEM / COLLECTIONS" description="创建可复用的题单，编排题目顺序并快速进入题目管理。" :icon="List" tone="green">
+    <div class="module-toolbar">
+      <div><span class="eyebrow">CURATED SETS</span><strong>题单列表</strong><small>共 {{ total }} 个题单</small></div>
+      <div class="toolbar-actions"><el-button :icon="Refresh" :loading="isLoading" @click="getList">刷新题单</el-button><el-button v-has="'problem:list:add'" type="primary" :icon="Plus" @click="handleAdd">新建题单</el-button><el-button v-has="'problem:list:remove'" type="danger" plain :disabled="!ids.length" :icon="Delete" @click="handleDelete()">删除</el-button></div>
+    </div>
 
-            @keyup.enter.native="handleQuery"
-            clearable
-        />
-      </el-form-item>
-      <el-form-item label="列表ID" prop="parentId">
-        <el-input v-model="queryParams.listId" :controls="false"/>
-      </el-form-item>
+    <div class="filter-panel">
+      <div class="filter-field"><label>题单名称</label><el-input v-model="queryParams.listName" clearable placeholder="搜索题单名称" :prefix-icon="Search" @keyup.enter="handleQuery" /></div>
+      <div class="filter-field"><label>题单 ID</label><el-input v-model="queryParams.listId" clearable placeholder="输入题单 ID" @keyup.enter="handleQuery" /></div>
+      <div class="filter-actions"><el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button><el-button :icon="Refresh" @click="resetQuery">重置</el-button></div>
+    </div>
 
-      <el-form-item>
-        <el-button type="primary" icon="search"  @click="handleQuery">搜索</el-button>
-        <el-button icon="refresh"  @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-            type="primary"
-            plain
-            icon="plus"
-            size="small"
-            @click="handleAdd"
-            v-has="'problem:list:add'"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="success"
-            plain
-            icon="edit"
-            size="small"
-            :disabled="single"
-            @click="handleUpdate()"
-            v-has="'problem:list:edit'"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="danger"
-            plain
-            icon="delete"
-            size="small"
-            :disabled="multiple"
-            @click="handleDelete()"
-            v-has="'problem:list:remove'"
-        >删除</el-button>
-      </el-col>
-      <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
-    </el-row>
-
-    <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="题单ID" align="center" prop="listId" v-if="columns[0].visible" show-overflow-tooltip />
-      <el-table-column label="题单名称" align="center" prop="listName" v-if="columns[1].visible" />
-      <el-table-column label="题单描述" align="center" prop="description" v-if="columns[2].visible" />
-      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[3].visible" />
-      <el-table-column label="操作" align="center" list-name="small-padding fixed-width">
-        <template v-slot:default="scope">
-          <el-link
-              size="small"
-              type="primary"
-              icon="edit"
-              @click="handleUpdate(scope.row)"
-              v-has="'problem:list:edit'"
-          >修改</el-link>
-          <el-link
-              size="small"
-              type="primary"
-              icon="delete"
-              @click="handleDelete(scope.row)"
-              v-has="'problem:list:remove'"
-          >删除</el-link>
-          <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
-                       v-has-any="['problem:list:add-problem', 'problem:list:del-problem', 'problem:problem:list'] ">
-            <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <div v-has="['problem:list:add-problem', 'problem:list:del-problem', 'problem:problem:list']" >
-                  <el-dropdown-item command="handleProblem" icon="management"
-                  >管理题目</el-dropdown-item>
-                </div>
-
-              </el-dropdown-menu>
-            </template>
-
-          </el-dropdown>
-        </template>
+    <el-table v-loading="isLoading" class="list-table" :data="tableList" row-key="listId" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="54" align="center" />
+      <el-table-column label="题单" min-width="340">
+        <template #default="{ row }"><div class="list-title-cell"><span class="list-icon"><el-icon><List /></el-icon></span><div><strong>{{ row.listName }}</strong><span>#{{ row.listId }}</span></div></div></template>
       </el-table-column>
+      <el-table-column label="描述" min-width="360" prop="description" show-overflow-tooltip>
+        <template #default="{ row }"><span class="description">{{ row.description || '暂无描述' }}</span></template>
+      </el-table-column>
+      <el-table-column label="创建时间" min-width="190" prop="createTime" show-overflow-tooltip />
+      <el-table-column label="操作" width="230" fixed="right" align="right">
+        <template #default="{ row }"><el-space><el-button v-has="'problem:list:edit'" link type="primary" :icon="Edit" @click="handleUpdate(row)">编辑</el-button><el-button v-has-any="['problem:list:add-problem', 'problem:list:del-problem', 'problem:problem:list']" link type="success" :icon="Management" @click="handleCommand('handleProblem', row)">管理题目</el-button><el-button v-has="'problem:list:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button></el-space></template>
+      </el-table-column>
+      <template #empty><el-empty description="还没有题单" /></template>
     </el-table>
+    <Pagination v-show="total > 0" v-model:page="queryParams.currentPage" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <pagination
-        v-show="total > 0"
-        :total="total"
-        v-model:page="queryParams.currentPage"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-    />
-
-    <!-- 添加或修改测试功能对话框 -->
-    <el-dialog :title="title" v-model="open" width="680px" append-to-body>
-      <el-form :model="form" :rules="rules" label-width="100px">
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="题单名称" prop="listName">
-              <el-input v-model="form.listName" placeholder="请输入题单名称"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item prop="remark" label="描述">
-              <el-input v-model="form.description" type="textarea" placeholder="请输入标记" maxlength="450" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-      <template #footer>
-
-        <el-button type="primary" @click="submitForm" :loading="isUpdateLoading  || isAddLoading">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-
-      </template>
-
+    <el-dialog v-model="open" :title="title === '添加' ? '新建题单' : '编辑题单'" width="min(620px, 92vw)" append-to-body>
+      <div class="dialog-intro"><span class="eyebrow">COLLECTION SETTINGS</span><p>题单可以被竞赛、作业和前台题库重复使用。</p></div>
+      <el-form :model="form" :rules="rules" label-position="top"><el-form-item label="题单名称" prop="listName"><el-input v-model="form.listName" maxlength="80" show-word-limit placeholder="请输入题单名称" /></el-form-item><el-form-item label="题单描述" prop="description"><el-input v-model="form.description" type="textarea" :rows="5" maxlength="450" show-word-limit placeholder="描述题单用途或适用范围" /></el-form-item></el-form>
+      <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">保存题单</el-button></template>
     </el-dialog>
-  </div>
+  </ProblemModuleShell>
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
-import {
-  type ListForm, type ListView,
-  debouncedAddList,
-  debouncedGetList,
-  debouncedUpdateList,
-  type QueryList,
-  removeList
-} from "@/api/list";
-import {useColumn} from "@/hooks/useColumn";
-import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
-import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElMessageBox} from "element-plus";
-import __ from "lodash";
-import {useRouter} from "vue-router";
-import type {IdType} from "@/api/common.ts";
+import { computed, reactive, ref } from 'vue'
+import { Delete, Edit, List, Management, Plus, Refresh, Search } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
+import { type ListForm, type ListView, debouncedAddList, debouncedGetList, debouncedUpdateList, type QueryList, removeList } from '@/api/list'
+import Pagination from '@/components/pageination/Pagination.vue'
+import { useRouter } from 'vue-router'
+import type { IdType } from '@/api/common'
+import ProblemModuleShell from '@/views/backend/problem-module/component/ProblemModuleShell.vue'
 
-const router = useRouter();
-// 查询需要的表单数据
-const queryParams = reactive<QueryList>({
-  asc: true,
-  currentPage: 1,
-  pageSize: 20,
-  listId: undefined,
-  listName: undefined,
-});
-
-const form = reactive<ListForm>({
-  listId: undefined,
-  listName: '',
-  description: '',
-});
-
-
-const rules = ref();
-
-const open = ref(false);
-
-const {columns} = useColumn(['题单ID', '题单名称', '题单描述', '创建时间']);
-
-// 重制题单
-const resetQuery = () => {
-  queryParams.listName = undefined;
-  queryParams.listId = undefined;
-  queryParams.sortColumn = undefined;
-
-  getList();
-};
-
-// 重置表单
-const resetForm = () => {
-  form.listId = undefined;
-  form.listName = '';
-  form.description = '';
-}
-
-const showSearch = ref(true);
-
-const {loading, isLoading, get} = debouncedGetList(queryParams, (data) => {
-  tableList.length = 0;
-  total.value = data.totalRecords
-  tableList.push(...data.data)
-});
-
-const tableList = reactive<ListView[]>([]);
-const total = ref<number>(0);
-
-// 获取题单
-const getList = () => {
-  loading();
-  get();
-
-}
-
-// 多选或者单选
+const router = useRouter()
+const queryParams = reactive<QueryList>({ asc: true, currentPage: 1, pageSize: 20, listId: undefined, listName: undefined })
+const form = reactive<ListForm>({ listId: undefined, listName: '', description: '' })
+const rules = { listName: [{ required: true, message: '请输入题单名称', trigger: 'blur' }] }
+const open = ref(false)
+const tableList = reactive<ListView[]>([])
+const total = ref(0)
+const ids = ref<IdType[]>([])
 const single = ref(true)
 const multiple = ref(true)
+const { loading, isLoading, get } = debouncedGetList(queryParams, (data) => { tableList.length = 0; total.value = data.totalRecords; tableList.push(...data.data) })
+const { loading: updateLoading, isLoading: isUpdateLoading, update } = debouncedUpdateList(form, () => finishDialog())
+const { loading: addLoading, isLoading: isAddLoading, add } = debouncedAddList(form, () => finishDialog())
+const dialogState = ref(1)
+const title = computed(() => dialogState.value === 1 ? '添加' : '修改')
 
-// 选择列的id数组
-const ids = ref<IdType[]>([])
+const resetForm = () => Object.assign(form, { listId: undefined, listName: '', description: '' })
+const resetQuery = () => { queryParams.listName = undefined; queryParams.listId = undefined; queryParams.sortColumn = undefined; getList() }
+const getList = () => { loading(); get() }
+const handleQuery = () => { queryParams.currentPage = 1; getList() }
+const handleSelectionChange = (selection: ListView[]) => { ids.value = selection.map((item) => item.listId); single.value = selection.length !== 1; multiple.value = !selection.length }
+const handleAdd = () => { resetForm(); dialogState.value = 1; open.value = true }
+const handleUpdate = (data?: ListView) => { const item = data || tableList.find((x) => x.listId === ids.value[0]); if (!item) return; resetForm(); Object.assign(form, item); dialogState.value = 2; open.value = true }
+const handleDelete = (row?: ListView) => { const target = row ? [row.listId] : ids.value; if (!target.length) return; ElMessageBox.confirm(`确定删除选中的 ${target.length} 个题单吗？`, '删除题单', { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }).then(() => removeList(target).then(getList)).catch(() => {}) }
+const finishDialog = () => { open.value = false; resetForm(); getList() }
+const submitForm = () => { if (dialogState.value === 1) { addLoading(); add() } else { updateLoading(); update() } }
+const cancel = () => { open.value = false; resetForm() }
+const handleCommand = (command: string, row: ListView) => { if (command === 'handleProblem') router.push({ name: 'list-problem', params: { id: row.listId } }) }
 
-const handleSelectionChange = (selection: ListView[]) => {
-  ids.value = selection.map(item => item.listId);
-  single.value = selection.length != 1;
-  multiple.value = !selection.length;
-}
-
-
-
-const handleDelete = (row?: ListView) => {
-  const id = row ? row.listId : ids.value
-  ElMessageBox.confirm(`您是否要删除ID为${id}的数据项？`, {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  })
-      .then(() => {
-        removeList(id).then(getList);
-      })
-}
-
-// 搜索按钮
-const handleQuery = () => {
-  getList();
-  single.value = false
-  multiple.value = false;
-}
-
-const finishDialog = () => {
-  open.value = false;
-  resetForm();
-  getList();
-}
-
-const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateList(form, finishDialog);
-
-const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddList(form, finishDialog);
-
-const {} = debouncedAddList(form, finishDialog)
-// 1: Insert 2: Update
-const dialogState = ref(1);
-const title = computed(() => {
-  return dialogState.value === 1 ? "添加" : "修改";
-})
-const handleAdd = () => {
-  resetForm();
-  dialogState.value = 1;
-  open.value = true;
-
-}
-const handleUpdate = (data: ListView | void) => {
-  resetForm();
-  open.value = true;
-  dialogState.value = 2;
-
-  if (!data) {
-    const id = ids.value[0];
-    data = __.find(tableList, x => x.listId === id)
-  }
-  __.assign(form, data)
-}
-
-const submitForm = () => {
-
-  if (dialogState.value === 1) {
-    addLoading();
-    // 添加
-    add();
-  } else {
-    updateLoading();
-    // 修改
-    update();
-  }
-}
-
-const cancel = () => {
-  open.value = false;
-  resetForm()
-}
-
-
-const handleCommand = (command: string, row: ListView) => {
-  if (command === 'handleProblem') {
-
-    router.push({name: "list-problem", params: {id: row.listId}})
-  }
-}
-
-
-
-// created -> 获取题单
 getList()
-
-
-
-
 </script>
 
 <style lang="scss" scoped>
-
-::v-deep(.inline-form) {
-  .el-input {
-    --el-input-width: 220px;
-  }
-
-  .el-select {
-    --el-select-width: 220px;
-  }
-
-}
-
-::v-deep(.el-table__row) .el-dropdown {
-  height: 23px;
-}
+.module-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 18px; }.module-toolbar > div:first-child { display: flex; align-items: baseline; gap: 10px; }.eyebrow { color: #059669; font-size: 10px; font-weight: 800; letter-spacing: .14em; }.module-toolbar strong { font-size: 18px; }.module-toolbar small { color: var(--el-text-color-secondary); font-size: 12px; }.toolbar-actions { display: flex; gap: 9px; }.filter-panel { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 18px; padding: 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 13px; background: var(--el-fill-color-light); }.filter-field { width: 240px; }.filter-field label { display: block; margin-bottom: 6px; color: var(--el-text-color-secondary); font-size: 12px; }.filter-actions { display: flex; gap: 8px; }.list-table { border-radius: 14px; overflow: hidden; }.list-title-cell { display: flex; align-items: center; gap: 12px; }.list-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; background: rgb(5 150 105 / 11%); color: var(--el-color-success); }.list-title-cell div:last-child { display: flex; flex-direction: column; gap: 4px; }.list-title-cell strong { color: var(--el-text-color-primary); }.list-title-cell span, .description { color: var(--el-text-color-secondary); font-size: 12px; }.dialog-intro { margin-bottom: 20px; padding: 14px 16px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-intro p { margin: 7px 0 0; color: var(--el-text-color-secondary); font-size: 13px; }
+@media (max-width: 720px) { .module-toolbar, .filter-panel { align-items: stretch; flex-direction: column; }.module-toolbar > div:first-child { flex-wrap: wrap; }.toolbar-actions, .filter-field, .filter-actions { width: 100%; }.filter-field { width: auto; } }
+@media (max-width: 480px) { .module-content { padding: 14px 10px; }.toolbar-actions { flex-wrap: wrap; } }
 </style>

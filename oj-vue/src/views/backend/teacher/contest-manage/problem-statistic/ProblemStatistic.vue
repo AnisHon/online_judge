@@ -1,171 +1,42 @@
 <template>
-  <div class="app-container">
-    <div class="header">
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <el-text type="success">
-            <h1>题目统计</h1>
-          </el-text>
-        </el-col>
-        <el-col :span="6">
-<!--          <div class="absoluteCenter">-->
-<!--            <el-progress-->
-<!--                type="circle"-->
-<!--                :percentage="averageCorrect"-->
-<!--                :width="150"-->
-<!--            />-->
-<!--            <el-text type="info" size="large" >-->
-<!--              <h3>平均正确率</h3>-->
-<!--            </el-text>-->
-<!--          </div>-->
-        </el-col>
-
-        <el-col :span="6">
-
-        </el-col>
-      </el-row>
-    </div>
-
-    <div class="contents" >
-      <el-table class="table" :data="list" stripe :border="false" header-cell-class-name="header-cell">
-        <el-table-column label="题目ID" prop="problemId" align="center" />
-        <el-table-column label="题目" prop="title"  align="left">
-          <template v-slot="scope">
-            <el-link
-                type="primary"
-                :underline="false"
-                target="_blank"
-                :href="`/problem/${scope.row.problemId}`"
-            >
-              {{ scope.row.title }}
-            </el-link>
-          </template>
-        </el-table-column>
-        <el-table-column label="题目分数" prop="score" align="center">
-          <template v-slot="scope">
-            <el-text type="info" size="large">{{ scope.row.score }}</el-text>
-          </template>
-        </el-table-column>
-        <el-table-column label="平均分数" prop="average" align="center">
-          <template v-slot="scope">
-            <el-text type="primary" size="large">{{ scope.row.average }}</el-text>
-          </template>
-        </el-table-column>
-        <el-table-column label="正确人数" prop="rightNum" align="center">
-          <template v-slot="scope">
-            <el-text type="success" size="large">{{ scope.row.rightNum }}</el-text>
-          </template>
-        </el-table-column>
-        <el-table-column label="错误人数（错误+未交）" prop="wrongNum" align="center">
-          <template v-slot="scope">
-            <el-text type="danger" size="large">{{ scope.row.wrongNum + scope.row.absentNum }}</el-text>
-          </template>
-        </el-table-column>
-        <el-table-column label="未做人数" prop="absentNum" align="center">
-          <template v-slot="scope">
-            <el-text type="warning" size="large">{{ scope.row.absentNum }}</el-text>
-          </template>
-        </el-table-column>
-        <el-table-column label="正确率" type="default" align="center">
-          <template v-slot="scope">
-            <el-progress
-                type="dashboard"
-                :percentage="getAccuracy(scope.row)"
-                :width="64"
-            />
-          </template>
-        </el-table-column>
-
-        <el-table-column label="操作" align="center">
-          <template v-slot="scope">
-            <el-link
-                type="primary"
-                @click="toStudentScore(scope.row)"
-            >
-              题目分数
-            </el-link>
-          </template>
-        </el-table-column>
-
-        <template #empty>
-          <el-empty description="当前没有任何题目"/>
-        </template>
-      </el-table>
-    </div>
-  </div>
+  <ContestSubPageShell title="题目统计" kicker="ANALYTICS / PROBLEMS" description="按题目查看提交、得分和正确率，快速定位教学薄弱点。" :icon="DataAnalysis" tone="violet" :stats="stats">
+    <template #actions><el-button v-has="'problem:contest:statistic'" :loading="loading" :icon="Refresh" @click="getList">刷新统计</el-button></template>
+    <div class="table-heading"><div><strong>题目表现</strong><span>点击题目分数可查看每位用户的答题结果</span></div><el-tag effect="plain" type="info">{{ list.length }} 道题</el-tag></div>
+    <el-table v-loading="loading" :data="list" class="stat-table" stripe>
+      <el-table-column label="题目" min-width="250"><template #default="{row}"><div class="problem-cell"><span class="problem-id">#{{ row.problemId }}</span><el-link type="primary" :underline="false" @click="router.push({name: 'problem', params: {id: row.problemId}})">{{ row.title }}</el-link></div></template></el-table-column>
+      <el-table-column label="满分" prop="score" width="90" align="center" />
+      <el-table-column label="平均分" prop="average" width="100" align="center"><template #default="{row}"><strong>{{ row.average ?? 0 }}</strong></template></el-table-column>
+      <el-table-column label="正确" prop="rightNum" width="90" align="center"><template #default="{row}"><span class="number number--green">{{ row.rightNum }}</span></template></el-table-column>
+      <el-table-column label="错误" prop="wrongNum" width="90" align="center"><template #default="{row}"><span class="number number--red">{{ row.wrongNum }}</span></template></el-table-column>
+      <el-table-column label="未提交" prop="absentNum" width="90" align="center"><template #default="{row}"><span class="number number--amber">{{ row.absentNum }}</span></template></el-table-column>
+      <el-table-column label="正确率" width="145" align="center"><template #default="{row}"><div class="accuracy-cell"><el-progress :percentage="getAccuracy(row)" :stroke-width="7" :show-text="false" /><span>{{ getAccuracy(row) }}%</span></div></template></el-table-column>
+      <el-table-column label="操作" width="110" fixed="right" align="right"><template #default="{row}"><el-button v-has="'problem:contest:statistic'" link type="primary" :icon="View" @click="toProblemScore(row)">查看分数</el-button></template></el-table-column>
+      <template #empty><el-empty description="当前没有题目统计" /></template>
+    </el-table>
+  </ContestSubPageShell>
 </template>
 
 <script setup lang="ts">
-
-import {useRoute, useRouter} from "vue-router";
 import {computed, ref} from "vue";
+import {useRoute, useRouter} from "vue-router";
+import {DataAnalysis, Refresh, View} from "@element-plus/icons-vue";
+import {getProblemStatistic, type ProblemStatistic} from "@/api/record";
 import type {IdType} from "@/api/common.ts";
-import {getProblemStatistic, type ProblemStatistic} from "@/api/record"
-import {round} from "lodash";
-import {useParamStore} from "@/stores/useParam.ts";
+import ContestSubPageShell from "@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue";
 
 const route = useRoute();
-
 const router = useRouter();
-
-const useParam = useParamStore();
-
-const contestId = ref<IdType>(<string>route?.params?.contestId);
-
-const list = ref<ProblemStatistic[]>([])
-
-const averageCorrect = computed(() => {
-  if (list.value.length === 0) {
-    return 0;
-  }
-  let total = 0;
-  list.value.forEach((element) => {
-    total += getAccuracy(element);
-  });
-
-  return round(total / list.value.length) * 100;
-})
-
-const getList = async () => {
-  list.value = await getProblemStatistic(contestId.value);
-}
-
-const getAccuracy = (row: ProblemStatistic) => {
-  const total = row.absentNum + row.rightNum + row.wrongNum;
-  if (total === 0) {
-    return 0;
-  }
-
-  return round(row.rightNum / total, 2) * 100;
-}
-
-const toStudentScore = (row: ProblemStatistic) => {
-
-  router.push({name: 'problem-scores', params: {contestId: contestId.value, problemId: row.problemId}});
-  useParam.set("ProblemStatistic", row);
-}
-
-
-
+const contestId = route.params.contestId as IdType;
+const loading = ref(false);
+const list = ref<ProblemStatistic[]>([]);
+const getAccuracy = (row: ProblemStatistic) => {const total = row.absentNum + row.rightNum + row.wrongNum; return total ? Math.round(row.rightNum / total * 100) : 0;};
+const averageAccuracy = computed(() => list.value.length ? Math.round(list.value.reduce((sum, row) => sum + getAccuracy(row), 0) / list.value.length) : 0);
+const stats = computed(() => [{label: '题目数量', value: list.value.length, tone: 'violet'}, {label: '平均正确率', value: `${averageAccuracy.value}%`, tone: 'green'}, {label: '总提交数', value: list.value.reduce((sum, row) => sum + row.rightNum + row.wrongNum, 0), tone: 'blue'}, {label: '未提交数', value: list.value.reduce((sum, row) => sum + row.absentNum, 0), tone: 'amber'}]);
+const getList = async () => {loading.value = true; try {list.value = await getProblemStatistic(contestId);} finally {loading.value = false;}};
+const toProblemScore = (row: ProblemStatistic) => router.push({name: 'problem-scores', params: {contestId, problemId: row.problemId}});
 getList();
-
 </script>
 
-<style lang="scss" scoped>
-@use "@/assets/styles/color" as *;
-::v-deep(.table) {
-  .header-cell {
-    height: 64px;
-    background-color: $table-header-color;
-  }
-
-  .el-progress__text {
-    font-size: 14px !important;
-  }
-
-  .row {
-    height: 64px;
-  }
-
-}
+<style scoped>
+.table-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }.table-heading strong, .table-heading span { display: block; }.table-heading strong { font-size: 15px; }.table-heading span { margin-top: 3px; color: var(--el-text-color-secondary); font-size: 11px; }.problem-cell { display: flex; align-items: center; gap: 9px; min-width: 0; }.problem-id { color: var(--el-text-color-placeholder); font: 11px var(--code-font-family, monospace); }.problem-cell :deep(.el-link) { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }.number { font-weight: 650; }.number--green { color: var(--el-color-success); }.number--red { color: var(--el-color-danger); }.number--amber { color: var(--el-color-warning); }.accuracy-cell { display: flex; align-items: center; gap: 8px; }.accuracy-cell :deep(.el-progress) { width: 72px; }.accuracy-cell span { width: 35px; color: var(--el-text-color-secondary); font-size: 11px; text-align: right; }
 </style>

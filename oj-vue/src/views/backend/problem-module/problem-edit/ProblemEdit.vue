@@ -1,6 +1,12 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
+  <ProblemModuleShell
+    title="题目管理"
+    kicker="PROBLEM / QUESTION BANK"
+    description="维护题目内容、题型、权限与测试数据，集中管理题库资产。"
+    :icon="Collection"
+    tone="blue"
+  >
+    <el-form :model="queryParams" class="filter-panel inline-form" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="题目" prop="problemName">
         <el-input
             v-model="queryParams.title"
@@ -35,7 +41,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="module-toolbar">
       <el-col :span="1.5">
         <el-button
             type="primary"
@@ -82,7 +88,7 @@
     </el-row>
 
 <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
-    <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
+    <el-table v-loading="isLoading" class="problem-table" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip/>
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" show-overflow-tooltip/>
@@ -117,8 +123,7 @@
               @click="handleDelete(scope.row)"
               v-has="'problem:problem:remove'"
           >删除</el-link>
-          <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
-                       v-has-any="['problem:tag:add'] ">
+          <el-dropdown v-if="canUseMore" size="small" @command="(command: string) => handleCommand(command, scope.row)">
             <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
             <template #dropdown>
               <el-dropdown-menu>
@@ -148,8 +153,9 @@
     />
 
 
-    <el-dialog title="管理题目标签" v-model="open" width="680px" append-to-body>
-      <div >
+    <el-dialog title="管理题目标签" v-model="open" class="tag-dialog" width="min(680px, 92vw)" append-to-body destroy-on-close>
+      <div class="dialog-intro"><span class="dialog-icon"><el-icon><CollectionTag /></el-icon></span><div><strong>为题目整理标签</strong><p>标签用于题库筛选和题目归类，当前已选择 {{ currentCards.length }} 个。</p></div></div>
+      <div class="tag-picker">
         <el-space v-loading="loadingCard" wrap>
           <el-check-tag
               v-for="item of allCards"
@@ -161,13 +167,11 @@
           </el-check-tag>
         </el-space>
       </div>
-      <template #footer>
-        <el-button type="primary" @click="submit" :loading="addIsLoading">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-      </template>
+      <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" @click="submit" :loading="addIsLoading">保存标签</el-button></template>
     </el-dialog>
 
-    <el-dialog title="上传题目" v-model="openUpload" width="680px" append-to-body>
+    <el-dialog title="上传题目" v-model="openUpload" class="upload-dialog" width="min(680px, 92vw)" append-to-body destroy-on-close>
+      <div class="dialog-intro"><span class="dialog-icon"><el-icon><UploadFilled /></el-icon></span><div><strong>批量导入题目</strong><p>仅支持符合平台格式的 JSON 文件，单文件不超过 500KB。</p></div></div>
       <el-upload
           drag
           ref="uploadRef"
@@ -188,16 +192,13 @@
           </div>
         </template>
       </el-upload>
-      <template #footer>
-        <el-button type="primary" @click="onHandleSubmit" :loading="isLoading">确 定</el-button>
-        <el-button @click="onUploadCancel">取 消</el-button>
-      </template>
+      <template #footer><el-button @click="onUploadCancel">取消</el-button><el-button type="primary" @click="onHandleSubmit" :loading="isLoading">开始导入</el-button></template>
     </el-dialog>
-  </div>
+  </ProblemModuleShell>
 </template>
 
 <script setup lang="ts">
-import {reactive, ref} from "vue";
+import {computed, reactive, ref} from "vue";
 import {
   type AdminQueryProblem,
   debouncedGetProblem,
@@ -221,11 +222,16 @@ import {
 import __ from "lodash";
 import {useRouter} from "vue-router";
 import {UploadFilled} from "@element-plus/icons-vue";
+import {Collection} from "@element-plus/icons-vue";
+import {CollectionTag} from "@element-plus/icons-vue";
+import ProblemModuleShell from "@/views/backend/problem-module/component/ProblemModuleShell.vue";
 import type {UploadAjaxError} from "element-plus/es/components/upload/src/ajax";
 import type {AjaxResult} from "@/utils/http";
 import type {IdType} from "@/api/common.ts";
+import {hasAnyPerm} from "@/utils/authUtil.ts";
 
 const router = useRouter();
+const canUseMore = computed(() => hasAnyPerm(['problem:tag:add', 'problem:problem:edit']));
 
 // 查询需要的表单数据
 const queryParams = reactive<AdminQueryProblem>({
@@ -461,4 +467,22 @@ getTag();
 ::v-deep(.el-table__row) .el-dropdown {
   height: 23px;
 }
+
+.filter-panel {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 13px;
+  background: var(--el-fill-color-light);
+}
+
+.module-toolbar { margin-bottom: 16px; }
+.problem-table { border-radius: 14px; overflow: hidden; }
+:deep(.el-table__header th.el-table__cell) { color: var(--el-text-color-secondary); font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); }
+:deep(.el-table__row td.el-table__cell) { height: 68px; }
+.dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--el-color-primary-light-9); color: var(--el-color-primary); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.tag-picker { min-height: 90px; padding: 12px; border: 1px dashed var(--el-border-color); border-radius: 12px; background: var(--el-bg-color-page); }
+@media (max-width: 760px) { .filter-panel { align-items: stretch; flex-direction: column; }.filter-panel :deep(.el-form-item) { margin-right: 0; } }
 </style>

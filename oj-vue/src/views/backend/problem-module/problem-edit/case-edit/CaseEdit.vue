@@ -1,5 +1,11 @@
 <template>
-  <div class="app-container">
+  <ProblemModuleShell
+    title="测试用例"
+    kicker="PROBLEM / TEST CASES"
+    :description="`管理题目 #${problemId} 的输入、输出与分值。`"
+    :icon="Files"
+    tone="blue"
+  >
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
@@ -63,7 +69,7 @@
     </el-row>
 
     <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
-    <el-table :data="tableList" @selection-change="handleSelectionChange" stripe flexible>
+    <el-table class="case-table" :data="tableList" @selection-change="handleSelectionChange" stripe flexible>
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="题例ID" align="center" prop="caseId" v-if="columns[0].visible" show-overflow-tooltip/>
       <el-table-column label="分数" align="center" prop="score" v-if="columns[1].visible" show-overflow-tooltip/>
@@ -91,7 +97,8 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog :title="title" v-model="openDialog" width="680px" append-to-body>
+    <el-dialog :title="title" v-model="openDialog" class="case-dialog" width="min(760px, 92vw)" append-to-body destroy-on-close>
+      <div class="dialog-intro"><span class="dialog-icon"><el-icon><Files /></el-icon></span><div><strong>配置测试用例</strong><p>每个测试用例可以手动输入，也可以上传输入和输出文件。</p></div></div>
       <el-form :model="form" label-width="100px" label-position="top">
         <el-row :gutter="20">
           <el-col :span="24">
@@ -148,7 +155,7 @@
         <el-button @click="cancel">取 消</el-button>
       </template>
     </el-dialog>
-  </div>
+  </ProblemModuleShell>
 </template>
 
 <script setup lang="ts">
@@ -165,6 +172,8 @@ import {addCase, downloadCase, listCase, type OjCaseView, removeCase} from "@/ap
 import {bytesToSize} from "@/utils/byte2size.ts";
 import useLoading from "@/hooks/useLoading.ts";
 import __ from "lodash";
+import {Files} from "@element-plus/icons-vue";
+import ProblemModuleShell from "@/views/backend/problem-module/component/ProblemModuleShell.vue";
 
 const router = useRouter();
 
@@ -305,4 +314,6 @@ getList();
 ::v-deep(.el-table__row) .el-dropdown {
   height: 23px;
 }
+
+.case-table { border-radius: 14px; overflow: hidden; }.dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--el-color-primary-light-9); color: var(--el-color-primary); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

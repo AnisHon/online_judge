@@ -1,5 +1,9 @@
 <template>
-  <div>
+  <div class="answer-page">
+    <div v-show="!isFullScreen" class="answer-toolbar">
+      <div class="answer-toolbar__title"><span class="answer-icon"><el-icon><DocumentChecked /></el-icon></span><div><span class="eyebrow">SUBMISSION REVIEW</span><strong>答题详情</strong><small>用户 #{{ userId }} · 题目 #{{ problemId }}</small></div></div>
+      <el-button text :icon="ArrowLeft" @click="router.back">返回上一页</el-button>
+    </div>
     <el-row justify="center" v-if="problem !== undefined" :gutter="20">
       <el-col class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
         <div class="header">
@@ -85,7 +89,6 @@
 
     </el-row>
 
-
   </div>
 </template>
 
@@ -104,11 +107,13 @@ import OnlineJudgeProblem from "@/components/DetailProblem/OnlineJudgeProblem.vu
 import ChoiceChoose from "@/components/DetailProblem/ChoiceChoose.vue";
 import FillBlank from "@/components/DetailProblem/FillBlank.vue";
 import {getUserAnswer} from "@/api/record";
-import {useRoute} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
+import {ArrowLeft, DocumentChecked} from "@element-plus/icons-vue";
 import __ from "lodash";
 
 
 const route = useRoute();
+const router = useRouter();
 
 // 题目对象
 const problem = ref<ProblemDetailView>();
@@ -296,7 +301,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.onreset = null;
+  window.onresize = null;
 
 })
 
@@ -306,6 +311,11 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 @use "@/assets/styles/color" as *;
+
+.answer-page { min-height: 100%; padding: 0 4px; color: var(--el-text-color-primary); }
+.answer-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 auto 14px; padding: 10px 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 14px; background: var(--el-bg-color); box-shadow: 0 8px 24px rgb(15 23 42 / 4%); }
+.answer-toolbar__title { display: flex; align-items: center; gap: 10px; }.answer-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.answer-toolbar__title > div:last-child { display: flex; flex-direction: column; gap: 2px; }.eyebrow { color: var(--el-color-primary); font-size: 10px; font-weight: 800; letter-spacing: .14em; }.answer-toolbar strong { font-size: 16px; }.answer-toolbar small { color: var(--el-text-color-secondary); font-size: 11px; }
+.problem-content, .problem-content + * { min-width: 0; }
 
 ::v-deep(.table) {
   .header-cell {

@@ -1,5 +1,11 @@
 <template>
-  <div class="app-container">
+  <ProblemModuleShell
+    title="题单题目"
+    kicker="COLLECTION / PROBLEMS"
+    :description="`管理题单 #${listId} 中的题目、顺序与分数。`"
+    :icon="List"
+    tone="green"
+  >
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
@@ -47,7 +53,7 @@
     </el-row>
 
     <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
-    <el-table v-loading="isLoading" :data="sortedTableList" @selection-change="handleSelectionChange">
+    <el-table v-loading="isLoading" class="list-problem-table" :data="sortedTableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
@@ -101,18 +107,20 @@
     />
 
 
-    <el-dialog title="选择题目" v-model="open" append-to-body>
-      <div>
+    <el-dialog title="添加题目到题单" v-model="open" class="add-problem-dialog" width="min(980px, 94vw)" append-to-body destroy-on-close>
+      <div class="dialog-intro"><span class="dialog-icon"><el-icon><List /></el-icon></span><div><strong>选择要加入的题目</strong><p>可以按题目、题型或标签筛选，选中后一次性加入当前题单。</p></div></div>
+      <div class="picker-body">
         <ListProblemView :list-id="listId" v-model="addProblemIds"/>
       </div>
       <template #footer>
-        <el-button type="primary" @click="submit" :loading="isAddLoading">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
+        <span class="selection-summary">已选择 {{ addProblemIds.length }} 道题目</span>
+        <el-button @click="cancel">取消</el-button>
+        <el-button type="primary" :disabled="!addProblemIds.length" @click="submit" :loading="isAddLoading">加入题单</el-button>
       </template>
     </el-dialog>
 
 
-  </div>
+  </ProblemModuleShell>
 </template>
 
 <script setup lang="ts">
@@ -135,6 +143,8 @@ import {
 } from "@/api/list";
 import ListProblemView from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemView.vue";
 import type {IdType} from "@/api/common.ts";
+import {List} from "@element-plus/icons-vue";
+import ProblemModuleShell from "@/views/backend/problem-module/component/ProblemModuleShell.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -343,4 +353,7 @@ getList();
 ::v-deep(.el-table__row) .el-dropdown {
   height: 23px;
 }
+
+.list-problem-table { border-radius: 14px; overflow: hidden; }
+.dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: rgb(5 150 105 / 12%); color: var(--el-color-success); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.picker-body { min-height: 420px; max-height: 62vh; overflow: auto; }.selection-summary { margin-right: auto; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

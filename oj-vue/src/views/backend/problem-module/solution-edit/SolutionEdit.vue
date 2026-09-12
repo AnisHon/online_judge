@@ -1,329 +1,62 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="发送者ID" prop="className">
-        <el-input
-            v-model="queryParams.userId"
-            placeholder="请输入发送者ID"
+  <ProblemModuleShell title="题解管理" kicker="PROBLEM / SOLUTIONS" description="审核与维护题解内容，连接题目、作者和公开展示。" :icon="EditPen" tone="violet">
+    <div class="module-toolbar">
+      <div><span class="eyebrow">KNOWLEDGE BASE</span><strong>题解列表</strong><small>共 {{ total }} 条题解</small></div>
+      <div class="toolbar-actions"><el-button :icon="Refresh" :loading="loading" @click="getList">刷新题解</el-button><el-button v-has="'problem:solution:add'" type="primary" :icon="Plus" @click="handleAdd">新增题解</el-button><el-button v-has="'problem:solution:remove'" type="danger" plain :disabled="!ids.length" :icon="Delete" @click="handleDelete()">删除</el-button></div>
+    </div>
 
-            @keyup.enter.native="handleQuery"
-            :controls="false"
-        />
-      </el-form-item>
-      <el-form-item label="题目ID" prop="parentId">
-        <el-input
-            v-model="queryParams.problemId"
-            placeholder="请输入题目ID"
-            :controls="false"
-        />
-      </el-form-item>
+    <div class="filter-panel">
+      <div class="filter-field"><label>发布者 ID</label><el-input v-model="queryParams.userId" clearable placeholder="按用户筛选" @keyup.enter="handleQuery" /></div>
+      <div class="filter-field"><label>题目 ID</label><el-input v-model="queryParams.problemId" clearable placeholder="按题目筛选" @keyup.enter="handleQuery" /></div>
+      <div class="filter-actions"><el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button><el-button :icon="Refresh" @click="resetQuery">重置</el-button></div>
+    </div>
 
-      <el-form-item>
-        <el-button type="primary" icon="search"  @click="handleQuery">搜索</el-button>
-        <el-button icon="refresh"  @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-            type="primary"
-            plain
-            icon="plus"
-            size="small"
-            @click="handleAdd"
-            v-has="'problem:solution:add'"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="success"
-            plain
-            icon="edit"
-            size="small"
-            :disabled="single"
-            @click="handleUpdate()"
-            v-has="'problem:solution:edit'"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="danger"
-            plain
-            icon="delete"
-            size="small"
-            :disabled="multiple"
-            @click="handleDelete"
-            v-has="'problem:solution:remove'"
-        >删除</el-button>
-      </el-col>
-      <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
-    </el-row>
-
-    <el-table :data="tableList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="题解ID" align="center" prop="solutionId" v-if="columns[0].visible" show-overflow-tooltip/>
-      <el-table-column label="标题" align="center" prop="title" v-if="columns[1].visible" show-overflow-tooltip/>
-      <el-table-column label="置顶" align="center" prop="topUp" v-if="columns[2].visible" >
-        <template v-slot="scope">
-          <el-switch
-              :active-value="true"
-              :inactive-value="false"
-              v-model="scope.row.topUp"
-              @change="handlePrivateChange(scope.row)"
-          />
-        </template>
+    <el-table v-loading="loading" class="solution-table" :data="tableList" row-key="solutionId" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="54" align="center" />
+      <el-table-column label="题解" min-width="330">
+        <template #default="{ row }"><div class="solution-title-cell"><span class="solution-icon"><el-icon><EditPen /></el-icon></span><div><strong :title="row.title">{{ row.title }}</strong><span>#{{ row.solutionId }} · {{ row.problemTitle || `题目 #${row.problemId}` }}</span></div></div></template>
       </el-table-column>
-      <el-table-column label="发布者昵称" align="center" prop="nikeName" v-if="columns[3].visible" />
-      <el-table-column label="是否公开" align="center" prop="private_" v-if="columns[4].visible" >
-        <template v-slot="scope">
-          <el-tag v-if="scope.row.private_" type="success">公开</el-tag>
-          <el-tag v-else type="danger">私有</el-tag>
-        </template>
-
-      </el-table-column>
-      <el-table-column label="题目" align="center" prop="problemTitle" v-if="columns[5].visible" show-overflow-tooltip/>
-      <el-table-column label="内容" align="center" prop="content" v-if="columns[6].visible" show-overflow-tooltip/>
-      <el-table-column label="创建日期" align="center" prop="createTime" v-if="columns[7].visible" show-overflow-tooltip />
-      <el-table-column label="更新日期" align="center" prop="updateTime" v-if="columns[8].visible" show-overflow-tooltip />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
-        <template v-slot:default="scope">
-          <el-link
-              size="small"
-              type="primary"
-              icon="edit"
-              @click="handleUpdate(scope.row)"
-              v-has="'problem:solution:edit'"
-          >修改</el-link>
-          <el-link
-              size="small"
-              type="primary"
-              icon="delete"
-              @click="handleDelete(scope.row)"
-              v-has="'problem:solution:remove'"
-          >删除</el-link>
-          <el-dropdown size="small" @command="(command: string) => handleCommand(command, scope.row)"
-                       v-has-any="['problem:solution:list'] ">
-            <el-link size="small" type="primary" icon="arrow-right">更多</el-link>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <div v-has="'problem:solution:list'" >
-                  <el-dropdown-item command="openSolution" icon="Monitor">
-                    查看题解
-                  </el-dropdown-item>
-                </div>
-              </el-dropdown-menu>
-            </template>
-
-          </el-dropdown>
-        </template>
-      </el-table-column>
-
-      <template>
-        <el-empty description="没有任何数据项"/>
-      </template>
+      <el-table-column label="作者" min-width="150"><template #default="{ row }"><div class="author-cell"><strong>{{ row.nikeName || '匿名用户' }}</strong><span>ID {{ row.userId }}</span></div></template></el-table-column>
+      <el-table-column label="展示状态" width="170"><template #default="{ row }"><div class="status-stack"><span :class="['status-pill', row.private_ ? 'is-private' : 'is-public']">{{ row.private_ ? '私有' : '公开' }}</span><span v-if="row.topUp" class="pin-label">已置顶</span></div></template></el-table-column>
+      <el-table-column label="置顶" width="100"><template #default="{ row }"><el-switch v-has="'problem:solution:edit'" v-model="row.topUp" size="small" @change="handlePrivateChange(row)" /></template></el-table-column>
+      <el-table-column label="更新时间" min-width="190" prop="updateTime" show-overflow-tooltip />
+      <el-table-column label="操作" width="230" fixed="right" align="right"><template #default="{ row }"><el-space><el-button v-has="'problem:solution:list'" link type="primary" :icon="View" @click="handleCommand('openSolution', row)">查看</el-button><el-button v-has="'problem:solution:edit'" link type="primary" :icon="Edit" @click="handleUpdate(row)">编辑</el-button><el-button v-has="'problem:solution:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button></el-space></template></el-table-column>
+      <template #empty><el-empty description="还没有题解" /></template>
     </el-table>
-
-    <pagination
-        v-show="total>0"
-        :total="total"
-        v-model:page="queryParams.currentPage"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-    />
-  </div>
+    <Pagination v-show="total > 0" v-model:page="queryParams.currentPage" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+  </ProblemModuleShell>
 </template>
 
 <script setup lang="ts">
-import {reactive, ref} from "vue";
-import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
-import Pagination from "@/components/pageination/Pagination.vue";
+import { reactive, ref } from 'vue'
+import { Delete, Edit, EditPen, Plus, Refresh, Search, View } from '@element-plus/icons-vue'
+import { ElMessageBox, ElNotification } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { deleteSolutionAdmin, listSolutionAdmin, lowDown, type QuerySolution, type Solution, topUp } from '@/api/solution'
+import type { IdType } from '@/api/common'
+import Pagination from '@/components/pageination/Pagination.vue'
+import ProblemModuleShell from '@/views/backend/problem-module/component/ProblemModuleShell.vue'
 
-import {ElMessageBox, ElNotification} from "element-plus";
-
-import {useRouter} from "vue-router";
-import {
-  deleteSolutionAdmin,
-  listSolutionAdmin, lowDown,
-  type QuerySolution,
-  type Solution, topUp
-} from "@/api/solution";
-import type {IdType} from "@/api/common.ts";
-
-const router = useRouter();
-
-// 查询需要的表单数据
-const queryParams = reactive<QuerySolution>({
-  asc: true,
-  currentPage: 1,
-  pageSize: 20,
-  problemId: undefined,
-  userId: undefined,
-});
-
-// 多选或者单选
-const single = ref(true)
-const multiple = ref(true)
-
-// 选择列的id数组
+const router = useRouter()
+const queryParams = reactive<QuerySolution>({ asc: true, currentPage: 1, pageSize: 20, problemId: undefined, userId: undefined })
+const tableList = reactive<Solution[]>([])
+const total = ref(0)
 const ids = ref<IdType[]>([])
+const loading = ref(false)
+const handleQuery = () => { queryParams.currentPage = 1; getList() }
+const resetQuery = () => { queryParams.problemId = undefined; queryParams.userId = undefined; queryParams.sortColumn = undefined; handleQuery() }
+const getList = async () => { loading.value = true; try { const data = await listSolutionAdmin(queryParams); tableList.length = 0; total.value = data.totalRecords; tableList.push(...data.data) } finally { loading.value = false } }
+const handleSelectionChange = (selection: Solution[]) => { ids.value = selection.map((item) => item.solutionId) }
+const handlePrivateChange = (row: Solution) => { const text = row.topUp ? '置顶' : '取消置顶'; ElMessageBox.confirm(`确认要${text}此题解吗？`, '更新展示状态', { confirmButtonText: '确认', cancelButtonText: '取消' }).then(() => row.topUp ? topUp(row.solutionId) : lowDown(row.solutionId)).then((data) => { if (data) ElNotification.success(text + '成功'); else { row.topUp = !row.topUp; ElNotification.warning(text + '失败') } }).catch(() => { row.topUp = !row.topUp }) }
+const handleDelete = (row?: Solution) => { const target = row ? [row.solutionId] : ids.value; if (!target.length) return; ElMessageBox.confirm(`确定删除选中的 ${target.length} 条题解吗？`, '删除题解', { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }).then(() => deleteSolutionAdmin(target)).then(getList).catch(() => {}) }
+const handleAdd = () => router.push({ name: 'solution_edit' })
+const handleUpdate = (data?: Solution) => { const id = data?.solutionId || ids.value[0]; if (id) router.push({ name: 'solution_edit', query: { solutionId: id } }) }
+const handleCommand = (command: string, row: Solution) => { if (command === 'openSolution') router.push({ name: 'solution', params: { id: row.solutionId } }) }
 
-const columns = ref([
-  {
-    key: 0,
-    label: "题解ID",
-    visible: true,
-  },
-  {
-    key: 1,
-    label: "标题",
-    visible: true,
-  },
-  {
-    key: 2,
-    label: "置顶",
-    visible: true,
-  },
-  {
-    key: 3,
-    label: "发布者昵称",
-    visible: true,
-  },
-  {
-    key: 4,
-    label: "是否公开",
-    visible: true,
-  },
-  {
-    key: 5,
-    label: "题目",
-    visible: true,
-  },
-  {
-    key: 6,
-    label: "内容",
-    visible: true,
-  },
-  {
-    key: 7,
-    label: "创建日期",
-    visible: true,
-  },
-  {
-    key: 8,
-    label: "更新日期",
-    visible: true,
-  }
-]);
-
-
-// 重制列表
-const resetQuery = () => {
-  queryParams.problemId = undefined;
-  queryParams.userId = undefined;
-  queryParams.sortColumn = undefined;
-
-  getList();
-};
-
-const showSearch = ref(true);
-
-
-const tableList = reactive<Solution[]>([]);
-const total = ref<number>(0);
-
-// 获取列表
-const getList = async () => {
-  const data = await listSolutionAdmin(queryParams)
-  tableList.length = 0;
-  total.value = data.totalRecords
-  tableList.push(...data.data)
-
-}
-
-// 用户状态修改
-const handlePrivateChange = (row: Solution) => {
-  const text = row.topUp ? "置顶" : "取消置顶";
-  ElMessageBox.confirm('确认要' + text + "此题解吗?").then(function() {
-    if (row.topUp) {
-      return topUp(row.solutionId);
-    } else {
-      return lowDown(row.solutionId);
-    }
-  }).then((data) => {
-    if (data) {
-      ElNotification.success(text + "成功");
-    } else {
-      ElNotification.warning(text + "失败");
-    }
-  }).catch(function() {
-    row.topUp = !row.topUp;
-  });
-};
-
-const handleSelectionChange = (selection: Solution[]) => {
-  ids.value = selection.map(item => item.solutionId);
-  single.value = selection.length != 1;
-  multiple.value = !selection.length;
-}
-
-
-
-const handleDelete = (row?: Solution) => {
-  const id = row ? row.solutionId : ids.value[0];
-  ElMessageBox.confirm(`您是否要删除ID为${id}的数据项？` , {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  })
-      .then(() => {
-        deleteSolutionAdmin(id).then(getList);
-      })
-
-}
-
-// 搜索按钮
-const handleQuery = () => {
-  getList();
-  single.value = false
-  multiple.value = false;
-}
-
-
-const handleAdd = () => {
-  router.push({name: 'solution_edit'})
-}
-
-const handleUpdate = (data: Solution | void) => {
-  const id = data ? data.solutionId : ids.value[0];
-  router.push({name: 'solution_edit', query: {solutionId: id}});
-}
-
-
-const handleCommand = (command: string, row: Solution) => {
-  if (command === "openSolution") {
-    router.push({name: 'solution', params: {id: row.solutionId}});
-  }
-}
-
-// created -> 获取列表
 getList()
-
 </script>
 
 <style lang="scss" scoped>
-
-::v-deep(.inline-form) {
-  .el-input {
-    --el-input-width: 220px;
-  }
-
-  .el-select {
-    --el-select-width: 220px;
-  }
-
-}
-
-::v-deep(.el-table__row) .el-dropdown {
-  height: 23px;
-}
+.module-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 18px; }.module-toolbar > div:first-child { display: flex; align-items: baseline; gap: 10px; }.eyebrow { color: #8b5cf6; font-size: 10px; font-weight: 800; letter-spacing: .14em; }.module-toolbar strong { font-size: 18px; }.module-toolbar small { color: var(--el-text-color-secondary); font-size: 12px; }.toolbar-actions { display: flex; gap: 9px; }.filter-panel { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 18px; padding: 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 13px; background: var(--el-fill-color-light); }.filter-field { width: 220px; }.filter-field label { display: block; margin-bottom: 6px; color: var(--el-text-color-secondary); font-size: 12px; }.filter-actions { display: flex; gap: 8px; }.solution-table { border-radius: 14px; overflow: hidden; }.solution-title-cell { display: flex; align-items: center; gap: 12px; }.solution-icon { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 11px; background: rgb(139 92 246 / 12%); color: #8b5cf6; }.solution-title-cell div:last-child, .author-cell, .status-stack { display: flex; flex-direction: column; gap: 4px; }.solution-title-cell strong { max-width: 290px; overflow: hidden; color: var(--el-text-color-primary); text-overflow: ellipsis; white-space: nowrap; }.solution-title-cell span, .author-cell span { color: var(--el-text-color-secondary); font-size: 12px; }.author-cell strong { color: var(--el-text-color-primary); font-size: 13px; }.status-pill { width: fit-content; padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }.status-pill.is-public { background: color-mix(in srgb, var(--el-color-success) 10%, var(--el-bg-color)); color: var(--el-color-success); }.status-pill.is-private { background: var(--el-fill-color-light); color: var(--el-text-color-secondary); }.pin-label { color: var(--el-color-warning); font-size: 11px; }.dialog-intro { margin-bottom: 20px; padding: 14px 16px; border-radius: 12px; background: var(--el-fill-color-light); }
+@media (max-width: 720px) { .module-toolbar, .filter-panel { align-items: stretch; flex-direction: column; }.module-toolbar > div:first-child { flex-wrap: wrap; }.toolbar-actions, .filter-field, .filter-actions { width: 100%; }.filter-field { width: auto; } }
 </style>
