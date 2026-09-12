@@ -75,7 +75,7 @@ export interface Splice extends ChunkInfo {
 }
 
 export const countOnline = async (): Promise<number> => {
-    const {data} = await get<number>("/content-api/info/online");
+    const {data} = await get<number>("/user-api/auth/count");
     return data;
 }
 

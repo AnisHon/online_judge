@@ -98,6 +98,8 @@ const {isLoading, loading, sendCheckIn} = checkInFetcher((data) => {
   dialogBodyText.value = data.success ?`${data.msg},得到${data.award}积分` : data.msg;
   isCheckIn.value = true;
 
+  window.dispatchEvent(new Event('oj:point-refresh'));
+
   refresh();
 });
 

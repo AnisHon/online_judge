@@ -43,7 +43,6 @@ interface JudgeForm {
     languageId?: IdType;
     answers: Answer[];
     code: string;
-    uuid?: string;
 
 }
 
@@ -124,7 +123,7 @@ async function fetchLog(id: number, success: successCallback<LogSubmit>) {
 }
 
 /**
- * 不依赖 SSE 的提交状态轮询。默认每秒查询一次，返回停止函数供页面卸载时清理。
+ * 提交状态轮询。默认每秒查询一次，返回停止函数供页面卸载时清理。
  */
 async function pollSubmission(
     id: IdType,

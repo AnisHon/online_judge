@@ -78,7 +78,7 @@ OJ_JUDGE_MAX_SUBMISSIONS=1
 OJ_JUDGE_QUEUE_CAPACITY=200
 ```
 
-普通用户查询提交结果使用 `GET /problem-api/log/submissions/{submitId}`，按约 1 秒短轮询即可；旧 SSE 接口仍保留兼容，但新页面不需要依赖它。
+普通用户查询提交结果使用 `GET /problem-api/log/submissions/{submitId}`，按约 1 秒短轮询即可；项目不再保留长连接推送接口。
 
 管理员诊断接口为 `GET /problem-api/log/admin/{submitId}` 和
 `GET /problem-api/log/admin/{submitId}/cases`，均要求 `problem:judge:case:read`。

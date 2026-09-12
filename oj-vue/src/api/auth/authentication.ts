@@ -4,7 +4,6 @@ import {useUserStore} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
 import router from '@/router'
 import {useMenuStore} from "@/stores/useMenuStore";
-import {closeSse, initSSE, SSE_URL} from "@/utils/sse";
 
 export interface LoginForm {
     captchaCode: string;
@@ -76,7 +75,6 @@ const finishLogin = async (token: string, refreshToken?: string) => {
         tokenStore.setTokens(token, refreshToken);
         await useUserStore().loadUser();
         await useMenuStore().getTree();
-        initSSE();
         await router.replace({name: "home"});
     } catch (error) {
         tokenStore.clearToken();
@@ -129,7 +127,6 @@ async function resetPassword(data: {code: string, password: string}) {
 }
 
 async function logout() {
-    closeSse(SSE_URL);
     try {
         await get("/user-api/auth/logout");
     } finally {

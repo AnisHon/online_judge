@@ -20,9 +20,6 @@ public class JudgeInfo {
 
     private Long userId;
 
-    /** 旧版 SSE 通知链路的兼容 ID；HTTP 轮询不依赖它。 */
-    private String uuid;
-
     private Long problemId;
 
     private Long contestId;

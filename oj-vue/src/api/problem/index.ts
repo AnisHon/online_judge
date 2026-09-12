@@ -288,7 +288,7 @@ export async function getDetailProblem(id: IdType): Promise<ProblemDetailView> {
 }
 
 const recentSubmit = async (problemId: IdType) => {
-    const {data} = await get<LogSubmit[], IdType>("/problem-api/log/recentSubmit/", problemId);
+    const {data} = await get<LogSubmit[], IdType>("/problem-api/log/recentSubmit", problemId);
     return data
 }
 

@@ -1,7 +1,6 @@
 package com.anishan.content.controller;
 
 import com.anishan.commons.domain.R;
-import com.anishan.content.service.SseService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +19,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class InfoController {
 
-    private final SseService sseService;
-
     @Value("${site.name:言语代码}")
     private String siteName;
 
@@ -35,14 +32,6 @@ public class InfoController {
         data.put("siteName", siteName);
         data.put("icpNumber", icpNumber);
         return R.success(data);
-    }
-
-    @ResponseBody
-    @ApiOperation("在线人数")
-    @GetMapping("/online")
-//    @PreAuthorize("hasAuthority('content:info')")
-    public R<Long> online() {
-        return R.success(sseService.count());
     }
 
     @ResponseBody

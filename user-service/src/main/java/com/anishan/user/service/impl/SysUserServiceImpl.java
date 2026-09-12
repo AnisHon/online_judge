@@ -6,8 +6,6 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.api.annotation.EnableCache;
-import com.anishan.api.client.content.client.ContentInternalClient;
-import com.anishan.api.client.user.domain.SseMessage;
 import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.domain.entity.SysRole;
@@ -16,7 +14,6 @@ import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
-import com.anishan.commons.enumeration.SseEvent;
 import com.anishan.commons.enumeration.UserState;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.commons.util.ThrowUtil;
@@ -36,7 +33,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -65,7 +61,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     private final UserConfig config;
     private final SysMenuService sysMenuService;
     private final AuthUtil authUtil;
-    private final ContentInternalClient contentInternalClient;
     private final UserConfig userConfig;
 
     @Override
@@ -76,18 +71,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
 
     // +=操作使用事务
-    @SneakyThrows
     @Transactional
     @Override
     public boolean addPoint(Long userId, BigDecimal point) {
 
         boolean b = sysUserMapper.addPoints(userId, point) > 0;
 
-        UserPoint userPoint = getPoint(userId);
-
-        SseMessage message = SseMessage.create(userId, SseEvent.UPDATE_POINT, userPoint);
-
-        contentInternalClient.sendMessage(message);
         return b;
     }
 
@@ -388,6 +377,4 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
 
 }
-
-
 

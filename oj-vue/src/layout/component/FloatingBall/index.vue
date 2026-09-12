@@ -33,7 +33,6 @@
 import {ArrowRight, Coin} from "@element-plus/icons-vue";
 
 import DrawerContent from "@/layout/component/FloatingBall/DrawerContent.vue";
-import {onSse, SseEvent} from "@/utils/sse";
 import {getMyPoint} from "@/api/user/index.ts";
 import IconCoin from "@/assets/icons/IconCoin.vue";
 
@@ -47,7 +46,8 @@ export default {
       startPosY: 0,
       startPosX: 0,
       isDragged: false,
-      point: 0
+      point: 0,
+      pointTimer: null
     };
   },
   computed: {
@@ -92,21 +92,55 @@ export default {
       this.isDragged = false;
 
     },
-    changePoint(point) {
-      this.point = point.point;
+    refreshPoint() {
+      if (document.visibilityState !== 'visible') return;
+      getMyPoint()
+          .then((point) => {
+            this.point = point ?? 0;
+          })
+          .catch(() => undefined);
+    },
+    startPointPolling() {
+      this.stopPointPolling();
+      if (document.visibilityState !== 'visible') return;
+      this.pointTimer = window.setInterval(() => this.refreshPoint(), 30000);
+    },
+    stopPointPolling() {
+      if (this.pointTimer !== null) {
+        window.clearInterval(this.pointTimer);
+        this.pointTimer = null;
+      }
+    },
+    handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        this.refreshPoint();
+        this.startPointPolling();
+      } else {
+        this.stopPointPolling();
+      }
+    },
+    handleWindowFocus() {
+      this.refreshPoint();
+    },
+    handlePointRefresh() {
+      this.refreshPoint();
     }
 
   },
   mounted() {
-    // initSSE("/user-api/sse")
-    onSse(SseEvent.UPDATE_POINT, this.changePoint)
-
-
-    getMyPoint()
-        .then((point) => {
-          this.point = point;
-        })
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    window.addEventListener('focus', this.handleWindowFocus);
+    window.addEventListener('oj:point-refresh', this.handlePointRefresh);
+    this.refreshPoint();
+    this.startPointPolling();
   },
+
+  beforeUnmount() {
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    window.removeEventListener('focus', this.handleWindowFocus);
+    window.removeEventListener('oj:point-refresh', this.handlePointRefresh);
+    this.stopPointPolling();
+  }
 
 
 

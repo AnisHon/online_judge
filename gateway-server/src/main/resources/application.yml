@@ -39,7 +39,7 @@ spring:
         - id: content-resource
           uri: lb://content-service
           predicates:
-            - Path=/image/**, /avatar/**, /file/**, /sse/**
+            - Path=/image/**, /avatar/**, /file/**
 
 
 knife4j:
@@ -91,5 +91,4 @@ oj:
       - "/*/v3/**"
       - "/*/doc.html"
       - "/*/webjars/**"
-
 

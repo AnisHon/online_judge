@@ -426,7 +426,7 @@ const errMsg = ref<string>();
 // 所有提交日志
 const submitLogs = reactive<LogSubmit[]>([])
 
-// OJ 提交状态只通过 HTTP 短轮询获取，不依赖 SSE 长连接。
+// OJ 提交状态只通过 HTTP 短轮询获取。
 const activeSubmissionId = ref<IdType>();
 const activeSubmission = ref<LogSubmit>();
 const submissionPolls = new Map<string, () => void>();
@@ -519,8 +519,6 @@ const handleTestSubmit = async () => {
 };
 
 const submitOj = async () => {
-  const uuid = requestUuid();
-  judgeForm.uuid = uuid;
   const payload = JSON.parse(JSON.stringify(judgeForm)) as JudgeForm;
   try {
     const data = await judge(payload, (message) => ElNotification.error({title: "提交失败", message}));
@@ -548,7 +546,7 @@ const submitOj = async () => {
   }
 };
 
-// 提交入口不再 debounce，也不依赖 SSE；连续提交由判题队列按容量自然排队。
+// 提交入口不再 debounce；连续提交由判题队列按容量自然排队。
 const onHandleSubmit = async () => {
   stdout.value = "";
   errMsg.value = undefined;
@@ -662,7 +660,12 @@ const getProblem = async () => {
   // 取题目
   get(problemId)
 
-  await getLogs();
+  try {
+    await getLogs();
+  } catch {
+    // 提交记录是题目页的辅助信息，加载失败不应阻断题目正文。
+    submitLogs.length = 0;
+  }
 
 }
 

@@ -32,7 +32,4 @@ public class JudgeRequest {
     @ApiModelProperty("填空选择答案")
     private List<JudgeAnswer> answers;
 
-    @ApiModelProperty("请求标识，兼容旧版判题链路")
-    private String uuid;
-
 }

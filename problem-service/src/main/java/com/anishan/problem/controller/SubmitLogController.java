@@ -61,18 +61,18 @@ public class SubmitLogController {
 
     @GetMapping("/get/{id}")
     @ApiOperation("外部接口，用户获取运行结果")
-    @PreAuthorize("hasAuthority('problem:submit:read')")
+    @PreAuthorize("isAuthenticated()")
     public R<SubmitLogVo> getLog(@PathVariable("id") Long id, @RequestHeader("user-id")Long userId) {
         SubmitLogVo log = submitLogService.getLog(id, userId);
         return R.success(log);
     }
 
     /**
-     * HTTP 短轮询接口。前端按 1 秒左右的频率调用即可，不依赖 SSE 连接。
+     * HTTP 短轮询接口。前端按 1 秒左右的频率调用即可。
      */
     @GetMapping("/submissions/{id}")
     @ApiOperation("轮询指定提交状态")
-    @PreAuthorize("hasAuthority('problem:submit:read')")
+    @PreAuthorize("isAuthenticated()")
     public R<SubmitLogVo> poll(@PathVariable("id") Long id, @RequestHeader("user-id") Long userId) {
         return R.success(submitLogService.getLog(id, userId));
     }
@@ -97,7 +97,7 @@ public class SubmitLogController {
 
     @GetMapping("/recentSubmit/{problemId}")
     @ApiOperation("最近提交记录")
-    @PreAuthorize("hasAuthority('problem:submit:read')")
+    @PreAuthorize("isAuthenticated()")
     public R<List<SubmitLogVo>> recentSubmit(
             @NotNull @PathVariable("problemId") Long problemId,
             @RequestHeader("user-id") Long userId
