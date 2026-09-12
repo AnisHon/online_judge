@@ -1,208 +1,238 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="菜单名称" prop="menuName">
-        <el-input
-            v-model="queryParams.menuName"
-            placeholder="请输入菜单名称"
+  <ContestSubPageShell
+      title="权限管理"
+      kicker="USER / AUTHORIZATION"
+      description="以菜单资源树维护后台导航、权限标识和路由入口，父子关系一目了然。"
+      :icon="Key"
+      tone="violet"
+      :stats="summaryStats"
+  >
+    <template #actions>
+      <el-button :icon="Refresh" :loading="isLoading" @click="getList">刷新资源树</el-button>
+      <el-button v-has="'user:menu:add'" type="primary" :icon="Plus" @click="handleAdd()">新增资源</el-button>
+    </template>
 
-            @keyup.enter.native="handleQuery"
-            clearable
-        />
-      </el-form-item>
-      <el-form-item label="权限标识" prop="perms">
-        <el-input
-            v-model="queryParams.perms"
-            placeholder="请输入权限标识"
-            clearable
-            @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="菜单类型" prop="menuType">
-        <el-select
-            v-model="queryParams.menuType"
-            placeholder="菜单类型"
-            clearable
-            style="width: 120px"
-        >
-          <el-option
-              v-for="item in dict.menuType"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="父菜单ID" prop="parentId">
-        <el-input-number v-model="queryParams.parentId" :controls="false"/>
-      </el-form-item>
+    <section class="auth-panel">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-eyebrow">RESOURCE HIERARCHY</span>
+          <h2>菜单资源树</h2>
+          <p>菜单栏、菜单项和按钮按父子关系组织；权限标识是角色授权的实际依据。</p>
+        </div>
+        <div class="panel-heading__meta"><span class="sync-dot" :class="{ 'is-loading': isLoading }"></span><span>{{
+            isLoading ? '正在同步' : `共 ${allMenus.length} 个资源`
+          }}</span></div>
+      </div>
 
-      <el-form-item>
-        <el-button type="primary" icon="search"  @click="handleQuery">搜索</el-button>
-        <el-button icon="refresh"  @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-            type="primary"
-            plain
-            icon="plus"
-            size="small"
-            @click="handleAdd"
-            v-has="'user:menu:add'"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="success"
-            plain
-            icon="edit"
-            size="small"
-            :disabled="single"
-            @click="handleUpdate()"
-            v-has="'user:menu:edit'"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="danger"
-            plain
-            icon="delete"
-            size="small"
-            :disabled="multiple"
-            @click="handleDelete"
-            v-has="'user:menu:remove'"
-        >删除</el-button>
-      </el-col>
-      <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
-    </el-row>
-
-<!--    ['菜单ID', '菜单名称', '菜单类型', '父菜单ID', '菜单图标', '权限标识', '路由路径', '顺序', '创建时间', '标注']-->
-    <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="菜单ID" align="center" prop="menuId" v-if="columns[0].visible" show-overflow-tooltip />
-      <el-table-column label="菜单名称" align="center" prop="menuName" v-if="columns[1].visible" />
-      <el-table-column label="菜单类型" align="center" prop="menuType" v-if="columns[2].visible" />
-      <el-table-column label="父菜单ID" align="center" prop="parentId" v-if="columns[3].visible" show-overflow-tooltip />
-      <el-table-column label="菜单图标" align="center" prop="icon" v-if="columns[4].visible">
-        <template v-slot="scope">
-          <div v-if="scope.row.icon !== '#'">
-            <icon-loader :icon="scope.row.icon" />
+      <div class="filter-panel">
+        <div class="filter-panel__bar">
+          <div class="filter-title">
+            <el-icon>
+              <Filter/>
+            </el-icon>
+            <strong>定位资源</strong><span v-if="activeFilterCount">{{ activeFilterCount }} 项已启用</span></div>
+          <div class="tree-actions">
+            <el-button link type="primary" :icon="expandedAll ? Fold : Expand" @click="toggleExpand">
+              {{ expandedAll ? '收起全部' : '展开全部' }}
+            </el-button>
+            <el-button link @click="clearFilters">清除筛选</el-button>
           </div>
-          <div v-else>
-            {{ scope.row.icon }}
+        </div>
+        <el-form :model="queryParams" class="auth-filters" label-position="top" @submit.prevent="handleQuery">
+          <el-form-item label="资源名称" prop="menuName">
+            <el-input v-model="queryParams.menuName" clearable :prefix-icon="Search" placeholder="搜索菜单名称"
+                      @keyup.enter="handleQuery"/>
+          </el-form-item>
+          <el-form-item label="权限标识" prop="perms">
+            <el-input v-model="queryParams.perms" clearable :prefix-icon="Lock" placeholder="例如 user:user:list"
+                      @keyup.enter="handleQuery"/>
+          </el-form-item>
+          <el-form-item label="资源类型" prop="menuType">
+            <el-select v-model="queryParams.menuType" clearable class="full-width" placeholder="全部类型">
+              <el-option v-for="item in dict.menuType" :key="item.value" :label="item.label" :value="item.value"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="资源 ID" prop="menuId">
+            <el-input v-model="queryParams.menuId" clearable :prefix-icon="Key" placeholder="输入 ID"
+                      @keyup.enter="handleQuery"/>
+          </el-form-item>
+          <div class="filter-actions">
+            <el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button>
+            <el-button :icon="Refresh" @click="clearFilters">重置</el-button>
           </div>
+        </el-form>
+      </div>
 
+      <div class="list-toolbar">
+        <div class="list-toolbar__left"><span class="selection-status" :class="{ 'has-selection': selectedIds.length }"><el-icon><Select/></el-icon>{{
+            selectedIds.length ? `已选择 ${selectedIds.length} 个资源` : '未选择资源'
+          }}</span>
+          <el-button v-has="'user:menu:remove'" type="danger" plain :disabled="!selectedIds.length || actionLoading"
+                     :icon="Delete" @click="handleDelete()">批量删除
+          </el-button>
+        </div>
+        <span class="tree-caption">{{ filteredCount }} 个匹配资源 · 树形结果会保留父级路径</span>
+      </div>
+
+      <el-table ref="tableRef" v-loading="isLoading" class="auth-table" :data="filteredTree" row-key="id" :indent="0"
+                :row-style="treeRowStyle" :tree-props="{ children: 'children' }"
+                @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="52" align="center"/>
+        <el-table-column v-if="columns[0].visible" class-name="resource-column" label="资源" min-width="320">
+          <template #default="{ row }">
+            <div class="resource-cell" :style="resourceCellStyle(row)"><span class="resource-icon"
+                                                                             :class="`resource-icon--${typeTone(row.menu.menuType)}`"><el-icon
+                v-if="resolveIcon(row.menu.icon)"><component :is="resolveIcon(row.menu.icon)"/></el-icon><span
+                v-else>—</span></span>
+              <div class="resource-cell__main">
+                <div class="resource-cell__title"><strong :title="row.menu.menuName">{{
+                    row.menu.menuName
+                  }}</strong><span class="type-pill" :class="`type-pill--${typeTone(row.menu.menuType)}`">{{
+                    typeLabel(row.menu.menuType)
+                  }}</span></div>
+                <span class="resource-cell__sub" :title="String(row.menu.menuId)">ID {{
+                    shortId(row.menu.menuId)
+                  }}</span></div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="columns[1].visible" label="权限标识" min-width="235" prop="menu.perms"
+                         show-overflow-tooltip>
+          <template #default="{ row }"><code v-if="row.menu.perms">{{ row.menu.perms }}</code><span v-else
+                                                                                                    class="muted-text">菜单容器</span>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="columns[2].visible" label="路由 / 组件" min-width="220">
+          <template #default="{ row }">
+            <div class="route-cell"><span v-if="row.menu.router" :title="row.menu.router">{{
+                row.menu.router
+              }}</span><small v-if="row.menu.component" :title="row.menu.component">{{
+                row.menu.component
+              }}</small><span v-if="!row.menu.router && !row.menu.component" class="muted-text">—</span></div>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="columns[3].visible" label="顺序" width="82" align="center" prop="menu.orderNum"/>
+        <el-table-column v-if="columns[4].visible" label="创建时间" width="145" prop="menu.createTime"
+                         show-overflow-tooltip>
+          <template #default="{ row }">{{ formatDate(row.menu.createTime) }}</template>
+        </el-table-column>
+        <el-table-column v-if="columns[5].visible" label="备注" min-width="170" prop="menu.remark"
+                         show-overflow-tooltip>
+          <template #default="{ row }">{{ row.menu.remark || '—' }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="185" fixed="right" align="right">
+          <template #default="{ row }">
+            <el-space :size="5">
+              <el-button v-has="'user:menu:add'" link type="success" :icon="Plus" @click="handleAdd(row)">下级
+              </el-button>
+              <el-button v-has="'user:menu:edit'" link type="primary" :icon="EditPen" @click="handleUpdate(row)">编辑
+              </el-button>
+              <el-button v-has="'user:menu:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除
+              </el-button>
+            </el-space>
+          </template>
+        </el-table-column>
+        <template #empty>
+          <el-empty description="没有匹配的资源" :image-size="84"/>
         </template>
-      </el-table-column>
-      <el-table-column label="权限标识" align="center" prop="perms" v-if="columns[5].visible" show-overflow-tooltip />
-      <el-table-column label="路由路径" align="center" prop="router" v-if="columns[6].visible" show-overflow-tooltip />
-      <el-table-column label="顺序" width="60" align="center" prop="orderNum" v-if="columns[7].visible" show-overflow-tooltip />
-      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[8].visible" show-overflow-tooltip />
-      <el-table-column label="标注" align="center" prop="remark" v-if="columns[9].visible" show-overflow-tooltip />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template v-slot:default="scope">
-          <el-link
-              size="small"
-              type="primary"
-              icon="edit"
-              @click="handleUpdate(scope.row)"
-              v-has="'user:menu:edit'"
-          >修改</el-link>
-          <el-link
-              size="small"
-              type="primary"
-              icon="delete"
-              @click="handleDelete(scope.row)"
-              v-has="'user:menu:remove'"
-          >删除</el-link>
-        </template>
-      </el-table-column>
-    </el-table>
+      </el-table>
+    </section>
 
-    <pagination
-        v-show="total>0"
-        :total="total"
-        v-model:page="queryParams.currentPage"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-    />
-
-    <!-- 添加或修改测试功能对话框 -->
-    <el-dialog :title="title" v-model="open" width="680px" append-to-body>
-      <el-form :model="form" :rules="rules" label-width="100px">
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="上级菜单ID" prop="parentId">
-              <el-input-number v-model="form.parentId" :controls="false" placeholder="请输入上级菜单ID"/>
+    <el-dialog v-model="open" class="auth-dialog" :title="dialogState === 'add' ? '新增权限资源' : '编辑权限资源'"
+               width="min(760px, 92vw)" append-to-body destroy-on-close>
+      <div class="dialog-intro"><span class="dialog-intro__icon"><el-icon><Key/></el-icon></span>
+        <div><strong>{{ dialogState === 'add' ? '建立菜单资源' : '调整资源配置' }}</strong>
+          <p>菜单类型决定它在导航和授权中的角色，按钮资源需要配置权限标识。</p></div>
+      </div>
+      <el-form ref="formRef" :model="form" :rules="rules" class="editor-form" label-position="top">
+        <section class="form-section">
+          <div class="section-title"><span>01</span>
+            <div><strong>层级与类型</strong><small>先确定资源挂载位置，再配置展示和授权信息</small></div>
+          </div>
+          <div class="form-grid">
+            <el-form-item v-if="dialogState === 'edit'" label="资源 ID">
+              <el-input :model-value="String(form.menuId || '')" disabled :prefix-icon="Key"/>
             </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="菜单类型" prop="menuType">
-              <el-radio-group v-model="form.menuType">
-                <el-radio :label="MenuType.MENU" :value="MenuType.MENU">菜单</el-radio>
-                <el-radio :label="MenuType.MENU_ITEM" :value="MenuType.MENU_ITEM">菜单项</el-radio>
-                <el-radio :label="MenuType.BUTTON" :value="MenuType.BUTTON">按钮</el-radio>
+            <el-form-item label="父级资源" prop="parentId">
+              <el-tree-select v-model="form.parentId" class="full-width" :data="parentOptions" node-key="id"
+                              check-strictly filterable :render-after-expand="false"
+                              placeholder="选择父级资源，留空为根节点"/>
+            </el-form-item>
+            <el-form-item label="资源类型" prop="menuType">
+              <el-radio-group v-model="form.menuType" class="type-options">
+                <el-radio v-for="item in dict.menuType" :key="item.value" :label="item.value" :value="item.value">
+                  {{ item.label }}
+                </el-radio>
               </el-radio-group>
             </el-form-item>
-          </el-col>
-          <el-col :span="24" v-if="form.icon != MenuType.BUTTON">
-            <el-form-item label="菜单图标" prop="icon">
-              <el-input v-model="form.icon" placeholder="请输入icon"/>
+            <el-form-item label="显示顺序" prop="orderNum">
+              <el-input-number v-model="form.orderNum" class="full-width" :min="0" :controls="false"
+                               placeholder="数字越小越靠前"/>
             </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="菜单名称" prop="menuName">
-              <el-input v-model="form.menuName" placeholder="请输入菜单名称" />
+          </div>
+        </section>
+        <section class="form-section">
+          <div class="section-title"><span>02</span>
+            <div><strong>展示信息</strong><small>名称和图标会出现在后台导航中，按钮资源不需要图标</small></div>
+          </div>
+          <div class="form-grid">
+            <el-form-item label="资源名称" prop="menuName">
+              <el-input v-model="form.menuName" maxlength="80" show-word-limit placeholder="例如：用户管理"/>
             </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="显示排序" prop="orderNum">
-              <el-input-number v-model="form.orderNum" controls-position="right" />
+          </div>
+          <el-form-item v-if="form.menuType !== MenuType.BUTTON" class="icon-form-item" label="菜单图标" prop="icon">
+            <IconPicker v-model="form.icon"/>
+          </el-form-item>
+        </section>
+        <section class="form-section">
+          <div class="section-title"><span>03</span>
+            <div><strong>路由与授权</strong><small>路由供菜单跳转使用，组件决定页面实现，权限标识供角色授权使用</small>
+            </div>
+          </div>
+          <div class="form-grid">
+            <el-form-item v-if="form.menuType !== MenuType.BUTTON" label="路由地址" prop="router">
+              <el-input v-model="form.router" maxlength="180" placeholder="例如：user-module/user-manage"/>
             </el-form-item>
-          </el-col>
-
-          <el-col :span="12" v-if="form.menuType != MenuType.BUTTON">
-            <el-form-item prop="router" label="路由地址">
-              <el-input v-model="form.router" placeholder="请输入路由地址" />
+            <el-form-item v-if="form.menuType !== MenuType.BUTTON" label="组件路径" prop="component">
+              <el-input v-model="form.component" maxlength="220"
+                        placeholder="例如：backend/user-module/user-manage/UserManage"/>
             </el-form-item>
-          </el-col>
-          <el-col :span="12" v-if="form.menuType != MenuType.MENU">
-            <el-form-item prop="perms" label="权限标识">
-              <el-input v-model="form.perms" placeholder="请输入权限标识" maxlength="32" />
+            <el-form-item v-if="form.menuType !== MenuType.MENU" label="权限标识" prop="perms">
+              <el-input v-model="form.perms" maxlength="80" placeholder="例如：user:user:list"/>
             </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item prop="perms" label="标记">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入标记" maxlength="450" />
-            </el-form-item>
-          </el-col>
-        </el-row>
+          </div>
+          <el-form-item label="内部备注" prop="remark">
+            <el-input v-model="form.remark" type="textarea" :rows="3" maxlength="450" show-word-limit
+                      placeholder="记录资源用途、授权范围或维护说明"/>
+          </el-form-item>
+        </section>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm" :loading="isUpdateLoading  || isAddLoading">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-      </div>
+      <template #footer>
+        <el-button @click="cancel">取消</el-button>
+        <el-button type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">
+          {{ dialogState === 'add' ? '创建资源' : '保存修改' }}
+        </el-button>
+      </template>
     </el-dialog>
-  </div>
+  </ContestSubPageShell>
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
-import {debouncedAddMenu, debouncedGetMenu, debouncedUpdateMenu, dict, type QueryMenu, removeMenu} from "@/api/menu";
-import {type MenuForm, MenuType, type MenuView} from "@/api/auth/menu";
-import {useColumn} from "@/hooks/useColumn";
-import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
-import Pagination from "@/components/pageination/Pagination.vue";
-import IconLoader from "@/components/IconLoader/IconLoader.vue"
-import {ElDialog, ElMessageBox} from "element-plus";
-import __ from "lodash";
-import type {IdType} from "@/api/common.ts";
+import {computed, nextTick, reactive, ref} from 'vue'
+import {Delete, EditPen, Expand, Filter, Fold, Key, Lock, Plus, Refresh, Search, Select} from '@element-plus/icons-vue'
+import {ElMessage, ElMessageBox, type FormInstance, type TableInstance} from 'element-plus'
+import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
+import IconPicker from '@/components/IconPicker/IconPicker.vue'
+import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
+import {debouncedAddMenu, debouncedUpdateMenu, dict, getAllTreedMenu, type QueryMenu, removeMenu} from '@/api/menu'
+import {MenuType, type MenuForm, type MenuView, type TreedMenu} from '@/api/auth/menu'
+import type {IdType} from '@/api/common'
+import {useColumn} from '@/hooks/useColumn'
+import {setTreeId} from '@/utils/menu'
 
-
-// 查询需要的表单数据
+type DialogState = 'add' | 'edit'
+type TreeOption = { id: IdType | string; label: string; children?: TreeOption[] }
+type AuthTreeNode = Omit<TreedMenu, 'children'> & { depth: number; children: AuthTreeNode[] }
 const queryParams = reactive<QueryMenu>({
   asc: true,
   currentPage: 1,
@@ -210,198 +240,891 @@ const queryParams = reactive<QueryMenu>({
   menuId: undefined,
   menuName: undefined,
   menuType: undefined,
-  parentId: undefined,
-  icon: undefined,
-  perms: undefined,
-  router: undefined,
-  remark: undefined
-});
-
+  perms: undefined
+})
 const form = reactive<MenuForm>({
   menuId: undefined,
   menuName: '',
   menuType: MenuType.MENU,
-  parentId: undefined,
+  parentId: '0',
   icon: '#',
   perms: '',
   router: '',
+  component: '',
   orderNum: 0,
   remark: ''
-});
+})
+const formRef = ref<FormInstance>()
+const tableRef = ref<TableInstance>()
+const menuTree = reactive<AuthTreeNode[]>([])
+const selectedIds = ref<IdType[]>([])
+const open = ref(false)
+const dialogState = ref<DialogState>('add')
+const isLoading = ref(false)
+const actionLoading = ref(false)
+const expandedAll = ref(false)
+const columns = useColumn(['资源', '权限标识', '路由 / 组件', '顺序', '创建时间', '备注']).columns
 
+const rules = {
+  menuName: [{required: true, message: '资源名称不能为空', trigger: 'blur'}],
+  parentId: [{required: true, message: '请选择父级资源或根节点', trigger: 'change'}],
+  orderNum: [{required: true, message: '请输入显示顺序', trigger: 'change'}]
+}
 
-const rules = ref();
+const allMenus = computed(() => flattenTree(menuTree))
+const activeFilterCount = computed(() => [queryParams.menuId, queryParams.menuName, queryParams.perms, queryParams.menuType].filter(value => value !== undefined && value !== '').length)
+const summaryStats = computed(() => [{
+  label: '全部资源',
+  value: allMenus.value.length,
+  tone: 'blue'
+}, {
+  label: '菜单资源',
+  value: allMenus.value.filter(item => item.menu.menuType !== MenuType.BUTTON).length,
+  tone: 'green'
+}, {
+  label: '按钮权限',
+  value: allMenus.value.filter(item => item.menu.menuType === MenuType.BUTTON).length,
+  tone: 'amber'
+}, {label: '当前匹配', value: filteredCount.value, tone: 'violet'}])
+const filteredTree = computed(() => filterTree(menuTree))
+const filteredCount = computed(() => flattenTree(filteredTree.value).length)
+const parentOptions = computed<TreeOption[]>(() => [{
+  id: '0',
+  label: '根节点'
+}, ...toParentOptions(menuTree, form.menuId)])
 
-const open = ref(false);
+function flattenTree(nodes: TreedMenu[]): TreedMenu[] {
+  return nodes.reduce<TreedMenu[]>((result, node) => {
+    result.push(node);
+    if (node.children?.length) result.push(...flattenTree(node.children));
+    return result
+  }, [])
+}
 
-const {columns} = useColumn(['菜单ID', '菜单名称', '菜单类型', '父菜单ID', '菜单图标', '权限标识', '路由路径', '顺序', '创建时间', '标注']);
+function toParentOptions(nodes: TreedMenu[], currentId?: IdType): TreeOption[] {
+  return nodes.filter(node => node.menu.menuType !== MenuType.BUTTON && String(node.menu.menuId) !== String(currentId)).map(node => ({
+    id: node.menu.menuId,
+    label: `${node.menu.menuName} · ${typeLabel(node.menu.menuType)}`,
+    children: node.children?.length ? toParentOptions(node.children, currentId) : undefined
+  }))
+}
 
+function nodeMatches(node: TreedMenu): boolean {
+  const menu = node.menu;
+  return (!queryParams.menuId || String(menu.menuId).includes(String(queryParams.menuId))) && (!queryParams.menuName || menu.menuName?.toLowerCase().includes(String(queryParams.menuName).toLowerCase())) && (!queryParams.perms || menu.perms?.toLowerCase().includes(String(queryParams.perms).toLowerCase())) && (!queryParams.menuType || menu.menuType === queryParams.menuType)
+}
 
-// 重制列表
-const resetQuery = () => {
-  queryParams.menuType = undefined;
+function menuTypeRank(type: MenuType) {
+  return type === MenuType.MENU ? 0 : type === MenuType.MENU_ITEM ? 1 : 2
+}
+
+function sortTree(nodes: TreedMenu[]) {
+  return [...nodes].sort((a, b) => menuTypeRank(a.menu.menuType) - menuTypeRank(b.menu.menuType) || (a.menu.orderNum ?? 0) - (b.menu.orderNum ?? 0) || String(a.menu.menuName).localeCompare(String(b.menu.menuName), 'zh-CN'))
+}
+
+function decorateTree(nodes: TreedMenu[], depth = 0): AuthTreeNode[] {
+  return sortTree(nodes).map(node => ({...node, depth, children: decorateTree(node.children || [], depth + 1)}))
+}
+
+function filterTree(nodes: AuthTreeNode[]): AuthTreeNode[] {
+  return nodes.reduce<AuthTreeNode[]>((result, node) => {
+    const children = node.children?.length ? filterTree(node.children) : [];
+    if (nodeMatches(node) || children.length) result.push({...node, children});
+    return result
+  }, [])
+}
+
+function typeLabel(type: MenuType) {
+  return dict.menuType.find(item => item.value === type)?.label || '未知'
+}
+
+function typeTone(type: MenuType) {
+  return type === MenuType.BUTTON ? 'amber' : type === MenuType.MENU_ITEM ? 'blue' : 'violet'
+}
+
+function shortId(value: IdType) {
+  const text = String(value);
+  return text.length > 18 ? `${text.slice(0, 8)}…${text.slice(-6)}` : text
+}
+
+function formatDate(value: Date | string | undefined) {
+  return value ? new Date(value).toLocaleDateString('zh-CN', {year: 'numeric', month: '2-digit', day: '2-digit'}) : '—'
+}
+
+function resolveIcon(name?: string) {
+  return name && name !== '#' ? name : undefined
+}
+
+function treeRowStyle({row}: { row: AuthTreeNode }) {
+  return {'--tree-depth': String(row.depth), '--tree-offset': `${row.depth * 24}px`}
+}
+
+function resourceCellStyle(row: AuthTreeNode) {
+  return row.children?.length ? undefined : {paddingLeft: `${row.depth * 24}px`}
+}
+
+const getList = async () => {
+  isLoading.value = true;
+  try {
+    const data = await getAllTreedMenu();
+    setTreeId(data);
+    menuTree.splice(0, menuTree.length, ...decorateTree(data));
+    await nextTick();
+    expandVisibleRows(expandedAll.value)
+  } catch {
+    ElMessage.error('权限资源加载失败，请稍后重试')
+  } finally {
+    isLoading.value = false
+  }
+}
+const handleQuery = () => {
+  expandedAll.value = true;
+  setTimeout(() => expandVisibleRows(true), 0)
+}
+const clearFilters = () => {
+  queryParams.menuId = undefined;
   queryParams.menuName = undefined;
-  queryParams.parentId = undefined;
-  queryParams.icon = undefined;
   queryParams.perms = undefined;
-  queryParams.router = undefined;
-  queryParams.remark = undefined;
-  queryParams.sortColumn = undefined;
+  queryParams.menuType = undefined;
+  handleQuery()
+}
+const expandVisibleRows = (expanded: boolean) => {
+  void expandRows(filteredTree.value, expanded)
+}
+const expandRows = async (nodes: TreedMenu[], expanded: boolean): Promise<void> => {
+  nodes.forEach(node => tableRef.value?.toggleRowExpansion(node, expanded));
+  const children = nodes.flatMap(node => node.children || []);
+  if (expanded && children.length) {
+    await nextTick();
+    await expandRows(children, true)
+  }
+}
+const toggleExpand = () => {
+  expandedAll.value = !expandedAll.value;
+  expandVisibleRows(expandedAll.value)
+}
+const handleSelectionChange = (selection: TreedMenu[]) => {
+  selectedIds.value = selection.map(item => item.menu.menuId)
+}
 
-  getList();
-};
-
-// 重置表单
 const resetForm = () => {
   form.menuId = undefined;
   form.menuName = '';
   form.menuType = MenuType.MENU;
-  form.parentId = undefined;
+  form.parentId = '0';
   form.icon = '#';
   form.perms = '';
   form.router = '';
+  form.component = '';
   form.orderNum = 0;
   form.remark = '';
+  formRef.value?.clearValidate()
 }
-
-const showSearch = ref(true);
-
-const {loading, isLoading, get: getMenu} = debouncedGetMenu(queryParams, (data) => {
-  tableList.length = 0;
-  total.value = data.totalRecords
-  tableList.push(...data.data)
-});
-
-const tableList = reactive<MenuView[]>([]);
-const total = ref<number>(0);
-
-// 获取列表
-const getList = () => {
-  loading();
-  getMenu();
-
+const handleAdd = (parent?: TreedMenu) => {
+  resetForm();
+  form.parentId = parent?.menu.menuId || '0';
+  dialogState.value = 'add';
+  open.value = true
 }
-
-// 多选或者单选
-const single = ref(true)
-const multiple = ref(true)
-
-// 选择列的id数组
-const ids = ref<IdType[]>([])
-
-const handleSelectionChange = (selection: MenuView[]) => {
-  ids.value = selection.map(item => item.menuId);
-  single.value = selection.length != 1;
-  multiple.value = !selection.length;
-}
-
-
-
-const handleDelete = (row: MenuView | Event) => {
-  if (row instanceof Event) {
-    ElMessageBox.confirm(`您是否要删除ID为${ids.value}的数据项？`, {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          removeMenu(ids.value).then(getList);
-        })
-  } else {
-    ElMessageBox.confirm('是否确认删除名称为"' + row.menuName + '"的数据项？', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          removeMenu(row.menuId).then(getList);
-        })
+const handleUpdate = (node?: TreedMenu) => {
+  const target = node || allMenus.value.find(item => String(item.menu.menuId) === String(selectedIds.value[0]));
+  if (!target) {
+    ElMessage.warning('请先选择一个资源');
+    return
   }
-
-
+  resetForm();
+  Object.assign(form, target.menu);
+  form.parentId = form.parentId || '0';
+  dialogState.value = 'edit';
+  open.value = true
 }
-
-// 搜索按钮
-const handleQuery = () => {
-  getList();
-  single.value = false
-  multiple.value = false;
+const submitForm = async () => {
+  if (!formRef.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+  if (form.menuType !== MenuType.BUTTON && !form.icon) form.icon = '#';
+  if (form.menuType !== MenuType.MENU && !form.perms?.trim()) {
+    ElMessage.warning('菜单项和按钮必须填写权限标识');
+    return
+  }
+  if (form.menuType !== MenuType.BUTTON && !form.router?.trim()) {
+    ElMessage.warning('菜单栏和菜单项必须填写路由地址');
+    return
+  }
+  if (dialogState.value === 'add') {
+    addLoading();
+    add()
+  } else {
+    updateLoading();
+    update()
+  }
 }
-
 const finishDialog = () => {
   open.value = false;
   resetForm();
-  getList();
+  getList()
 }
+const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddMenu(form, finishDialog)
+const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateMenu(form, finishDialog)
 
-const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateMenu(form, finishDialog);
-
-const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddMenu(form, finishDialog);
-
-const {} = debouncedAddMenu(form, finishDialog)
-// 1: Insert 2: Update
-const dialogState = ref(1);
-const title = computed(() => {
-  return dialogState.value === 1 ? "添加" : "修改";
-})
-const handleAdd = () => {
-  resetForm();
-  dialogState.value = 1;
-  open.value = true;
-}
-const handleUpdate = (data: MenuView | void) => {
-  resetForm();
-  open.value = true;
-  dialogState.value = 2;
-  if (!data) {
-    const id = ids.value[0];
-    data = __.find(tableList, x => x.menuId === id)
-  }
-  __.assign(form, data)
-}
-
-const submitForm = () => {
-
-  if (dialogState.value === 1) {
-    addLoading();
-    // 添加
-    add();
-  } else {
-    updateLoading();
-    // 修改
-    update();
+const handleDelete = async (node?: TreedMenu) => {
+  const ids = node ? [node.menu.menuId] : selectedIds.value;
+  if (!ids.length) return;
+  try {
+    await ElMessageBox.confirm(node ? `删除“${node.menu.menuName}”可能同时影响它的子资源，确定继续吗？` : `确定删除选中的 ${ids.length} 个资源吗？`, '删除权限资源', {
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+    actionLoading.value = true;
+    await removeMenu(node ? ids[0] : ids);
+    ElMessage.success('资源已删除');
+    await getList()
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error('删除失败，请稍后重试')
+  } finally {
+    actionLoading.value = false
   }
 }
-
 const cancel = () => {
   open.value = false;
   resetForm()
 }
 
-
-
-
-
-
-// created -> 获取列表
 getList()
-
-
-
-
 </script>
 
 <style lang="scss" scoped>
+.auth-panel {
+  min-width: 0;
+  padding: 22px 24px 12px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 20px;
+  background: var(--el-bg-color);
+  box-shadow: 0 16px 40px rgb(15 23 42 / 4%);
+}
 
-::v-deep(.inline-form) {
-  .el-input {
-    --el-input-width: 220px;
-  }
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
 
-  .el-select {
-    --el-select-width: 220px;
+.panel-eyebrow {
+  color: #8b5cf6;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.panel-heading h2 {
+  margin: 7px 0 5px;
+  font-size: 21px;
+  letter-spacing: -.03em;
+}
+
+.panel-heading p {
+  margin: 0;
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+}
+
+.panel-heading__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 5px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--el-color-success);
+}
+
+.sync-dot.is-loading {
+  background: var(--el-color-warning);
+  animation: pulse 1.1s ease-in-out infinite;
+}
+
+.filter-panel {
+  margin-bottom: 18px;
+  padding: 14px 16px 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 13px;
+  background: var(--el-bg-color-page);
+}
+
+.filter-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.filter-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+
+.filter-title .el-icon {
+  color: #8b5cf6;
+}
+
+.filter-title span, .tree-caption {
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.tree-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.auth-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr)) auto;
+  align-items: end;
+  gap: 0 14px;
+}
+
+.auth-filters :deep(.el-form-item) {
+  min-width: 0;
+  margin-bottom: 10px;
+}
+
+.auth-filters :deep(.el-form-item__label) {
+  height: auto;
+  margin-bottom: 5px;
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  height: 68px;
+  padding-bottom: 10px;
+}
+
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  min-height: 36px;
+  margin-bottom: 10px;
+}
+
+.list-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.selection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+.selection-status .el-icon {
+  color: var(--el-text-color-placeholder);
+}
+
+.selection-status.has-selection {
+  color: #8b5cf6;
+  font-weight: 650;
+}
+
+.selection-status.has-selection .el-icon {
+  color: #8b5cf6;
+}
+
+.auth-table {
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.auth-table :deep(.el-table__header th.el-table__cell) {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--el-fill-color-light);
+}
+
+.auth-table :deep(.el-table__row td.el-table__cell) {
+  height: 68px;
+}
+
+.auth-table :deep(.resource-column .cell) {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.auth-table :deep(.el-table__indent) {
+  width: 0;
+  overflow: hidden;
+}
+
+.auth-table :deep(.el-table__expand-icon) {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  margin-right: 5px;
+  margin-left: var(--tree-offset, 0px);
+  place-items: center;
+  border: 1px solid var(--el-border-color);
+  border-radius: 7px;
+  background: var(--el-bg-color-page);
+  color: var(--el-text-color-secondary);
+  vertical-align: middle;
+  transition: border-color .18s ease, background-color .18s ease, color .18s ease;
+}
+
+.auth-table :deep(.el-table__expand-icon:hover) {
+  border-color: rgb(139 92 246 / 55%);
+  color: #8b5cf6;
+}
+
+.auth-table :deep(.el-table__expand-icon--expanded) {
+  border-color: rgb(139 92 246 / 40%);
+  background: rgb(139 92 246 / 11%);
+  color: #8b5cf6;
+}
+
+.auth-table :deep(.el-table__expand-icon .el-icon) {
+  font-size: 12px;
+}
+
+.resource-cell {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+}
+
+.resource-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 17px;
+}
+
+.resource-icon--violet {
+  color: #8b5cf6;
+  background: rgb(139 92 246 / 12%);
+}
+
+.resource-icon--blue {
+  color: #2563eb;
+  background: rgb(37 99 235 / 12%);
+}
+
+.resource-icon--amber {
+  color: #d97706;
+  background: rgb(217 119 6 / 12%);
+}
+
+.resource-cell__main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.resource-cell__title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+.resource-cell__title strong {
+  max-width: 220px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-cell__sub {
+  color: var(--el-text-color-secondary);
+  font: 11px var(--code-font-family, monospace);
+}
+
+.type-pill {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+}
+
+.type-pill--violet {
+  color: #8b5cf6;
+  background: rgb(139 92 246 / 11%);
+}
+
+.type-pill--blue {
+  color: #2563eb;
+  background: rgb(37 99 235 / 11%);
+}
+
+.type-pill--amber {
+  color: #d97706;
+  background: rgb(217 119 6 / 11%);
+}
+
+.auth-table code {
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-primary);
+  font: 11px var(--code-font-family, monospace);
+}
+
+.muted-text {
+  color: var(--el-text-color-placeholder);
+}
+
+.route-cell {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.route-cell span, .route-cell small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-cell span {
+  color: var(--el-text-color-primary);
+  font-size: 12px;
+}
+
+.route-cell small {
+  color: var(--el-text-color-secondary);
+  font: 10px var(--code-font-family, monospace);
+}
+
+.dialog-intro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 19px;
+  padding: 14px 16px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 13px;
+  background: var(--el-fill-color-light);
+}
+
+.dialog-intro__icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+  background: rgb(139 92 246 / 13%);
+  color: #8b5cf6;
+  font-size: 18px;
+}
+
+.dialog-intro strong, .dialog-intro p {
+  display: block;
+}
+
+.dialog-intro p {
+  margin: 4px 0 0;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+.editor-form {
+  padding: 0 2px;
+}
+
+.form-section {
+  padding: 18px 0 4px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.form-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.section-title > span {
+  color: #8b5cf6;
+  font: 700 11px/1.4 var(--code-font-family, monospace);
+  letter-spacing: .08em;
+}
+
+.section-title strong, .section-title small {
+  display: block;
+}
+
+.section-title strong {
+  font-size: 14px;
+}
+
+.section-title small {
+  margin-top: 3px;
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+}
+
+.editor-form :deep(.el-form-item) {
+  margin-bottom: 16px;
+}
+
+.editor-form :deep(.el-form-item__label) {
+  height: auto;
+  margin-bottom: 6px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.type-options {
+  min-height: 32px;
+  align-items: center;
+}
+
+.field-tip {
+  display: block;
+  margin-top: 6px;
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.icon-form-item {
+  margin-top: 1px;
+}
+
+.icon-picker {
+  padding: 10px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 13px;
+  background: var(--el-bg-color-page);
+}
+
+.icon-picker__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.icon-picker__toolbar .el-input {
+  flex: 1;
+}
+
+.icon-picker__toolbar > span {
+  flex: 0 0 auto;
+  color: var(--el-text-color-secondary);
+  font: 11px var(--code-font-family, monospace);
+}
+
+.icon-grid {
+  display: grid;
+  max-height: 258px;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.icon-tile {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 5px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  background: var(--el-bg-color);
+  color: var(--el-text-color-secondary);
+  cursor: pointer;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color .18s ease, background-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.icon-tile:hover {
+  border-color: rgb(139 92 246 / 48%);
+  color: #8b5cf6;
+  transform: translateY(-1px);
+}
+
+.icon-tile.is-active {
+  border-color: #8b5cf6;
+  background: rgb(139 92 246 / 11%);
+  box-shadow: 0 0 0 2px rgb(139 92 246 / 12%);
+  color: #8b5cf6;
+}
+
+.icon-tile__visual {
+  display: grid;
+  height: 25px;
+  place-items: center;
+  font-size: 20px;
+}
+
+.icon-tile__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-empty {
+  grid-column: 1 / -1;
+  padding: 28px 0;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+
+.icon-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -2px 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--el-bg-color-page);
+}
+
+.icon-preview__box {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 8px;
+  background: rgb(139 92 246 / 12%);
+  color: #8b5cf6;
+  font-size: 16px;
+}
+
+.icon-preview strong, .icon-preview small {
+  display: block;
+}
+
+.icon-preview strong {
+  font: 12px var(--code-font-family, monospace);
+}
+
+.icon-preview small {
+  margin-top: 3px;
+  color: var(--el-text-color-secondary);
+  font-size: 10px;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: .35;
   }
 }
 
-::v-deep(.el-table__row) .el-dropdown {
-  height: 23px;
+@media (max-width: 900px) {
+  .auth-filters {
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
+  }
+  .filter-actions {
+    height: auto;
+    padding-bottom: 10px;
+  }
+}
+
+@media (max-width: 680px) {
+  .auth-panel {
+    padding: 18px 14px 8px;
+  }
+  .panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .auth-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .filter-actions {
+    grid-column: 1 / -1;
+  }
+  .list-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .tree-caption {
+    align-self: flex-end;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .auth-table :deep(.el-table__fixed-right) {
+    display: none;
+  }
+}
+
+@media (max-width: 440px) {
+  .auth-filters {
+    grid-template-columns: 1fr;
+  }
+  .filter-actions {
+    grid-column: auto;
+  }
+  .filter-actions .el-button {
+    flex: 1;
+  }
+  .tree-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
 }
 </style>

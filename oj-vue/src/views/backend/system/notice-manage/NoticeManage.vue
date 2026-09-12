@@ -1,290 +1,301 @@
 <template>
-  <div class="list-container">
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-            type="primary"
-            plain
-            icon="plus"
-            size="small"
-            @click="handleAdd"
-            v-has="'content:notice:add'"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="success"
-            plain
-            icon="edit"
-            size="small"
-            :disabled="single"
-            @click="handleUpdate()"
-            v-has="'content:notice:edit'"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-            type="danger"
-            plain
-            icon="delete"
-            size="small"
-            :disabled="multiple"
-            @click="handleDelete"
-            v-has="'content:notice:remove'"
-        >删除</el-button>
-      </el-col>
-      <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
-    </el-row>
+  <ContestSubPageShell
+    title="公告管理"
+    kicker="SYSTEM / ANNOUNCEMENTS"
+    description="集中维护平台公告、重要通知与内容展示，让信息发布更清晰可控。"
+    :icon="Bell"
+    tone="amber"
+    :stats="summaryStats"
+  >
+    <template #actions>
+      <el-button :icon="Refresh" :loading="loading" @click="getList">刷新列表</el-button>
+      <el-button v-has="'content:notice:add'" type="primary" :icon="Plus" @click="handleAdd">
+        发布公告
+      </el-button>
+    </template>
 
-    <el-table :data="tableList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="通知ID" align="center" prop="noticeId" v-if="columns[0].visible" show-overflow-tooltip />
-      <el-table-column label="通知名称" align="center" prop="title" v-if="columns[1].visible" />
-      <el-table-column label="通知状态" align="center" prop="topUp" v-if="columns[2].visible" >
-        <template v-slot="scope">
-          <el-tag type="danger" v-if="scope.row.topUp">重要</el-tag>
-          <el-tag type="primary" v-else>普通</el-tag>
+    <section class="notice-panel">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-eyebrow">CONTENT WORKSPACE</span>
+          <h2>公告列表</h2>
+          <p>支持批量操作、重要标记与 Markdown 内容编辑。</p>
+        </div>
+        <div class="panel-tools">
+          <el-input
+            v-model="keyword"
+            clearable
+            class="keyword-input"
+            :prefix-icon="Search"
+            placeholder="搜索公告标题"
+          />
+          <el-select v-model="priorityFilter" class="priority-select" placeholder="公告级别">
+            <el-option label="全部公告" value="all" />
+            <el-option label="重要公告" value="important" />
+            <el-option label="普通公告" value="normal" />
+          </el-select>
+        </div>
+      </div>
 
+      <div v-if="selectedIds.length" class="selection-bar">
+        <span>已选择 {{ selectedIds.length }} 条公告</span>
+        <el-button v-has="'content:notice:remove'" text type="danger" @click="handleDelete()">
+          批量删除
+        </el-button>
+      </div>
+
+      <el-table
+        v-loading="loading"
+        class="notice-table"
+        :data="filteredList"
+        row-key="noticeId"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="52" align="center" />
+        <el-table-column label="公告" min-width="360">
+          <template #default="{ row }">
+            <div class="notice-title-cell">
+              <span class="notice-mark" :class="{ 'is-important': row.topUp }">
+                <el-icon><Bell /></el-icon>
+              </span>
+              <div>
+                <strong>{{ row.title }}</strong>
+                <span>#{{ row.noticeId }}</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="级别" width="130">
+          <template #default="{ row }">
+            <span class="priority-pill" :class="row.topUp ? 'is-important' : 'is-normal'">
+              {{ row.topUp ? '重要公告' : '普通公告' }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="发布时间" min-width="190" prop="createTime" show-overflow-tooltip />
+        <el-table-column label="更新于" min-width="190" prop="updateTime" show-overflow-tooltip />
+        <el-table-column label="操作" width="220" fixed="right" align="right">
+          <template #default="{ row }">
+            <el-space>
+              <el-button link type="primary" :icon="View" @click="viewNotice(row.noticeId)">
+                查看
+              </el-button>
+              <el-button
+                v-has="'content:notice:edit'"
+                link
+                type="primary"
+                :icon="Edit"
+                @click="handleUpdate(row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                v-has="'content:notice:remove'"
+                link
+                type="danger"
+                :icon="Delete"
+                @click="handleDelete(row)"
+              >
+                删除
+              </el-button>
+            </el-space>
+          </template>
+        </el-table-column>
+        <template #empty>
+          <el-empty description="暂无公告" />
         </template>
-      </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[3].visible" />
-      <el-table-column label="操作" align="center" list-name="small-padding fixed-width">
-        <template v-slot:default="scope">
-          <el-link
-              size="small"
-              type="primary"
-              icon="edit"
-              @click="handleUpdate(scope.row)"
-              v-has="'problem:list:edit'"
-          >修改</el-link>
-          <el-link
-              size="small"
-              type="primary"
-              icon="delete"
-              @click="handleDelete(scope.row)"
-              v-has="'problem:list:remove'"
-          >删除</el-link>
-          <el-link
-              size="small"
-              type="primary"
-              icon="view"
-              @click="router.push({name: 'notice', params: {id: scope.row.noticeId}})"
-          >查看</el-link>
-        </template>
-      </el-table-column>
-    </el-table>
+      </el-table>
 
-    <pagination
+      <Pagination
         v-show="total > 0"
-        :total="total"
         v-model:page="queryParams.currentPage"
         v-model:limit="queryParams.pageSize"
+        :total="total"
         @pagination="getList"
-    />
+      />
+    </section>
 
-    <!-- 添加或修改测试功能对话框 -->
-    <el-dialog :title="title" v-model="open" width="1080px" append-to-body>
-      <el-form label-position="top" :model="form" :rules="rules" label-width="100px">
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="ID">
-              <el-input v-model="form.noticeId" placeholder="通知ID" disabled/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="通知名称">
-              <el-input v-model="form.title" placeholder="请输入通知标题"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="标记为重要">
-              <el-switch v-model="form.topUp"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="通知内容">
-              <mark-down-editor v-model="form.content"/>
-            </el-form-item>
-          </el-col>
-        </el-row>
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="min(1080px, 94vw)" append-to-body>
+      <el-form ref="formRef" class="notice-form" label-position="top" :model="form" :rules="rules">
+        <div class="form-intro">
+          <span class="panel-eyebrow">{{ dialogState === 'add' ? 'NEW ANNOUNCEMENT' : 'EDIT ANNOUNCEMENT' }}</span>
+          <p>标题负责让用户快速理解通知内容，正文支持 Markdown。</p>
+        </div>
+        <el-form-item label="公告标题" prop="title">
+          <el-input v-model="form.title" maxlength="120" show-word-limit placeholder="请输入公告标题" />
+        </el-form-item>
+        <el-form-item label="公告级别">
+          <el-switch v-model="form.topUp" inline-prompt active-text="重要" inactive-text="普通" />
+        </el-form-item>
+        <el-form-item label="公告内容" prop="content">
+          <MarkDownEditor v-model="form.content" />
+        </el-form-item>
       </el-form>
       <template #footer>
-
-        <el-button type="primary" @click="submitForm" :loading="isLoading" >确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">保存公告</el-button>
       </template>
-
     </el-dialog>
-  </div>
+  </ContestSubPageShell>
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
-import {useColumn} from "@/hooks/useColumn";
-import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
-import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElMessageBox} from "element-plus";
-import {useRouter} from "vue-router";
-import type {IdType} from "@/api/common.ts";
-import {addNotice, getNotice, listNotice, type Notice, type NoticeDto, removeNotice, updateNotice} from "@/api/notice";
-import type {PagedType} from "@/api/pagedType.ts";
-import MarkDownEditor from "@/components/MarkDownEditor/MarkDownEditor.vue";
-import useLoading from "@/hooks/useLoading.ts";
-import __ from "lodash";
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+  Bell,
+  Delete,
+  Edit,
+  Plus,
+  Refresh,
+  Search,
+  View,
+} from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import ContestSubPageShell from '../../teacher/contest-manage/component/ContestSubPageShell.vue'
+import Pagination from '@/components/pageination/Pagination.vue'
+import MarkDownEditor from '@/components/MarkDownEditor/MarkDownEditor.vue'
+import type { IdType } from '@/api/common'
+import type { PagedType } from '@/api/pagedType'
+import { addNotice, getNotice, listNotice, type Notice, type NoticeDto, removeNotice, updateNotice } from '@/api/notice'
 
-const router = useRouter();
-// 查询需要的表单数据
-const queryParams = reactive<PagedType>({
-  currentPage: 1,
-  pageSize: 20,
-});
+type PriorityFilter = 'all' | 'important' | 'normal'
+type DialogState = 'add' | 'edit'
 
-const form = reactive<NoticeDto>({
-  noticeId: "",
-  title: "",
-  content: "",
-  topUp: false,
-});
+const router = useRouter()
+const loading = ref(false)
+const submitting = ref(false)
+const dialogVisible = ref(false)
+const dialogState = ref<DialogState>('add')
+const formRef = ref<FormInstance>()
+const keyword = ref('')
+const priorityFilter = ref<PriorityFilter>('all')
+const selectedIds = ref<IdType[]>([])
+const tableList = ref<Notice[]>([])
+const total = ref(0)
+const queryParams = reactive<PagedType>({ currentPage: 1, pageSize: 20 })
+const form = reactive<NoticeDto>({ noticeId: '', title: '', content: '', topUp: false })
 
-
-const rules = ref();
-
-const open = ref(false);
-
-const {columns} = useColumn(['通知ID', '通知名称', '通知状态', '创建时间']);
-
-// 重置表单
-const resetForm = () => {
-  form.noticeId = "";
-  form.title = '';
-  form.content = '';
-  form.topUp = false;
+const rules: FormRules<NoticeDto> = {
+  title: [{ required: true, message: '请输入公告标题', trigger: 'blur' }],
+  content: [{ required: true, message: '请输入公告内容', trigger: 'change' }],
 }
 
-const showSearch = ref(true);
-
-
-const tableList = reactive<Notice[]>([]);
-const total = ref<number>(0);
-
-// 获取题单
-const getList = async () => {
-  const data = await listNotice(queryParams)
-  total.value = data.totalRecords;
-  tableList.length = 0;
-  tableList.push(...data.data);
-}
-
-// 多选或者单选
-const single = ref(true)
-const multiple = ref(true)
-
-// 选择列的id数组
-const ids = ref<IdType[]>([])
-
-const {loading, isLoading, finish} = useLoading();
-
-const handleSelectionChange = (selection: Notice[]) => {
-  ids.value = selection.map(item => item.noticeId);
-  single.value = selection.length != 1;
-  multiple.value = !selection.length;
-}
-
-
-
-const handleDelete = (row?: Notice) => {
-
-  const id = row? row.noticeId : ids.value;
-  ElMessageBox.confirm(`您是否要删除ID为${id}的数据项？`, {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
+const dialogTitle = computed(() => (dialogState.value === 'add' ? '发布公告' : '编辑公告'))
+const filteredList = computed(() => {
+  const normalizedKeyword = keyword.value.trim().toLowerCase()
+  return tableList.value.filter((item) => {
+    const matchesKeyword = !normalizedKeyword || item.title.toLowerCase().includes(normalizedKeyword)
+    const matchesPriority =
+      priorityFilter.value === 'all' ||
+      (priorityFilter.value === 'important' && item.topUp) ||
+      (priorityFilter.value === 'normal' && !item.topUp)
+    return matchesKeyword && matchesPriority
   })
-      .then(() => {
-        removeNotice(id).then(getList);
-      })
-}
-
-
-const finishDialog = () => {
-  open.value = false;
-  resetForm();
-  getList();
-}
-
-const debouncedAdd = __.debounce(async () => {
-  await addNotice(form);
-  finish();
-  finishDialog();
 })
 
-const debouncedUpdate = __.debounce(async () => {
-  await updateNotice(form);
-  finish();
-  finishDialog();
-})
+const summaryStats = computed(() => [
+  { label: '公告总数', value: total.value, tone: 'blue' },
+  { label: '当前重要', value: tableList.value.filter((item) => item.topUp).length, tone: 'amber' },
+  { label: '普通公告', value: tableList.value.filter((item) => !item.topUp).length, tone: 'green' },
+  { label: '当前页', value: tableList.value.length, tone: 'violet' },
+])
 
-// 1: Insert 2: Update
-const dialogState = ref(1);
-const title = computed(() => {
-  return dialogState.value === 1 ? "添加" : "修改";
-})
-const handleAdd = () => {
-  resetForm();
-  dialogState.value = 1;
-  open.value = true;
+const resetForm = () => {
+  Object.assign(form, { noticeId: '', title: '', content: '', topUp: false })
+  formRef.value?.clearValidate()
 }
 
-const handleUpdate = async (data?: Notice) => {
-  resetForm();
-  open.value = true;
-  dialogState.value = 2;
-
-  const id = data ? data.noticeId : ids.value[0];
-
-  const notice = await getNotice(id)
-
-  __.assign(form, notice)
-}
-
-// 1: Insert 2: Update
-const submitForm = () => {
-  loading();
-  if (dialogState.value === 1) {
-    debouncedAdd();
-  } else {
-    debouncedUpdate();
+const getList = async () => {
+  loading.value = true
+  try {
+    const data = await listNotice(queryParams)
+    tableList.value = data.data || []
+    total.value = data.totalRecords || 0
+    selectedIds.value = []
+  } finally {
+    loading.value = false
   }
 }
 
-const cancel = () => {
-  open.value = false;
-  resetForm()
+const handleSelectionChange = (selection: Notice[]) => {
+  selectedIds.value = selection.map((item) => item.noticeId)
 }
 
+const handleAdd = () => {
+  resetForm()
+  dialogState.value = 'add'
+  dialogVisible.value = true
+}
 
-// created -> 获取题单
-getList()
+const handleUpdate = async (notice?: Notice) => {
+  const id = notice?.noticeId || selectedIds.value[0]
+  if (!id) return
+  resetForm()
+  dialogState.value = 'edit'
+  dialogVisible.value = true
+  Object.assign(form, await getNotice(id))
+}
 
+const submitForm = async () => {
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
+  submitting.value = true
+  try {
+    if (dialogState.value === 'add') await addNotice(form)
+    else await updateNotice(form)
+    ElMessage.success(dialogState.value === 'add' ? '公告发布成功' : '公告更新成功')
+    dialogVisible.value = false
+    resetForm()
+    await getList()
+  } finally {
+    submitting.value = false
+  }
+}
 
+const handleDelete = async (notice?: Notice) => {
+  const ids = notice ? [notice.noticeId] : selectedIds.value
+  if (!ids.length) return
+  await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 条公告吗？`, '删除公告', {
+    confirmButtonText: '确认删除',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+  await removeNotice(ids)
+  ElMessage.success('公告已删除')
+  await getList()
+}
 
+const viewNotice = (id: IdType) => router.push({ name: 'notice', params: { id } })
 
+onMounted(getList)
 </script>
 
 <style lang="scss" scoped>
-
-::v-deep(.inline-form) {
-  .el-input {
-    --el-input-width: 220px;
-  }
-
-  .el-select {
-    --el-select-width: 220px;
-  }
-
-}
-
-::v-deep(.el-table__row) .el-dropdown {
-  height: 23px;
-}
+.notice-panel { padding: 22px 24px 12px; border: 1px solid var(--el-border-color-lighter); border-radius: 20px; background: var(--el-bg-color); box-shadow: 0 16px 40px rgb(15 23 42 / 4%); }
+.panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+.panel-eyebrow { color: var(--el-color-warning); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+.panel-heading h2 { margin: 7px 0 5px; font-size: 21px; }
+.panel-heading p { margin: 0; color: var(--el-text-color-secondary); font-size: 13px; }
+.panel-tools { display: flex; gap: 10px; }
+.keyword-input { width: 230px; }
+.priority-select { width: 130px; }
+.selection-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 8px 12px; border-radius: 10px; background: var(--el-fill-color-light); color: var(--el-text-color-secondary); font-size: 13px; }
+.notice-table { border-radius: 14px; overflow: hidden; }
+.notice-title-cell { display: flex; align-items: center; gap: 12px; }
+.notice-mark { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 11px; background: color-mix(in srgb, var(--el-color-primary) 10%, var(--el-bg-color)); color: var(--el-color-primary); }
+.notice-mark.is-important { background: color-mix(in srgb, var(--el-color-warning) 14%, var(--el-bg-color)); color: var(--el-color-warning); }
+.notice-title-cell div:last-child { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.notice-title-cell strong { overflow: hidden; color: var(--el-text-color-primary); text-overflow: ellipsis; white-space: nowrap; }
+.notice-title-cell span:last-child { color: var(--el-text-color-secondary); font-size: 12px; }
+.priority-pill { display: inline-flex; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.priority-pill.is-important { background: color-mix(in srgb, var(--el-color-warning) 12%, var(--el-bg-color)); color: var(--el-color-warning); }
+.priority-pill.is-normal { background: color-mix(in srgb, var(--el-color-success) 10%, var(--el-bg-color)); color: var(--el-color-success); }
+.notice-form { padding: 4px 4px 0; }
+.form-intro { margin-bottom: 18px; padding: 14px 16px; border-radius: 12px; background: var(--el-fill-color-light); }
+.form-intro p { margin: 7px 0 0; color: var(--el-text-color-secondary); font-size: 13px; }
+:deep(.el-table__header th.el-table__cell) { color: var(--el-text-color-secondary); font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); }
+:deep(.el-table__row td.el-table__cell) { height: 68px; }
+@media (max-width: 760px) { .panel-heading { flex-direction: column; }.panel-tools { width: 100%; }.keyword-input, .priority-select { flex: 1; width: auto; } }
+@media (max-width: 480px) { .notice-panel { padding: 16px 12px 8px; }.panel-tools { flex-direction: column; }.keyword-input, .priority-select { width: 100%; }.notice-table :deep(.el-table__fixed-right) { display: none; } }
 </style>
