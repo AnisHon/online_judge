@@ -84,7 +84,8 @@ provide('elMain', {elMainRef: elMainRef});
   flex: 0 0 var(--backend-header-height);
   height: var(--backend-header-height);
   position: relative;
-  z-index: 2000;
+  /* 不抢占 Element Plus Drawer/Dialog 的全局弹层层级。 */
+  z-index: 10;
   overflow: visible;
 }
 

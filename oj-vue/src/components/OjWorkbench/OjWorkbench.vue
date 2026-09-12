@@ -7,7 +7,8 @@
         <div class="problem-meta">
           <el-tag v-if="difficulty" :type="difficultyType" effect="plain">{{ difficulty }}</el-tag>
           <span>{{ problem.problemVo.source || '题库' }}</span>
-          <span v-for="tag in problem.tagVo" :key="tag.tagId" class="problem-tag" :style="{ '--tag-color': tag.tagColor }">
+          <span v-for="tag in problem.tagVo" :key="tag.tagId" class="problem-tag"
+                :style="{ '--tag-color': tag.tagColor }">
             {{ tag.tagName }}
           </span>
         </div>
@@ -20,20 +21,24 @@
 
       <el-tabs v-model="activePane" class="problem-pane__tabs">
         <el-tab-pane name="statement">
-          <template #label><el-icon><Document /></el-icon><span>题面</span></template>
+          <template #label>
+            <el-icon>
+              <Document/>
+            </el-icon>
+            <span>题面</span></template>
           <el-scrollbar class="problem-pane__scroll">
             <article class="statement-content">
               <section>
                 <h2>题目描述</h2>
-                <markdown-preview :text="problem.problemVo.description || ''" />
+                <markdown-preview :text="problem.problemVo.description || ''"/>
               </section>
               <section v-if="problem.ojProblemVo?.input">
                 <h2>输入格式</h2>
-                <markdown-preview :text="problem.ojProblemVo.input" />
+                <markdown-preview :text="problem.ojProblemVo.input"/>
               </section>
               <section v-if="problem.ojProblemVo?.output">
                 <h2>输出格式</h2>
-                <markdown-preview :text="problem.ojProblemVo.output" />
+                <markdown-preview :text="problem.ojProblemVo.output"/>
               </section>
               <div v-if="problem.ojProblemVo?.inputExample || problem.ojProblemVo?.outputExample" class="example-grid">
                 <div v-if="problem.ojProblemVo?.inputExample">
@@ -47,17 +52,23 @@
               </div>
               <section v-if="problem.problemVo.hint">
                 <h2>提示</h2>
-                <markdown-preview :text="problem.problemVo.hint" />
+                <markdown-preview :text="problem.problemVo.hint"/>
               </section>
             </article>
           </el-scrollbar>
         </el-tab-pane>
 
         <el-tab-pane name="submissions" lazy>
-          <template #label><el-icon><TrendCharts /></el-icon><span>提交记录</span><em v-if="logs.length">{{ logs.length }}</em></template>
+          <template #label>
+            <el-icon>
+              <TrendCharts/>
+            </el-icon>
+            <span>提交记录</span><em v-if="logs.length">{{ logs.length }}</em></template>
           <el-scrollbar class="problem-pane__scroll">
             <div v-if="!logs.length" class="empty-state">
-              <el-icon><Document /></el-icon>
+              <el-icon>
+                <Document/>
+              </el-icon>
               <strong>还没有提交记录</strong>
               <span>写好代码后，提交结果会显示在这里</span>
             </div>
@@ -82,9 +93,13 @@
         </el-tab-pane>
 
         <el-tab-pane v-if="!contestId" name="solutions" lazy>
-          <template #label><el-icon><Notebook /></el-icon><span>题解</span></template>
+          <template #label>
+            <el-icon>
+              <Notebook/>
+            </el-icon>
+            <span>题解</span></template>
           <el-scrollbar class="problem-pane__scroll">
-            <solutions :param="solutionParam" :scroll-element="problemPaneRef" />
+            <solutions :param="solutionParam" :scroll-element="problemPaneRef"/>
           </el-scrollbar>
         </el-tab-pane>
       </el-tabs>
@@ -94,41 +109,54 @@
       <div class="code-pane__topline">
         <div class="code-pane__identity">
           <span class="code-pane__eyebrow">{{ fullscreen ? 'FOCUS MODE' : 'CODE WORKSPACE' }}</span>
-          <strong>{{ problem.problemVo.title }}</strong>
         </div>
         <div class="code-pane__actions">
           <el-button text @click="$emit('toggle-test')">
-            <el-icon><Monitor /></el-icon>
+            <el-icon>
+              <Monitor/>
+            </el-icon>
             {{ testConsoleOpen ? '收起测试' : '打开测试' }}
           </el-button>
           <el-button text @click="openSubmissions">
-            <el-icon><TrendCharts /></el-icon>记录
+            <el-icon>
+              <TrendCharts/>
+            </el-icon>
+            记录
           </el-button>
           <el-button text @click="$emit('full-screen')">
-            <el-icon><FullScreen /></el-icon>{{ fullscreen ? '退出全屏' : '全屏专注' }}
+            <el-icon>
+              <FullScreen/>
+            </el-icon>
+            {{ fullscreen ? '退出全屏' : '全屏专注' }}
           </el-button>
         </div>
       </div>
 
       <div v-if="activeSubmission" class="judge-status" :class="`judge-status--${statusTone(activeSubmission.status)}`">
         <div class="judge-status__leading">
-          <span class="status-orb"><el-icon v-if="isPending(activeSubmission.status)"><Loading /></el-icon><el-icon v-else><CircleCheck /></el-icon></span>
+          <span class="status-orb"><el-icon v-if="isPending(activeSubmission.status)"><Loading/></el-icon><el-icon
+              v-else><CircleCheck/></el-icon></span>
           <div>
             <strong>{{ statusLabel(activeSubmission.status) }}</strong>
-            <small>提交 #{{ activeSubmission.submitId }}<template v-if="isPending(activeSubmission.status)"> · 判题机正在处理</template></small>
+            <small>提交 #{{ activeSubmission.submitId }}
+              <template v-if="isPending(activeSubmission.status)"> · 判题机正在处理</template>
+            </small>
           </div>
         </div>
         <div class="judge-status__metrics">
-          <span v-if="activeSubmission.totalCount">{{ activeSubmission.passCount ?? 0 }}/{{ activeSubmission.totalCount }} 用例</span>
+          <span v-if="activeSubmission.totalCount">{{ activeSubmission.passCount ?? 0 }}/{{
+              activeSubmission.totalCount
+            }} 用例</span>
           <span v-if="activeSubmission.time != null">{{ activeSubmission.time }} ms</span>
           <span v-if="activeSubmission.memory != null">{{ formatMemory(activeSubmission.memory) }}</span>
         </div>
-        <el-progress v-if="isPending(activeSubmission.status)" :percentage="progress" :show-text="false" :indeterminate="true" />
+        <el-progress v-if="isPending(activeSubmission.status)" :percentage="progress" :show-text="false"
+                     :indeterminate="true"/>
         <p v-if="activeSubmission.stderr" class="judge-status__message">{{ activeSubmission.stderr }}</p>
       </div>
       <div v-else class="judge-status judge-status--idle">
-        <span class="status-orb"><el-icon><InfoFilled /></el-icon></span>
-        <div><strong>准备提交</strong><small>提交后状态会在这里实时更新，页面不依赖 SSE 连接</small></div>
+        <span class="status-orb"><el-icon><InfoFilled/></el-icon></span>
+        <div><strong>尚未提交</strong><small>提交代码后可在这里查看最新结果</small></div>
       </div>
 
       <div class="editor-host">
@@ -148,22 +176,34 @@
 
       <section ref="testConsoleRef" class="test-console" :class="{ 'test-console--collapsed': !testConsoleOpen }">
         <header class="test-console__header">
-          <div><el-icon><Monitor /></el-icon><strong>自定义测试</strong><span>使用当前代码运行一组输入</span></div>
+          <div>
+            <el-icon>
+              <Monitor/>
+            </el-icon>
+            <strong>自定义测试</strong><span>使用当前代码运行一组输入</span></div>
           <div class="test-console__tools">
-            <el-tag v-if="testResult" :type="testResult.judgeResult === OJResult.ACCEPT ? 'success' : 'danger'" effect="plain">
+            <el-tag v-if="testResult" :type="testResult.judgeResult === OJResult.ACCEPT ? 'success' : 'danger'"
+                    effect="plain">
               {{ testResult.judgeResult === OJResult.ACCEPT ? '运行成功' : statusLabel(testResult.judgeResult) }}
             </el-tag>
-            <el-button text circle @click="$emit('toggle-test')"><el-icon><ArrowDown /></el-icon></el-button>
+            <el-button text circle @click="$emit('toggle-test')">
+              <el-icon>
+                <ArrowDown/>
+              </el-icon>
+            </el-button>
           </div>
         </header>
         <div v-show="testConsoleOpen" class="test-console__body">
           <div class="test-console__field">
             <label>标准输入</label>
-            <el-input :model-value="stdin" @update:model-value="$emit('update:stdin', $event)" type="textarea" resize="none" placeholder="输入测试数据，每行一个值" />
+            <el-input :model-value="stdin" @update:model-value="$emit('update:stdin', $event)" type="textarea"
+                      resize="none" placeholder="输入测试数据，每行一个值"/>
           </div>
           <div class="test-console__field">
             <label>程序输出</label>
-            <pre v-if="stdout || testResult?.stderr" class="test-console__output">{{ stdout || testResult?.stderr }}</pre>
+            <pre v-if="stdout || testResult?.stderr" class="test-console__output">{{
+                stdout || testResult?.stderr
+              }}</pre>
             <div v-else class="test-console__placeholder">运行结果会显示在这里</div>
           </div>
         </div>
@@ -174,7 +214,17 @@
 
 <script setup lang="ts">
 import {computed, nextTick, onMounted, onUnmounted, reactive, ref} from "vue";
-import {ArrowDown, CircleCheck, Document, FullScreen, InfoFilled, Loading, Monitor, Notebook, TrendCharts} from "@element-plus/icons-vue";
+import {
+  ArrowDown,
+  CircleCheck,
+  Document,
+  FullScreen,
+  InfoFilled,
+  Loading,
+  Monitor,
+  Notebook,
+  TrendCharts
+} from "@element-plus/icons-vue";
 import type {IdType} from "@/api/common.ts";
 import type {ProblemDetailView} from "@/api/problem";
 import {Difficulty} from "@/api/problem";
@@ -225,7 +275,18 @@ const solutionParam = reactive<QuerySolution>({
   userId: undefined,
 });
 
-const OJResult = {QUEUE: 'QUEUE', COMPILING: 'compiling', RUNNING: 'running', ACCEPT: 'AC', RUNTIME_ERROR: 'RE', WRONG_ANSWER: 'WA', TIME_LIMIT_EXCEEDED: 'TLE', MEMORY_LIMIT_EXCEEDED: 'MLE', COMPILE_ERROR: 'CE', JUDGE_ERROR: 'JUDGE_ERROR'} as const;
+const OJResult = {
+  QUEUE: 'QUEUE',
+  COMPILING: 'compiling',
+  RUNNING: 'running',
+  ACCEPT: 'AC',
+  RUNTIME_ERROR: 'RE',
+  WRONG_ANSWER: 'WA',
+  TIME_LIMIT_EXCEEDED: 'TLE',
+  MEMORY_LIMIT_EXCEEDED: 'MLE',
+  COMPILE_ERROR: 'CE',
+  JUDGE_ERROR: 'JUDGE_ERROR'
+} as const;
 const pendingStates: string[] = [OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING];
 
 const openSubmissions = () => {
@@ -236,7 +297,12 @@ const openSubmissions = () => {
 const isOjProblem = computed(() => props.problem.problemVo.type === 1);
 const difficulty = computed(() => {
   const value = props.problem.ojProblemVo?.difficulty;
-  return value == null ? '' : ({[Difficulty.UNKNOWN]: '未分类', [Difficulty.SIMPLE]: '简单', [Difficulty.MEDIUM]: '中等', [Difficulty.DIFFICULT]: '困难'} as Record<number, string>)[value] || '未分类';
+  return value == null ? '' : ({
+    [Difficulty.UNKNOWN]: '未分类',
+    [Difficulty.SIMPLE]: '简单',
+    [Difficulty.MEDIUM]: '中等',
+    [Difficulty.DIFFICULT]: '困难'
+  } as Record<number, string>)[value] || '未分类';
 });
 const difficultyType = computed(() => {
   const value = props.problem.ojProblemVo?.difficulty;
@@ -262,7 +328,12 @@ const statusLabel = (status?: string) => ({
   TLE: '时间超限', MLE: '内存超限', CE: '编译错误', JUDGE_ERROR: '判题异常'
 } as Record<string, string>)[status || ''] || status || '未知状态';
 const statusTone = (status?: string) => isPending(status) ? 'pending' : status === OJResult.ACCEPT ? 'success' : status === OJResult.JUDGE_ERROR ? 'danger' : 'error';
-const formatDate = (value?: string) => value ? new Date(value).toLocaleString('zh-CN', {month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}) : '刚刚';
+const formatDate = (value?: string) => value ? new Date(value).toLocaleString('zh-CN', {
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit'
+}) : '刚刚';
 const formatMemory = (value?: number) => value == null ? '-' : `${value > 1024 ? (value / 1024).toFixed(1) : value} ${value > 1024 ? 'MiB' : 'KiB'}`;
 
 const measure = () => {
@@ -283,59 +354,524 @@ onUnmounted(() => resizeObserver.value?.disconnect());
 </script>
 
 <style scoped>
-.oj-workbench { --oj-border: color-mix(in srgb, var(--el-border-color) 68%, transparent); display: grid; grid-template-columns: minmax(360px, 0.92fr) minmax(520px, 1.08fr); gap: 16px; min-height: min(820px, calc(100vh - 132px)); height: 100%; color: var(--el-text-color-primary); }
-.oj-workbench--fullscreen { display: block; min-height: calc(100vh - 92px); }
-.oj-problem-pane, .oj-code-pane { min-height: 0; overflow: hidden; border: 1px solid var(--oj-border); border-radius: 20px; background: var(--el-bg-color); box-shadow: 0 12px 36px color-mix(in srgb, var(--el-color-primary) 6%, transparent); }
-.oj-problem-pane { display: flex; flex-direction: column; }
-.problem-pane__header { padding: 25px 26px 18px; border-bottom: 1px solid var(--oj-border); background: linear-gradient(145deg, color-mix(in srgb, var(--el-color-primary) 8%, var(--el-bg-color)), var(--el-bg-color)); }
-.problem-kicker, .code-pane__eyebrow { color: var(--el-color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.problem-pane__header h1 { margin: 8px 0 14px; font-size: clamp(22px, 2vw, 30px); line-height: 1.2; }
-.problem-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--el-text-color-secondary); font-size: 12px; }
-.problem-tag { padding: 3px 8px; border: 1px solid color-mix(in srgb, var(--tag-color, var(--el-color-primary)) 35%, transparent); border-radius: 999px; color: var(--tag-color, var(--el-color-primary)); }
-.limit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 18px; }
-.limit-grid div { padding: 10px 12px; border-radius: 12px; background: var(--el-fill-color-light); }
-.limit-grid span, .limit-grid strong { display: block; }
-.limit-grid span { color: var(--el-text-color-secondary); font-size: 11px; }
-.limit-grid strong { margin-top: 4px; font-size: 13px; }
-.problem-pane__tabs { display: flex; flex: 1; min-height: 0; flex-direction: column; }
-.problem-pane__tabs :deep(.el-tabs__header) { margin: 0; padding: 0 20px; }
-.problem-pane__tabs :deep(.el-tabs__nav-wrap::after) { display: none; }
-.problem-pane__tabs :deep(.el-tabs__content) { flex: 1; min-height: 0; }
-.problem-pane__tabs :deep(.el-tab-pane) { height: 100%; }
-.problem-pane__tabs :deep(.el-tabs__item) { gap: 6px; font-size: 13px; }
-.problem-pane__tabs em { min-width: 18px; padding: 1px 5px; border-radius: 99px; background: var(--el-fill-color); color: var(--el-text-color-secondary); font-size: 10px; font-style: normal; }
-.problem-pane__scroll { height: 100%; padding: 4px 26px 26px; }
-.statement-content { padding: 4px 0 30px; line-height: 1.8; }
-.statement-content section { margin: 0 0 26px; }
-.statement-content h2 { margin: 0 0 10px; font-size: 17px; }
-.statement-content h3 { margin: 0 0 8px; font-size: 13px; color: var(--el-text-color-secondary); }
-.statement-content pre, .test-console__output { overflow: auto; margin: 0; padding: 13px 15px; border: 1px solid var(--oj-border); border-radius: 12px; background: var(--el-fill-color-lighter); color: var(--el-text-color-primary); font: 13px/1.65 "OJCodeFont", "JetBrains Mono", Consolas, monospace; white-space: pre-wrap; }
-.example-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 26px; }
-.empty-state { display: flex; align-items: center; flex-direction: column; gap: 8px; padding: 70px 20px; color: var(--el-text-color-secondary); text-align: center; }
-.empty-state .el-icon { margin-bottom: 5px; color: var(--el-color-primary); font-size: 32px; }
-.empty-state strong { color: var(--el-text-color-primary); }
-.empty-state span { font-size: 12px; }
-.submission-list { display: flex; flex-direction: column; gap: 9px; padding: 10px 0; }
-.submission-item { display: flex; justify-content: space-between; gap: 12px; padding: 13px 14px; border: 1px solid var(--oj-border); border-radius: 14px; background: var(--el-fill-color-lighter); }
-.submission-item__main, .submission-item__stats { display: flex; align-items: center; gap: 9px; }
-.submission-item__main strong, .submission-item__main small { display: block; }
-.submission-item__main small { margin-top: 3px; color: var(--el-text-color-secondary); font-size: 11px; }
-.submission-item__stats { flex-wrap: wrap; justify-content: flex-end; color: var(--el-text-color-secondary); font-size: 11px; }
-.status-dot { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: var(--el-color-danger); }
-.status-dot--success { background: var(--el-color-success); }.status-dot--pending { background: var(--el-color-warning); box-shadow: 0 0 0 4px color-mix(in srgb, var(--el-color-warning) 14%, transparent); }
-.oj-code-pane { display: flex; flex-direction: column; padding: 14px; background: color-mix(in srgb, var(--el-fill-color-lighter) 55%, var(--el-bg-color)); }
-.code-pane__topline { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 34px; padding: 0 7px 10px; }
-.code-pane__identity strong, .code-pane__identity span { display: block; }.code-pane__identity strong { margin-top: 3px; font-size: 14px; }.code-pane__actions { display: flex; gap: 2px; }
-.editor-host { display: flex; flex: 1; min-height: 0; overflow: hidden; padding: 9px; border: 1px solid var(--oj-border); border-radius: 16px; background: var(--el-bg-color); }
-.editor-host :deep(.enhanced-editor) { display: flex; flex: 1; min-height: 0; flex-direction: column; }
-.judge-status { position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; margin: 0 0 10px; padding: 10px 14px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--status-color, var(--el-color-primary)) 25%, var(--oj-border)); border-radius: 14px; background: color-mix(in srgb, var(--status-color, var(--el-color-primary)) 6%, var(--el-bg-color)); }
-.judge-status--success { --status-color: var(--el-color-success); }.judge-status--error { --status-color: var(--el-color-danger); }.judge-status--pending { --status-color: var(--el-color-warning); }.judge-status--idle { --status-color: var(--el-color-primary); }
-.judge-status__leading { display: flex; align-items: center; min-width: 145px; gap: 9px; }.judge-status__leading strong, .judge-status__leading small { display: block; }.judge-status__leading small { margin-top: 2px; color: var(--el-text-color-secondary); font-size: 11px; }
-.status-orb { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 10px; background: color-mix(in srgb, var(--status-color) 15%, transparent); color: var(--status-color); }
-.judge-status__metrics { display: flex; flex: 1; justify-content: flex-end; gap: 12px; color: var(--el-text-color-secondary); font-size: 11px; }.judge-status .el-progress { position: absolute; right: 0; bottom: 0; left: 0; }.judge-status__message { max-width: 42%; margin: 0; overflow: hidden; color: var(--el-color-danger); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.test-console { flex: 0 0 auto; margin-top: 10px; overflow: hidden; border: 1px solid var(--oj-border); border-radius: 16px; background: var(--el-bg-color); }.test-console--collapsed { height: 42px; }
-.test-console__header { display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 10px 0 14px; }.test-console__header > div, .test-console__tools { display: flex; align-items: center; gap: 8px; }.test-console__header strong { font-size: 13px; }.test-console__header span { color: var(--el-text-color-secondary); font-size: 11px; }.test-console__header > div:first-child .el-icon { color: var(--el-color-primary); }
-.test-console__body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 12px 12px; }.test-console__field { min-width: 0; }.test-console__field label { display: block; margin: 0 0 5px; color: var(--el-text-color-secondary); font-size: 11px; }.test-console__field :deep(.el-textarea__inner) { min-height: 82px !important; resize: none; }.test-console__output, .test-console__placeholder { height: 82px; box-sizing: border-box; overflow: auto; }.test-console__placeholder { display: grid; place-items: center; border: 1px dashed var(--oj-border); border-radius: 12px; color: var(--el-text-color-placeholder); font-size: 12px; }
-@media (max-width: 980px) { .oj-workbench { grid-template-columns: minmax(300px, .85fr) minmax(440px, 1.15fr); gap: 10px; }.problem-pane__header { padding: 18px; }.problem-pane__scroll { padding-inline: 18px; } }
-@media (max-width: 760px) { .oj-workbench { display: block; min-height: 0; }.oj-problem-pane { min-height: 52vh; margin-bottom: 10px; }.oj-code-pane { min-height: 74vh; }.limit-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }.code-pane__actions .el-button { padding-inline: 5px; }.code-pane__actions .el-button span { display: none; }.test-console__body, .example-grid { grid-template-columns: 1fr; }.judge-status__metrics { display: none; } }
+.oj-workbench {
+  --oj-border: color-mix(in srgb, var(--el-border-color) 68%, transparent);
+  display: grid;
+  grid-template-columns: minmax(360px, 0.92fr) minmax(520px, 1.08fr);
+  gap: 16px;
+  width: 100%;
+  height: var(--in-main-content-height);
+  min-height: 0;
+  max-height: var(--in-main-content-height);
+  color: var(--el-text-color-primary);
+}
+
+.oj-workbench--fullscreen {
+  display: block;
+  height: calc(100vh - var(--menu-height) - 24px);
+  max-height: none;
+}
+
+.oj-problem-pane, .oj-code-pane {
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--oj-border);
+  border-radius: 20px;
+  background: var(--el-bg-color);
+  box-shadow: 0 12px 36px color-mix(in srgb, var(--el-color-primary) 6%, transparent);
+}
+
+.oj-problem-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+.problem-pane__header {
+  padding: 25px 26px 18px;
+  border-bottom: 1px solid var(--oj-border);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--el-color-primary) 8%, var(--el-bg-color)), var(--el-bg-color));
+}
+
+.problem-kicker, .code-pane__eyebrow {
+  color: var(--el-color-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.problem-pane__header h1 {
+  margin: 8px 0 14px;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.2;
+}
+
+.problem-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+.problem-tag {
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--tag-color, var(--el-color-primary)) 35%, transparent);
+  border-radius: 999px;
+  color: var(--tag-color, var(--el-color-primary));
+}
+
+.limit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.limit-grid div {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--el-fill-color-light);
+}
+
+.limit-grid span, .limit-grid strong {
+  display: block;
+}
+
+.limit-grid span {
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.limit-grid strong {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.problem-pane__tabs {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.problem-pane__tabs :deep(.el-tabs__header) {
+  margin: 0;
+  padding: 0 20px;
+}
+
+.problem-pane__tabs :deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+
+.problem-pane__tabs :deep(.el-tabs__content) {
+  flex: 1;
+  min-height: 0;
+}
+
+.problem-pane__tabs :deep(.el-tab-pane) {
+  height: 100%;
+}
+
+.problem-pane__tabs :deep(.el-tabs__item) {
+  gap: 6px;
+  font-size: 13px;
+}
+
+.problem-pane__tabs em {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 99px;
+  background: var(--el-fill-color);
+  color: var(--el-text-color-secondary);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.problem-pane__scroll {
+  height: 100%;
+  padding: 4px 26px 26px;
+}
+
+.statement-content {
+  padding: 4px 0 30px;
+  line-height: 1.8;
+}
+
+.statement-content section {
+  margin: 0 0 26px;
+}
+
+.statement-content h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.statement-content h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
+.statement-content pre, .test-console__output {
+  overflow: auto;
+  margin: 0;
+  padding: 13px 15px;
+  border: 1px solid var(--oj-border);
+  border-radius: 12px;
+  background: var(--el-fill-color-lighter);
+  color: var(--el-text-color-primary);
+  font: 13px/1.65 "OJCodeFont", "JetBrains Mono", Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+.example-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 70px 20px;
+  color: var(--el-text-color-secondary);
+  text-align: center;
+}
+
+.empty-state .el-icon {
+  margin-bottom: 5px;
+  color: var(--el-color-primary);
+  font-size: 32px;
+}
+
+.empty-state strong {
+  color: var(--el-text-color-primary);
+}
+
+.empty-state span {
+  font-size: 12px;
+}
+
+.submission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 10px 0;
+}
+
+.submission-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--oj-border);
+  border-radius: 14px;
+  background: var(--el-fill-color-lighter);
+}
+
+.submission-item__main, .submission-item__stats {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.submission-item__main strong, .submission-item__main small {
+  display: block;
+}
+
+.submission-item__main small {
+  margin-top: 3px;
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.submission-item__stats {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 50%;
+  background: var(--el-color-danger);
+}
+
+.status-dot--success {
+  background: var(--el-color-success);
+}
+
+.status-dot--pending {
+  background: var(--el-color-warning);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--el-color-warning) 14%, transparent);
+}
+
+.oj-code-pane {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  background: color-mix(in srgb, var(--el-fill-color-lighter) 55%, var(--el-bg-color));
+}
+
+.code-pane__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 34px;
+  padding: 0 7px 10px;
+}
+
+.code-pane__identity strong, .code-pane__identity span {
+  display: block;
+}
+
+.code-pane__identity strong {
+  margin-top: 3px;
+  font-size: 14px;
+}
+
+.code-pane__actions {
+  display: flex;
+  gap: 2px;
+}
+
+.editor-host {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 9px;
+  border: 1px solid var(--oj-border);
+  border-radius: 16px;
+  background: var(--el-bg-color);
+}
+
+.editor-host :deep(.enhanced-editor) {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.judge-status {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--status-color, var(--el-color-primary)) 25%, var(--oj-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--status-color, var(--el-color-primary)) 6%, var(--el-bg-color));
+}
+
+.judge-status--success {
+  --status-color: var(--el-color-success);
+}
+
+.judge-status--error {
+  --status-color: var(--el-color-danger);
+}
+
+.judge-status--pending {
+  --status-color: var(--el-color-warning);
+}
+
+.judge-status--idle {
+  --status-color: var(--el-color-primary);
+}
+
+.judge-status__leading {
+  display: flex;
+  align-items: center;
+  min-width: 145px;
+  gap: 9px;
+}
+
+.judge-status__leading strong, .judge-status__leading small {
+  display: block;
+}
+
+.judge-status__leading small {
+  margin-top: 2px;
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.status-orb {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--status-color) 15%, transparent);
+  color: var(--status-color);
+}
+
+.judge-status__metrics {
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
+  gap: 12px;
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.judge-status .el-progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.judge-status__message {
+  max-width: 42%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--el-color-danger);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.test-console {
+  flex: 0 0 auto;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--oj-border);
+  border-radius: 16px;
+  background: var(--el-bg-color);
+}
+
+.test-console--collapsed {
+  height: 42px;
+}
+
+.test-console__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 42px;
+  padding: 0 10px 0 14px;
+}
+
+.test-console__header > div, .test-console__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.test-console__header strong {
+  font-size: 13px;
+}
+
+.test-console__header span {
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.test-console__header > div:first-child .el-icon {
+  color: var(--el-color-primary);
+}
+
+.test-console__body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+
+.test-console__field {
+  min-width: 0;
+}
+
+.test-console__field label {
+  display: block;
+  margin: 0 0 5px;
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+
+.test-console__field :deep(.el-textarea__inner) {
+  min-height: 82px !important;
+  resize: none;
+}
+
+.test-console__output, .test-console__placeholder {
+  height: 82px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.test-console__placeholder {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--oj-border);
+  border-radius: 12px;
+  color: var(--el-text-color-placeholder);
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .oj-workbench {
+    grid-template-columns: minmax(300px, .85fr) minmax(440px, 1.15fr);
+    gap: 10px;
+  }
+
+  .problem-pane__header {
+    padding: 18px;
+  }
+
+  .problem-pane__scroll {
+    padding-inline: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .oj-workbench {
+    display: block;
+    height: auto;
+    max-height: none;
+  }
+
+  .oj-problem-pane {
+    min-height: 52vh;
+    margin-bottom: 10px;
+  }
+
+  .oj-code-pane {
+    min-height: 74vh;
+  }
+
+  .limit-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .code-pane__actions .el-button {
+    padding-inline: 5px;
+  }
+
+  .code-pane__actions .el-button span {
+    display: none;
+  }
+
+  .test-console__body, .example-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .judge-status__metrics {
+    display: none;
+  }
+}
 </style>

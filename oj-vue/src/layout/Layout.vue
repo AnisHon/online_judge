@@ -50,7 +50,8 @@ provide('elMain', {elMainRef: elMainRef});
   height: var(--menu-height);
   display: flex;
   position: relative;
-  z-index: 2000;
+  /* Element Plus 的 Drawer/Dialog 会使用更高的弹层层级；页面导航只需保持在内容之上。 */
+  z-index: 10;
 }
 .content-scroll { width: 100%; }
 .main-content { box-sizing: border-box; min-height: var(--content-height); padding: var(--main-padding); }
