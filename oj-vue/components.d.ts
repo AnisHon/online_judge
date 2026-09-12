@@ -89,6 +89,7 @@ declare module 'vue' {
     ListView: typeof import('./src/components/ListView/ListView.vue')['default']
     MarkDownEditor: typeof import('./src/components/MarkDownEditor/MarkDownEditor.vue')['default']
     MarkdownPreview: typeof import('./src/components/MarkdownPreview.vue')['default']
+    OjWorkbench: typeof import('./src/components/OjWorkbench/OjWorkbench.vue')['default']
     OnlineJudgeProblem: typeof import('./src/components/DetailProblem/OnlineJudgeProblem.vue')['default']
     Pagination: typeof import('./src/components/pageination/Pagination.vue')['default']
     ProblemList: typeof import('./src/components/problemset/ProblemList.vue')['default']

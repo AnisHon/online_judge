@@ -1,7 +1,6 @@
 import {
     type AjaxResult,
     type failCallback,
-    type finallyCallback,
     get,
     getWithParams,
     post,
@@ -9,6 +8,7 @@ import {
 } from "@/utils/http";
 import {debounce} from "lodash";
 import type {IdType} from "@/api/common.ts";
+import {ElMessage} from "element-plus";
 
 enum OJResult {
     QUEUE = "QUEUE",
@@ -51,7 +51,7 @@ interface JudgeResponse {
     answers?: Answer[],
     correct: boolean;
     judgeResult: OJResult;
-    submitId?: number;
+    submitId?: IdType;
     errorMessage: string;
     totalScore: string;
     fullMark: string;
@@ -91,18 +91,23 @@ interface TestForm {
 }
 
 interface TestResult {
-    userId: IdType
+    userId?: IdType
+    uuid: string
     judgeResult: OJResult,
     stderr?: string,
     stdout?: string,
+}
+
+interface TestStatusRequest {
+    uuid: string;
 }
 
 async function sendTest(testForm: TestForm): Promise<AjaxResult<void | AjaxResult<void>>> {
     return await post<TestForm, void | AjaxResult<void>>("/problem-api/judge/test", testForm);
 }
 
-async function testStatus() {
-    const {data} = await get<TestResult, void>("/problem-api/judge/test-status");
+async function testStatus(uuid: string) {
+    const {data} = await getWithParams<TestResult | null, TestStatusRequest>("/problem-api/judge/test-status", {uuid});
     return data;
 }
 
@@ -128,19 +133,61 @@ async function pollSubmission(
 ): Promise<() => void> {
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const poll = async () => {
-        if (stopped) return;
-        const {data} = await get<LogSubmit, IdType>("/problem-api/log/submissions", id);
-        if (data) onUpdate(data);
-        if (!stopped && data && [OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING].includes(data.status)) {
-            timer = setTimeout(poll, interval);
-        }
-    };
-    await poll();
-    return () => {
+    const stop = () => {
         stopped = true;
         if (timer) clearTimeout(timer);
     };
+    const poll = async () => {
+        if (stopped) return;
+        try {
+            const {data} = await get<LogSubmit, IdType>("/problem-api/log/submissions", id);
+            if (data) {
+                onUpdate(data);
+                if (![OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING].includes(data.status)) {
+                    stop();
+                    return;
+                }
+            }
+            if (!stopped) timer = setTimeout(poll, interval);
+        } catch {
+            // 网络瞬断时保留轮询，避免用户必须重新提交；错误提示由 HTTP 层统一处理。
+            if (!stopped) timer = setTimeout(poll, Math.min(interval * 2, 5000));
+        }
+    };
+    void poll();
+    return stop;
+}
+
+/** 代码测试结果轮询。uuid 用于隔离同一用户的连续测试，避免读到旧结果。 */
+async function pollTestResult(
+    uuid: string,
+    onUpdate: (result: TestResult) => void,
+    interval = 1000
+): Promise<() => void> {
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = () => {
+        stopped = true;
+        if (timer) clearTimeout(timer);
+    };
+    const poll = async () => {
+        if (stopped) return;
+        try {
+            const data = await testStatus(uuid);
+            if (data && data.uuid === uuid) {
+                onUpdate(data);
+                if (data.judgeResult && ![OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING].includes(data.judgeResult)) {
+                    stop();
+                    return;
+                }
+            }
+            if (!stopped) timer = setTimeout(poll, interval);
+        } catch {
+            if (!stopped) timer = setTimeout(poll, Math.min(interval * 2, 5000));
+        }
+    };
+    void poll();
+    return stop;
 }
 
 async function getUserAnswer(req: UserAnswerRequest): Promise<UserAnswer> {
@@ -166,39 +213,18 @@ const debouncedSave = () => {
 }
 
 async function test(judgeForm: JudgeForm, fail: failCallback): Promise<JudgeResponse> {
-    const {code, data} =
-        await post<JudgeForm, JudgeResponse>("/problem-api/judge/test", judgeForm, (msg) => {
-            ElMessage.warning(msg);
-        });
+    const {data} =
+        await post<JudgeForm, JudgeResponse>("/problem-api/judge/test", judgeForm, fail);
 
     return data
 }
 
 
 async function judge(judgeForm: JudgeForm, fail: failCallback): Promise<JudgeResponse> {
-    const {code, data} =
-        await post<JudgeForm, JudgeResponse>("/problem-api/judge", judgeForm);
+    const {data} =
+        await post<JudgeForm, JudgeResponse>("/problem-api/judge", judgeForm, fail);
 
     return data
-}
-
-const defaultFail = (msg: string = "提交出错") => {
-    ElMessage.error(msg)
-
-}
-
-const getDebouncedJudge = (
-    judgeForm: JudgeForm,
-    success: successCallback<JudgeResponse>,
-    fail: failCallback = defaultFail,
-    final: finallyCallback = () => {}
-) => {
-    return debounce(() => {
-
-        judge(judgeForm, fail).then(success).finally(final);
-        console.log()
-    }, 1000);
-
 }
 
 export type {
@@ -208,12 +234,12 @@ export type {
     LogSubmit,
     TestResult,
     TestForm,
-    JudgeMessage
+    JudgeMessage,
+    TestStatusRequest
 }
 
 export {
     judge,
-    getDebouncedJudge,
     getUserAnswer,
     saveUserAnswer,
     debouncedSave,
@@ -221,6 +247,6 @@ export {
     pollSubmission,
     sendTest,
     testStatus,
+    pollTestResult,
     OJResult
 }
-

@@ -19,7 +19,6 @@ import com.anishan.judge.judge.Judge;
 import com.anishan.judge.judge.SandboxRun;
 import com.anishan.judge.service.JudgeService;
 import com.anishan.judge.util.Constants;
-import com.anishan.judge.util.JudgeDelayUtil;
 import com.anishan.judge.util.JudgeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -273,32 +272,14 @@ public class JudgeServiceImpl implements JudgeService {
 
     @Override
     public boolean sendJudgeMessage(JudgeInfo judgeInfo) {
-        // 并发安全
-        synchronized (this) {
-            boolean available = JudgeDelayUtil.isAvailable(judgeInfo.getUserId());
-            if (available) {
-                JudgeDelayUtil.setDelay(judgeInfo.getUserId());
-            } else {
-                return false;
-            }
-        }
-
+        // 不按用户做固定冷却；RabbitMQ、判题执行器和并发信号量共同承担排队与负载控制。
         rabbitTemplate.convertAndSend("judge-exchange", "judge-info", judgeInfo);
         return true;
     }
 
     @Override
     public boolean sendTestMessage(RunTestInfo testInfo) {
-        // 并发安全
-        synchronized (this) {
-            boolean available = JudgeDelayUtil.isAvailable(testInfo.getUserId());
-            if (available) {
-                JudgeDelayUtil.setDelay(testInfo.getUserId());
-            } else {
-                return false;
-            }
-        }
-
+        // 测试运行同样交给 RabbitMQ 和判题机容量控制，不再使用固定冷却时间。
         rabbitTemplate.convertAndSend("judge-exchange", "test-info", testInfo);
         return true;
     }

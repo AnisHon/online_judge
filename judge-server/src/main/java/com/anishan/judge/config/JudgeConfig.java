@@ -11,11 +11,6 @@ import java.math.BigDecimal;
 @ConfigurationProperties("judge.config")
 public class JudgeConfig {
 
-    /**
-     * 判题间隔，单位s
-     */
-    private Integer judgeInterval = 10;
-
     /** 单台判题机同时运行的测试用例数。 */
     private Integer maxConcurrency = 4;
 

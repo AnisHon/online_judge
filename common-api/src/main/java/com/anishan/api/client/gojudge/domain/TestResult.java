@@ -9,6 +9,8 @@ import lombok.experimental.Accessors;
 public class TestResult {
 
     private Long userId;
+    /** 用于把轮询结果绑定到本次测试请求，避免读到上一次测试的结果。 */
+    private String uuid;
     private JudgeResult judgeResult;
     private String stderr;
     private String stdout;

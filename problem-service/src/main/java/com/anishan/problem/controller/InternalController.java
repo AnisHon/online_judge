@@ -2,6 +2,8 @@ package com.anishan.problem.controller;
 
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.judgeserver.domain.JudgeCaseResult;
+import com.anishan.api.client.gojudge.domain.TestResult;
+import com.anishan.api.util.RedisJudgeTestUtil;
 import com.anishan.commons.domain.R;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.problem.domain.entity.Records;
@@ -28,6 +30,7 @@ public class InternalController {
     private final RecordsService recordsService;
     private final SubmitLogService submitLogService;
     private final JudgeCaseLogService judgeCaseLogService;
+    private final RedisJudgeTestUtil redisJudgeTestUtil;
 
     @ApiOperation("更新判题状态，仅供 judge-server 调用")
     @PostMapping("/judgeStatus")
@@ -72,6 +75,15 @@ public class InternalController {
             recordsService.addRecord(records);
         }
 
+        return R.success(null);
+    }
+
+    @ApiOperation("存储代码测试结果，仅供 judge-server 调用")
+    @PostMapping("/testResult")
+    public R<Void> testResult(@RequestBody TestResult testResult) {
+        if (testResult != null && testResult.getUserId() != null && testResult.getUuid() != null) {
+            redisJudgeTestUtil.save(testResult, 120);
+        }
         return R.success(null);
     }
 

@@ -12,11 +12,6 @@ import java.math.BigDecimal;
 public class JudgeConfig {
 
     /**
-     * 判题间隔，单位s
-     */
-    private Integer judgeInterval = 10;
-
-    /**
      * 是否使用固定奖励分
      */
     private Boolean isFixedAwardPoint = true;

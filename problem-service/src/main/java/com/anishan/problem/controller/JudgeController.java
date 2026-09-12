@@ -55,8 +55,9 @@ public class JudgeController {
 
     @GetMapping("/test-status")
     @ApiOperation("OJ代码测试结果查看")
-    public R<TestResult> testStatus(@RequestHeader("user-id") Long userId) {
-        TestResult testResult = judgeService.testStatus(userId);
+    public R<TestResult> testStatus(@RequestHeader("user-id") Long userId,
+                                    @RequestParam("uuid") String uuid) {
+        TestResult testResult = judgeService.testStatus(userId, uuid);
         return R.success(testResult);
     }
 

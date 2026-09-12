@@ -195,6 +195,7 @@ getList();
   display: flex;
   align-items: center;
   border-radius: 16px;
+  padding: 0 12px;
   transition: transform .2s, border-color .2s;
 }
 

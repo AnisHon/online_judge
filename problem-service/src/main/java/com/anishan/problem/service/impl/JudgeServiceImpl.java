@@ -9,6 +9,7 @@ import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.util.RedisJudgeTestUtil;
 import com.anishan.problem.domain.dto.TestRequest;
 import com.anishan.commons.enumeration.ProblemType;
+import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.JudgeAnswer;
 import com.anishan.problem.domain.ScoreAndIsCorrected;
@@ -414,15 +415,33 @@ public class JudgeServiceImpl implements JudgeService {
         runTestInfo.setLanguage(language);
         runTestInfo.setCode(testRequest.getCode());
         runTestInfo.setStdin(testRequest.getStdin());
+        redisJudgeTestUtil.save(new TestResult()
+                .setUserId(userId)
+                .setUuid(testRequest.getUuid())
+                .setJudgeResult(JudgeResult.QUEUE), 120);
 
-        Boolean isSuccess = judgeClient.test(runTestInfo).getData();
-
-        ThrowUtil.businessError(!isSuccess, "冷却中，请稍后再试");
+        try {
+            Boolean isSuccess = judgeClient.test(runTestInfo).getData();
+            if (!Boolean.TRUE.equals(isSuccess)) {
+                redisJudgeTestUtil.save(new TestResult()
+                        .setUserId(userId)
+                        .setUuid(testRequest.getUuid())
+                        .setJudgeResult(JudgeResult.JUDGE_ERROR), 120);
+                ThrowUtil.businessError(true, "判题服务当前繁忙，请稍后重试");
+            }
+        } catch (RuntimeException e) {
+            redisJudgeTestUtil.save(new TestResult()
+                    .setUserId(userId)
+                    .setUuid(testRequest.getUuid())
+                    .setJudgeResult(JudgeResult.JUDGE_ERROR), 120);
+            throw e;
+        }
     }
 
     @Override
-    public TestResult testStatus(Long userId) {
-        return redisJudgeTestUtil.get(userId);
+    public TestResult testStatus(Long userId, String uuid) {
+        TestResult result = redisJudgeTestUtil.get(userId);
+        return result != null && java.util.Objects.equals(result.getUuid(), uuid) ? result : null;
     }
 
 

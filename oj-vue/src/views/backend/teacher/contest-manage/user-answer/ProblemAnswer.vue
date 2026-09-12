@@ -49,8 +49,17 @@
 
           <div class="detail-problem">
             <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
-            <fill-blank v-model="judgeForm"  v-else-if="isFillProblem" />
-            <choice-choose :problem-view="problem" v-model="judgeForm" v-else-if="isChoiceProblem" />
+            <fill-blank
+                :model-value="judgeForm"
+                @update:model-value="updateJudgeForm"
+                v-else-if="isFillProblem"
+            />
+            <choice-choose
+                :problem-view="problem"
+                :model-value="judgeForm"
+                @update:model-value="updateJudgeForm"
+                v-else-if="isChoiceProblem"
+            />
           </div>
 
 
@@ -78,7 +87,8 @@
       >
         <enhanced-code-editor
             :disable-submit="disableSubmit"
-            v-model="judgeForm"
+            :model-value="judgeForm"
+            @update:model-value="updateJudgeForm"
             :heightProp="height"
             @full-screen="onHandleFullScreen"
             @on-ready="onEditorReady"
@@ -212,6 +222,10 @@ const judgeForm = reactive<JudgeForm>({
   answers: [],
   code: ""
 });
+
+const updateJudgeForm = (value: JudgeForm) => {
+  Object.assign(judgeForm, value)
+}
 
 
 // 全屏

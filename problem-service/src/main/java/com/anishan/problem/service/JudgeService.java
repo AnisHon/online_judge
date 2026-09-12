@@ -12,5 +12,5 @@ public interface JudgeService {
 
     void codeTest(Long userId, TestRequest judgeRequest);
 
-    TestResult testStatus(Long userId);
+    TestResult testStatus(Long userId, String uuid);
 }

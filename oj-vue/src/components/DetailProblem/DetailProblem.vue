@@ -1,5 +1,30 @@
 <template>
-  <div v-loading="problemIsLoading" class="detail-problem-root" :class="{ 'detail-problem-root--contest': contestId }">
+  <oj-workbench
+      v-if="problem && isOjProblem"
+      v-loading="problemIsLoading"
+      :problem="problem"
+      :problem-id="problemId"
+      :contest-id="contestId"
+      :disable-submit="disableSubmit"
+      :form="judgeForm"
+      :logs="submitLogs"
+      :active-submission="activeSubmission"
+      :loading="isLoading"
+      :fullscreen="isFullScreen"
+      :test-console-open="testConsoleOpen"
+      :stdin="stdin"
+      :stdout="stdout"
+      :test-result="testResult"
+      @update:form="updateJudgeForm"
+      @update:stdin="stdin = $event"
+      @submit="onHandleSubmit"
+      @test="submitTest"
+      @toggle-test="toggleTestConsole"
+      @full-screen="onHandleFullScreen"
+      @open-log="openLog"
+      @view-code="viewSubmissionCode"
+  />
+  <div v-else v-loading="problemIsLoading" class="detail-problem-root" :class="{ 'detail-problem-root--contest': contestId }">
     <el-row v-if="problem !== undefined" class="detail-problem-row" justify="center" :gutter="20">
 
       <el-col style="padding: 0" class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
@@ -57,8 +82,17 @@
 
                 <div class="detail-problem">
                   <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
-                  <fill-blank-problem v-model="judgeForm"  v-else-if="isFillProblem" />
-                  <choice-choose-problem :problem-view="problem" v-model="judgeForm" v-else-if="isChoiceProblem" />
+                  <fill-blank-problem
+                      :model-value="judgeForm"
+                      @update:model-value="updateJudgeForm"
+                      v-else-if="isFillProblem"
+                  />
+                  <choice-choose-problem
+                      :problem-view="problem"
+                      :model-value="judgeForm"
+                      @update:model-value="updateJudgeForm"
+                      v-else-if="isChoiceProblem"
+                  />
                   <el-skeleton v-else animated>
                     <el-skeleton-item variant="p"/>
                     <el-skeleton-item variant="p"/>
@@ -138,7 +172,8 @@
               </template>
 
               <solutions
-                  v-model:param="solutionParam"
+                  :param="solutionParam"
+                  @update:param="updateSolutionParam"
                   :scroll-element="contentRef?.$el"
               />
 
@@ -158,7 +193,8 @@
         <div class="editor-panel">
           <enhanced-code-editor
               :disable-submit="disableSubmit"
-              v-model="judgeForm"
+              :model-value="judgeForm"
+              @update:model-value="updateJudgeForm"
               :heightProp="height"
               @submit="onHandleSubmit"
               @full-screen="onHandleFullScreen"
@@ -221,19 +257,20 @@ import {
   ProblemType,
   recentSubmit,
 } from "@/api/problem";
-import {computed, createVNode, onMounted, onUnmounted, reactive, type Ref, ref, type VNode, watch} from "vue";
+import {computed, onMounted, onUnmounted, reactive, type Ref, ref, watch} from "vue";
 import EnhancedCodeEditor from '@/components/EnhancedCodeEdior/index.vue'
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {
   type Answer,
-  getDebouncedJudge,
+  judge,
   getUserAnswer,
   type JudgeForm,
-  type JudgeMessage,
   type JudgeResponse,
   type LogSubmit,
   OJResult,
+  pollSubmission,
+  pollTestResult,
   saveUserAnswer,
   sendTest,
 } from "@/api/problem/judge";
@@ -241,15 +278,14 @@ import useLoading from "@/hooks/useLoading";
 import OnlineJudgeProblem from "./OnlineJudgeProblem.vue";
 import FillBlankProblem from "./FillBlank.vue";
 import ChoiceChooseProblem from "./ChoiceChoose.vue";
+import OjWorkbench from "@/components/OjWorkbench/OjWorkbench.vue";
 import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
 import __ from "lodash";
 import {letterToNumber} from "@/utils/stringUtils";
-import {ElMessage, ElNotification, type MessageHandler} from "element-plus";
-import CustomElMessage from "@/components/CustomElMessage.vue";
+import {ElMessage, ElNotification} from "element-plus";
 import {ChatLineSquare, Document, Notebook} from "@element-plus/icons-vue";
 import Solutions from "@/views/solutions/component/SolutionsComponent/SolutionsComponent.vue";
 import type {QuerySolution} from "@/api/solution";
-import {getUuid, initSSE, isSseConnected, offSse, onSse, SseEvent} from "@/utils/sse";
 import type {IdType} from "@/api/common.ts";
 
 const errorTitle = ref("");
@@ -282,6 +318,10 @@ const solutionParam = reactive<QuerySolution>({
   problemId: problemId,
   userId: undefined,
 })
+
+const updateSolutionParam = (value: QuerySolution) => {
+  Object.assign(solutionParam, value)
+}
 
 const {loading, finish, isLoading} = useLoading()
 
@@ -368,6 +408,10 @@ const judgeForm = reactive<JudgeForm>({
   languageId: '1',
 });
 
+const updateJudgeForm = (value: JudgeForm) => {
+  Object.assign(judgeForm, value)
+}
+
 // 判题的表单的副本，用于比对
 const judgeFormCopy = reactive<JudgeForm>({
   contestId: undefined,
@@ -381,6 +425,16 @@ const errMsg = ref<string>();
 
 // 所有提交日志
 const submitLogs = reactive<LogSubmit[]>([])
+
+// OJ 提交状态只通过 HTTP 短轮询获取，不依赖 SSE 长连接。
+const activeSubmissionId = ref<IdType>();
+const activeSubmission = ref<LogSubmit>();
+const submissionPolls = new Map<string, () => void>();
+const testConsoleOpen = ref(false);
+const testResult = ref<import("@/api/problem/judge").TestResult>();
+let testPollStop: (() => void) | undefined;
+
+const requestUuid = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 const viewSubmissionCode = (log: LogSubmit) => {
   if (!log.code) return;
@@ -398,157 +452,123 @@ const openLog = () => {
   currentTab.value = "log";
 }
 
-// 发送OJ测试
-const submitTest = () => {
-  if (!isSseConnected()) {
-    ElNotification.error({title: "测试失败", message: "连接已断开，请尝试刷新网页"})
-    return;
-  }
-  handleTestSubmit();
-  judgeForm.uuid = getUuid();
+const toggleTestConsole = () => {
+  testConsoleOpen.value = !testConsoleOpen.value;
 }
 
-
-
-// 发送OJ测试
-const handleTestSubmit = async () => {
-  stdout.value = "";
-  errMsg.value = undefined;
-  loading();
-
-  const testForm = {code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value, uuid: getUuid()};
-  const {code} = await sendTest(testForm);
-  if (code === 200) {
-    getOjResult(true);
-  } else {
-    finish();
-  }
-
-}
-
-// SSE的变换状态的回调
-const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: MessageHandler, vnode: VNode, isTest = false) => {
-
-  if (judgeMessage.state == OJResult.COMPILING) {
-
-    vnode?.component?.exposed?.update("编译中")
-
-  } else if (judgeMessage.state == OJResult.RUNNING) {
-    vnode?.component?.exposed?.update("运行中")
-  }
-
-  errMsg.value = judgeMessage.stderr;
-  switch (judgeMessage.state) {
-    case OJResult.ACCEPT:
-      stdout.value = judgeMessage.stdout || "";
-      if (!isTest) {
-        getLogs()
-        openLog();
-      }
-      break;
-    case OJResult.RUNTIME_ERROR:
-      errorTitle.value = "RE";
-      errorText.value = "运行时错误";
-      break;
-    case OJResult.WRONG_ANSWER:
-      errorTitle.value = "WA";
-      errorText.value = "答案错误\n";
-      break;
-    case OJResult.TIME_LIMIT_EXCEEDED:
-      errorTitle.value = "TLE";
-      errorText.value = "时间超限";
-      break;
-    case OJResult.MEMORY_LIMIT_EXCEEDED:
-      errorTitle.value = "MLE";
-      errorText.value = "内存超限";
-      break;
-    case OJResult.COMPILE_ERROR:
-      errorTitle.value = "CE";
-      errorText.value = "编译错误";
-      break;
-    case OJResult.JUDGE_ERROR:
-      errorTitle.value = "OJ";
-      errorText.value = "判题服务暂时不可用，请稍后重试";
-      break;
-
-  }
-  const isFinish = judgeMessage.state != OJResult.COMPILING
-      && judgeMessage.state != OJResult.QUEUE
-      && judgeMessage.state != OJResult.RUNNING;
-
-  if (isFinish) {
-    offSse(SseEvent.UPDATE_JUDGE_STATE, handler);
-    setTimeout(instance.close, 1000);
-    finish();
-    if (!isTest) {
-      getLogs()
-      openLog();
-    }
-    if (judgeMessage.state != OJResult.ACCEPT) {
-      openErrorDialog.value = true;
-    }
-  }
-
-
-}
-
-//
-const getOjResult = (isTest = false) => {
-  const vNode = createVNode(CustomElMessage)
-  const el = ElMessage(
-      {
-        message: vNode,
-        duration: 60000
-      }
-  )
-  vNode?.component?.exposed?.update("排队中")
-
-  const onUpdate = (judgeMessage: JudgeMessage) => {
-    onUpdateJudgeState(judgeMessage, onUpdate, el, vNode, isTest);
-  }
-
-  onSse(SseEvent.UPDATE_JUDGE_STATE, onUpdate)
-}
-
-// 发送判题
-const doJudge = getDebouncedJudge(judgeForm,
-    (data: JudgeResponse) => {
-
-      if (!data) {
-        return;
-      }
-
-      showAnswers.value =  Array.isArray(data.answers) && data.answers?.length > 0;
-
-      judgeResult.value = data;
-      judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
-
-      if (problemType.value === ProblemType.OJ) {
-        getOjResult();
-      }
-    },
-    undefined,
-    finish
-);
-
-
-// 显示答案
+// 显示答案（非 OJ 题仍复用原有即时判题逻辑）
 const showAnswers = ref(false);
 
-// 提交Oj答案
-const onHandleSubmit = () => {
-  if (!isSseConnected()) {
-    ElNotification.error({title: "测试失败", message: "连接已断开，请尝试刷新网页"})
-    return;
+const pendingJudgeStates = [OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING];
+const isTerminalJudgeState = (status?: OJResult) => !!status && !pendingJudgeStates.includes(status);
+
+const upsertSubmitLog = (log: LogSubmit) => {
+  const index = submitLogs.findIndex(item => String(item.submitId) === String(log.submitId));
+  if (index === -1) {
+    submitLogs.unshift(log);
+  } else {
+    submitLogs[index] = {...submitLogs[index], ...log};
   }
+  if (String(activeSubmissionId.value) === String(log.submitId)) {
+    activeSubmission.value = submitLogs[index === -1 ? 0 : index];
+  }
+};
+
+const startSubmissionPolling = async (submitId: IdType) => {
+  const key = String(submitId);
+  submissionPolls.get(key)?.();
+  const stop = await pollSubmission(submitId, (log) => {
+    upsertSubmitLog(log);
+    if (isTerminalJudgeState(log.status)) {
+      submissionPolls.get(key)?.();
+      submissionPolls.delete(key);
+      finish();
+    }
+  }, 1000);
+  submissionPolls.set(key, stop);
+};
+
+// 发送 OJ 测试：提交后只轮询这次 uuid 对应的结果。
+const submitTest = () => {
+  testConsoleOpen.value = true;
+  void handleTestSubmit();
+};
+
+const handleTestSubmit = async () => {
+  const uuid = requestUuid();
   stdout.value = "";
   errMsg.value = undefined;
-
+  testResult.value = {uuid, judgeResult: OJResult.QUEUE};
+  testPollStop?.();
   loading();
-  doJudge();
-  judgeForm.uuid = getUuid();
 
-}
+  try {
+    await sendTest({code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value, uuid});
+    testPollStop = await pollTestResult(uuid, result => {
+      testResult.value = result;
+      errMsg.value = result.stderr;
+      stdout.value = result.stdout || "";
+      if (isTerminalJudgeState(result.judgeResult)) {
+        finish();
+        testPollStop = undefined;
+      }
+    }, 1000);
+  } catch {
+    finish();
+  }
+};
+
+const submitOj = async () => {
+  const uuid = requestUuid();
+  judgeForm.uuid = uuid;
+  const payload = JSON.parse(JSON.stringify(judgeForm)) as JudgeForm;
+  try {
+    const data = await judge(payload, (message) => ElNotification.error({title: "提交失败", message}));
+    if (!data?.submitId) {
+      ElNotification.error({title: "提交失败", message: "服务没有返回提交编号"});
+      finish();
+      return;
+    }
+    activeSubmissionId.value = data.submitId;
+    const queuedLog: LogSubmit = {
+      submitId: data.submitId,
+      userId: "0",
+      problemId,
+      language: judgeForm.languageId || "未知语言",
+      status: OJResult.QUEUE,
+      code: judgeForm.code,
+    };
+    activeSubmission.value = queuedLog;
+    upsertSubmitLog(queuedLog);
+    await startSubmissionPolling(data.submitId);
+    // 提交请求已经进入判题队列，按钮不再被整段判题过程锁住；后续状态由独立轮询更新。
+    finish();
+  } catch {
+    finish();
+  }
+};
+
+// 提交入口不再 debounce，也不依赖 SSE；连续提交由判题队列按容量自然排队。
+const onHandleSubmit = async () => {
+  stdout.value = "";
+  errMsg.value = undefined;
+  loading();
+  if (problemType.value === ProblemType.OJ) {
+    await submitOj();
+    return;
+  }
+
+  try {
+    const data = await judge(judgeForm, (message) => ElNotification.error({title: "提交失败", message}));
+    showAnswers.value = Array.isArray(data?.answers) && data.answers.length > 0;
+    judgeResult.value = data;
+    judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
+  } catch {
+    // HTTP 层已经统一展示错误消息。
+  } finally {
+    finish();
+  }
+};
 
 // 全屏
 const onHandleFullScreen = () => {
@@ -694,12 +714,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.onreset = null;
-
+  submissionPolls.forEach(stop => stop());
+  testPollStop?.();
 })
-
-
-
-initSSE();
 </script>
 
 

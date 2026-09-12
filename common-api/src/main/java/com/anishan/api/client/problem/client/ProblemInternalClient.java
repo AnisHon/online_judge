@@ -1,6 +1,7 @@
 package com.anishan.api.client.problem.client;
 
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
+import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.config.FeignDecoderConfig;
 import com.anishan.commons.domain.R;
 import io.swagger.annotations.ApiOperation;
@@ -18,4 +19,8 @@ public interface ProblemInternalClient {
     @ApiOperation("更新判题公开状态")
     @PostMapping("/judgeStatus")
     R<Void> judgeStatus(@RequestBody JudgeScore judgeScore);
+
+    @ApiOperation("存储代码测试结果")
+    @PostMapping("/testResult")
+    R<Void> testResult(@RequestBody TestResult testResult);
 }

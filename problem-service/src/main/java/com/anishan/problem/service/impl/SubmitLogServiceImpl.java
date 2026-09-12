@@ -7,7 +7,6 @@ import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.commons.util.ThrowUtil;
-import com.anishan.problem.config.JudgeConfig;
 import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.problem.mapper.SubmitLogMapper;
@@ -31,7 +30,6 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
     implements SubmitLogService {
 
     private final SubmitLogUtil submitLogUtil;
-    private final JudgeConfig judgeConfig;
 
     @Override
     public Long logQueue(Long userId, Long problemId, String language) {
@@ -41,9 +39,6 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
                 .setUserId(userId)
                 .setProblemId(problemId);
 
-        ThrowUtil.runtime(submitLogUtil.isExist(userId), "请等待");
-
-
         this.save(submitLog);
         submitLogUtil.cacheLog(submitLog);
         return submitLog.getSubmitId();
@@ -52,8 +47,6 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
     @Override
     public Long createQueued(JudgeInfo judgeInfo) {
         ThrowUtil.runtime(judgeInfo == null, "判题参数不能为空");
-        ThrowUtil.runtime(submitLogUtil.isExist(judgeInfo.getUserId()), "请等待");
-
         SubmitLog submitLog = new SubmitLog()
                 .setUserId(judgeInfo.getUserId())
                 .setProblemId(judgeInfo.getProblemId())
@@ -81,9 +74,6 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
                 .setUserId(userId)
                 .setStatus(result)
         );
-        submitLogUtil.setExpired(userId, 20L);
-
-
         return this.update(
                 new LambdaUpdateWrapper<SubmitLog>()
                         .set(SubmitLog::getStatus, result)
@@ -117,8 +107,6 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
         // 缓存也改一下
 
         submitLogUtil.update(log);
-        submitLogUtil.setExpired(submitLog.getUserId(), judgeConfig.getJudgeInterval().longValue());
-
         return this.updateById(log);
     }
 
@@ -184,12 +172,10 @@ public class SubmitLogServiceImpl extends ServiceImpl<SubmitLogMapper, SubmitLog
         boolean updated = this.updateById(log);
         if (updated && judgeScore.getUserId() != null) {
             submitLogUtil.update(log);
-            submitLogUtil.setExpired(judgeScore.getUserId(), judgeConfig.getJudgeInterval().longValue());
         }
         return updated;
     }
 
 
 }
-
 

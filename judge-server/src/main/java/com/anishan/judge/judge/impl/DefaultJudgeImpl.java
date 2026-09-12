@@ -17,7 +17,6 @@ import com.anishan.judge.exception.CompileError;
 import com.anishan.judge.exception.SubmitError;
 import com.anishan.judge.exception.SystemError;
 import com.anishan.judge.judge.*;
-import com.anishan.judge.util.JudgeNotifyUtil;
 import com.anishan.judge.judge.Compiler;
 import com.anishan.judge.util.JudgeUtils;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +51,6 @@ public class DefaultJudgeImpl implements JudgeRun {
 
     private final SandboxRun sandboxRun;
 
-    private final JudgeNotifyUtil judgeNotifyUtil;
     private final ProblemInternalClient problemInternalClient;
     private final JudgeConfig judgeConfig;
 
@@ -167,7 +165,7 @@ public class DefaultJudgeImpl implements JudgeRun {
                                 List<CaseContent> caseContents,
                                 JudgeScore judgeScore,
                                 BigDecimal totalScore,
-                                JudgeInfo judgeInfo) throws ExecutionException, InterruptedException, TimeoutException {
+                                JudgeInfo judgeInfo) throws InterruptedException {
         if (CollUtil.isEmpty(futureTasks)) {
             judgeScore
                     .setResult(JudgeResult.JUDGE_ERROR)
@@ -343,8 +341,6 @@ public class DefaultJudgeImpl implements JudgeRun {
                 return judgeScore;
             }
 
-            // 通知编译
-            judgeNotifyUtil.notifyCompiling(judgeInfo.getUuid());
             fileId = compiler.compile(languageConfig, judgeInfo.getCode(), null, null);
 
             try {
@@ -366,8 +362,6 @@ public class DefaultJudgeImpl implements JudgeRun {
                     .test(false)
                     .build();
 
-            // 通知正在判题
-            judgeNotifyUtil.notifyRunning(judgeInfo.getUuid());
             caseContents.forEach(caseContent -> {
                 CompletableFuture<JudgeRunResultScore> future =
                         CompletableFuture.supplyAsync(() -> judge(caseContent, judgeInfo, judgeParam), executorService);
@@ -399,12 +393,6 @@ public class DefaultJudgeImpl implements JudgeRun {
             judgeScore
                     .setResult(JudgeResult.JUDGE_ERROR)
                     .setErrorCode("JUDGE_INTERRUPTED")
-                    .setInternalError(e.getMessage());
-        } catch (ExecutionException | TimeoutException e) {
-            log.error(e.getMessage(), e);
-            judgeScore
-                    .setResult(JudgeResult.JUDGE_ERROR)
-                    .setErrorCode("CASE_FUTURE_ERROR")
                     .setInternalError(e.getMessage());
         } finally {
             if (fileId != null) {
@@ -439,8 +427,6 @@ public class DefaultJudgeImpl implements JudgeRun {
         String fileId = null;
 
         try {
-            // 通知编译
-            judgeNotifyUtil.notifyCompiling(runTestInfo.getUuid());
             fileId = compiler.compile(languageConfig, runTestInfo.getCode(), null, null);
 
 
@@ -452,8 +438,6 @@ public class DefaultJudgeImpl implements JudgeRun {
                     .test(true)
                     .build();
 
-            // 通知正在运行
-            judgeNotifyUtil.notifyRunning(runTestInfo.getUuid());
             CompletableFuture<RunResult> future =
                     CompletableFuture.supplyAsync(() -> {
                         boolean acquired = false;

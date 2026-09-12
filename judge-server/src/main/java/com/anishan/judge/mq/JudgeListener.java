@@ -7,7 +7,6 @@ import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.client.problem.client.ProblemInternalClient;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.judge.judge.JudgeRun;
-import com.anishan.judge.util.JudgeNotifyUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -24,7 +23,6 @@ public class JudgeListener {
 
     private final JudgeRun judgeRun;
     private final ProblemInternalClient problemInternalClient;
-    private final JudgeNotifyUtil judgeNotifyUtil;
 
     private void fillJudgeScore(JudgeScore judgeScore, JudgeInfo judgeInfo) {
         if (judgeScore == null) return;
@@ -81,16 +79,6 @@ public class JudgeListener {
         problemInternalClient.judgeResult(judge);
 
 
-        // 通知完成
-        JudgeResult result = judge.getResult() == null ? JudgeResult.JUDGE_ERROR : judge.getResult();
-        String stderr = result == JudgeResult.JUDGE_ERROR ? "判题服务异常，请稍后重试" : judge.getErrorMessage();
-
-        if (result == JudgeResult.WRONG_ANSWER) {
-            stderr = "总共:" + judge.getTotalCount() + "\n通过:" + judge.getPassCount();
-        }
-
-        judgeNotifyUtil.notify(info.getUuid(), result, stderr);
-
         log.debug("用户ID:{} 判题结束", info.getUserId());
     }
 
@@ -114,11 +102,14 @@ public class JudgeListener {
         } catch (Exception e) {
 
              testResult = new TestResult()
-                     .setJudgeResult(JudgeResult.RUNTIME_ERROR);
+                     .setJudgeResult(JudgeResult.JUDGE_ERROR);
         }
 
-        // 通知完成
-        judgeNotifyUtil.notify(info.getUuid(), testResult.getJudgeResult(), testResult.getStdout(), testResult.getStderr());
+        if (testResult == null) {
+            testResult = new TestResult().setJudgeResult(JudgeResult.JUDGE_ERROR);
+        }
+        testResult.setUserId(info.getUserId()).setUuid(info.getUuid());
+        problemInternalClient.testResult(testResult);
         log.debug("用户ID:{} 测试结束", info.getUserId());
     }
 
