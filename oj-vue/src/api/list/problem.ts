@@ -15,6 +15,7 @@ const debouncedGetProblems = (success: successCallback<ProblemInListView[]>) => 
     const get = debounce((x) => {
         contestProblems(x)
             .then(success)
+            .catch(() => success([]))
             .finally(finish);
     }, 500);
     return {loading, isLoading, get};

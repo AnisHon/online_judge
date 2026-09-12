@@ -43,6 +43,7 @@ interface ProblemInListView extends ProblemView {
     tempScore?: number;
     userScore?: number;
     correct?: boolean;
+    finish?: boolean;
 }
 
 
@@ -126,7 +127,7 @@ const debouncedGetProblem = (listId: IdType, success: successCallback<ProblemVie
 }
 
 interface QueryList extends SortedPagedType{
-    listId?: number;
+    listId?: IdType;
     listName?: string;
 }
 
@@ -205,6 +206,4 @@ export {
     debouncedUserGetProblem,
     getProblems
 }
-
-
 

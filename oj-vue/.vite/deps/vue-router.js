@@ -1232,7 +1232,7 @@ function getInsertionAncestor(matcher) {
       return ancestor;
     }
   }
-  return;
+
 }
 function isMatchable({ record }) {
   return !!(record.name || record.components && Object.keys(record.components).length || record.redirect);
@@ -1480,7 +1480,7 @@ function loadRouteLocation(route) {
         const resolvedComponent = isESModule(resolved) ? resolved.default : resolved;
         record.mods[name] = resolved;
         record.components[name] = resolvedComponent;
-        return;
+
       }));
     }
     return promises;

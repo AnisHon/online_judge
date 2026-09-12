@@ -316,6 +316,7 @@ export type {
 
 export {
     getProblems,
+    getProblemsAdmin,
     debouncedGetProblem,
     removeProblems,
     ProblemAuth,

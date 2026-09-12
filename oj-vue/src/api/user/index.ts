@@ -36,7 +36,7 @@ interface UserView {
     userId: IdType;
     userName: string;
     email: string;
-    point: number;
+    points: number;
     nikeName: string;
     status: UserStatus;
     createTime: Date;
@@ -154,7 +154,12 @@ const debouncedUpdateUser = (form: UserUpdateForm, success: successCallback<void
 }
 
 const getUser = async (queryData: QueryUser): Promise<PagedResponse<UserView>> => {
-    return await fetch(queryData, "/user-api/user/page", "/user-api/user/query")
+    // 后端 UserState 按枚举名称绑定查询参数，不能把数字枚举值直接传成 "0/1"。
+    const statusValue = String(queryData.status ?? '').toUpperCase();
+    const status = queryData.status === undefined
+        ? undefined
+        : statusValue === String(UserStatus.BANNED) || statusValue === 'BANNED' ? 'BANNED' : 'NORMAL';
+    return await fetch({...queryData, status} as unknown as QueryUser, "/user-api/user/page", "/user-api/user/query")
 }
 
 
@@ -221,6 +226,3 @@ export {
     change,
     dict
 }
-
-
-

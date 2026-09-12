@@ -258,9 +258,12 @@ router.beforeEach(async (to) => {
       try {
         await loadDynamicRoutes();
         return { ...to, replace: true };
-      } catch (_) {
-        token.clearToken();
-        return {name: 'login', replace: true};
+      } catch (error) {
+        if (typeof error === 'object' && error !== null && 'code' in error && error.code === 401) {
+          token.clearToken();
+          return {name: 'login', replace: true};
+        }
+        return false;
       }
     }
     if (!isMatched) return {name: '404', replace: true};

@@ -20,6 +20,14 @@ export const hasPerm = (perm: string | string[] | undefined): boolean => {
     return result;
 }
 
+export const hasAnyPerm = (perm: string | string[] | undefined): boolean => {
+    if (!perm) {
+        return true;
+    }
+    const auths = useUserStore().getAuths();
+    return Array.isArray(perm) ? perm.some(role => auths.includes(role)) : auths.includes(perm);
+}
+
 
 export const isUserIdEqual = (id: IdType | undefined): boolean => {
     const userStore = useUserStore();

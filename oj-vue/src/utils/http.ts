@@ -16,6 +16,8 @@ export interface AjaxResult<T> {
 }
 
 export class ApiError extends Error {
+    notified = false;
+
     constructor(message: string, readonly code: number) {
         super(message);
         this.name = "ApiError";
@@ -53,17 +55,31 @@ export const service = axios.create({
     withCredentials: true // 携带cookie
 });
 
+// 刷新令牌必须绕开业务响应拦截器，否则已经解包的 AjaxResult 会被二次解包。
+const refreshService = axios.create({
+    baseURL,
+    timeout: 60000,
+    withCredentials: true
+});
+
 let refreshing: Promise<string> | null = null;
+
+interface RefreshTokenResult {
+    accessToken?: string;
+    refreshToken?: string;
+}
 
 const refreshAccessToken = async (): Promise<string> => {
     const tokenStore = useToken();
     if (!tokenStore.refreshToken) throw new Error("刷新令牌不存在");
     if (!refreshing) {
-        refreshing = service.post('/user-api/auth/refresh', {refreshToken: tokenStore.refreshToken}, {
-            headers: {token: ''},
-            _skipAuthRefresh: true
-        } as any).then(response => {
-            const result = response.data as AjaxResult<any>;
+        const refreshToken = tokenStore.refreshToken;
+        refreshing = refreshService.post<AjaxResult<RefreshTokenResult>>(
+            '/user-api/auth/refresh',
+            {refreshToken},
+            {headers: {token: ''}}
+        ).then(response => {
+            const result = response.data;
             const accessToken = result.data?.accessToken;
             if (result.code !== 200 || !accessToken) throw new Error(result.message || "刷新登录状态失败");
             tokenStore.setTokens(accessToken, result.data.refreshToken);
@@ -71,6 +87,33 @@ const refreshAccessToken = async (): Promise<string> => {
         }).finally(() => { refreshing = null; });
     }
     return refreshing;
+};
+
+const noRefreshPaths = [
+    '/auth/login',
+    '/auth/registration',
+    '/auth/refresh',
+    '/auth/captcha-code',
+    '/auth/send-email-code',
+    '/auth/send-forget-email-code',
+    '/auth/forget-pass'
+];
+
+const canRefreshRequest = (request: any) => {
+    const tokenStore = useToken();
+    return !!request
+        && !request._skipAuthRefresh
+        && !request._retry
+        && !!tokenStore.token
+        && !!tokenStore.refreshToken
+        && !noRefreshPaths.some(path => request.url?.includes(path));
+};
+
+const retryWithFreshAccessToken = async (request: any) => {
+    request._retry = true;
+    const accessToken = await refreshAccessToken();
+    request.headers.set('token', accessToken);
+    return service(request);
 };
 
 // 请求拦截器
@@ -95,18 +138,14 @@ service.interceptors.response.use(
             return Promise.reject(new ApiError("服务返回了无法识别的数据", response.status));
         }
         const request = response.config as any;
-        if ((result?.code === 401 || response.status === 401) && !request._skipAuthRefresh && !request._retry) {
-            request._retry = true;
-            return refreshAccessToken().then(accessToken => {
-                request.headers.set('token', accessToken);
-                return service(request);
-            }).catch(() => {
+        if ((result?.code === 401 || response.status === 401) && canRefreshRequest(request)) {
+            return retryWithFreshAccessToken(request).catch(() => {
                 error401();
                 return Promise.reject(new ApiError(result?.message || "登录已过期", 401));
             });
         }
         if (result?.code === 401 || response.status === 401) {
-            error401();
+            if (useToken().hasToken()) error401();
             return Promise.reject(new ApiError(result?.message || "登录已过期", 401));
         }
         if (result?.code === 403 || response.status === 403) {
@@ -120,19 +159,15 @@ service.interceptors.response.use(
     },
     error => {
         const request = isAxiosError(error) ? error.config as any : undefined;
-        if (isAxiosError(error) && error.response?.status === 401 && request && !request._skipAuthRefresh && !request._retry) {
-            request._retry = true;
-            return refreshAccessToken().then(accessToken => {
-                request.headers.set('token', accessToken);
-                return service(request);
-            }).catch(() => {
+        if (isAxiosError(error) && error.response?.status === 401 && canRefreshRequest(request)) {
+            return retryWithFreshAccessToken(request).catch(() => {
                 error401();
                 return Promise.reject(new ApiError("登录已过期", 401));
             });
         }
         const status = isAxiosError(error) ? error.response?.status : undefined;
         if (status === 401) {
-            error401();
+            if (useToken().hasToken()) error401();
         } else if (status === 403) {
             error403();
         }
@@ -144,36 +179,42 @@ service.interceptors.response.use(
 const failHandler = <T>(result: ResultPromise<T>, handle: typeof defaultFail) => {
     result
         .catch(error => {
-            if (error instanceof ApiError) {
+            if (error instanceof ApiError && !error.notified) {
                 handle(error.message, error.code);
+                error.notified = true;
             }
         })
 }
+
+const withFailHandler = <T>(result: ResultPromise<T>, handle: typeof defaultFail = defaultFail) => {
+    failHandler(result, handle);
+    return result;
+};
 
 // 封装的 GET 和 POST 方法
 const get = <R, T = any>(url: string, params: T | undefined = undefined): ResultPromise<R> => {
     if (params !== undefined && params !== null && params !== '') {
         url = url + '/' + encodeURIComponent(params.toString());
     }
-    return service.get<T, AjaxResult<R>>(url);
+    return withFailHandler(service.get<T, AjaxResult<R>>(url));
 };
 
 export const getWithParams = <R, T>(url: string, params: T): ResultPromise<R> => {
-    return service<T, AjaxResult<R>>({
+    return withFailHandler(service<T, AjaxResult<R>>({
         method: "GET",
         url: url,
         params: params,
         paramsSerializer: (data) => qs.stringify(data, { arrayFormat: 'repeat' })
-    });
+    }));
 };
 
 
 // 封装的 GET 方法
 export const query = <R, T>(url: string, params: T): ResultPromise<PagedResponse<R>> => {
-    return service.get<T, AjaxResult<PagedResponse<R>>>(url, {
+    return withFailHandler(service.get<T, AjaxResult<PagedResponse<R>>>(url, {
         params: params,
         paramsSerializer: (data) => qs.stringify(data, { arrayFormat: 'repeat' })
-    });
+    }));
 };
 
 const getWithArray = <R>(url: string, params: string[]): ResultPromise<R> => {
@@ -182,10 +223,12 @@ const getWithArray = <R>(url: string, params: string[]): ResultPromise<R> => {
     if (params && params.length > 0) {
         param = params.join(",");
     }
-    return <ResultPromise<R>>service.get<string, AjaxResult<R>>(url + "/" + param);
+    return withFailHandler(<ResultPromise<R>>service.get<string, AjaxResult<R>>(url + "/" + param));
 }
 
 const defaultFail = (msg: string, code: number) => {
+    if (code === 401 || code === 403) return;
+    ElNotification.error({title: "请求失败", message: msg || "服务暂时不可用，请稍后重试"});
 }
 
 const post = <T, R>(url: string, data: T, failCallback = defaultFail): ResultPromise<R> => {
@@ -204,14 +247,14 @@ const pathPut = <R, T = any>(url: string, params: T | undefined = undefined): Re
     if (params) {
         url = url + '/' + params.toString();
     }
-    return service.put<T, AjaxResult<R>>(url);
+    return withFailHandler(service.put<T, AjaxResult<R>>(url));
 };
 
 const del = <R, T = any>(url: string, params: T | T[] | undefined = undefined): ResultPromise<R> => {
     if (params) {
         url = url + '/' + params.toString();
     }
-    return service.delete<T, AjaxResult<R>>(url);
+    return withFailHandler(service.delete<T, AjaxResult<R>>(url));
 };
 
 export const resultNotify = (result: boolean | undefined, successMsg: string, errorMsg: string) => {

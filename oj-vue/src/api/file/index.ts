@@ -100,13 +100,12 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
 export const myAvatarPath = computed(() => {
     const userStore = useUserStore();
     const userId = userStore?.user?.userId || ""
-    return getAvatarPath(userId);
+    return userId ? getAvatarPath(userId, userStore.avatarVersions[String(userId)] ?? 0) : "";
 })
 
-export const getAvatarPath = (userId: IdType) => {
-
-
-    return `/api/avatar/${userId}`;
+export const getAvatarPath = (userId: IdType, version?: number) => {
+    const suffix = version === undefined ? '' : `?v=${version}`;
+    return `/api/avatar/${userId}${suffix}`;
 }
 
 export const uploadAvatar = async (file: File): Promise<string> => {

@@ -1,6 +1,5 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
-import __ from "lodash";
 import router from "@/router";
 
 export interface TabStoreType {
@@ -23,34 +22,20 @@ export const useTabStore = defineStore("tabStore", () => {
 
     const currentTab = ref("backend-index");
 
-    const set = (newTabs: TabStoreType[]) => {
-        tabs.value = newTabs;
-    }
-
-    const setCurrentTab = (current: string) => {
-        currentTab.value = current;
-    }
-
-    const indexOf = (name: string) => {
-        return __.findIndex(tabs.value, tab => tab.name === name);
-    }
+    const indexOf = (name: string) => tabs.value.findIndex(tab => tab.name === name);
 
     const removeTab = (targetName: string) => {
-        const tabs_ = tabs.value;
-        let activeName = currentTab.value
+        const targetIndex = indexOf(targetName);
+        if (targetIndex === -1) return currentTab.value;
+
+        let activeName = currentTab.value;
         if (activeName === targetName) {
-            tabs_.forEach((tab, index) => {
-                if (tab.name === targetName) {
-                    const nextTab = tabs_[index + 1] || tabs_[index - 1]
-                    if (nextTab) {
-                        activeName = nextTab.name
-                    }
-                }
-            })
+            const nextTab = tabs.value[targetIndex + 1] || tabs.value[targetIndex - 1];
+            if (nextTab) activeName = nextTab.name;
         }
 
-        // currentTab.value = activeName
-        tabs.value = tabs_.filter((tab) => tab.name !== targetName);
+        tabs.value.splice(targetIndex, 1);
+        currentTab.value = activeName;
         return activeName;
     }
 
@@ -60,19 +45,19 @@ export const useTabStore = defineStore("tabStore", () => {
             return undefined;
         }
 
-        return tabs.value[idx].url;
+        return tabs.value[idx]?.url;
 
     }
 
     const open = (name: string, title: string, url: string) => {
-        const find = router.getRoutes().find((route) => route.name === name);
+        const matchedRoute = router.getRoutes().find(route => route.name === name);
         const index = indexOf(name);
         if (index === -1) {
             tabs.value.push({
                 name: name,
                 title: title,
                 closable: true,
-                component: <string>find?.meta?.component,
+                component: String(matchedRoute?.meta?.component || ''),
                 url: url
             })
         } else {
@@ -82,21 +67,11 @@ export const useTabStore = defineStore("tabStore", () => {
         currentTab.value = name;
     }
 
-    const getCurrentTab = () => {
-        return currentTab;
-    }
-
-    const getTabs = () => {
-        return tabs;
-    }
-
     return {
+        tabs,
+        currentTab,
         removeTab,
         open,
-        set,
-        setCurrentTab,
-        getCurrentTab,
-        getTabs,
         getUrl
     }
 })

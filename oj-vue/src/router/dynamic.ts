@@ -3,7 +3,7 @@ import {type RouteRecordRaw} from "vue-router";
 import router from "@/router/index.ts";
 import {useMenuStore} from "@/stores/useMenuStore.ts";
 import __ from "lodash";
-import {hasPerm} from "@/utils/authUtil.ts";
+import {hasAnyPerm, hasPerm} from "@/utils/authUtil.ts";
 import {useUserStore} from "@/stores/useUserStore.ts";
 
 // 动态路由
@@ -69,7 +69,7 @@ export const dynamicRoute: RouteRecordRaw = {
             name: 'user-joined',
             component: () => import("@/views/backend/teacher/contest-manage/user-joined/UserJoined.vue"),
             meta: {
-                has: ['problem:contest:edit'],
+                hasAny: ['problem:contest:list', 'user:user:list'],
                 name: "参加管理",
                 component: 'UserJoined',
                 noKeepAlive: true,
@@ -237,7 +237,7 @@ export const filterDynamic = async () => {
     await useUserStore().loadUser();
     dynamicRoute.children = __.filter(dynamicRoute.children, (data) => {
         // @ts-ignore
-        return hasPerm(data.meta.has);
+        return hasPerm(data.meta.has) && hasAnyPerm(data.meta.hasAny);
     })
 }
 
@@ -258,4 +258,3 @@ export const loadDynamicRoutes = async () => {
     }
     menuStore.setMenu(menuTree);
 }
-

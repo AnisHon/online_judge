@@ -16,6 +16,7 @@ export interface LoginUser {
 
 export const useUserStore = defineStore('user', () => {
     const user =  ref<LoginUser | null>(null)
+    const avatarVersions = ref<Record<string, number>>({})
 
     const loadUser = async () => {
         user.value = await getMe()
@@ -23,6 +24,12 @@ export const useUserStore = defineStore('user', () => {
 
     const clear = () => {
         user.value = null
+    }
+
+    const refreshAvatar = (userId?: IdType) => {
+        const id = String(userId ?? user.value?.userId ?? '')
+        if (!id) return
+        avatarVersions.value[id] = (avatarVersions.value[id] ?? 0) + 1
     }
 
     const getUser = async () => {
@@ -43,6 +50,8 @@ export const useUserStore = defineStore('user', () => {
         user,
         loadUser,
         clear,
+        avatarVersions,
+        refreshAvatar,
         getAuths,
         getUser,
     }

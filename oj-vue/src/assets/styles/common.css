@@ -1,9 +1,22 @@
 @font-face {
-    font-family: "AdobeHeitiStd-Regular";
-    src: url("src/assets/fonts/consolas/Consolas.ttf");
+    font-family: "OJCodeFont";
+    src: url("../fonts/consolas/Consolas.ttf") format("truetype");
+    font-display: swap;
 }
 body {
     font: 14px/1.5 "Helvetica Neue",Helvetica,Arial,"Microsoft Yahei","Hiragino Sans GB","Heiti SC","WenQuanYi Micro Hei",sans-serif;
+}
+
+/* 代码区域必须使用真正的等宽字体，避免被全局中文字体覆盖。 */
+.CodeMirror,
+.CodeMirror pre,
+.CodeMirror textarea,
+.md-editor-preview pre,
+.md-editor-preview pre code,
+.md-editor-preview code {
+    font-family: "OJCodeFont", "JetBrains Mono", "Cascadia Code", Consolas,
+    "Liberation Mono", "DejaVu Sans Mono", monospace !important;
+    font-variant-ligatures: none;
 }
 
 html,
@@ -24,17 +37,17 @@ a {
 
 
 
-    --vertical-menu-expand-width: 300px;            /* 后台垂直菜单展开宽度 */
-    --vertical-menu-collapse-width: 63px;           /* 后台垂直菜单折叠宽度 */
-    --vertical-menu-text-color: rgb(191, 203, 217); /* menu文字颜色 */
-    --vertical-menu-color: rgb(48, 65, 86);         /* menu背景色 */
-    --vertical-menu-hover-color: rgb(38, 52, 69);           /* menu hover属性的背景色 */
-    --vertical-menu-submenu-color: #1f2d3d;         /* submenu展开后的背景色 */
-    --vertical-menu-submenu-hover-color: #001528;   /* submenu展开后hover的背景色 */
+    --vertical-menu-expand-width: 248px;            /* 后台垂直菜单展开宽度 */
+    --vertical-menu-collapse-width: 72px;           /* 后台垂直菜单折叠宽度 */
+    --vertical-menu-text-color: #cbd5e1;             /* menu文字颜色 */
+    --vertical-menu-color: #172033;                  /* menu背景色 */
+    --vertical-menu-hover-color: #22304a;            /* menu hover属性的背景色 */
+    --vertical-menu-submenu-color: #111a2b;          /* submenu展开后的背景色 */
+    --vertical-menu-submenu-hover-color: #273653;    /* submenu展开后hover的背景色 */
 
 
-    --header-bar-height: 50px;
-    --tab-height: 30px;
+    --header-bar-height: 54px;
+    --tab-height: 36px;
     --backend-header-height: calc(var(--header-bar-height) + var(--tab-height));
     --backend-content-height: calc(100vh - var(--backend-header-height));
     --backend-content-no-padding-height: calc(100vh - var(--backend-header-height) - 40px);
@@ -84,9 +97,6 @@ a {
     user-select: none; /* 标准语法 */
     /*cursor: default;*/
 }
-
-
-
 
 
 

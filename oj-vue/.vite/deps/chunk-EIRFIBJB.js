@@ -561,7 +561,7 @@ function endBatch() {
       e.flags &= ~8;
       if (e.flags & 1) {
         try {
-          ;
+
           e.trigger();
         } catch (err) {
           if (!error) error = err;
@@ -817,7 +817,7 @@ var Dep = class {
       }
       for (let link = this.subs; link; link = link.prevSub) {
         if (link.sub.notify()) {
-          ;
+
           link.sub.dep.notify();
         }
       }
@@ -2185,7 +2185,7 @@ function formatProp(key, value, raw) {
 function assertNumber(val, type) {
   if (false) return;
   if (val === void 0) {
-    return;
+
   } else if (typeof val !== "number") {
     warn$1(`${type} is not a valid number - got ${JSON.stringify(val)}.`);
   } else if (isNaN(val)) {
@@ -7296,7 +7296,7 @@ function baseCreateRenderer(options, createHydrationFns) {
         if (true) {
           popWarningContext();
         }
-        return;
+
       } else {
         instance.next = n2;
         instance.update();

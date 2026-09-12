@@ -1,4 +1,5 @@
 import '@/assets/styles/common.css';
+import '@/assets/styles/auth-form.css';
 import '@/assets/styles/transition.css';
 import 'normalize.css';
 import 'element-plus/dist/index.css';

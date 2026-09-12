@@ -14,7 +14,26 @@ const authTagType = (auth: ContestAuth) => {
 const differ = (start: string, end: string) => {
     const startTime = dayjs(start);
     const endTime = dayjs(end);
-    return endTime.diff(startTime, 'hours');
+    if (!startTime.isValid() || !endTime.isValid() || !endTime.isAfter(startTime)) {
+        return '不足1小时';
+    }
+
+    let cursor = startTime;
+    const units: Array<[dayjs.ManipulateType, string]> = [
+        ['year', '年'],
+        ['month', '个月'],
+        ['day', '天'],
+        ['hour', '小时'],
+    ];
+    const parts: string[] = [];
+    for (const [unit, label] of units) {
+        const value = endTime.diff(cursor, unit);
+        if (value > 0) {
+            parts.push(`${value}${label}`);
+            cursor = cursor.add(value, unit);
+        }
+    }
+    return parts.length ? parts.join('') : '不足1小时';
 };
 
 const isContestOver = (end: string | undefined): boolean => {
@@ -36,7 +55,7 @@ const isNotStart = (start: string | undefined) => {
 };
 
 const formatDate = (dateStr: string) => {
-    return  dayjs(dateStr).format('YYYY/MM/DD HH:mm:ss')
+    return dayjs(dateStr).format('YYYY/MM/DD HH:mm')
 };
 
 export {

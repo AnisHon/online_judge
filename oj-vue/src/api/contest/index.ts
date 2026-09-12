@@ -37,8 +37,8 @@ interface ContestForm {
     title?: string;
     auth?: ContestAuth;
     type?: ContestType;
-    startTime?: Date;
-    endTime?: Date;
+    startTime?: string;
+    endTime?: string;
     pwd?: string;
     listId?: IdType;
     description?: string;
@@ -223,6 +223,5 @@ export {
     dict,
     ContestAuth
 }
-
 
 

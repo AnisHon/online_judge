@@ -37,6 +37,7 @@ interface MenuForm {
     icon?: string;
     perms?: string;
     router?: string;
+    component?: string;
     orderNum?: number;
     remark?: string;
 }

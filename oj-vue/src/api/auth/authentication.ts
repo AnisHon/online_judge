@@ -67,6 +67,9 @@ const errorMessage = (error: unknown, fallback: string) => {
     return fallback;
 }
 
+// 认证页面会结合表单状态显示错误，避免 HTTP 层重复弹出同一条提示。
+const handledByAuthPage = () => {};
+
 const finishLogin = async (token: string, refreshToken?: string) => {
     const tokenStore = useToken();
     try {
@@ -83,7 +86,7 @@ const finishLogin = async (token: string, refreshToken?: string) => {
 }
 
 async function login(data: LoginForm) {
-    const result = await post<LoginForm, LoginResponse>('/user-api/auth/login', data);
+    const result = await post<LoginForm, LoginResponse>('/user-api/auth/login', data, handledByAuthPage);
     if (!result.data) throw new Error(result.message || "登录响应缺少数据");
     const {message, success, token} = result.data;
 
@@ -97,7 +100,7 @@ async function login(data: LoginForm) {
 
 
 async function signUp(data: SignUpForm) {
-    const result = await post<SignUpForm, LoginResponse>('/user-api/auth/registration', data);
+    const result = await post<SignUpForm, LoginResponse>('/user-api/auth/registration', data, handledByAuthPage);
     if (!result.data) throw new Error(result.message || "注册响应缺少数据");
     const {message, success, token} = result.data;
     if (success) {
@@ -108,7 +111,7 @@ async function signUp(data: SignUpForm) {
 }
 
 async function forgetPassword(data: ForgetPasswordForm) {
-    const {data: {success, message}} = await post<ForgetPasswordForm, ForgetPasswordResponse>('/user-api/auth/forget-pass', data);
+    const {data: {success, message}} = await post<ForgetPasswordForm, ForgetPasswordResponse>('/user-api/auth/forget-pass', data, handledByAuthPage);
     if (success) {
         return  message
     } else {
@@ -121,7 +124,7 @@ async function forgetPassword(data: ForgetPasswordForm) {
 async function resetPassword(data: {code: string, password: string}) {
     const param = {code: data.code, password: data.password};
     const {data: r} =
-        await put<typeof param, Boolean>('/user-api/auth/reset-pass', param);
+        await put<typeof param, Boolean>('/user-api/auth/reset-pass', param, handledByAuthPage);
     return r;
 }
 
