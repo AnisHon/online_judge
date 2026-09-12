@@ -28,10 +28,15 @@ public class SubmitLogVo {
      */
     private Long problemId;
 
+    private Long contestId;
+
     /**
      * 使用语言的id
      */
     private String language;
+
+    /** 提交源代码。接口层会先做归属校验。 */
+    private String code;
 
     /**
      * 提交结果，取值范围 (AC, RE, WA, TLE, MLE)
@@ -49,6 +54,10 @@ public class SubmitLogVo {
      * 内存使用 单位kb
      */
     private Long memory;
+
+    private Integer totalCount;
+
+    private Integer passCount;
 
     /**
      *

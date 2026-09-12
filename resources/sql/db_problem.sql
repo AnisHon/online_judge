@@ -218,10 +218,16 @@ CREATE TABLE submit_log (
     user_id     varchar(32) not null                comment '用户id',
     problem_id  bigint(20)  not null                comment '题目id',
     language    varchar(20) not null                comment '使用语言的id',
-    status      varchar(10) null                    comment '提交结果，取值范围 (AC, RE, WA, TLE, MLE, COMPILING QUEUE)',
+    contest_id  bigint(20)  null                    comment '比赛ID',
+    code        longtext    null                    comment '用户提交的源代码',
+    status      varchar(32) null                    comment '公开判题状态',
     stderr      text        null                    comment '报错信息',
+    internal_error longtext null                    comment '判题机内部错误，仅管理侧使用',
+    error_code  varchar(64) null                    comment '判题机内部错误码',
     time        int(20)     null                    comment '耗时 单位ms',
     memory      int(20)     null                    comment '内存使用 单位kb',
+    total_count int         null                    comment '测试用例总数',
+    pass_count  int         null                    comment '通过测试用例数',
     submit_time datetime    default now() not null,
     PRIMARY KEY (submit_id),
     constraint submit_log_problem_id_fk foreign key submit_log(problem_id)
@@ -230,6 +236,27 @@ CREATE TABLE submit_log (
 create index submit_log_problem_id on submit_log(problem_id);
 create index submit_log_user_id on submit_log(user_id);
 create index submit_log_user_problem_id on submit_log(problem_id, user_id);
+
+-- ----------------------------
+-- 11.1、判题机内部测试用例日志
+-- ----------------------------
+create table judge_case_log (
+    id              bigint(20) not null comment '日志ID',
+    submit_id       bigint(20) not null comment '提交ID',
+    problem_id      bigint(20) not null comment '题目ID',
+    case_id         bigint(20) null comment '测试用例ID，兜底日志可为空',
+    case_index      int not null comment '测试用例顺序',
+    status          varchar(32) not null comment '单个测试用例状态',
+    score           decimal(10, 3) default 0 comment '该测试用例得分',
+    time            int(20) default 0 comment '耗时，单位ms',
+    memory          int(20) default 0 comment '内存，单位kb',
+    internal_error  longtext null comment '判题机内部错误，不对用户公开',
+    create_time     datetime default now() not null,
+    update_time     datetime default now() on update now() not null,
+    primary key (id),
+    key judge_case_log_submit_id_idx (submit_id),
+    key judge_case_log_problem_id_idx (problem_id)
+) engine=innodb default charset=utf8mb4 comment 'OJ判题机内部测试用例日志';
 
 
 

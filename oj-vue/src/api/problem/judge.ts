@@ -20,6 +20,7 @@ enum OJResult {
     TIME_LIMIT_EXCEEDED = "TLE",
     MEMORY_LIMIT_EXCEEDED = "MLE",
     COMPILE_ERROR = "CE",
+    JUDGE_ERROR = "JUDGE_ERROR",
 }
 
 interface Answer {
@@ -77,6 +78,9 @@ interface LogSubmit {
     memory?: number;
     submitTime?: string;
     stderr?: string;
+    code?: string;
+    totalCount?: number;
+    passCount?: number;
 }
 
 interface TestForm {
@@ -103,15 +107,40 @@ async function testStatus() {
 }
 
 async function fetchLog(id: number, success: successCallback<LogSubmit>) {
-    const {data} = await get<LogSubmit, number>("/problem-api/log/get", id);
+    const {data} = await get<LogSubmit, number>("/problem-api/log/submissions", id);
     success(data);
     const intervalId = setInterval(async () => {
-        const {data} = await get<LogSubmit, number>("/problem-api/log/get", id);
+        const {data} = await get<LogSubmit, number>("/problem-api/log/submissions", id);
         success(data);
-        if (data.status !== OJResult.COMPILING && data.status !== OJResult.QUEUE) {
+        if (data.status !== OJResult.COMPILING && data.status !== OJResult.QUEUE && data.status !== OJResult.RUNNING) {
             clearInterval(intervalId);
         }
     }, 1000);
+}
+
+/**
+ * 不依赖 SSE 的提交状态轮询。默认每秒查询一次，返回停止函数供页面卸载时清理。
+ */
+async function pollSubmission(
+    id: IdType,
+    onUpdate: (log: LogSubmit) => void,
+    interval = 1000
+): Promise<() => void> {
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const poll = async () => {
+        if (stopped) return;
+        const {data} = await get<LogSubmit, IdType>("/problem-api/log/submissions", id);
+        if (data) onUpdate(data);
+        if (!stopped && data && [OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING].includes(data.status)) {
+            timer = setTimeout(poll, interval);
+        }
+    };
+    await poll();
+    return () => {
+        stopped = true;
+        if (timer) clearTimeout(timer);
+    };
 }
 
 async function getUserAnswer(req: UserAnswerRequest): Promise<UserAnswer> {
@@ -189,9 +218,9 @@ export {
     saveUserAnswer,
     debouncedSave,
     fetchLog,
+    pollSubmission,
     sendTest,
     testStatus,
     OJResult
 }
-
 

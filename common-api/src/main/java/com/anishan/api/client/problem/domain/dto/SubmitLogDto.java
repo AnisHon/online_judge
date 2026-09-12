@@ -27,10 +27,19 @@ public class SubmitLogDto {
      */
     private Long problemId;
 
+    private Long contestId;
+
     /**
      * 使用语言的id
      */
     private String language;
+
+    /** 用户提交的完整源代码，仅在有权限且属于本人时返回。 */
+    private String code;
+
+    private Integer totalCount;
+
+    private Integer passCount;
 
     /**
      * 提交结果，取值范围 (AC, RE, WA, TLE, MLE)

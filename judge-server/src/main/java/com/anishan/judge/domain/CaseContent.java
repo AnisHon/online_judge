@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 @Builder
 public class CaseContent {
 
+    private Long caseId;
+
     private BigDecimal score;
 
     /**

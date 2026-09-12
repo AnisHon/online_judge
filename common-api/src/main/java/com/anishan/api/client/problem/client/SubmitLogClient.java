@@ -23,8 +23,10 @@ public interface SubmitLogClient {
     @GetMapping("/get/{id}")
     R<SubmitLogVo> getLog(@PathVariable("id") Long id, @RequestHeader("user-id") Long userId);
 
+    @GetMapping("/submissions/{id}")
+    R<SubmitLogVo> poll(@PathVariable("id") Long id, @RequestHeader("user-id") Long userId);
+
     @PostMapping("update")
     R<Boolean> update(@RequestBody SubmitLogDto submitLog, @RequestHeader("user-id") Long userId);
 }
-
 

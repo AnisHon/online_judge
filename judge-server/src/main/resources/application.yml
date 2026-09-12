@@ -7,8 +7,8 @@ spring:
   rabbitmq:
     listener:
       simple:
-        concurrency: 5
-        max-concurrency: 10
+        concurrency: 1
+        max-concurrency: 1
 
 #共用一个数据库
 oj:
@@ -24,3 +24,7 @@ oj:
 # judge的url
 judge:
   url: http://localhost:5050
+  config:
+    max-concurrency: ${OJ_JUDGE_MAX_CONCURRENCY:4}
+    max-submissions: ${OJ_JUDGE_MAX_SUBMISSIONS:1}
+    queue-capacity: ${OJ_JUDGE_QUEUE_CAPACITY:200}

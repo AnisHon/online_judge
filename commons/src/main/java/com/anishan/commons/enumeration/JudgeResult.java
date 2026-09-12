@@ -3,7 +3,7 @@ package com.anishan.commons.enumeration;
 import com.baomidou.mybatisplus.annotation.IEnum;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel("AC RE WA TLE MLE CE")
+@ApiModel("QUEUE COMPILING RUNNING AC RE WA TLE MLE CE JUDGE_ERROR")
 public enum JudgeResult implements IEnum<String>, Enumerator<String> {
 
     QUEUE("QUEUE"), //排队中
@@ -15,6 +15,10 @@ public enum JudgeResult implements IEnum<String>, Enumerator<String> {
     TIME_LIMIT_EXCEEDED("TLE"),
     MEMORY_LIMIT_EXCEEDED("MLE"),
     COMPILE_ERROR("CE"),
+    /**
+     * 判题基础设施异常。该状态用于兜底，内部原因只写入管理侧日志，不返回给普通用户。
+     */
+    JUDGE_ERROR("JUDGE_ERROR"),
     ;
 
     private final String value;

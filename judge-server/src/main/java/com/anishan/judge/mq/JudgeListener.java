@@ -6,9 +6,7 @@ import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.client.problem.client.ProblemInternalClient;
 import com.anishan.commons.enumeration.JudgeResult;
-import com.anishan.judge.domain.entity.SubmitLog;
 import com.anishan.judge.judge.JudgeRun;
-import com.anishan.judge.service.SubmitLogService;
 import com.anishan.judge.util.JudgeNotifyUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,45 +17,18 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
-
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
 public class JudgeListener {
 
     private final JudgeRun judgeRun;
-    private final SubmitLogService submitLogService;
     private final ProblemInternalClient problemInternalClient;
     private final JudgeNotifyUtil judgeNotifyUtil;
 
-
-    private void logSubmit(JudgeScore judge, JudgeInfo judgeInfo) {
-        SubmitLog submitLog = new SubmitLog()
-                .setUserId(judgeInfo.getUserId())
-                .setProblemId(judgeInfo.getProblemId())
-                .setLanguage(judgeInfo.getLanguage());
-
-
-
-
-        if (judge != null) {
-            submitLog
-                    .setStatus(judge.getResult())
-                    .setTime(judge.getRuntime())
-                    .setMemory(judge.getMemory())
-                    .setStderr(judge.getErrorMessage());
-        }
-        submitLogService.save(submitLog);
-    }
-
-
     private void fillJudgeScore(JudgeScore judgeScore, JudgeInfo judgeInfo) {
-        if (judgeScore == null) {
-            return;
-        }
-
+        if (judgeScore == null) return;
+        judgeScore.setSubmitId(judgeInfo.getSubmitId());
         judgeScore.setProblemId(judgeInfo.getProblemId());
         judgeScore.setUserId(judgeInfo.getUserId());
         judgeScore.setContestId(judgeInfo.getContestId());
@@ -77,34 +48,46 @@ public class JudgeListener {
 
         log.debug("用户ID:{} 开始判题", info.getUserId());
 
-        JudgeScore judge = null;
+        JudgeScore judge;
         try {
+            problemInternalClient.judgeStatus(new JudgeScore()
+                    .setSubmitId(info.getSubmitId())
+                    .setUserId(info.getUserId())
+                    .setResult(JudgeResult.COMPILING));
             // 判题
             judge = judgeRun.judgeAll(info);
-            // 记录提交日志
-            logSubmit(judge, info);
-            // 提交Record信息
-            fillJudgeScore(judge, info); // 构建
-            problemInternalClient.judgeResult(judge); // 提交
-
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            // Let the container apply its retry/DLQ policy instead of acknowledging
-            // a submission whose result was not persisted.
-            throw new IllegalStateException("判题结果处理失败", e);
+            judge = new JudgeScore()
+                    .setSubmitId(info.getSubmitId())
+                    .setProblemId(info.getProblemId())
+                    .setUserId(info.getUserId())
+                    .setContestId(info.getContestId())
+                    .setCode(info.getCode())
+                    .setLanguageId(info.getLanguageId())
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("JUDGE_PIPELINE_EXCEPTION")
+                    .setInternalError(e.getClass().getName() + ": " + e.getMessage());
         }
+
+        if (judge == null) {
+            judge = new JudgeScore()
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("EMPTY_JUDGE_RESULT")
+                    .setInternalError("judge runner returned null");
+        }
+        fillJudgeScore(judge, info);
+        // problem-service 是公开提交日志和 records 的唯一落库方，避免 judge-server 写出重复行。
+        problemInternalClient.judgeResult(judge);
 
 
         // 通知完成
-        JudgeResult result = judge == null ? JudgeResult.RUNTIME_ERROR : judge.getResult();
-        String stderr = Optional.ofNullable(judge).map(JudgeScore::getErrorMessage).orElse("");
+        JudgeResult result = judge.getResult() == null ? JudgeResult.JUDGE_ERROR : judge.getResult();
+        String stderr = result == JudgeResult.JUDGE_ERROR ? "判题服务异常，请稍后重试" : judge.getErrorMessage();
 
         if (result == JudgeResult.WRONG_ANSWER) {
             stderr = "总共:" + judge.getTotalCount() + "\n通过:" + judge.getPassCount();
         }
-
-        // 没有结果，可能是人为因素
-        result = Optional.ofNullable(result).orElse(JudgeResult.RUNTIME_ERROR);
 
         judgeNotifyUtil.notify(info.getUuid(), result, stderr);
 

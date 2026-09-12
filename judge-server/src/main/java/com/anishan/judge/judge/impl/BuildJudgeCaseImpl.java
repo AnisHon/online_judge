@@ -52,6 +52,7 @@ public class BuildJudgeCaseImpl implements BuildJudgeCase {
 
         return CaseContent
                 .builder()
+                .caseId(item.getCaseId())
                 .score(item.getScore())
                 .inPath(getPath(input))
                 .outPath(output)         // 输出不需要路径转换

@@ -35,10 +35,15 @@ public class SubmitLog implements Serializable {
      */
     private Long problemId;
 
+    private Long contestId;
+
     /**
      * 使用语言的id
      */
     private String language;
+
+    /** 用户提交的源代码。公开详情接口只允许本人读取。 */
+    private String code;
 
     /**
      * 提交结果，取值范围 (AC, RE, WA, TLE, MLE)
@@ -57,6 +62,15 @@ public class SubmitLog implements Serializable {
     private Long memory;
 
     private String stderr;
+
+    /** 仅供管理侧排查，不能复制到 SubmitLogVo。 */
+    private String internalError;
+
+    private String errorCode;
+
+    private Integer totalCount;
+
+    private Integer passCount;
 
     /**
      * 

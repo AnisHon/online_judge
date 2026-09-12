@@ -4,10 +4,13 @@ import cn.hutool.core.collection.CollUtil;
 import com.anishan.api.client.gojudge.domain.RunResult;
 import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
+import com.anishan.api.client.judgeserver.domain.JudgeCaseResult;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
+import com.anishan.api.client.problem.client.ProblemInternalClient;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.judge.config.LanguageConfigLoader;
+import com.anishan.judge.config.JudgeConfig;
 import com.anishan.judge.domain.*;
 import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.CompileError;
@@ -21,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 
 import java.math.BigDecimal;
@@ -35,21 +40,6 @@ import java.util.concurrent.*;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class DefaultJudgeImpl implements JudgeRun {
 
-
-    private final static ExecutorService executorService;
-    private static final int cpuNum = Runtime.getRuntime().availableProcessors();
-    static {
-        executorService = new ThreadPoolExecutor(
-                cpuNum, // 核心线程数
-                cpuNum, // 最大线程数。最多几个线程并发。
-                3,//当非核心线程无任务时，几秒后结束该线程
-                TimeUnit.SECONDS,// 结束线程时间单位
-                new LinkedBlockingDeque<>(200 * cpuNum), //阻塞队列，限制等候线程数
-                Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.CallerRunsPolicy());
-    }
-
-
     private final Judge judge;
 
     private final BuildJudgeCaseImpl buildJudgeCase;
@@ -63,6 +53,37 @@ public class DefaultJudgeImpl implements JudgeRun {
     private final SandboxRun sandboxRun;
 
     private final JudgeNotifyUtil judgeNotifyUtil;
+    private final ProblemInternalClient problemInternalClient;
+    private final JudgeConfig judgeConfig;
+
+    private ExecutorService executorService;
+    private Semaphore caseSemaphore;
+    private Semaphore submissionSemaphore;
+
+    @PostConstruct
+    public void initExecutor() {
+        int maxConcurrency = Math.max(1, judgeConfig.getMaxConcurrency());
+        int queueCapacity = Math.max(maxConcurrency, judgeConfig.getQueueCapacity());
+        executorService = new ThreadPoolExecutor(
+                maxConcurrency,
+                maxConcurrency,
+                0L,
+                TimeUnit.MILLISECONDS,
+                new LinkedBlockingDeque<>(queueCapacity),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.CallerRunsPolicy());
+        caseSemaphore = new Semaphore(maxConcurrency);
+        submissionSemaphore = new Semaphore(Math.max(1, judgeConfig.getMaxSubmissions()));
+        log.info("判题并发限制已启用: submissions={}, cases={}, queue={}",
+                judgeConfig.getMaxSubmissions(), maxConcurrency, queueCapacity);
+    }
+
+    @PreDestroy
+    public void shutdownExecutor() {
+        if (executorService != null) {
+            executorService.shutdownNow();
+        }
+    }
 
 
     private RunResult runJudge(CaseContent caseContent, JudgeInfo judgeInfo, JudgeParam judgeParam) throws SystemError {
@@ -97,20 +118,39 @@ public class DefaultJudgeImpl implements JudgeRun {
     private JudgeRunResultScore judge(CaseContent caseContent, JudgeInfo judgeInfo, JudgeParam judgeParam) {
 
         RunResult runResult;
+        boolean acquired = false;
         try {
+            caseSemaphore.acquire();
+            acquired = true;
             runResult = runJudge(caseContent, judgeInfo, judgeParam);
         } catch (SystemError e) {
             log.error("严重错误，判题机出错 stderr:{}", e.getStderr());
             log.error("严重错误，判题机出错 stdout:{}", e.getStdout());
             log.error("严重错误，判题机出错 message:{}", e.getMessage());
             return JudgeRunResultScore.builder()
+                    .caseId(caseContent.getCaseId())
                     .score(BigDecimal.ZERO)
-                    .judgeResult(JudgeResult.RUNTIME_ERROR)
+                    .judgeResult(JudgeResult.JUDGE_ERROR)
                     .passed(false)
                     .runtime(0L)
                     .memory(0L)
-                    .errorMessage("系统异常, 请联系管理员")
+                    .internalError("sandbox error: " + e.getMessage())
                     .build();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return JudgeRunResultScore.builder()
+                    .caseId(caseContent.getCaseId())
+                    .score(BigDecimal.ZERO)
+                    .judgeResult(JudgeResult.JUDGE_ERROR)
+                    .passed(false)
+                    .runtime(0L)
+                    .memory(0L)
+                    .internalError("case execution interrupted")
+                    .build();
+        } finally {
+            if (acquired) {
+                caseSemaphore.release();
+            }
         }
 
         return gradeSubmission.judgeScore(runResult, caseContent);
@@ -123,8 +163,19 @@ public class DefaultJudgeImpl implements JudgeRun {
      * @param futureTasks 判题任务列表
      * @param judgeScore  输出参数JudgeScore
      */
-    public void judgeFinalScore(List<CompletableFuture<JudgeRunResultScore>> futureTasks, JudgeScore judgeScore, BigDecimal totalScore, JudgeInfo judgeInfo) throws ExecutionException, InterruptedException, TimeoutException {
+    public void judgeFinalScore(List<CompletableFuture<JudgeRunResultScore>> futureTasks,
+                                List<CaseContent> caseContents,
+                                JudgeScore judgeScore,
+                                BigDecimal totalScore,
+                                JudgeInfo judgeInfo) throws ExecutionException, InterruptedException, TimeoutException {
         if (CollUtil.isEmpty(futureTasks)) {
+            judgeScore
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("NO_TEST_CASE")
+                    .setInternalError("no active test case was found for problem " + judgeInfo.getProblemId())
+                    .setTotalCount(0)
+                    .setPassCount(0)
+                    .setCaseResults(new ArrayList<>());
             return;
         }
 
@@ -134,31 +185,77 @@ public class DefaultJudgeImpl implements JudgeRun {
         long runtime = 0;
         long memory = 0;
         int passCount = 0; // 通过数量
+        List<JudgeCaseResult> caseResults = new ArrayList<>();
 
-        for (CompletableFuture<JudgeRunResultScore> futureTask : futureTasks) {
-            JudgeRunResultScore judgeRunResultScore = futureTask.get (2, TimeUnit.MINUTES);
+        for (int index = 0; index < futureTasks.size(); index++) {
+            CompletableFuture<JudgeRunResultScore> futureTask = futureTasks.get(index);
+            JudgeRunResultScore judgeRunResultScore;
+            try {
+                judgeRunResultScore = futureTask.get(2, TimeUnit.MINUTES);
+            } catch (ExecutionException | TimeoutException e) {
+                judgeRunResultScore = JudgeRunResultScore.builder()
+                        .caseId(caseContents.get(index).getCaseId())
+                        .judgeResult(JudgeResult.JUDGE_ERROR)
+                        .score(BigDecimal.ZERO)
+                        .passed(false)
+                        .runtime(0L)
+                        .memory(0L)
+                        .internalError("case future failed: " + e.getMessage())
+                        .build();
+            }
 
             if (judgeRunResultScore == null) {
-                return;
+                judgeRunResultScore = JudgeRunResultScore.builder()
+                        .caseId(caseContents.get(index).getCaseId())
+                        .judgeResult(JudgeResult.JUDGE_ERROR)
+                        .score(BigDecimal.ZERO)
+                        .passed(false)
+                        .runtime(0L)
+                        .memory(0L)
+                        .internalError("case returned no result")
+                        .build();
             }
 
             // 算最大运行时间
-            if (judgeRunResultScore.getRuntime() > runtime) {
-                runtime = judgeRunResultScore.getRuntime();
+            long caseRuntime = Optional.ofNullable(judgeRunResultScore.getRuntime()).orElse(0L);
+            long caseMemory = Optional.ofNullable(judgeRunResultScore.getMemory()).orElse(0L);
+            if (caseRuntime > runtime) {
+                runtime = caseRuntime;
             }
 
             // 最大使用内存
-            if (judgeRunResultScore.getMemory() > memory) {
-                memory = judgeRunResultScore.getMemory();
+            if (caseMemory > memory) {
+                memory = caseMemory;
             }
 
             // 算总分
-            score = score.add(judgeRunResultScore.getScore());
+            score = score.add(Optional.ofNullable(judgeRunResultScore.getScore()).orElse(BigDecimal.ZERO));
+
+            caseResults.add(new JudgeCaseResult()
+                    .setCaseId(judgeRunResultScore.getCaseId())
+                    .setCaseIndex(index)
+                    .setStatus(Optional.ofNullable(judgeRunResultScore.getJudgeResult()).orElse(JudgeResult.JUDGE_ERROR))
+                    .setScore(Optional.ofNullable(judgeRunResultScore.getScore()).orElse(BigDecimal.ZERO))
+                    .setTime(caseRuntime)
+                    .setMemory(caseMemory)
+                    .setErrorMessage(Optional.ofNullable(judgeRunResultScore.getInternalError())
+                            .orElse(judgeRunResultScore.getErrorMessage())));
 
             // 设置结果 报错信息
-            if (judgeRunResultScore.getJudgeResult() != JudgeResult.ACCEPT) {
-                judgeScore.setResult(judgeRunResultScore.getJudgeResult());
-                judgeScore.setErrorMessage(judgeRunResultScore.getErrorMessage());
+            JudgeResult caseResult = Optional.ofNullable(judgeRunResultScore.getJudgeResult())
+                    .orElse(JudgeResult.JUDGE_ERROR);
+            if (caseResult != JudgeResult.ACCEPT) {
+                if (judgeScore.getResult() == JudgeResult.ACCEPT
+                        || caseResult == JudgeResult.JUDGE_ERROR) {
+                    judgeScore.setResult(caseResult);
+                }
+                if (caseResult == JudgeResult.JUDGE_ERROR) {
+                    judgeScore
+                            .setErrorCode("CASE_EXECUTION_FAILED")
+                            .setInternalError(judgeRunResultScore.getInternalError());
+                } else if (judgeScore.getErrorMessage() == null) {
+                    judgeScore.setErrorMessage(judgeRunResultScore.getErrorMessage());
+                }
             } else  {
                 passCount++;
             }
@@ -179,6 +276,8 @@ public class DefaultJudgeImpl implements JudgeRun {
         judgeScore.setRuntime(runtime);    // 设置最大运行时间
         judgeScore.setMemory(memory);      // 设置最大内存
         judgeScore.setPassCount(passCount); // 通过数量
+        judgeScore.setTotalCount(futureTasks.size());
+        judgeScore.setCaseResults(caseResults);
     }
 
     /**
@@ -192,6 +291,7 @@ public class DefaultJudgeImpl implements JudgeRun {
 
         // 初始参数
         JudgeScore judgeScore = new JudgeScore()
+                .setSubmitId(judgeInfo.getSubmitId())
                 .setProblemId(judgeInfo.getProblemId())
                 .setUserId(judgeInfo.getUserId())
                 .setContestId(judgeInfo.getContestId())
@@ -201,22 +301,60 @@ public class DefaultJudgeImpl implements JudgeRun {
 
         String language = judgeInfo.getLanguage();
 
+        boolean submissionAcquired = false;
+        try {
+            submissionSemaphore.acquire();
+            submissionAcquired = true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return judgeScore
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("SUBMISSION_INTERRUPTED")
+                    .setInternalError("submission permit interrupted");
+        }
+
         // 获取语言配置
         LanguageConfig languageConfig = configLoader.getLanguageConfigByName(language);
+        if (languageConfig == null) {
+            submissionSemaphore.release();
+            return judgeScore
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("UNSUPPORTED_LANGUAGE")
+                    .setInternalError("language config not found: " + language);
+        }
 
         String fileId = null;
 
         try {
+            // 先读取测试用例并锁定总数，编译失败时公开日志也能知道本次判题的规模。
+            JudgeCases judgeCases = buildJudgeCase.buildJudgeCases(judgeInfo.getProblemId());
+            List<CaseContent> caseContents = judgeCases == null
+                    ? new ArrayList<>()
+                    : Optional.ofNullable(judgeCases.getCaseContents()).orElse(new ArrayList<>());
+            judgeScore.setTotalCount(caseContents.size());
+
+            if (caseContents.isEmpty()) {
+                judgeScore
+                        .setResult(JudgeResult.JUDGE_ERROR)
+                        .setErrorCode("NO_TEST_CASE")
+                        .setInternalError("no active test case was found for problem " + judgeInfo.getProblemId())
+                        .setPassCount(0)
+                        .setCaseResults(new ArrayList<>());
+                return judgeScore;
+            }
+
             // 通知编译
             judgeNotifyUtil.notifyCompiling(judgeInfo.getUuid());
             fileId = compiler.compile(languageConfig, judgeInfo.getCode(), null, null);
 
-            JudgeCases judgeCases = buildJudgeCase.buildJudgeCases(judgeInfo.getProblemId());
-
-            List<CaseContent> caseContents = Optional.ofNullable(judgeCases.getCaseContents()).orElse(new ArrayList<>());
-
-            // 题例总数
-            judgeScore.setTotalCount(caseContents.size());
+            try {
+                problemInternalClient.judgeStatus(new JudgeScore()
+                        .setSubmitId(judgeInfo.getSubmitId())
+                        .setUserId(judgeInfo.getUserId())
+                        .setResult(JudgeResult.RUNNING));
+            } catch (Exception e) {
+                log.warn("更新提交运行状态失败，继续执行判题: submitId={}", judgeInfo.getSubmitId(), e);
+            }
 
             ArrayList<CompletableFuture<JudgeRunResultScore>> futureTasks = new ArrayList<>();
 
@@ -237,11 +375,14 @@ public class DefaultJudgeImpl implements JudgeRun {
             });
 
             // 统计最后得分
-            judgeFinalScore(futureTasks, judgeScore, judgeCases.getTotalScore(), judgeInfo);
+            BigDecimal totalScore = judgeCases == null || judgeCases.getTotalScore() == null
+                    ? BigDecimal.ZERO : judgeCases.getTotalScore();
+            judgeFinalScore(futureTasks, caseContents, judgeScore, totalScore, judgeInfo);
         } catch (SystemError e) {
             judgeScore
-                    .setResult(JudgeResult.COMPILE_ERROR)
-                    .setErrorMessage("SandBox failed to compile, please contact administrator");
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("SANDBOX_ERROR")
+                    .setInternalError(e.getMessage());
             log.error("判题机异常当前参数{}", judgeInfo, e);
         } catch (CompileError e) {
             judgeScore
@@ -249,18 +390,28 @@ public class DefaultJudgeImpl implements JudgeRun {
                     .setErrorMessage(e.getStderr());
         } catch (SubmitError e) {
             judgeScore
-                    .setResult(JudgeResult.COMPILE_ERROR)
-                    .setErrorMessage(e.getStderr());
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("SANDBOX_SUBMIT_ERROR")
+                    .setInternalError(e.getMessage() + " " + e.getStderr());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error(e.getMessage(), e);
-            judgeScore.setResult(JudgeResult.RUNTIME_ERROR);
+            judgeScore
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("JUDGE_INTERRUPTED")
+                    .setInternalError(e.getMessage());
         } catch (ExecutionException | TimeoutException e) {
             log.error(e.getMessage(), e);
-            judgeScore.setResult(JudgeResult.RUNTIME_ERROR);
+            judgeScore
+                    .setResult(JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("CASE_FUTURE_ERROR")
+                    .setInternalError(e.getMessage());
         } finally {
             if (fileId != null) {
                 sandboxRun.delFile(fileId);
+            }
+            if (submissionAcquired) {
+                submissionSemaphore.release();
             }
         }
 
@@ -305,10 +456,20 @@ public class DefaultJudgeImpl implements JudgeRun {
             judgeNotifyUtil.notifyRunning(runTestInfo.getUuid());
             CompletableFuture<RunResult> future =
                     CompletableFuture.supplyAsync(() -> {
+                        boolean acquired = false;
                         try {
+                            caseSemaphore.acquire();
+                            acquired = true;
                             return runJudge(null, judgeInfo, judgeParam);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            throw new RuntimeException("test execution interrupted", e);
                         } catch (SystemError e) {
                             throw new RuntimeException(e);
+                        } finally {
+                            if (acquired) {
+                                caseSemaphore.release();
+                            }
                         }
                     }, executorService);
 

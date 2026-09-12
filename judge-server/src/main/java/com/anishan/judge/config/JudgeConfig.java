@@ -16,6 +16,14 @@ public class JudgeConfig {
      */
     private Integer judgeInterval = 10;
 
+    /** 单台判题机同时运行的测试用例数。 */
+    private Integer maxConcurrency = 4;
+
+    /** 单台判题机同时处理的提交数。 */
+    private Integer maxSubmissions = 1;
+
+    private Integer queueCapacity = 200;
+
     /**
      * Minio本地挂载路径
      */

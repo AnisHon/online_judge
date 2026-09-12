@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 @Accessors(chain = true)
 public class JudgeScore {
 
+    private Long submitId;
     private Long problemId;
     private Long userId;
     private Long contestId;
@@ -24,11 +25,20 @@ public class JudgeScore {
     private Long memory;
     private String errorMessage;
 
+    /** 仅供管理侧使用，不能映射到用户公开 VO。 */
+    private String internalError;
+
+    /** 机器可检索的内部错误码。 */
+    private String errorCode;
+
     // 总数
     private Integer totalCount;
 
     // 通过数
     private Integer passCount;
+
+    /** 每个测试用例的结果，供 problem-service 写入内部日志表。 */
+    private java.util.List<JudgeCaseResult> caseResults;
 
 
     public JudgeScore runtimeSetter(RunResult runResult) {

@@ -157,6 +157,8 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (104, '添加题目', 4, 10, '#', 'B', 'problem:problem:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (105, '删除题目', 5, 10, '#', 'B', 'problem:problem:remove', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (106, '更改题目', 6, 10, '#', 'B', 'problem:problem:edit', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (150, '查看本人提交', 7, 10, '#', 'B', 'problem:submit:read', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (151, '查看判题内部日志', 8, 10, '#', 'B', 'problem:judge:case:read', '#');
 
 # menu_id 11 标签编辑
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (110, '添加标签', 1, 11, '#', 'B', 'problem:tag:add', '#');
@@ -311,6 +313,9 @@ values
     (2, 1003),
     (2, 1100);
 
+# 所有登录用户可查看自己的提交；内部测试用例日志只授予管理员。
+insert ignore into sys_role_menu(role_id, menu_id) values (1, 150), (2, 150), (3, 150), (4, 150), (3, 151), (4, 151);
+
 # 管理员，没有权限相关操作，权限操作危险，可能会毁坏网站
 delete from sys_role_menu where role_id = 3;
 insert into sys_role_menu(role_id, menu_id)
@@ -338,5 +343,3 @@ create table user_check_in (
     constraint check_in_user_id_pk foreign key user_check_in(user_id)
                            references sys_user(user_id)
 ) engine=innodb comment = '签到记录表';
-
-

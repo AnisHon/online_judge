@@ -1,9 +1,9 @@
 <template>
-  <div v-loading="problemIsLoading">
-    <el-row justify="center" v-if="problem !== undefined" :gutter="20">
+  <div v-loading="problemIsLoading" class="detail-problem-root" :class="{ 'detail-problem-root--contest': contestId }">
+    <el-row v-if="problem !== undefined" class="detail-problem-row" justify="center" :gutter="20">
 
       <el-col style="padding: 0" class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
-        <el-scrollbar style="padding: 0 10px" height="var(--in-main-content-height)">
+        <el-scrollbar class="problem-scrollbar" style="padding: 0 10px" :height="contestId ? '100%' : 'var(--in-main-content-height)'">
           <div class="header">
             <h1>{{ problem?.problemVo.title }}</h1>
             <div class="tags">
@@ -105,14 +105,23 @@
                 <el-table-column prop="language" label="语言" align="center" />
                 <el-table-column prop="status" label="结果" align="center">
                   <template v-slot="scope">
-                    <el-tooltip content="AC 通过 WA 答案错误 CE 编译错误 RE 运行时错误 TLE 超时 MLE 内存过限">
+                    <el-tooltip content="AC 通过 WA 答案错误 CE 编译错误 RE 运行时错误 TLE 超时 MLE 内存过限 JUDGE_ERROR 判题服务异常">
                       <el-tag type="info" v-if="scope.row.status === OJResult.QUEUE">排队中</el-tag>
                       <el-tag type="primary" v-else-if="scope.row.status === OJResult.COMPILING">编译中</el-tag>
+                      <el-tag type="warning" v-else-if="scope.row.status === OJResult.RUNNING">判题中</el-tag>
                       <el-tag type="success" v-else-if="scope.row.status === OJResult.ACCEPT">AC</el-tag>
+                      <el-tag type="danger" v-else-if="scope.row.status === OJResult.JUDGE_ERROR">判题异常</el-tag>
                       <el-tag type="danger" v-else>{{ scope.row.status }}</el-tag>
                     </el-tooltip>
                   </template>
                 </el-table-column >
+                <el-table-column label="源代码" align="center" width="100">
+                  <template #default="scope">
+                    <el-button link type="primary" :disabled="!scope.row.code" @click="viewSubmissionCode(scope.row)">
+                      查看
+                    </el-button>
+                  </template>
+                </el-table-column>
                 <el-table-column prop="time" label="时间(ms)" align="center"/>
                 <el-table-column prop="memory" label="内存(MiB)" align="center"/>
               </el-table>
@@ -143,20 +152,23 @@
       <el-col
           :span="codeSpan"
           v-if="isShowCodeEditor"
+          class="code-editor-column"
           style="padding: 0 20px"
       >
-        <enhanced-code-editor
-            :disable-submit="disableSubmit"
-            v-model="judgeForm"
-            :heightProp="height"
-            @submit="onHandleSubmit"
-            @full-screen="onHandleFullScreen"
-            @on-ready="onEditorReady"
-            @open-log="openLog"
-            @test="submitTest"
-            :loading="isLoading"
-        />
-        <el-row ref="testInputRowRef" :gutter="20" style="max-height: 80px">
+        <div class="editor-panel">
+          <enhanced-code-editor
+              :disable-submit="disableSubmit"
+              v-model="judgeForm"
+              :heightProp="height"
+              @submit="onHandleSubmit"
+              @full-screen="onHandleFullScreen"
+              @on-ready="onEditorReady"
+              @open-log="openLog"
+              @test="submitTest"
+              :loading="isLoading"
+          />
+        </div>
+        <el-row ref="testInputRowRef" class="test-input-panel" :gutter="20" style="max-height: 80px">
           <el-col :span="12">
             <el-scrollbar>
               <h4 style="margin: 0">标准输入</h4>
@@ -192,6 +204,10 @@
       </el-result>
 
 
+    </el-dialog>
+
+    <el-dialog v-model="codeDialogVisible" title="提交源代码" width="min(860px, 92vw)" destroy-on-close>
+      <pre class="submission-code"><code>{{ selectedSubmissionCode }}</code></pre>
     </el-dialog>
 
   </div>
@@ -241,6 +257,8 @@ const errorTitle = ref("");
 const errorText = ref("");
 
 const openErrorDialog = ref(false);
+const codeDialogVisible = ref(false);
+const selectedSubmissionCode = ref("");
 
 // 当前tab
 const currentTab = ref("detail")
@@ -364,6 +382,12 @@ const errMsg = ref<string>();
 // 所有提交日志
 const submitLogs = reactive<LogSubmit[]>([])
 
+const viewSubmissionCode = (log: LogSubmit) => {
+  if (!log.code) return;
+  selectedSubmissionCode.value = log.code;
+  codeDialogVisible.value = true;
+}
+
 // 测试的标准输入
 const stdin = ref<string>("")
 
@@ -441,6 +465,10 @@ const onUpdateJudgeState = (judgeMessage: JudgeMessage, handler: any, instance: 
     case OJResult.COMPILE_ERROR:
       errorTitle.value = "CE";
       errorText.value = "编译错误";
+      break;
+    case OJResult.JUDGE_ERROR:
+      errorTitle.value = "OJ";
+      errorText.value = "判题服务暂时不可用，请稍后重试";
       break;
 
   }
@@ -677,6 +705,13 @@ initSSE();
 
 <style scoped>
 
+.detail-problem-root--contest { height: 100%; min-height: 0; overflow: hidden; }
+.detail-problem-root--contest :deep(.detail-problem-row) { height: 100%; min-height: 0; margin: 0 !important; }
+.detail-problem-root--contest :deep(.problem-content), .detail-problem-root--contest :deep(.code-editor-column) { height: 100%; min-height: 0; }
+.detail-problem-root--contest :deep(.problem-scrollbar) { height: 100% !important; }
+.detail-problem-root--contest :deep(.code-editor-column) { display: flex; flex-direction: column; overflow: hidden; }
+.detail-problem-root--contest .editor-panel { min-height: 0; flex: 1; overflow: hidden; }
+.detail-problem-root--contest .test-input-panel { flex: 0 0 auto; }
 
 .submit {
   display: flex;
@@ -693,9 +728,21 @@ initSSE();
   padding: 20px;
   font-size: 16px;
   white-space: pre-wrap;
-  font-family: Inconsolata, Helvetica, sans-serif;
+  font-family: "OJCodeFont", "JetBrains Mono", Consolas, monospace;
   font-weight: 700;
   text-align: left
+}
+
+.submission-code {
+  max-height: 60vh;
+  overflow: auto;
+  margin: 0;
+  padding: 18px;
+  border-radius: 12px;
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-primary);
+  font: 14px/1.7 "OJCodeFont", "JetBrains Mono", Consolas, monospace;
+  white-space: pre;
 }
 
 </style>

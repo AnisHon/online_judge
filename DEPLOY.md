@@ -57,3 +57,28 @@ docker compose -p oj-dev -f docker-compose.dev.yaml --env-file .env.dev logs -f 
 此前容器化 Maven 构建可能会把 `*/target` 生成为不可由本机用户覆盖的文件；已清理当前仓库内这些旧产物。以后只使用本机 Maven / IDEA 构建，若 IDEA 仍缓存旧状态，执行 Maven Reload 后 Rebuild Project。
 
 生产环境必须修改 `.env` 中的密码，并在防火墙中限制 3306、6379、5672、8848、9848、9849、5050、8000 和 MinIO 控制台端口的公网访问；通常只开放 80/443。
+
+## 已有线上数据库迁移
+
+本次 OJ 判题重构不会删除历史提交。已有数据卷升级应用前，先执行一次：
+
+```bash
+MYSQL_HOST=127.0.0.1 MYSQL_PORT=3306 MYSQL_ROOT_PASSWORD='你的密码' \
+  ./resources/sql/migration/apply.sh
+```
+
+迁移会新增提交源代码、比赛 ID、测试用例统计、内部错误字段，创建 `judge_case_log`，并写入
+`problem:submit:read` 与 `problem:judge:case:read` 权限。脚本兼容 MySQL 8.0.27，可重复执行；内部错误字段和测试用例日志不要直接暴露给普通用户。
+
+判题机并发可通过 Nacos 的 `judge-server.yaml` 或环境变量调整：
+
+```bash
+OJ_JUDGE_MAX_CONCURRENCY=4
+OJ_JUDGE_MAX_SUBMISSIONS=1
+OJ_JUDGE_QUEUE_CAPACITY=200
+```
+
+普通用户查询提交结果使用 `GET /problem-api/log/submissions/{submitId}`，按约 1 秒短轮询即可；旧 SSE 接口仍保留兼容，但新页面不需要依赖它。
+
+管理员诊断接口为 `GET /problem-api/log/admin/{submitId}` 和
+`GET /problem-api/log/admin/{submitId}/cases`，均要求 `problem:judge:case:read`。

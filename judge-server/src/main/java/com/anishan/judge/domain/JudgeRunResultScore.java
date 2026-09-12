@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 @Builder
 public class JudgeRunResultScore {
 
+    private Long caseId;
+
     private BigDecimal score;
 
     private JudgeResult judgeResult;
@@ -24,5 +26,7 @@ public class JudgeRunResultScore {
     private Long memory;
 
     private String errorMessage;
+
+    private String internalError;
 
 }

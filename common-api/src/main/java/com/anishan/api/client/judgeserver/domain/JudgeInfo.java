@@ -13,12 +13,14 @@ import java.math.BigDecimal;
 @Accessors(chain = true)
 public class JudgeInfo {
 
+    /**
+     * problem-service 创建的提交记录 ID。判题机不再自行创建公开提交记录。
+     */
+    private Long submitId;
 
     private Long userId;
 
-    /**
-     * 用户sse uuid
-     */
+    /** 旧版 SSE 通知链路的兼容 ID；HTTP 轮询不依赖它。 */
     private String uuid;
 
     private Long problemId;

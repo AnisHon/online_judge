@@ -14,4 +14,8 @@ public interface ProblemInternalClient {
     @ApiOperation("存储判题结果用的")
     @PostMapping("/judgeResult")
     R<Void> judgeResult(@RequestBody JudgeScore judgeScore);
+
+    @ApiOperation("更新判题公开状态")
+    @PostMapping("/judgeStatus")
+    R<Void> judgeStatus(@RequestBody JudgeScore judgeScore);
 }

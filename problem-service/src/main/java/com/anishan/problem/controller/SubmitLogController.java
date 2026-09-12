@@ -5,6 +5,8 @@ import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.commons.domain.R;
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.problem.domain.entity.SubmitLog;
+import com.anishan.problem.domain.entity.JudgeCaseLog;
+import com.anishan.problem.service.JudgeCaseLogService;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.problem.service.SubmitLogService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -14,6 +16,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -25,6 +28,7 @@ import java.util.List;
 public class SubmitLogController {
 
     private final SubmitLogService submitLogService;
+    private final JudgeCaseLogService judgeCaseLogService;
 
     @PostMapping("/queue")
     public R<Long> logQueue(JudgeMessage judgeMessage) {
@@ -57,13 +61,43 @@ public class SubmitLogController {
 
     @GetMapping("/get/{id}")
     @ApiOperation("外部接口，用户获取运行结果")
+    @PreAuthorize("hasAuthority('problem:submit:read')")
     public R<SubmitLogVo> getLog(@PathVariable("id") Long id, @RequestHeader("user-id")Long userId) {
         SubmitLogVo log = submitLogService.getLog(id, userId);
         return R.success(log);
     }
 
+    /**
+     * HTTP 短轮询接口。前端按 1 秒左右的频率调用即可，不依赖 SSE 连接。
+     */
+    @GetMapping("/submissions/{id}")
+    @ApiOperation("轮询指定提交状态")
+    @PreAuthorize("hasAuthority('problem:submit:read')")
+    public R<SubmitLogVo> poll(@PathVariable("id") Long id, @RequestHeader("user-id") Long userId) {
+        return R.success(submitLogService.getLog(id, userId));
+    }
+
+    /** 管理员预留接口：查看每个测试用例和判题机内部错误。 */
+    @GetMapping("/admin/{submitId}/cases")
+    @ApiOperation("查看提交的内部测试用例日志")
+    @PreAuthorize("hasAuthority('problem:judge:case:read')")
+    public R<List<JudgeCaseLog>> caseLogs(@PathVariable Long submitId) {
+        return R.success(judgeCaseLogService.list(new LambdaQueryWrapper<JudgeCaseLog>()
+                .eq(JudgeCaseLog::getSubmitId, submitId)
+                .orderByAsc(JudgeCaseLog::getCaseIndex)));
+    }
+
+    /** 管理员预留接口：查看提交级内部错误（例如无测试用例、投递失败、沙箱异常）。 */
+    @GetMapping("/admin/{submitId}")
+    @ApiOperation("查看提交内部诊断信息")
+    @PreAuthorize("hasAuthority('problem:judge:case:read')")
+    public R<SubmitLog> adminDetail(@PathVariable Long submitId) {
+        return R.success(submitLogService.getById(submitId));
+    }
+
     @GetMapping("/recentSubmit/{problemId}")
     @ApiOperation("最近提交记录")
+    @PreAuthorize("hasAuthority('problem:submit:read')")
     public R<List<SubmitLogVo>> recentSubmit(
             @NotNull @PathVariable("problemId") Long problemId,
             @RequestHeader("user-id") Long userId

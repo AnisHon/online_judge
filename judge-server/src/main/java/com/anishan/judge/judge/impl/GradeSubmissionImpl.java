@@ -40,6 +40,7 @@ public class GradeSubmissionImpl implements GradeSubmission {
 
         JudgeRunResultScore.JudgeRunResultScoreBuilder builder = JudgeRunResultScore
                 .builder()
+                .caseId(caseContent.getCaseId())
                 .judgeResult(judgeResult)
                 .score(BigDecimal.ZERO)
                 .passed(false)
@@ -60,6 +61,7 @@ public class GradeSubmissionImpl implements GradeSubmission {
 
             return builder
                     .errorMessage(stringBuilder.toString())
+                    .internalError(stringBuilder.toString())
                     .build();
         }
 

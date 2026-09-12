@@ -1,0 +1,6 @@
+# 单台 judge-server 的并发上限。多实例部署时每个实例独立限流，RabbitMQ 负责排队。
+judge:
+  config:
+    max-concurrency: ${OJ_JUDGE_MAX_CONCURRENCY:4}
+    max-submissions: ${OJ_JUDGE_MAX_SUBMISSIONS:1}
+    queue-capacity: ${OJ_JUDGE_QUEUE_CAPACITY:200}

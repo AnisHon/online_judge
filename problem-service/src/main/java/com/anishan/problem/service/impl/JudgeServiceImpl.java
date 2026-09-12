@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.client.JudgeClient;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
+import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.util.RedisJudgeTestUtil;
 import com.anishan.problem.domain.dto.TestRequest;
@@ -40,6 +41,7 @@ public class JudgeServiceImpl implements JudgeService {
     private final SysLanguageService sysLanguageService;
     private final RedisJudgeTestUtil redisJudgeTestUtil;
     private final JudgeClient judgeClient;
+    private final SubmitLogService submitLogService;
 
 
     private ProblemJudgeResult judgeOj(Long userId, Problem problem, JudgeRequest judgeRequest) {
@@ -71,10 +73,42 @@ public class JudgeServiceImpl implements JudgeService {
                 .setStackLimit(ojProblem.getStackLimit())
                 .setListScore(score);
 
+        // 先建立公开提交记录，再把提交 ID 传入判题机，保证异步链路有稳定主键。
+        Long submitId = submitLogService.createQueued(info);
+        info.setSubmitId(submitId);
 
-        boolean isSuccess = judgeClient.judge(info).getData();
+        Boolean isSuccess;
+        try {
+            isSuccess = judgeClient.judge(info).getData();
+        } catch (Exception e) {
+            // Feign/MQ 不可用时不能留下永久 QUEUE，内部原因落库，用户只看到通用提示。
+            submitLogService.complete(new JudgeScore()
+                    .setSubmitId(submitId)
+                    .setUserId(userId)
+                    .setProblemId(problem.getProblemId())
+                    .setContestId(judgeRequest.getContestId())
+                    .setCode(judgeRequest.getCode())
+                    .setResult(com.anishan.commons.enumeration.JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("DISPATCH_EXCEPTION")
+                    .setInternalError(e.getClass().getName() + ": " + e.getMessage()));
+            ThrowUtil.businessError(true, "判题服务暂时不可用，请稍后重试");
+            return problemJudgeResult;
+        }
 
-        ThrowUtil.businessError(!isSuccess, "冷却中，请稍后提交");
+        if (!Boolean.TRUE.equals(isSuccess)) {
+            submitLogService.complete(new JudgeScore()
+                    .setSubmitId(submitId)
+                    .setUserId(userId)
+                    .setProblemId(problem.getProblemId())
+                    .setContestId(judgeRequest.getContestId())
+                    .setCode(judgeRequest.getCode())
+                    .setResult(com.anishan.commons.enumeration.JudgeResult.JUDGE_ERROR)
+                    .setErrorCode("DISPATCH_REJECTED")
+                    .setInternalError("judge-server rejected the submission"));
+            ThrowUtil.businessError(true, "判题服务繁忙，请稍后提交");
+        }
+
+        problemJudgeResult.setSubmitId(submitId);
 
 
         return problemJudgeResult;

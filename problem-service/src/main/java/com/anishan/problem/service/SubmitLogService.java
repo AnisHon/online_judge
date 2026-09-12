@@ -1,6 +1,8 @@
 package com.anishan.problem.service;
 
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
+import com.anishan.api.client.judgeserver.domain.JudgeInfo;
+import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
@@ -15,6 +17,8 @@ public interface SubmitLogService extends IService<SubmitLog> {
 
     Long logQueue(Long userId, Long problemId, String language);
 
+    Long createQueued(JudgeInfo judgeInfo);
+
     Long logJudge(SubmitLogDto log);
 
     boolean changeStatus(Long userId, Long id, JudgeResult result);
@@ -22,4 +26,8 @@ public interface SubmitLogService extends IService<SubmitLog> {
     SubmitLogVo getLog(Long id, Long userId);
 
     boolean update(SubmitLogDto submitLog);
+
+    boolean updateStatus(JudgeScore judgeScore);
+
+    boolean complete(JudgeScore judgeScore);
 }
