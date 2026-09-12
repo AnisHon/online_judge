@@ -31,7 +31,6 @@ public class CompilerImpl implements Compiler {
                           String language, HashMap<String, String> extraFiles) throws SystemError, CompileError, SubmitError {
 
 
-
         if (languageConfig == null) {
             throw new RuntimeException("Unsupported language " + language);
         }
@@ -111,10 +110,8 @@ public class CompilerImpl implements Compiler {
             throw new RuntimeException("Unsupported interactive language:" + language);
         }
 
-        boolean copyOutExe = true;
-        if (pid == null) { // 题目id为空，则不进行本地存储，可能为新建题目时测试特判程序是否正常的判断而已
-            copyOutExe = false;
-        }
+        boolean copyOutExe = pid != null;
+        // 题目id为空，则不进行本地存储，可能为新建题目时测试特判程序是否正常的判断而已
 
         // 调用安全沙箱对特别判题程序进行编译
         JSONArray res = sandboxRun.compile(languageConfig.getMaxCpuTime(),

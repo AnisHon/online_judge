@@ -26,6 +26,7 @@ public class CacheRoleServiceImpl implements CacheRoleService {
     private String getMenuKey(Long roleId) {
         return userMenu + roleId;
     }
+
     private String getTreedMenuKey(Long roleId) {
 
         return userTreedMenu + roleId;
@@ -41,7 +42,7 @@ public class CacheRoleServiceImpl implements CacheRoleService {
     @Override
     public boolean isExist(Long roleId) {
         String menuKey = getMenuKey(roleId);
-        boolean exist = Boolean.TRUE.equals(redisTemplate.hasKey(menuKey));
+        boolean exist = redisTemplate.hasKey(menuKey);
         if (exist) {
             Object o = redisTemplate.opsForValue().get(menuKey);
 
@@ -71,11 +72,12 @@ public class CacheRoleServiceImpl implements CacheRoleService {
         }
         return menus;
     }
+
     @SuppressWarnings("unchecked")
     @Override
     public boolean isExistTreedMenu(Long roleId) {
         String menuKey = getTreedMenuKey(roleId);
-        boolean exist = Boolean.TRUE.equals(redisTemplate.hasKey(menuKey));
+        boolean exist = redisTemplate.hasKey(menuKey);
         if (exist) {
             Object o = redisTemplate.opsForValue().get(menuKey);
 

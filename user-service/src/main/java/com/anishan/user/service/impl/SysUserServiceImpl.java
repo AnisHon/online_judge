@@ -238,13 +238,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     }
 
     @Override
-    @EnableCache(name = "user:rank:", expire = 6 * 60 * 60 * 1000)
+    @EnableCache(name = "user:rank:v2:", expire = 6 * 60 * 60 * 1000)
     public List<UserVo> rank(Integer limit) {
-        Page<SysUser> page = Page.of(1, limit);
+        Page<SysUser> page = Page.of(1, Math.min(Math.max(limit, 1), 200));
         List<SysUser> users = this.list(
                 page,
                 new LambdaQueryWrapper<SysUser>()
-                        .select(SysUser::getNikeName, SysUser::getPoints)
+                        .select(SysUser::getUserId, SysUser::getUserName, SysUser::getNikeName, SysUser::getPoints)
                         .orderByDesc(SysUser::getPoints)
         );
         return BeanUtil.copyToList(users, UserVo.class);
@@ -388,7 +388,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
 
 }
-
 
 
 

@@ -19,6 +19,8 @@ set -a
 source .env.dev
 set +a
 
+NACOS_HTTP_PORT="${DEV_NACOS_PORT:-8848}"
+
 COMPOSE=(docker compose -p oj-dev -f docker-compose.dev.yaml --env-file .env.dev)
 INFRA=(oj-mysql oj-redis oj-mq oj-minio oj-nacos oj-sandbox)
 
@@ -27,17 +29,17 @@ echo '[1/2] 启动常驻基础设施（不会启动任何 Java 服务或前端�
 
 echo '[2/2] 等待 Nacos 并同步开发配置'
 for _ in $(seq 1 60); do
-  curl -fsS "http://127.0.0.1:8848/nacos/" >/dev/null 2>&1 && break
+  curl -fsS "http://127.0.0.1:${NACOS_HTTP_PORT}/nacos/" >/dev/null 2>&1 && break
   sleep 2
 done
-curl -fsS "http://127.0.0.1:8848/nacos/" >/dev/null || {
+curl -fsS "http://127.0.0.1:${NACOS_HTTP_PORT}/nacos/" >/dev/null || {
   "${COMPOSE[@]}" ps
   echo 'Nacos 未在预期时间内就绪。' >&2
   exit 1
 }
 
 for file in resources/config/*.yaml; do
-  curl -fsS -X POST "http://127.0.0.1:8848/nacos/v1/cs/configs" \
+  curl -fsS -X POST "http://127.0.0.1:${NACOS_HTTP_PORT}/nacos/v1/cs/configs" \
     --data-urlencode "dataId=$(basename "$file")" \
     --data-urlencode 'group=DEFAULT_GROUP' \
     --data-urlencode 'type=yaml' \

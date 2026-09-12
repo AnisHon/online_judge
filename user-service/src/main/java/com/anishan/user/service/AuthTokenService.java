@@ -19,10 +19,25 @@ public class AuthTokenService {
     public LoginVo issue(LoginUser loginUser) {
         Long userId = loginUser.getUser().getUserId();
         authUtil.cacheLoginUser(loginUser);
-        String accessToken = JwtUtil.createAccessToken(userId);
         String refreshToken = JwtUtil.createRefreshToken(userId);
-        authUtil.cacheToken(accessToken, JwtUtil.ACCESS_EXPIRE_MINUTES, TimeUnit.MINUTES);
         authUtil.cacheToken(refreshToken, JwtUtil.REFRESH_EXPIRE_DAYS, TimeUnit.DAYS);
+        return issueAccessToken(userId, refreshToken);
+    }
+
+    public LoginVo refresh(String refreshToken) {
+        Long userId = JwtUtil.parseRefreshJwt(refreshToken);
+        if (!authUtil.existToken(refreshToken) || !authUtil.isUserExisted(userId)) {
+            throw new IllegalTokenException("刷新令牌已失效");
+        }
+        LoginUser loginUser = authUtil.getLoginUser(userId);
+        if (loginUser == null) throw new IllegalTokenException("用户登录状态已失效");
+        // refresh token 保持固定有效期，只轮换短期 access token，避免多标签页并发刷新互相踢下线。
+        return issueAccessToken(userId, refreshToken);
+    }
+
+    private LoginVo issueAccessToken(Long userId, String refreshToken) {
+        String accessToken = JwtUtil.createAccessToken(userId);
+        authUtil.cacheToken(accessToken, JwtUtil.ACCESS_EXPIRE_MINUTES, TimeUnit.MINUTES);
 
         LoginVo result = new LoginVo();
         result.setSuccess(true);
@@ -32,18 +47,6 @@ public class AuthTokenService {
         result.setRefreshToken(refreshToken);
         result.setExpiresIn(JwtUtil.ACCESS_EXPIRE_MINUTES * 60L);
         return result;
-    }
-
-    public LoginVo refresh(String refreshToken) {
-        Long userId = JwtUtil.parseRefreshJwt(refreshToken);
-        if (!authUtil.existToken(refreshToken) || !authUtil.isUserExisted(userId)) {
-            throw new IllegalTokenException("刷新令牌已失效");
-        }
-        // refresh rotation：旧 refresh key 立即失效，降低重放风险。
-        authUtil.removeToken(refreshToken);
-        LoginUser loginUser = authUtil.getLoginUser(userId);
-        if (loginUser == null) throw new IllegalTokenException("用户登录状态已失效");
-        return issue(loginUser);
     }
 
     public void revoke(String token) {

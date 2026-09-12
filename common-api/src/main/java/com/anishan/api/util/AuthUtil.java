@@ -66,6 +66,7 @@ public class AuthUtil {
     private static String getLoginKey(@NotNull Long id) {
         return "user-service:userId:" + id;
     }
+
     private static String getAllLoginKey() {
         return "user-service:userId:*";
     }
@@ -123,15 +124,14 @@ public class AuthUtil {
         }
         return captcha;
     }
-    
 
 
     public synchronized boolean hasEmailKey(String key) {
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(getEmailCodeKey(key)));
+        return stringRedisTemplate.hasKey(getEmailCodeKey(key));
     }
 
     public boolean hasCaptchaKey(String key) {
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(getCaptchaCodeKey(key)));
+        return stringRedisTemplate.hasKey(getCaptchaCodeKey(key));
     }
 
     public String getEmailCode(String email) {
@@ -173,6 +173,7 @@ public class AuthUtil {
     public void cacheToken(@NotNull String token, long duration, TimeUnit unit) {
         stringRedisTemplate.opsForValue().set(getWhiteListTokenKey(token), "", duration, unit);
     }
+
     public void removeToken(@NotNull String token) {
         log.info("删除token: {}", token);
         stringRedisTemplate.delete(getWhiteListTokenKey(token));
@@ -182,7 +183,7 @@ public class AuthUtil {
         if (token == null) {
             return true;
         }
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(getWhiteListTokenKey(token)));
+        return stringRedisTemplate.hasKey(getWhiteListTokenKey(token));
     }
 
 
@@ -203,10 +204,11 @@ public class AuthUtil {
     }
 
     /**
-     *  检查并且删除验证码，需要注意该方法返回的是验证码是否错误
+     * 检查并且删除验证码，需要注意该方法返回的是验证码是否错误
+     *
      * @param captchaToken 验证码UUID
      * @param inputCode    用户输入的验证码
-     * @return             是否正确
+     * @return 是否正确
      */
     public boolean checkAndRemoveCaptchaCode(String captchaToken, String inputCode, CaptchaCodeType type) {
         String code = getAndRemoveCaptchaCode(captchaToken);

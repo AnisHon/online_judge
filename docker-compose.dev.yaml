@@ -64,7 +64,8 @@ services:
       oj-mysql:
         condition: service_healthy
     environment:
-      PREFER_HOST_MODE: hostname
+      # hostname 模式在部分 Linux/Docker 环境会触发 Nacos 2.4.2 InetUtils NPE；开发环境使用容器 IP 更稳定。
+      PREFER_HOST_MODE: ip
       MODE: standalone
       SPRING_DATASOURCE_PLATFORM: mysql
       MYSQL_SERVICE_HOST: oj-mysql
@@ -74,12 +75,18 @@ services:
       MYSQL_SERVICE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=True
     ports:
-      - "8848:8848"
+      - "${DEV_NACOS_PORT:-8848}:8848"
       - "9848:9848"
       - "9849:9849"
     volumes:
       - nacos-logs:/home/nacos/logs
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8848/nacos/ >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
 
   # 判题运行时沙箱。Java judge-server 由 IDEA 启动，不属于此 Compose。
   oj-sandbox:

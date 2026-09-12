@@ -44,7 +44,8 @@ public class UserController {
     @GetMapping("/rank/{limit}")
     @ApiOperation("查看排名,最大200，高了没用")
     public R<List<UserVo>> rank(@NotNull @PathVariable("limit") @ApiParam("前limit位") Integer limit) {
-        List<UserVo> list = sysUserService.rank(30);
+        int safeLimit = Math.min(Math.max(limit, 1), 200);
+        List<UserVo> list = sysUserService.rank(safeLimit);
         return R.success(list);
     }
 

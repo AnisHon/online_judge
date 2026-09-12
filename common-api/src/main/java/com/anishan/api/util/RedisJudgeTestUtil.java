@@ -24,7 +24,7 @@ public class RedisJudgeTestUtil {
 
     public boolean exists(Long userId) {
         String testKey = getTestKey(userId);
-        return Boolean.TRUE.equals(redisTemplate.hasKey(testKey));
+        return redisTemplate.hasKey(testKey);
     }
 
     public TestResult get(Long userId) {
@@ -32,8 +32,6 @@ public class RedisJudgeTestUtil {
         Object o = redisTemplate.opsForValue().get(testKey);
         return (TestResult) o;
     }
-
-
 
 
 }

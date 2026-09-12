@@ -9,7 +9,6 @@ public enum CaptchaCodeType {
     LINE(2),
     CIRCLE(3),
     MATH(4);
-    ;
     private final Integer type;
 
     CaptchaCodeType(Integer type) {
