@@ -33,13 +33,13 @@
         </el-popover>
       </div>
       <div class="editor-toolbar__actions">
-        <el-button text :disabled="disableSubmit" @click="emit('test')" :loading="loading">
+        <el-button class="action-button action-button--test" text :disabled="disableSubmit" @click="emit('test')" :loading="loading">
           <el-icon><VideoPlay /></el-icon><span>运行测试</span>
         </el-button>
-        <el-button type="primary" :disabled="disableSubmit" @click="emit('submit')" :loading="loading">
+        <el-button class="action-button action-button--submit" type="primary" :disabled="disableSubmit" @click="emit('submit')" :loading="loading">
           <el-icon><Promotion /></el-icon><span>提交代码</span>
         </el-button>
-        <el-button text @click="emit('open-log')">
+        <el-button class="action-button action-button--log" text @click="emit('open-log')">
           <el-icon><List /></el-icon><span>记录</span>
         </el-button>
       </div>
@@ -142,7 +142,10 @@ initLanguages();
 .language-card { display: flex; min-width: 0; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--el-border-color-lighter); border-radius: 10px; background: var(--el-bg-color); color: var(--el-text-color-primary); cursor: pointer; text-align: left; transition: border-color .18s ease, background-color .18s ease; }.language-card:hover, .language-card--active { border-color: var(--el-color-primary-light-5); background: var(--el-color-primary-light-9); }
 .language-card__badge { width: 29px; height: 29px; flex: 0 0 auto; font-size: 10px; }.language-card__copy { overflow: hidden; }.language-card__copy strong, .language-card__copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.language-card__copy strong { font-size: 11px; }.language-card__copy small { color: var(--el-text-color-secondary); font: 10px var(--code-font-family, monospace); }.language-card__check { margin-left: auto; flex: 0 0 auto; color: var(--el-color-primary); }
 .editor-toolbar__actions { flex: 0 0 auto; gap: 2px; }
-.editor-toolbar__actions .el-button { margin: 0; }
+.editor-toolbar__actions .el-button { min-height: 34px; margin: 0; justify-content: center; }
+.action-button--test { min-width: 98px; }
+.action-button--submit { min-width: 108px; }
+.action-button--log { min-width: 68px; }
 .editor-toolbar__actions .el-button + .el-button { margin-left: 0; }
 @media (max-width: 900px) { .editor-toolbar { align-items: flex-start; flex-direction: column; }.editor-toolbar__left { width: 100%; }.language-trigger { width: 100%; }.editor-toolbar__actions { width: 100%; justify-content: flex-end; } }
 

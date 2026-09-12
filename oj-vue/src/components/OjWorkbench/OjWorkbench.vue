@@ -132,32 +132,27 @@
         </div>
       </div>
 
-      <div v-if="activeSubmission" class="judge-status" :class="`judge-status--${statusTone(activeSubmission.status)}`">
-        <div class="judge-status__leading">
-          <span class="status-orb"><el-icon v-if="isPending(activeSubmission.status)"><Loading/></el-icon><el-icon
-              v-else><CircleCheck/></el-icon></span>
-          <div>
-            <strong>{{ statusLabel(activeSubmission.status) }}</strong>
-            <small>提交 #{{ activeSubmission.submitId }}
-              <template v-if="isPending(activeSubmission.status)"> · 判题机正在处理</template>
-            </small>
+      <Teleport to="body">
+        <Transition name="judge-toast">
+          <div v-if="activeSubmission && statusVisible" class="judge-toast"
+               :class="`judge-toast--${statusTone(activeSubmission.status)}`">
+            <span class="status-orb"><el-icon v-if="isPending(activeSubmission.status)"><Loading/></el-icon><el-icon
+                v-else><CircleCheck/></el-icon></span>
+            <div class="judge-toast__copy">
+              <strong>{{ statusLabel(activeSubmission.status) }}</strong>
+              <small>提交 #{{ activeSubmission.submitId }}</small>
+            </div>
+            <div class="judge-toast__metrics">
+              <span v-if="activeSubmission.totalCount">{{ activeSubmission.passCount ?? 0 }}/{{ activeSubmission.totalCount }} 用例</span>
+              <span v-if="activeSubmission.time != null">{{ activeSubmission.time }} ms</span>
+              <span v-if="activeSubmission.memory != null">{{ formatMemory(activeSubmission.memory) }}</span>
+            </div>
+            <el-progress v-if="isPending(activeSubmission.status)" :percentage="progress" :show-text="false"
+                         :indeterminate="true"/>
+            <span v-if="activeSubmission.stderr" class="judge-toast__message">{{ activeSubmission.stderr }}</span>
           </div>
-        </div>
-        <div class="judge-status__metrics">
-          <span v-if="activeSubmission.totalCount">{{ activeSubmission.passCount ?? 0 }}/{{
-              activeSubmission.totalCount
-            }} 用例</span>
-          <span v-if="activeSubmission.time != null">{{ activeSubmission.time }} ms</span>
-          <span v-if="activeSubmission.memory != null">{{ formatMemory(activeSubmission.memory) }}</span>
-        </div>
-        <el-progress v-if="isPending(activeSubmission.status)" :percentage="progress" :show-text="false"
-                     :indeterminate="true"/>
-        <p v-if="activeSubmission.stderr" class="judge-status__message">{{ activeSubmission.stderr }}</p>
-      </div>
-      <div v-else class="judge-status judge-status--idle">
-        <span class="status-orb"><el-icon><InfoFilled/></el-icon></span>
-        <div><strong>尚未提交</strong><small>提交代码后可在这里查看最新结果</small></div>
-      </div>
+        </Transition>
+      </Teleport>
 
       <div class="editor-host">
         <enhanced-code-editor
@@ -213,13 +208,12 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onMounted, onUnmounted, reactive, ref} from "vue";
+import {computed, nextTick, onMounted, onUnmounted, reactive, ref, watch} from "vue";
 import {
   ArrowDown,
   CircleCheck,
   Document,
   FullScreen,
-  InfoFilled,
   Loading,
   Monitor,
   Notebook,
@@ -262,6 +256,8 @@ const emit = defineEmits<{
 }>();
 
 const activePane = ref('statement');
+const statusVisible = ref(false);
+let statusDismissTimer: ReturnType<typeof setTimeout> | undefined;
 const problemPaneRef = ref<HTMLElement>();
 const codePaneRef = ref<HTMLElement>();
 const testConsoleRef = ref<HTMLElement>();
@@ -336,6 +332,23 @@ const formatDate = (value?: string) => value ? new Date(value).toLocaleString('z
 }) : '刚刚';
 const formatMemory = (value?: number) => value == null ? '-' : `${value > 1024 ? (value / 1024).toFixed(1) : value} ${value > 1024 ? 'MiB' : 'KiB'}`;
 
+const showSubmissionToast = () => {
+  if (statusDismissTimer) clearTimeout(statusDismissTimer);
+  if (!props.activeSubmission) {
+    statusVisible.value = false;
+    return;
+  }
+  statusVisible.value = true;
+  if (!isPending(props.activeSubmission.status)) {
+    statusDismissTimer = setTimeout(() => {
+      statusVisible.value = false;
+      statusDismissTimer = undefined;
+    }, 4200);
+  }
+};
+
+watch(() => [props.activeSubmission?.submitId, props.activeSubmission?.status], showSubmissionToast, {immediate: true});
+
 const measure = () => {
   nextTick(() => {
     const codeHeight = codePaneRef.value?.clientHeight || 0;
@@ -350,7 +363,10 @@ onMounted(() => {
   if (codePaneRef.value) resizeObserver.value.observe(codePaneRef.value);
 });
 
-onUnmounted(() => resizeObserver.value?.disconnect());
+onUnmounted(() => {
+  resizeObserver.value?.disconnect();
+  if (statusDismissTimer) clearTimeout(statusDismissTimer);
+});
 </script>
 
 <style scoped>
@@ -380,6 +396,8 @@ onUnmounted(() => resizeObserver.value?.disconnect());
   background: var(--el-bg-color);
   box-shadow: 0 12px 36px color-mix(in srgb, var(--el-color-primary) 6%, transparent);
 }
+
+.oj-code-pane { position: relative; }
 
 .oj-problem-pane {
   display: flex;
@@ -662,88 +680,40 @@ onUnmounted(() => resizeObserver.value?.disconnect());
   flex-direction: column;
 }
 
-.judge-status {
-  position: relative;
+/* 判题提示是浮层，不参与编辑器布局，避免状态变化挤压代码区。 */
+.judge-toast {
+  position: fixed;
+  z-index: 2050;
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%;
   display: flex;
+  max-width: min(520px, calc(100vw - 32px));
   align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  margin: 0 0 10px;
-  padding: 10px 14px;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--status-color, var(--el-color-primary)) 25%, var(--oj-border));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--status-color, var(--el-color-primary)) 6%, var(--el-bg-color));
-}
-
-.judge-status--success {
-  --status-color: var(--el-color-success);
-}
-
-.judge-status--error {
-  --status-color: var(--el-color-danger);
-}
-
-.judge-status--pending {
-  --status-color: var(--el-color-warning);
-}
-
-.judge-status--idle {
-  --status-color: var(--el-color-primary);
-}
-
-.judge-status__leading {
-  display: flex;
-  align-items: center;
-  min-width: 145px;
   gap: 9px;
-}
-
-.judge-status__leading strong, .judge-status__leading small {
-  display: block;
-}
-
-.judge-status__leading small {
-  margin-top: 2px;
-  color: var(--el-text-color-secondary);
-  font-size: 11px;
-}
-
-.status-orb {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--status-color) 15%, transparent);
-  color: var(--status-color);
-}
-
-.judge-status__metrics {
-  display: flex;
-  flex: 1;
-  justify-content: flex-end;
-  gap: 12px;
-  color: var(--el-text-color-secondary);
-  font-size: 11px;
-}
-
-.judge-status .el-progress {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-
-.judge-status__message {
-  max-width: 42%;
-  margin: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 7px 11px;
   overflow: hidden;
-  color: var(--el-color-danger);
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--status-color, var(--el-color-primary)) 30%, var(--oj-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--status-color, var(--el-color-primary)) 8%, var(--el-bg-color));
+  box-shadow: 0 10px 28px rgb(15 23 42 / 14%);
+  transform: translate(-50%, 0);
 }
+
+.judge-toast--success { --status-color: var(--el-color-success); }
+.judge-toast--error { --status-color: var(--el-color-danger); }
+.judge-toast--pending { --status-color: var(--el-color-warning); }
+.judge-toast .status-orb { display: grid; width: 27px; height: 27px; flex: 0 0 27px; place-items: center; border-radius: 9px; background: color-mix(in srgb, var(--status-color) 15%, transparent); color: var(--status-color); }
+.judge-toast__copy { display: flex; min-width: 92px; flex-direction: column; gap: 1px; }
+.judge-toast__copy strong, .judge-toast__copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.judge-toast__copy strong { font-size: 12px; }
+.judge-toast__copy small { color: var(--el-text-color-secondary); font-size: 10px; }
+.judge-toast__metrics { display: flex; flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-end; gap: 9px; color: var(--el-text-color-secondary); font-size: 10px; }
+.judge-toast .el-progress { position: absolute; right: 0; bottom: 0; left: 0; }
+.judge-toast__message { max-width: 180px; overflow: hidden; color: var(--el-color-danger); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.judge-toast-enter-active, .judge-toast-leave-active { transition: opacity .22s ease, transform .22s ease; }
+.judge-toast-enter-from, .judge-toast-leave-to { opacity: 0; transform: translate(-50%, -18px); }
 
 .test-console {
   flex: 0 0 auto;
@@ -870,8 +840,10 @@ onUnmounted(() => resizeObserver.value?.disconnect());
     grid-template-columns: 1fr;
   }
 
-  .judge-status__metrics {
+  .judge-toast__metrics {
     display: none;
   }
+
+  .judge-toast { max-width: calc(100vw - 20px); }
 }
 </style>
