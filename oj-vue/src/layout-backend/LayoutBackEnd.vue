@@ -1,11 +1,11 @@
 <template>
   <div class="app-container">
-    <el-container style="height: 100%;" >
-      <el-aside class="menu vertical-menu-animation" width="auto" >
+    <el-container class="backend-container">
+      <el-aside class="backend-aside" :width="collapse ? 'var(--vertical-menu-collapse-width)' : 'var(--vertical-menu-expand-width)'" >
         <backend-menu :collapse="collapse"/>
       </el-aside>
 
-      <el-container>
+      <el-container class="backend-body">
         <el-header class="header" height="var(--backend-header-height)">
           <header-bar v-model:collapse="collapse"/>
           <custom-tab/>
@@ -50,7 +50,7 @@ const tabStore = useTabStore();
 const collapse = ref(true);
 
 const includeRoutes = computed(() => {
-  return tabStore.getTabs().value.map(tab => tab.component).filter(tab => tab);
+  return tabStore.tabs.map(tab => tab.component).filter(tab => tab);
 });
 
 const excludeRoutes = computed((): string[] => {
@@ -73,14 +73,33 @@ provide('elMain', {elMainRef: elMainRef});
   background: var(--vertical-menu-color);
 }
 
+.app-container { height: 100%; overflow: hidden; background: var(--el-bg-color-page); }
+.backend-container, .backend-body { height: 100%; min-width: 0; }
+.backend-aside { overflow: hidden; background: var(--vertical-menu-color); transition: width .25s ease; }
+
 .header {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 var(--backend-header-height);
+  height: var(--backend-header-height);
+  position: relative;
+  z-index: 2000;
+  overflow: visible;
 }
 
 .main {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 20px 24px 28px;
+  overflow: auto;
+  background: var(--el-bg-color-page);
+}
 
-  overflow-x: hidden;
-
+@media (max-width: 700px) {
+  .main { padding: 14px 12px 24px; }
 }
 
 </style>

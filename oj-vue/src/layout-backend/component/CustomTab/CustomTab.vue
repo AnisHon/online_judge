@@ -1,14 +1,14 @@
 <template>
   <div class="app-container">
     <el-tabs
-        v-model="editableTabsValue"
+        v-model="tabStore.currentTab"
         type="card"
         class="tabs"
-        @tab-remove="onTabRemove"
-        @tab-change="onTabChange"
+        @tab-remove="handleTabRemove"
+        @tab-change="navigateToTab"
     >
       <el-tab-pane
-          v-for="item in editableTabs"
+          v-for="item in tabStore.tabs"
           :key="item.name"
           :label="item.title"
           :name="item.name"
@@ -31,42 +31,35 @@ const tabStore = useTabStore();
 const route = useRoute();
 const router = useRouter();
 
-const editableTabsValue = tabStore.getCurrentTab();
-const editableTabs = tabStore.getTabs();
+const syncRouteToTab = () => {
+  if (!route.fullPath.startsWith("/backend") || !route.name) return;
+  tabStore.open(String(route.name), String(route.meta?.name || ""), route.fullPath);
+};
 
+const handleTabRemove = async (targetName: string) => {
+  const wasActive = tabStore.currentTab === targetName;
+  const activeName = tabStore.removeTab(targetName);
+  if (wasActive) await navigateToTab(activeName);
+};
 
-const setTabs = () => {
-  if (!route.fullPath.startsWith("/backend")) {
-    return;
-  }
-
-  const name = <string>route.name
-  const title = <string>route?.meta?.name || "";
-  tabStore.open(name, title, route.fullPath);
-}
-
-const onTabRemove = (targetName: string) => {
-  const active = tabStore.removeTab(targetName);
-  onTabChange(active);
-}
-
-const onTabChange = (targetName: string) => {
+const navigateToTab = async (targetName: string) => {
   const path = tabStore.getUrl(targetName);
-  try {
-    router.push({path: path});
-  } catch (e) {
-    console.log(e)
-  }
+  if (path && path !== route.fullPath) await router.push({path});
+};
 
-}
-
-watch(route, setTabs, { immediate: true });
+watch(() => route.fullPath, syncRouteToTab, { immediate: true });
 
 </script>
 
 <style scoped lang="scss">
 .app-container {
   height: var(--tab-height);
+  width: 100%;
+  flex: 0 0 var(--tab-height);
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 3px 14px 0;
+  background: var(--el-bg-color-page);
 }
 .app-container ::v-deep(.tabs),
 .app-container ::v-deep(.tabs) .el-tabs__header,
@@ -82,8 +75,27 @@ watch(route, setTabs, { immediate: true });
 .app-container ::v-deep(.tabs) .el-tabs__header .el-tabs__nav-scroll .el-tabs__nav {
   border: none ;
 }
+.app-container ::v-deep(.tabs) .el-tabs__nav-wrap { overflow: visible; }
+.app-container ::v-deep(.tabs) .el-tabs__nav-wrap::after { background: var(--el-border-color-lighter); }
 
 .app-container ::v-deep(.tabs) .el-tabs__item {
-  height: 80%;
+  height: 30px;
+  margin: 0 5px 0 0;
+  padding: 0 14px;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px 8px 0 0;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-lighter);
+  line-height: 30px;
+}
+.app-container ::v-deep(.tabs) .el-tabs__item.is-active {
+  color: var(--el-color-primary);
+  background: var(--el-bg-color);
+  border-bottom-color: var(--el-bg-color);
+}
+.app-container ::v-deep(.tabs) .el-tabs__item:hover { color: var(--el-color-primary); }
+@media (max-width: 700px) {
+  .app-container { padding: 3px 8px 0; }
+  .app-container ::v-deep(.tabs) .el-tabs__item { padding: 0 10px; }
 }
 </style>

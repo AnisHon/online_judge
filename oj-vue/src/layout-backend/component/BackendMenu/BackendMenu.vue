@@ -1,16 +1,9 @@
 <template>
-  <el-scrollbar height="100%" class="vertical-menu-animation" :view-class="collapseClass" :wrap-class="collapseClass">
-    <transition name="el-fade-in" mode="out-in" :duration="{enter: 500, leave: 100}">
-      <div class="header" :key="collapse ? 'collapsed' : 'expanded'">
-        <h3 v-show="!collapse">
-          <el-icon size="32"><IconManagement/></el-icon>
-          <span>丁真无敌后台管理</span>
-        </h3>
-        <h3 v-show="collapse">
-          <el-icon size="32"><IconManagement/></el-icon>
-        </h3>
+  <el-scrollbar height="100%" class="backend-scrollbar">
+      <div class="brand-header" :class="{collapsed: collapse}">
+        <el-icon class="brand-icon" size="30"><IconManagement/></el-icon>
+        <span v-show="!collapse" class="brand-title">延拓Code <small>管理后台</small></span>
       </div>
-    </transition>
 
     <el-menu
         class="menu"
@@ -21,7 +14,7 @@
         :default-active="currentIndex"
         :router="true"
     >
-      <recursive-menu-item v-for="route of routes" :route="route"/>
+        <recursive-menu-item v-for="route of routes" :key="route.path" :route="route"/>
     </el-menu>
   </el-scrollbar>
 
@@ -29,7 +22,7 @@
 
 <script setup lang="ts">
 
-import {computed,} from "vue";
+import {computed} from "vue";
 import RecursiveMenuItem from "@/components/RecursiveMenuItem/RecursiveMenuItem.vue";
 import {useMenuStore} from "@/stores/useMenuStore.ts";
 import {useRoute} from "vue-router";
@@ -47,23 +40,15 @@ const currentIndex = computed(() => {
 
 const {collapse = false} = defineProps<{collapse?: boolean}>()
 
-const collapseClass = computed(() => {
-  return (collapse ? "vertical-menu-collapse" : "vertical-menu-expand") + " vertical-menu-animation"
-})
-
-
 </script>
 
 <style scoped>
 
-.header {
-  h3 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-  }
-}
+.brand-header { display: flex; align-items: center; height: 72px; gap: 12px; padding: 0 20px; color: #f8fafc; white-space: nowrap; }
+.brand-header.collapsed { justify-content: center; padding: 0; }
+.brand-icon { flex: 0 0 auto; color: #67e8f9; }
+.brand-title { display: flex; flex-direction: column; color: #f8fafc; font-size: 16px; font-weight: 750; letter-spacing: -.02em; line-height: 1.15; }
+.brand-title small { margin-top: 4px; color: #94a3b8; font-size: 10px; font-weight: 500; letter-spacing: .12em; }
 
 </style>
 
@@ -71,6 +56,7 @@ const collapseClass = computed(() => {
 
 .menu {
   border: none;
+  width: 100%;
 }
 
 .el-menu>.el-menu-item:hover,
@@ -86,5 +72,10 @@ const collapseClass = computed(() => {
 .el-menu .el-sub-menu .el-menu-item:hover {
   background-color: var(--vertical-menu-submenu-hover-color);
 }
+
+.backend-scrollbar :deep(.el-scrollbar__view) { min-height: 100%; }
+.backend-scrollbar :deep(.el-menu-item), .backend-scrollbar :deep(.el-sub-menu__title) { height: 48px; margin: 3px 10px; border-radius: 10px; line-height: 48px; }
+.backend-scrollbar :deep(.el-menu-item.is-active) { color: #fff; background: linear-gradient(90deg, #2563eb, #0891b2); box-shadow: 0 6px 14px rgb(8 145 178 / 18%); }
+.backend-scrollbar :deep(.el-menu--collapse .el-menu-item), .backend-scrollbar :deep(.el-menu--collapse .el-sub-menu__title) { width: 52px; margin-right: 10px; margin-left: 10px; padding: 0; text-align: center; }
 
 </style>
