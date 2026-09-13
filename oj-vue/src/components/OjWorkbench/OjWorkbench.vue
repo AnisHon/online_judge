@@ -359,7 +359,15 @@ watch(() => [props.activeSubmission?.submitId, props.activeSubmission?.status], 
 const measure = () => {
   nextTick(() => {
     // 编辑器高度直接取上方面板的实际高度，拖动分隔线时不会再叠加外层高度。
-    editorHeight.value = Math.max(260, editorHostRef.value?.clientHeight || 0);
+    const measuredHeight = editorHostRef.value?.clientHeight || 0;
+    if (!measuredHeight) return;
+
+    const nextHeight = Math.max(260, measuredHeight);
+    // ResizeObserver 会观察 editorHost，而编辑器高度又会影响 editorHost 的布局。
+    // 没有变化时不再回写，避免在 auto 高度布局中形成 ResizeObserver 反馈循环。
+    if (Math.abs(editorHeight.value - nextHeight) > 1) {
+      editorHeight.value = nextHeight;
+    }
   });
 };
 
@@ -700,6 +708,12 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+.editor-host :deep(.cm-component), .editor-host :deep(.CodeMirror) {
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
 /* 判题提示是浮层，不参与编辑器布局，避免状态变化挤压代码区。 */
 .judge-toast {
   position: fixed;
@@ -867,7 +881,11 @@ onUnmounted(() => {
   }
 
   .oj-code-pane {
-    min-height: 74vh;
+    /* 单列时工作台本身允许页面滚动，但代码区必须拥有独立的有限高度。
+       否则内部 vertical ResizablePanel 的 72% 高度会和 auto 高度父级互相反馈。 */
+    height: clamp(420px, calc(100vh - var(--menu-height) - 24px), 820px);
+    min-height: 0;
+    max-height: 820px;
   }
 
   .limit-grid {

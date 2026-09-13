@@ -95,7 +95,7 @@ function restore() {
 
 <style scoped>
 .resizable-panel { --panel-size: v-bind('size + "%"'); display: flex; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; background: var(--el-bg-color-page); }
-.resizable-panel__sidebar { width: var(--panel-size); min-width: 0; flex: 0 0 var(--panel-size); overflow: hidden; transition: flex-basis .22s ease, width .22s ease; }
+.resizable-panel__sidebar { width: var(--panel-size); min-width: 0; min-height: 0; flex: 0 0 var(--panel-size); overflow: hidden; transition: flex-basis .22s ease, width .22s ease; }
 .resizable-panel__main { position: relative; min-width: 0; min-height: 0; flex: 1; overflow: hidden; }
 .is-collapsed .resizable-panel__main { box-sizing: border-box; padding-left: 38px; }
 .resizable-panel__handle { display: grid; width: 12px; flex: 0 0 12px; place-items: center; background: transparent; cursor: col-resize; touch-action: none; }

@@ -46,7 +46,7 @@ public class SecurityConfig {
             "/auth/send-email-code",
             "/auth/send-forget-email-code",
             "/auth/captcha-code",
-            "/info/config",
+            "/site/config",
             "/user/username/**",
             "/user/email/**",
             "/version",

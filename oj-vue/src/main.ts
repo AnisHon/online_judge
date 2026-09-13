@@ -14,6 +14,7 @@ import piniaPluginPersistedState from 'pinia-plugin-persistedstate'; //引入持
 import App from '@/App.vue';
 import router from './router';
 import {has, hasAny} from "@/utils/hasAuth";
+import {useSiteConfig} from '@/stores/useSiteConfig';
 
 
 const app = createApp(App)
@@ -32,5 +33,12 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.directive("has", has);
 app.directive('hasAny', hasAny)
 
-// router.isReady().then(() => app.mount('#app')
-app.mount('#app')
+const bootstrap = async () => {
+    // 配置在应用挂载前加载一次，登录/注册页直接读取内存状态。
+    // load() 内部保留默认值，即使配置服务暂时不可用也不会阻塞页面启动。
+    await useSiteConfig(pinia).load()
+    await router.isReady()
+    app.mount('#app')
+}
+
+void bootstrap()

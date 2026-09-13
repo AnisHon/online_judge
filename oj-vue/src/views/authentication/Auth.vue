@@ -11,7 +11,7 @@
     </section>
     <section class="form-panel">
       <div class="form-shell">
-        <div class="mobile-brand"><div class="brand-mark small">延</div><span>{{ siteConfig.siteName || '延拓Code' }}</span></div>
+        <div class="mobile-brand"><div class="brand-mark small">延</div><span>{{ siteConfig.config.siteName }}</span></div>
         <div class="header"><el-image src="/auth/auth_logo.webp" class="logo" fit="contain" /></div>
         <router-view v-slot="{ Component }">
           <transition name="el-fade-in" mode="out-in"><component :is="Component" /></transition>
@@ -22,8 +22,8 @@
           <el-col :span="12" v-show="showForgetPass"><router-link class="right-link" :to="{name: 'forget-password'}">忘记密码</router-link></el-col>
         </el-row>
         <footer class="auth-footer">
-          <span>{{ siteConfig.siteName || '请设置站点名' }}</span><span class="footer-dot">·</span>
-          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{ siteConfig.icpNumber || '请设置备案号' }}</a>
+          <span>{{ siteConfig.config.siteName }}</span><span class="footer-dot">·</span>
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{ siteConfig.config.icpNumber }}</a>
         </footer>
       </div>
     </section>
@@ -31,20 +31,17 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, reactive, ref, watch} from "vue";
+import {computed, ref, watch} from "vue";
 import {useRoute} from "vue-router";
-import {getSiteConfig, type SiteConfig} from "@/api/siteConfig";
+import {useSiteConfig} from "@/stores/useSiteConfig";
 
 const route = useRoute()
 const url = ref(route.path)
-const siteConfig = reactive<SiteConfig>({siteName: "", icpNumber: ""})
+const siteConfig = useSiteConfig()
 const lastLocation = computed(() => url.value.split("/").pop() || "")
 const routerTo = computed<{name: string, text: string}>(() => lastLocation.value.includes("login") ? {name: "sign-up", text: "去注册"} : {name: "login", text: "去登录"})
 const showForgetPass = computed(() => lastLocation.value.includes("login"))
 watch(() => route.path, value => { url.value = value }, {immediate: true})
-onMounted(async () => {
-  try { Object.assign(siteConfig, await getSiteConfig()) } catch (_) { /* 使用内置备案号兜底 */ }
-})
 </script>
 
 <style scoped lang="scss">

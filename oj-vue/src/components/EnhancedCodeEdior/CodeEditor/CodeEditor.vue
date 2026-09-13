@@ -148,6 +148,11 @@ defineExpose({code})
 .CodeMirror pre,
 .CodeMirror textarea,
 .cm-component {
+  display: block;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
   font-family: "OJCodeFont", "JetBrains Mono", "Cascadia Code", Consolas,
     "Liberation Mono", "DejaVu Sans Mono", monospace !important;
   font-variant-ligatures: none;
