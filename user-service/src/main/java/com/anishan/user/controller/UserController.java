@@ -139,11 +139,8 @@ public class UserController {
     @PreAuthorize("hasAuthority('user:user:add')")
     @ApiOperation("添加用户")
     public R<String> addUser(@RequestBody @Validated(ValidationGroup.Insert.class) SysUserDto sysUserDto) {
-        try {
-            sysUserService.addUser(sysUserDto);
-        } catch (RuntimeException e) {
-            return R.error(400, e.getMessage());
-        }
+        // 统一交给 GlobalExceptionAdvice 处理，避免把底层异常 message 直接返回给客户端。
+        sysUserService.addUser(sysUserDto);
         return R.success();
     }
 

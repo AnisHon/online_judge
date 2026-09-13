@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
+import org.springframework.util.StringUtils;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -26,21 +27,22 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.security.access.AccessDeniedException;
 
 import javax.validation.ConstraintViolationException;
-import java.util.Objects;
-
 @ControllerAdvice
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GlobalExceptionAdvice {
+
+    private static final String INTERNAL_ERROR_MESSAGE = "服务暂时无法处理请求，请稍后重试";
+    private static final String BAD_REQUEST_MESSAGE = "请求参数有误，请检查后重试";
 
     private final SharedConfig sharedConfig;
 
     @ResponseBody
     @ExceptionHandler(value = Exception.class)
     public R<String> handleException(Exception e) {
-        log.error(e.getMessage(), e);
+        log.error("未处理的请求异常", e);
         if (sharedConfig.isProduct()) {
-            return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误，请联系管理员");
+            return R.error(HttpStatus.HTTP_INTERNAL_ERROR, INTERNAL_ERROR_MESSAGE);
         } else {
             Throwable temp = e;
             StringBuilder builder = new StringBuilder();
@@ -61,9 +63,9 @@ public class GlobalExceptionAdvice {
     public R<String> handleIllegalArgumentException(IllegalArgumentException e) {
         log.debug("IllegalArgumentException", e);
         if (sharedConfig.isProduct()) {
-            return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, BAD_REQUEST_MESSAGE);
         } else {
-            return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误");
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -71,14 +73,16 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(IllegalTokenException.class)
     public R<String> handleIllegalTokenException(IllegalTokenException e) {
         log.debug("IllegalTokenException", e);
-        return R.error(HttpStatus.HTTP_UNAUTHORIZED, e.getMessage());
+        return R.error(HttpStatus.HTTP_UNAUTHORIZED,
+                sharedConfig.isProduct() ? "登录状态无效或已过期" : e.getMessage());
     }
 
     @ResponseBody
     @ExceptionHandler(PermissionDeniedDataAccessException.class)
     public R<String> handlePermissionDeniedDataAccessException(PermissionDeniedDataAccessException e) {
         log.debug("PermissionDeniedDataAccessException", e);
-        return R.error(HttpStatus.HTTP_UNAUTHORIZED, e.getMessage());
+        return R.error(HttpStatus.HTTP_UNAUTHORIZED,
+                sharedConfig.isProduct() ? "无权限访问该资源" : e.getMessage());
     }
 
     @ResponseBody
@@ -93,9 +97,9 @@ public class GlobalExceptionAdvice {
     public R<String> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
         log.debug("MethodArgumentTypeMismatchException", e);
         if (sharedConfig.isProduct()) {
-            return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, BAD_REQUEST_MESSAGE);
         } else {
-            return R.error(HttpStatus.HTTP_UNAUTHORIZED, "出现错误");
+            return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -104,7 +108,8 @@ public class GlobalExceptionAdvice {
     @ResponseStatus(org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED)
     public R<String> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.debug("HttpRequestMethodNotSupportedException", e);
-        return R.error(HttpStatus.HTTP_BAD_METHOD, e.getMessage());
+        return R.error(HttpStatus.HTTP_BAD_METHOD,
+                sharedConfig.isProduct() ? "不支持的请求方式" : e.getMessage());
     }
 
     @ResponseBody
@@ -112,7 +117,8 @@ public class GlobalExceptionAdvice {
     @ResponseStatus(org.springframework.http.HttpStatus.NOT_FOUND)
     public R<String> handleNoHandlerFoundException(NoHandlerFoundException e) {
         log.debug("NoHandlerFoundException", e);
-        return R.error(HttpStatus.HTTP_NOT_FOUND, e.getMessage());
+        return R.error(HttpStatus.HTTP_NOT_FOUND,
+                sharedConfig.isProduct() ? "请求地址不存在" : e.getMessage());
     }
 
 
@@ -121,9 +127,10 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
     public R<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String defaultMessage = Objects.requireNonNull(e.getFieldError()).getDefaultMessage();
+        String defaultMessage = e.getFieldError() == null ? null : e.getFieldError().getDefaultMessage();
         log.debug("MethodArgumentNotValidException", e);
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, defaultMessage);
+        return R.error(HttpStatus.HTTP_BAD_REQUEST,
+                sharedConfig.isProduct() ? safeClientMessage(defaultMessage, BAD_REQUEST_MESSAGE) : defaultMessage);
     }
 
     @ResponseBody
@@ -147,7 +154,7 @@ public class GlobalExceptionAdvice {
 
         log.debug("RuntimeException", e);
         if (sharedConfig.isProduct()) {
-            return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误");
+            return R.error(HttpStatus.HTTP_INTERNAL_ERROR, INTERNAL_ERROR_MESSAGE);
         } else {
             return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
         }
@@ -170,7 +177,7 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(BusinessException.class)
     public R<String> handleBusinessException(BusinessException e) {
         log.debug("BusinessException", e);
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+        return R.error(HttpStatus.HTTP_BAD_REQUEST, safeBusinessMessage(e));
     }
 
     @ResponseBody
@@ -186,7 +193,8 @@ public class GlobalExceptionAdvice {
     @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
     public R<String> handleJsonParseException(JsonParseException e) {
         log.debug("JsonParseException", e);
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, e.getMessage());
+        return R.error(HttpStatus.HTTP_BAD_REQUEST,
+                sharedConfig.isProduct() ? BAD_REQUEST_MESSAGE : e.getMessage());
     }
 
 
@@ -194,7 +202,45 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(MismatchedInputException.class)
     public R<String> handleMismatchedInputException(MismatchedInputException e) {
         log.debug("MismatchedInputException", e);
-        return R.error(HttpStatus.HTTP_BAD_REQUEST, "出现错误");
+        return R.error(HttpStatus.HTTP_BAD_REQUEST,
+                sharedConfig.isProduct() ? BAD_REQUEST_MESSAGE : e.getMessage());
+    }
+
+    /**
+     * 业务异常的 message 通常是可以展示给用户的校验提示，但不能让误用的
+     * SQL、堆栈或类名穿透到生产响应中。
+     */
+    private String safeBusinessMessage(BusinessException exception) {
+        String message = exception.getMessage();
+        if (!StringUtils.hasText(message) && exception.getError() != null) {
+            message = exception.getError().getMsg();
+        }
+        if (!sharedConfig.isProduct()) {
+            return message;
+        }
+        return safeClientMessage(message, BAD_REQUEST_MESSAGE);
+    }
+
+    private String safeClientMessage(String message, String fallback) {
+        if (!StringUtils.hasText(message)) {
+            return fallback;
+        }
+        String normalized = message.trim();
+        String lowerCase = normalized.toLowerCase(java.util.Locale.ROOT);
+        boolean technicalDetail = normalized.length() > 160
+                || normalized.contains("\n")
+                || normalized.contains("\r")
+                || lowerCase.contains("exception")
+                || lowerCase.contains("caused by")
+                || lowerCase.contains("sqlsyntax")
+                || lowerCase.contains("select ")
+                || lowerCase.contains("insert ")
+                || lowerCase.contains("update ")
+                || lowerCase.contains("delete ")
+                || lowerCase.contains("org.")
+                || lowerCase.contains("java.")
+                || lowerCase.contains(" at ");
+        return technicalDetail ? fallback : normalized;
     }
 
 }

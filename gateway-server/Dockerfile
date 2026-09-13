@@ -12,4 +12,4 @@ WORKDIR /opt
 COPY target/gateway-server-1.0.0-beta.jar /opt
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-CMD ["sh", "-c", "java -jar /opt/gateway-server-1.0.0-beta.jar --spring.cloud.nacos.server-addr=${NACOS_URL} --server.port=${SERVER_PORT}"]
+CMD ["sh", "-c", "java -jar /opt/gateway-server-1.0.0-beta.jar --spring.cloud.nacos.server-addr=${NACOS_URL} --server.port=${SERVER_PORT} --oj.product=${OJ_PRODUCT:-false}"]

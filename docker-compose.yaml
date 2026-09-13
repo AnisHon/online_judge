@@ -128,6 +128,7 @@ services:
       - judge-logs:/opt/logs/judge-server
     environment:
       - JUDGE_URL=oj-sandbox:5050
+      - OJ_PRODUCT=${OJ_PRODUCT:-false}
       - NACOS_URL=oj-nacos:8848
       - MINIO_URL=http://oj-minio:9000
       - DB_HOST=oj-mysql
@@ -157,6 +158,7 @@ services:
     volumes:
       - content-logs:/opt/logs/content-service
     environment:
+      - OJ_PRODUCT=${OJ_PRODUCT:-false}
       - NACOS_URL=oj-nacos:8848
       - MINIO_URL=http://oj-minio:9000
       - DB_HOST=oj-mysql
@@ -182,6 +184,7 @@ services:
     volumes:
       - problem-logs:/opt/logs/problem-service
     environment:
+      - OJ_PRODUCT=${OJ_PRODUCT:-false}
       - NACOS_URL=oj-nacos:8848
       - MINIO_URL=http://oj-minio:9000
       - DB_HOST=oj-mysql
@@ -207,6 +210,7 @@ services:
     volumes:
       - user-logs:/opt/logs/user-service
     environment:
+      - OJ_PRODUCT=${OJ_PRODUCT:-false}
       - NACOS_URL=oj-nacos:8848
       - MINIO_URL=http://oj-minio:9000
       - DB_HOST=oj-mysql
@@ -234,6 +238,7 @@ services:
     ports:
       - "8000:80"
     environment:
+      - OJ_PRODUCT=${OJ_PRODUCT:-false}
       - NACOS_URL=oj-nacos:8848
       - SERVER_PORT=80
       - OJ_JWT_SECRET=${OJ_JWT_SECRET:?set OJ_JWT_SECRET in .env}

@@ -17,7 +17,17 @@ feign:
     enabled: false
 
 oj:
-  product: false
+  # 开发环境默认保留调试信息；生产 Compose 必须显式注入 OJ_PRODUCT=true。
+  product: ${OJ_PRODUCT:false}
+
+server:
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+    whitelabel:
+      enabled: false
 
 site:
   name: 延拓Code

@@ -62,7 +62,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         } catch (IllegalTokenException e) {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            R<String> rest = R.unauthorized(e.getMessage());
+            // 令牌异常只记录在服务端，避免把认证实现细节返回给前端。
+            R<String> rest = R.unauthorized("登录状态无效或已过期");
 
             new ObjectMapper().writeValue(response.getWriter(), rest);
         }
