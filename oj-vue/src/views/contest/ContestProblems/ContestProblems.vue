@@ -1,6 +1,6 @@
 <template>
   <main class="contest-workspace">
-    <resizable-panel v-model:size="sidebarSize" v-model:collapsed="sidebarCollapsed" class="contest-layout"
+    <activity-resizable-panel v-model:size="sidebarSize" v-model:collapsed="sidebarCollapsed" class="contest-layout"
                      :min-size="20" :max-size="36">
       <template #sidebar>
         <aside class="problem-sidebar">
@@ -75,7 +75,7 @@
         </div>
         <div v-if="currentRow" class="problem-detail-shell">
           <detail-problem :key="String(currentRow.problemId)" :problem-id="currentRow.problemId" :contest-id="contestId"
-                          :disable-submit="!isAnswering"/>
+                          :disable-submit="!isAnswering" @submitted="refreshProblemState"/>
         </div>
 
         <div v-else class="activity-overview">
@@ -110,7 +110,7 @@
           <el-empty v-else-if="!isLoadingContest" description="活动信息加载失败，请刷新重试"/>
         </div>
       </section>
-    </resizable-panel>
+    </activity-resizable-panel>
   </main>
 </template>
 
@@ -134,7 +134,7 @@ import type {ProblemInListView} from '@/api/list'
 import {debouncedGetProblems} from '@/api/list/problem'
 import DetailProblem from '@/components/DetailProblem/DetailProblem.vue'
 import MarkdownPreview from '@/components/MarkdownPreview.vue'
-import ResizablePanel from '@/components/ResizablePanel/ResizablePanel.vue'
+import ActivityResizablePanel from '@/components/ActivityResizablePanel/ActivityResizablePanel.vue'
 import {ContestType, type ContestView, fetchContestById, getContestStatus, handInPaper} from '@/api/contest'
 import {authTagType, authText, formatDate, isContestOver, isNotStart} from '@/utils/contest'
 
@@ -188,6 +188,17 @@ const selectProblem = (row: ProblemInListView) => {
   currentRow.value = row;
   sidebarCollapsed.value = false
 }
+const refreshProblemState = () => {
+  get(contestId.value)
+}
+const refreshActivityState = async () => {
+  refreshProblemState()
+  try {
+    isAnswering.value = await getContestStatus(contestId.value)
+  } catch {
+    // 交卷已经成功时，状态接口瞬时失败不覆盖当前页面状态。
+  }
+}
 const handleHandIn = () => {
   ElMessageBox.confirm('提交试卷后将不能继续作答，确认提交吗？', '提交试卷', {
     cancelButtonText: '继续作答',
@@ -196,6 +207,7 @@ const handleHandIn = () => {
   })
       .then(async () => {
         await handInPaper(contestId.value);
+        await refreshActivityState()
         isAnswering.value = false;
         currentRow.value = undefined
       })
@@ -231,8 +243,11 @@ void loadPage()
   display: flex;
   width: 100%;
   height: 100%;
+  box-sizing: border-box;
   min-height: 0;
+  min-width: 0;
   flex: 1;
+  overflow: hidden;
   border: 1px solid var(--el-border-color-light);
   border-radius: 15px;
   box-shadow: 0 7px 24px rgb(15 23 42 / 4%);
@@ -240,8 +255,10 @@ void loadPage()
 
 .problem-sidebar {
   display: flex;
+  width: 100%;
   height: 100%;
   min-width: 0;
+  max-height: 100%;
   box-sizing: border-box;
   flex-direction: column;
   background: var(--el-bg-color);
@@ -635,6 +652,13 @@ void loadPage()
   width: 100%;
   height: 100%;
   min-height: 0;
+}
+
+.problem-detail-shell :deep(> .oj-workbench) {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .activity-overview {
