@@ -302,6 +302,43 @@ public class SandboxRunImpl implements SandboxRun {
                               Boolean isFileIO,
                               String ioReadFileName,
                               String ioWriteFileName) throws SystemError {
+        return testCaseWithLimits(
+                args,
+                envs,
+                testCasePath,
+                testCaseContent,
+                maxTime,
+                maxTime * 3,
+                maxMemory,
+                maxOutputSize,
+                maxProcessNumber,
+                maxStack,
+                exeName,
+                fileId,
+                fileContent,
+                isFileIO,
+                ioReadFileName,
+                ioWriteFileName
+        );
+    }
+
+    @Override
+    public JSONArray testCaseWithLimits(List<String> args,
+                                        List<String> envs,
+                                        String testCasePath,
+                                        String testCaseContent,
+                                        Long maxCpuTime,
+                                        Long maxWallTime,
+                                        Long maxMemory,
+                                        Long maxOutputSize,
+                                        Integer maxProcessLimit,
+                                        Integer maxStack,
+                                        String exeName,
+                                        String fileId,
+                                        String fileContent,
+                                        Boolean isFileIO,
+                                        String ioReadFileName,
+                                        String ioWriteFileName) throws SystemError {
 
         JSONObject cmd = new JSONObject();
         cmd.set("args", args);
@@ -332,11 +369,11 @@ public class SandboxRunImpl implements SandboxRun {
         cmd.set("files", files);
 
         // ms-->ns
-        cmd.set("cpuLimit", maxTime * 1000 * 1000L);
-        cmd.set("clockLimit", maxTime * 1000 * 1000L * 3);
+        cmd.set("cpuLimit", maxCpuTime * 1000 * 1000L);
+        cmd.set("clockLimit", maxWallTime * 1000 * 1000L);
         // byte
         cmd.set("memoryLimit", maxMemory * 1024L);
-        cmd.set("procLimit", maxProcessNumber);
+        cmd.set("procLimit", maxProcessLimit);
         cmd.set("stackLimit", maxStack * 1024 * 1024L);
 
         JSONObject exeFile = new JSONObject();

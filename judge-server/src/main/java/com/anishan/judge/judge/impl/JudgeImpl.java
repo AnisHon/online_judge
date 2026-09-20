@@ -69,6 +69,42 @@ public class JudgeImpl implements Judge {
         return objectMapper.convertValue(resultNode.get(0), RunResult.class);
     }
 
+    @Override
+    public RunResult doTest(
+            String fileId,
+            LanguageConfig languageConfig,
+            String input,
+            Long maxCpuTime,
+            Long maxWallTime,
+            Long maxMemory,
+            Long maxOutputSize,
+            Integer maxProcessLimit,
+            Integer maxStack
+    ) throws SystemError {
+        // 测试运行仍受语言本身的安全上限约束，但不复用正式题目的题目限制。
+        long cpuTime = Math.min(maxCpuTime, languageConfig.getMaxCpuTime());
+        long memory = Math.min(maxMemory, languageConfig.getMaxMemory() / 1024);
+        JSONArray resultNode = sandboxRun.testCaseWithLimits(
+                JudgeUtils.translateCommandline(languageConfig.getRunCommand()),
+                languageConfig.getRunEnvs(),
+                null,
+                input,
+                cpuTime,
+                maxWallTime,
+                memory,
+                maxOutputSize,
+                maxProcessLimit,
+                maxStack,
+                languageConfig.getExeName(),
+                fileId,
+                null,
+                false,
+                null,
+                null
+        );
+        return objectMapper.convertValue(resultNode.get(0), RunResult.class);
+    }
+
 
     @Override
     public RunResult doJudge(JudgeContent content) throws SystemError {

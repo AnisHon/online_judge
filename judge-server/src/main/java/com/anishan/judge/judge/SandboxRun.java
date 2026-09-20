@@ -61,6 +61,34 @@ public interface SandboxRun {
                        String ioWriteFileName) throws SystemError;
 
     /**
+     * 使用显式资源限制运行用户自定义测试输入。
+     * 正式题目判题继续使用 {@link #testCase}，避免两条链路相互影响。
+     *
+     * @param maxCpuTime      CPU 时间上限，单位 ms
+     * @param maxWallTime     墙钟时间上限，单位 ms
+     * @param maxMemory       内存上限，单位 KB
+     * @param maxOutputSize   标准输出上限，单位 byte
+     * @param maxProcessLimit 进程数上限
+     * @param maxStack        栈空间上限，单位 MB
+     */
+    JSONArray testCaseWithLimits(List<String> args,
+                                 List<String> envs,
+                                 String testCasePath,
+                                 String testCaseContent,
+                                 Long maxCpuTime,
+                                 Long maxWallTime,
+                                 Long maxMemory,
+                                 Long maxOutputSize,
+                                 Integer maxProcessLimit,
+                                 Integer maxStack,
+                                 String exeName,
+                                 String fileId,
+                                 String fileContent,
+                                 Boolean isFileIO,
+                                 String ioReadFileName,
+                                 String ioWriteFileName) throws SystemError;
+
+    /**
      * @param args                   特殊判题的运行cmd命令参数
      * @param envs                   特殊判题的运行环境变量
      * @param userOutputFilePath     用户程序输出文件的路径

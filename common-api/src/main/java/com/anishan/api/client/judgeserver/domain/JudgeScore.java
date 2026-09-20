@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 public class JudgeScore {
 
     private Long submitId;
+    /** 仅用于 problem-service 在异步判题完成后安全释放 Redis 锁。 */
+    private String submissionLockToken;
     private Long problemId;
     private Long userId;
     private Long contestId;

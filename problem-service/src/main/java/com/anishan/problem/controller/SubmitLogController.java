@@ -8,6 +8,7 @@ import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.problem.domain.entity.JudgeCaseLog;
 import com.anishan.problem.service.JudgeCaseLogService;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
+import com.anishan.api.client.problem.domain.vo.SubmitCaseResultVo;
 import com.anishan.problem.service.SubmitLogService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -20,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Api("内部接口，记录提交的")
 @RestController
@@ -75,6 +77,36 @@ public class SubmitLogController {
     @PreAuthorize("isAuthenticated()")
     public R<SubmitLogVo> poll(@PathVariable("id") Long id, @RequestHeader("user-id") Long userId) {
         return R.success(submitLogService.getLog(id, userId));
+    }
+
+    /**
+     * 普通用户查看自己提交的测试点结果。
+     *
+     * <p>这是脱敏后的结果，只用于解释通过情况，不返回判题机内部错误、测试数据或 caseId。</p>
+     */
+    @GetMapping("/submissions/{id}/cases")
+    @ApiOperation("查看自己的提交测试点结果")
+    @PreAuthorize("isAuthenticated()")
+    public R<List<SubmitCaseResultVo>> userCaseResults(
+            @PathVariable("id") Long id,
+            @RequestHeader("user-id") Long userId
+    ) {
+        // 先做归属校验。不存在或不属于当前用户时返回空列表，不泄露提交是否存在。
+        if (submitLogService.getLog(id, userId) == null) {
+            return R.success(java.util.Collections.emptyList());
+        }
+        List<SubmitCaseResultVo> results = judgeCaseLogService.list(new LambdaQueryWrapper<JudgeCaseLog>()
+                        .eq(JudgeCaseLog::getSubmitId, id)
+                        .orderByAsc(JudgeCaseLog::getCaseIndex))
+                .stream()
+                .map(item -> new SubmitCaseResultVo()
+                        .setCaseIndex(item.getCaseIndex() == null ? null : item.getCaseIndex() + 1)
+                        .setStatus(item.getStatus())
+                        .setScore(item.getScore())
+                        .setTime(item.getTime())
+                        .setMemory(item.getMemory()))
+                .collect(Collectors.toList());
+        return R.success(results);
     }
 
     /** 管理员预留接口：查看每个测试用例和判题机内部错误。 */

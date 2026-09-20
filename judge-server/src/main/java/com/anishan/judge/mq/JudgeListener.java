@@ -27,6 +27,7 @@ public class JudgeListener {
     private void fillJudgeScore(JudgeScore judgeScore, JudgeInfo judgeInfo) {
         if (judgeScore == null) return;
         judgeScore.setSubmitId(judgeInfo.getSubmitId());
+        judgeScore.setSubmissionLockToken(judgeInfo.getSubmissionLockToken());
         judgeScore.setProblemId(judgeInfo.getProblemId());
         judgeScore.setUserId(judgeInfo.getUserId());
         judgeScore.setContestId(judgeInfo.getContestId());

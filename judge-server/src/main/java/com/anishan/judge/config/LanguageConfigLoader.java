@@ -11,6 +11,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import javax.annotation.PostConstruct;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,24 +25,36 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j(topic = "hoj")
 public class LanguageConfigLoader {
 
-    private static final List<String> defaultEnv = Arrays.asList(
-            "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-            "LANG=en_US.UTF-8",
-            "LC_ALL=en_US.UTF-8",
-            "LANGUAGE=en_US:en",
-            "HOME=/w");
+    private static final String UTF8_LOCALE = "en_US.UTF-8";
+    private static final String JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64";
+    private static final String PATH = "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 
-    private static final List<String> python3Env = Arrays.asList("LANG=en_US.UTF-8",
-            "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8", "PYTHONIOENCODING=utf-8");
+    private static List<String> commonEnv() {
+        return new ArrayList<>(Arrays.asList(
+                PATH,
+                "LANG=" + UTF8_LOCALE,
+                "LC_ALL=" + UTF8_LOCALE,
+                "LANGUAGE=en_US:en",
+                "HOME=/w",
+                "JAVA_HOME=" + JAVA_HOME));
+    }
+
+    private static final List<String> defaultEnv = commonEnv();
+
+    private static final List<String> python3Env = new ArrayList<>(Arrays.asList(
+            PATH, "LANG=" + UTF8_LOCALE, "LANGUAGE=en_US:en", "LC_ALL=" + UTF8_LOCALE,
+            "PYTHONIOENCODING=utf-8", "HOME=/w", "JAVA_HOME=" + JAVA_HOME));
 
     private static final List<String> golangCompileEnv = Arrays.asList(
             "GOCACHE=/w", "GOPATH=/w/go", "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-            "LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8");
+            "LANG=" + UTF8_LOCALE, "LANGUAGE=en_US:en", "LC_ALL=" + UTF8_LOCALE,
+            "HOME=/w", "JAVA_HOME=" + JAVA_HOME);
 
     private static final List<String> golangRunEnv = Arrays.asList(
             "GOCACHE=off", "GODEBUG=madvdontneed=1",
             "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-            "LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8");
+            "LANG=" + UTF8_LOCALE, "LANGUAGE=en_US:en", "LC_ALL=" + UTF8_LOCALE,
+            "HOME=/w", "JAVA_HOME=" + JAVA_HOME);
 
     private static final AtomicBoolean init = new AtomicBoolean(false);
 

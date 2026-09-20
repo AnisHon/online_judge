@@ -10,6 +10,7 @@ import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.anishan.commons.enumeration.JudgeResult;
 import com.anishan.judge.config.LanguageConfigLoader;
+import com.anishan.judge.config.JudgeConfig;
 import com.anishan.judge.domain.entity.LanguageConfig;
 import com.anishan.judge.exception.CompileError;
 import com.anishan.judge.exception.SubmitError;
@@ -41,6 +42,7 @@ public class JudgeServiceImpl implements JudgeService {
     private final Judge judge;
     private final Compiler compiler;
     private final LanguageConfigLoader languageConfigLoader;
+    private final JudgeConfig judgeConfig;
     private final SandboxRun sandboxRun;
     private final RabbitTemplate rabbitTemplate;
 
@@ -221,12 +223,15 @@ public class JudgeServiceImpl implements JudgeService {
         RunResult runResult = null;
         try {
             fileId = compile(languageConfig, message.getCode());
-            runResult = judge.doJudge(
+            runResult = judge.doTest(
                     fileId,
                     languageConfig,
                     message.getStdin(),
-                    languageConfig.getMaxCpuTime(),
-                    languageConfig.getMaxMemory(),
+                    judgeConfig.getTestCpuTime().toMillis(),
+                    judgeConfig.getTestWallTime().toMillis(),
+                    judgeConfig.getTestMemory().toBytes() / 1024,
+                    judgeConfig.getTestOutput().toBytes(),
+                    judgeConfig.getTestPids(),
                     128
             );
         } catch (CompileError e) {

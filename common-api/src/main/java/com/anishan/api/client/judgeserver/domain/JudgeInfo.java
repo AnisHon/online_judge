@@ -18,6 +18,9 @@ public class JudgeInfo {
      */
     private Long submitId;
 
+    /** problem-service 用于释放用户判题锁的内部令牌，不向用户公开。 */
+    private String submissionLockToken;
+
     private Long userId;
 
     private Long problemId;

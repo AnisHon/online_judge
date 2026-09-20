@@ -28,3 +28,10 @@ judge:
     max-concurrency: ${OJ_JUDGE_MAX_CONCURRENCY:4}
     max-submissions: ${OJ_JUDGE_MAX_SUBMISSIONS:1}
     queue-capacity: ${OJ_JUDGE_QUEUE_CAPACITY:200}
+    # 用户“测试运行”限制，与正式提交判题限制分开配置。
+    test-run:
+      cpu-time: ${OJ_TEST_CPU_TIME:2s}
+      wall-time: ${OJ_TEST_WALL_TIME:3s}
+      memory: ${OJ_TEST_MEMORY:256MB}
+      output: ${OJ_TEST_OUTPUT:2MB}
+      pids: ${OJ_TEST_PIDS:4}

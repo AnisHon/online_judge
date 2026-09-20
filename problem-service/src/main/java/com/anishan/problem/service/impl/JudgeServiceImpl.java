@@ -7,6 +7,7 @@ import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.util.RedisJudgeTestUtil;
+import com.anishan.api.util.RedisJudgeSubmissionLock;
 import com.anishan.problem.domain.dto.TestRequest;
 import com.anishan.commons.enumeration.ProblemType;
 import com.anishan.commons.enumeration.JudgeResult;
@@ -44,6 +45,7 @@ public class JudgeServiceImpl implements JudgeService {
     private final RedisJudgeTestUtil redisJudgeTestUtil;
     private final JudgeClient judgeClient;
     private final SubmitLogService submitLogService;
+    private final RedisJudgeSubmissionLock redisJudgeSubmissionLock;
 
 
     private ProblemJudgeResult judgeOj(Long userId, Problem problem, JudgeRequest judgeRequest) {
@@ -67,8 +69,13 @@ public class JudgeServiceImpl implements JudgeService {
             ThrowUtil.businessError(score == null, "题目不属于指定比赛");
         }
 
+        // 校验通过后再加锁，避免无效请求占用用户的判题名额。
+        String submissionLockToken = redisJudgeSubmissionLock.tryAcquire(userId);
+        ThrowUtil.businessError(submissionLockToken == null, "上一条提交正在判题，请等待结果后再提交");
+
         JudgeInfo info = new JudgeInfo()
                 .setUserId(userId)
+                .setSubmissionLockToken(submissionLockToken)
                 .setProblemId(problem.getProblemId())
                 .setContestId(judgeRequest.getContestId())
                 .setLanguageId(judgeRequest.getLanguageId())
@@ -79,36 +86,48 @@ public class JudgeServiceImpl implements JudgeService {
                 .setStackLimit(ojProblem.getStackLimit())
                 .setListScore(score);
 
-        // 先建立公开提交记录，再把提交 ID 传入判题机，保证异步链路有稳定主键。
-        Long submitId = submitLogService.createQueued(info);
-        info.setSubmitId(submitId);
-
-        Boolean isSuccess;
+        Long submitId = null;
+        boolean dispatched = false;
+        Boolean dispatchAccepted = null;
         try {
-            isSuccess = judgeClient.judge(info).getData();
+            // 先建立公开提交记录，再把提交 ID 传入判题机，保证异步链路有稳定主键。
+            submitId = submitLogService.createQueued(info);
+            info.setSubmitId(submitId);
+
+            dispatchAccepted = judgeClient.judge(info).getData();
+            // 成功投递后保留锁，等 judgeResult 异步回调释放。
+            dispatched = Boolean.TRUE.equals(dispatchAccepted);
         } catch (Exception e) {
             // Feign/MQ 不可用时不能留下永久 QUEUE，内部原因落库，用户只看到通用提示。
-            submitLogService.complete(new JudgeScore()
-                    .setSubmitId(submitId)
-                    .setUserId(userId)
-                    .setProblemId(problem.getProblemId())
-                    .setContestId(judgeRequest.getContestId())
-                    .setCode(judgeRequest.getCode())
-                    .setResult(com.anishan.commons.enumeration.JudgeResult.JUDGE_ERROR)
-                    .setErrorCode("DISPATCH_EXCEPTION")
-                    .setInternalError(e.getClass().getName() + ": " + e.getMessage()));
+            if (submitId != null) {
+                submitLogService.complete(new JudgeScore()
+                        .setSubmitId(submitId)
+                        .setUserId(userId)
+                        .setProblemId(problem.getProblemId())
+                        .setContestId(judgeRequest.getContestId())
+                        .setCode(judgeRequest.getCode())
+                        .setResult(JudgeResult.JUDGE_ERROR)
+                        .setErrorCode("DISPATCH_EXCEPTION")
+                        .setInternalError(e.getClass().getName() + ": " + e.getMessage()));
+            }
             ThrowUtil.businessError(true, "判题服务暂时不可用，请稍后重试");
             return problemJudgeResult;
+        } finally {
+            // 成功投递后由 /internal/judgeResult 释放；其余路径立即释放。
+            // Redis 本身仍保留 12 秒硬过期，覆盖进程崩溃和回调丢失。
+            if (!dispatched) {
+                redisJudgeSubmissionLock.release(userId, submissionLockToken);
+            }
         }
 
-        if (!Boolean.TRUE.equals(isSuccess)) {
+        if (!Boolean.TRUE.equals(dispatchAccepted)) {
             submitLogService.complete(new JudgeScore()
                     .setSubmitId(submitId)
                     .setUserId(userId)
                     .setProblemId(problem.getProblemId())
                     .setContestId(judgeRequest.getContestId())
                     .setCode(judgeRequest.getCode())
-                    .setResult(com.anishan.commons.enumeration.JudgeResult.JUDGE_ERROR)
+                    .setResult(JudgeResult.JUDGE_ERROR)
                     .setErrorCode("DISPATCH_REJECTED")
                     .setInternalError("judge-server rejected the submission"));
             ThrowUtil.businessError(true, "判题服务繁忙，请稍后提交");
