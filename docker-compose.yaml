@@ -96,10 +96,13 @@ services:
       - oj-net
 
   oj-sandbox:
+    image: ${JUDGE_SANDBOX_IMAGE:-oj-sandbox:2026.09}
     build:
       context: resources/sandbox
       dockerfile: Dockerfile
       network: host
+      args:
+        JUDGE_ENVIRONMENT_IMAGE: ${JUDGE_ENVIRONMENT_IMAGE:-oj-judge-environment:2026.09}
     container_name: oj-sandbox
     depends_on:
       - oj-minio
@@ -107,6 +110,8 @@ services:
     shm_size: 512m
     environment:
       - MINIO_URL=http://oj-minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-admin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
     ports:
       - "5050:5050"
     networks:

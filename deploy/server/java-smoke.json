@@ -1,0 +1,25 @@
+{
+  "cmd": [
+    {
+      "args": [
+        "/bin/bash",
+        "-c",
+        "echo cHVibGljIGNsYXNzIE1haW57cHVibGljIHN0YXRpYyB2b2lkIG1haW4oU3RyaW5nW11hKXtTeXN0ZW0ub3V0LnByaW50KCJKQVZBX09LIik7fX0= | base64 -d > /tmp/Main.java && javac /tmp/Main.java && java -cp /tmp Main"
+      ],
+      "env": [
+        "PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64",
+        "LANG=en_US.UTF-8",
+        "LC_ALL=en_US.UTF-8"
+      ],
+      "files": [
+        { "content": "" },
+        { "name": "stdout", "max": 10240 },
+        { "name": "stderr", "max": 10240 }
+      ],
+      "cpuLimit": 10000000000,
+      "memoryLimit": 268435456,
+      "procLimit": 64
+    }
+  ]
+}

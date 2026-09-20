@@ -1,0 +1,182 @@
+version: "2.4"
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "3"
+
+x-java: &java-defaults
+  restart: unless-stopped
+  logging: *default-logging
+  networks:
+    - default
+
+services:
+  oj-nacos:
+    image: nacos/nacos-server:v2.4.2
+    container_name: oj-nacos
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: 0.75
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    volumes:
+      - /opt/nacos/logs:/home/nacos/logs
+    environment:
+      PREFER_HOST_MODE: hostname
+      MODE: standalone
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      JVM_XMN: 128m
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: oj-mysql
+      MYSQL_SERVICE_DB_NAME: nacos
+      MYSQL_SERVICE_PORT: "3306"
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+    logging: *default-logging
+    networks:
+      - default
+
+  oj-sandbox:
+    image: yantuocode/oj-sandbox:${RELEASE_TAG}
+    container_name: oj-sandbox
+    restart: unless-stopped
+    privileged: true
+    mem_limit: 2g
+    cpus: 3.0
+    shm_size: 512m
+    environment:
+      MINIO_URL: http://oj-minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "5050:5050"
+    logging: *default-logging
+    networks:
+      - default
+
+  judge-server:
+    <<: *java-defaults
+    image: yantuocode/judge-server:${RELEASE_TAG}
+    container_name: judge-server
+    mem_limit: 896m
+    cpus: 1.5
+    volumes:
+      - /opt/logs/judge-server:/opt/logs/judge-server
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms192m -Xmx640m -XX:MaxMetaspaceSize=192m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
+      OJ_PRODUCT: "true"
+      JUDGE_URL: oj-sandbox:5050
+      NACOS_URL: oj-nacos:8848
+      MINIO_URL: http://oj-minio:9000
+      DB_HOST: oj-mysql
+      REDIS_HOST: oj-redis
+      MQ_HOST: oj-mq
+      MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      MQ_V_HOST: /judge
+      MQ_CONCURRENCY: "2"
+      MQ_MAX_CONCURRENCY: "4"
+      GIN_MODE: release
+
+  problem-service:
+    <<: *java-defaults
+    image: yantuocode/problem-service:${RELEASE_TAG}
+    container_name: problem-service
+    mem_limit: 768m
+    cpus: 1.0
+    volumes:
+      - /opt/logs/problem-service:/opt/logs/problem-service
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms192m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
+      OJ_PRODUCT: "true"
+      NACOS_URL: oj-nacos:8848
+      MINIO_URL: http://oj-minio:9000
+      DB_HOST: oj-mysql
+      REDIS_HOST: oj-redis
+      MQ_HOST: oj-mq
+      MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      MQ_V_HOST: /judge
+
+  user-service:
+    <<: *java-defaults
+    image: yantuocode/user-service:${RELEASE_TAG}
+    container_name: user-service
+    mem_limit: 640m
+    cpus: 0.75
+    volumes:
+      - /opt/logs/user-service:/opt/logs/user-service
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms160m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
+      OJ_PRODUCT: "true"
+      NACOS_URL: oj-nacos:8848
+      MINIO_URL: http://oj-minio:9000
+      DB_HOST: oj-mysql
+      REDIS_HOST: oj-redis
+      OJ_JWT_SECRET: ${OJ_JWT_SECRET}
+      OJ_JWT_ACCESS_SECRET: ${OJ_JWT_ACCESS_SECRET}
+      OJ_JWT_REFRESH_SECRET: ${OJ_JWT_REFRESH_SECRET}
+
+  content-service:
+    <<: *java-defaults
+    image: yantuocode/content-service:${RELEASE_TAG}
+    container_name: content-service
+    mem_limit: 640m
+    cpus: 0.75
+    volumes:
+      - /opt/logs/content-service:/opt/logs/content-service
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms160m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
+      OJ_PRODUCT: "true"
+      NACOS_URL: oj-nacos:8848
+      MINIO_URL: http://oj-minio:9000
+      DB_HOST: oj-mysql
+      REDIS_HOST: oj-redis
+      MQ_HOST: oj-mq
+      MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      MQ_V_HOST: /judge
+
+  gateway-server:
+    <<: *java-defaults
+    image: yantuocode/gateway-server:${RELEASE_TAG}
+    container_name: gateway-server
+    mem_limit: 512m
+    cpus: 0.75
+    ports:
+      - "8000:80"
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms128m -Xmx256m -XX:MaxMetaspaceSize=160m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
+      OJ_PRODUCT: "true"
+      NACOS_URL: oj-nacos:8848
+      SERVER_PORT: "80"
+      OJ_JWT_SECRET: ${OJ_JWT_SECRET}
+      OJ_JWT_ACCESS_SECRET: ${OJ_JWT_ACCESS_SECRET}
+      OJ_JWT_REFRESH_SECRET: ${OJ_JWT_REFRESH_SECRET}
+
+  oj-vue:
+    image: yantuocode/oj-vue:${RELEASE_TAG}
+    container_name: oj-vue
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.5
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/nginx/ssl/certs:/etc/ssl/certs:ro
+      - /opt/nginx/conf.d:/etc/nginx/conf.d:ro
+    logging: *default-logging
+    networks:
+      - default
+
+networks:
+  default:
+    external:
+      name: online_judge_default

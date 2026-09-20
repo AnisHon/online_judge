@@ -24,10 +24,13 @@ NACOS_HTTP_PORT="${DEV_NACOS_PORT:-8848}"
 COMPOSE=(docker compose -p oj-dev -f docker-compose.dev.yaml --env-file .env.dev)
 INFRA=(oj-mysql oj-redis oj-mq oj-minio oj-nacos oj-sandbox)
 
-echo '[1/3] 启动常驻基础设施（不会启动任何 Java 服务或前端容器）'
+echo '[1/4] 准备可复用判题环境镜像（已存在时跳过）'
+JUDGE_ENV_FILE=.env.dev "$ROOT_DIR/scripts/build-judge-environment.sh"
+
+echo '[2/4] 启动常驻基础设施（不会启动任何 Java 服务或前端容器）'
 "${COMPOSE[@]}" up -d "${INFRA[@]}"
 
-echo '[2/3] 等待 MySQL 并应用开发环境数据库迁移'
+echo '[3/4] 等待 MySQL 并应用开发环境数据库迁移'
 for _ in $(seq 1 60); do
   if docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysqladmin ping -uroot --silent >/dev/null 2>&1; then
     break
@@ -42,7 +45,7 @@ docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysqladmin ping -ur
 docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
   < "$ROOT_DIR/resources/sql/migration/V20260912__judge_pipeline.sql"
 
-echo '[3/3] 等待 Nacos 并同步开发配置'
+echo '[4/4] 等待 Nacos 并同步开发配置'
 for _ in $(seq 1 60); do
   curl -fsS "http://127.0.0.1:${NACOS_HTTP_PORT}/nacos/" >/dev/null 2>&1 && break
   sleep 2

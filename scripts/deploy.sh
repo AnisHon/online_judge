@@ -17,10 +17,13 @@ docker run --rm -v "$ROOT_DIR:/workspace" -w /workspace \
 echo '[2/4] 编译前端'
 (cd oj-vue && pnpm install --no-frozen-lockfile && pnpm run build-only)
 
-echo '[3/4] 构建并启动服务'
+echo '[3/5] 准备可复用判题环境镜像（已存在时跳过）'
+JUDGE_ENV_FILE=.env "$ROOT_DIR/scripts/build-judge-environment.sh"
+
+echo '[4/5] 构建并启动服务'
 docker compose up -d --build
 
-echo '[4/4] 等待 Nacos 并导入配置'
+echo '[5/5] 等待 Nacos 并导入配置'
 for _ in $(seq 1 60); do
   curl -fsS http://127.0.0.1:8848/nacos/ >/dev/null 2>&1 && break
   sleep 2

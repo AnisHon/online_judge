@@ -49,6 +49,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env.dev}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL:-http://localhost:9091}
     ports:
       - "9000:9000"
       - "${MINIO_CONSOLE_PORT:-9091}:9090"
@@ -90,9 +91,12 @@ services:
 
   # 判题运行时沙箱。Java judge-server 由 IDEA 启动，不属于此 Compose。
   oj-sandbox:
+    image: ${JUDGE_SANDBOX_IMAGE:-oj-sandbox:2026.09}
     build:
       context: resources/sandbox
       dockerfile: Dockerfile
+      args:
+        JUDGE_ENVIRONMENT_IMAGE: ${JUDGE_ENVIRONMENT_IMAGE:-oj-judge-environment:2026.09}
     container_name: oj-dev-sandbox
     depends_on:
       - oj-minio
@@ -100,6 +104,8 @@ services:
     shm_size: 512m
     environment:
       MINIO_URL: http://oj-minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-admin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env.dev}
     ports:
       - "5050:5050"
     restart: unless-stopped
