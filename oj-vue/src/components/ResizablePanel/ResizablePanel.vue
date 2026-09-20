@@ -1,5 +1,9 @@
 <template>
-  <div ref="rootRef" class="resizable-panel" :class="[{ 'is-collapsed': collapsed, 'is-dragging': dragging }, `is-${direction}`]">
+  <div ref="rootRef" class="resizable-panel" :class="[
+    { 'is-collapsed': collapsed, 'is-dragging': dragging },
+    `is-${direction}`,
+    `resizable-panel--${variant}`,
+  ]">
     <aside class="resizable-panel__sidebar">
       <slot name="sidebar" />
     </aside>
@@ -34,12 +38,14 @@ const props = withDefaults(defineProps<{
   minSize?: number
   maxSize?: number
   direction?: 'horizontal' | 'vertical'
+  variant?: 'editor'
 }>(), {
   size: 25,
   collapsed: false,
   minSize: 18,
   maxSize: 42,
   direction: 'horizontal',
+  variant: 'editor',
 })
 
 const emit = defineEmits<{
@@ -95,7 +101,7 @@ function restore() {
 
 <style scoped>
 .resizable-panel { --panel-size: v-bind('size + "%"'); display: flex; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; background: var(--el-bg-color-page); }
-.resizable-panel__sidebar { width: var(--panel-size); min-width: 0; min-height: 0; flex: 0 0 var(--panel-size); overflow: hidden; transition: flex-basis .22s ease, width .22s ease; }
+.resizable-panel__sidebar { width: var(--panel-size); min-width: 0; flex: 0 0 var(--panel-size); overflow: hidden; transition: flex-basis .22s ease, width .22s ease; }
 .resizable-panel__main { position: relative; min-width: 0; min-height: 0; flex: 1; overflow: hidden; }
 .is-collapsed .resizable-panel__main { box-sizing: border-box; padding-left: 38px; }
 .resizable-panel__handle { display: grid; width: 12px; flex: 0 0 12px; place-items: center; background: transparent; cursor: col-resize; touch-action: none; }
@@ -105,7 +111,7 @@ function restore() {
 .resizable-panel__restore { position: absolute; z-index: 2; top: 50%; left: 8px; display: grid; width: 30px; height: 38px; place-items: center; border: 1px solid color-mix(in srgb, var(--el-border-color-light) 72%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--el-bg-color) 82%, transparent); color: var(--el-color-primary); box-shadow: 0 4px 14px rgb(15 23 42 / 8%); cursor: pointer; opacity: .3; transform: translateY(-50%); transition: opacity .18s ease, transform .18s ease, background-color .18s ease; }
 .resizable-panel__restore:hover, .resizable-panel__restore:focus-visible { background: var(--el-fill-color-light); opacity: 1; transform: translate(2px, -50%); }
 .resizable-panel.is-vertical { flex-direction: column; }
-.is-vertical .resizable-panel__sidebar { width: 100%; height: var(--panel-size); flex: 0 0 var(--panel-size); }
+.is-vertical .resizable-panel__sidebar { width: 100%; height: var(--panel-size); min-height: 0; flex: 0 0 var(--panel-size); }
 .is-vertical .resizable-panel__main { width: 100%; height: auto; }
 .is-vertical .resizable-panel__handle { width: 100%; height: 12px; flex: 0 0 12px; cursor: row-resize; }
 .is-vertical .resizable-panel__handle span { width: 44px; height: 4px; }
@@ -114,5 +120,11 @@ function restore() {
 .is-vertical.is-collapsed .resizable-panel__main { padding-top: 38px; padding-left: 0; }
 .is-vertical .resizable-panel__restore { top: 8px; left: 50%; transform: translateX(-50%); }
 .is-vertical .resizable-panel__restore:hover, .is-vertical .resizable-panel__restore:focus-visible { transform: translate(2px, 2px); }
-@media (max-width: 700px) { .resizable-panel__handle { width: 8px; flex-basis: 8px; }.resizable-panel__handle span { width: 3px; }.is-collapsed .resizable-panel__main { padding-left: 34px; }.resizable-panel__restore { left: 6px; } }
+@media (max-width: 700px) {
+  /* 仅编辑器纵向分栏使用紧凑拖拽柄，活动页横向侧栏保持原有尺寸。 */
+  .resizable-panel--editor .resizable-panel__handle { width: 8px; flex-basis: 8px; }
+  .resizable-panel--editor .resizable-panel__handle span { width: 3px; }
+  .resizable-panel--editor.is-collapsed .resizable-panel__main { padding-left: 34px; }
+  .resizable-panel--editor .resizable-panel__restore { left: 6px; }
+}
 </style>

@@ -67,7 +67,7 @@ interface UserAnswerRequest {
     problemId?: IdType;
 }
 
-interface LogSubmit {
+export interface LogSubmit {
     submitId: IdType;
     userId: IdType;
     problemId: IdType;
@@ -80,6 +80,15 @@ interface LogSubmit {
     code?: string;
     totalCount?: number;
     passCount?: number;
+    contestId?: IdType;
+}
+
+export interface SubmitCaseResult {
+    caseIndex?: number;
+    status: OJResult;
+    score?: number | string;
+    time?: number;
+    memory?: number;
 }
 
 interface TestForm {
@@ -108,6 +117,11 @@ async function sendTest(testForm: TestForm): Promise<AjaxResult<void | AjaxResul
 async function testStatus(uuid: string) {
     const {data} = await getWithParams<TestResult | null, TestStatusRequest>("/problem-api/judge/test-status", {uuid});
     return data;
+}
+
+async function getSubmissionCases(id: IdType): Promise<SubmitCaseResult[]> {
+    const {data} = await get<SubmitCaseResult[]>(`/problem-api/log/submissions/${encodeURIComponent(String(id))}/cases`);
+    return data || [];
 }
 
 async function fetchLog(id: number, success: successCallback<LogSubmit>) {
@@ -230,7 +244,6 @@ export type {
     Answer,
     JudgeForm,
     JudgeResponse,
-    LogSubmit,
     TestResult,
     TestForm,
     JudgeMessage,
@@ -247,5 +260,6 @@ export {
     sendTest,
     testStatus,
     pollTestResult,
+    getSubmissionCases,
     OJResult
 }

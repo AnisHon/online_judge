@@ -5,7 +5,7 @@
       :problem="problem"
       :problem-id="problemId"
       :contest-id="contestId"
-      :disable-submit="disableSubmit"
+      :disable-submit="isSubmitDisabled"
       :form="judgeForm"
       :logs="submitLogs"
       :active-submission="activeSubmission"
@@ -22,7 +22,7 @@
       @toggle-test="toggleTestConsole"
       @full-screen="onHandleFullScreen"
       @open-log="openLog"
-      @view-code="viewSubmissionCode"
+      @view-code="openSubmissionDetail"
   />
   <div v-else v-loading="problemIsLoading" class="detail-problem-root" :class="{ 'detail-problem-root--contest': contestId }">
     <el-row v-if="problem !== undefined" class="detail-problem-row" justify="center" :gutter="20">
@@ -105,7 +105,7 @@
 
                 <div v-if="!isOjProblem">
                   <div class="submit">
-                    <el-button type="success" :disabled="isShowResult || disableSubmit" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
+                    <el-button type="success" :disabled="isShowResult || isSubmitDisabled" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
                   </div>
                 </div>
 
@@ -140,18 +140,13 @@
                 <el-table-column prop="status" label="结果" align="center">
                   <template v-slot="scope">
                     <el-tooltip content="AC 通过 WA 答案错误 CE 编译错误 RE 运行时错误 TLE 超时 MLE 内存过限 JUDGE_ERROR 判题服务异常">
-                      <el-tag type="info" v-if="scope.row.status === OJResult.QUEUE">排队中</el-tag>
-                      <el-tag type="primary" v-else-if="scope.row.status === OJResult.COMPILING">编译中</el-tag>
-                      <el-tag type="warning" v-else-if="scope.row.status === OJResult.RUNNING">判题中</el-tag>
-                      <el-tag type="success" v-else-if="scope.row.status === OJResult.ACCEPT">AC</el-tag>
-                      <el-tag type="danger" v-else-if="scope.row.status === OJResult.JUDGE_ERROR">判题异常</el-tag>
-                      <el-tag type="danger" v-else>{{ scope.row.status }}</el-tag>
+                      <judge-status-badge :status="scope.row.status" />
                     </el-tooltip>
                   </template>
                 </el-table-column >
                 <el-table-column label="源代码" align="center" width="100">
                   <template #default="scope">
-                    <el-button link type="primary" :disabled="!scope.row.code" @click="viewSubmissionCode(scope.row)">
+                    <el-button link type="primary" @click="openSubmissionDetail(scope.row)">
                       查看
                     </el-button>
                   </template>
@@ -192,7 +187,7 @@
       >
         <div class="editor-panel">
           <enhanced-code-editor
-              :disable-submit="disableSubmit"
+              :disable-submit="isSubmitDisabled"
               :model-value="judgeForm"
               @update:model-value="updateJudgeForm"
               :heightProp="height"
@@ -242,11 +237,12 @@
 
     </el-dialog>
 
-    <el-dialog v-model="codeDialogVisible" title="提交源代码" width="min(860px, 92vw)" destroy-on-close>
-      <pre class="submission-code"><code>{{ selectedSubmissionCode }}</code></pre>
-    </el-dialog>
-
   </div>
+  <submission-detail-panel
+      v-model="submissionDetailVisible"
+      :log="selectedSubmission"
+      :problem-title="problem?.problemVo.title"
+  />
 </template>
 
 <script setup lang="ts">
@@ -280,6 +276,8 @@ import FillBlankProblem from "./FillBlank.vue";
 import ChoiceChooseProblem from "./ChoiceChoose.vue";
 import OjWorkbench from "@/components/OjWorkbench/OjWorkbench.vue";
 import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
+import JudgeStatusBadge from "@/components/JudgeStatusBadge/JudgeStatusBadge.vue";
+import SubmissionDetailPanel from "@/components/SubmissionDetailPanel/SubmissionDetailPanel.vue";
 import __ from "lodash";
 import {letterToNumber} from "@/utils/stringUtils";
 import {ElMessage, ElNotification} from "element-plus";
@@ -293,8 +291,8 @@ const errorTitle = ref("");
 const errorText = ref("");
 
 const openErrorDialog = ref(false);
-const codeDialogVisible = ref(false);
-const selectedSubmissionCode = ref("");
+const submissionDetailVisible = ref(false);
+const selectedSubmission = ref<LogSubmit>();
 
 // 当前tab
 const currentTab = ref("detail")
@@ -310,6 +308,10 @@ const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 
 // 传入题目组件
 const {problemId, contestId, disableSubmit = false} = defineProps<{problemId: IdType, contestId?: IdType, disableSubmit?: boolean}>()
+
+const emit = defineEmits<{
+  (event: 'submitted'): void;
+}>()
 
 const solutionParam = reactive<QuerySolution>({
   asc: true,
@@ -336,6 +338,29 @@ const isChoiceProblem = computed(() => {
 })
 
 const isOjProblem = computed(() => problemType.value === ProblemType.OJ)
+
+// OJ 提交在首次点击后立即锁定，避免鼠标连点或键盘重复触发创建多条提交记录。
+// 后端 Redis 还有 12 秒硬 TTL，这里的计时器使用同样的兜底时间。
+const ojSubmitLocked = ref(false);
+let ojSubmitUnlockTimer: ReturnType<typeof setTimeout> | undefined;
+const isSubmitDisabled = computed(() => disableSubmit || (isOjProblem.value && ojSubmitLocked.value));
+
+const unlockOjSubmit = () => {
+  ojSubmitLocked.value = false;
+  if (ojSubmitUnlockTimer) {
+    clearTimeout(ojSubmitUnlockTimer);
+    ojSubmitUnlockTimer = undefined;
+  }
+};
+
+const lockOjSubmit = () => {
+  if (ojSubmitLocked.value) return false;
+  ojSubmitLocked.value = true;
+  if (ojSubmitUnlockTimer) clearTimeout(ojSubmitUnlockTimer);
+  // 网络异常、轮询中断或服务重启时，前端也不能把按钮锁死。
+  ojSubmitUnlockTimer = setTimeout(unlockOjSubmit, 12_000);
+  return true;
+};
 
 const isFillProblem = computed(() => problemType.value === ProblemType.FILL)
 
@@ -436,10 +461,9 @@ let testPollStop: (() => void) | undefined;
 
 const requestUuid = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-const viewSubmissionCode = (log: LogSubmit) => {
-  if (!log.code) return;
-  selectedSubmissionCode.value = log.code;
-  codeDialogVisible.value = true;
+const openSubmissionDetail = (log: LogSubmit) => {
+  selectedSubmission.value = {...log};
+  submissionDetailVisible.value = true;
 }
 
 // 测试的标准输入
@@ -462,27 +486,37 @@ const showAnswers = ref(false);
 const pendingJudgeStates = [OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING];
 const isTerminalJudgeState = (status?: OJResult) => !!status && !pendingJudgeStates.includes(status);
 
-const upsertSubmitLog = (log: LogSubmit) => {
+const upsertSubmitLog = (log: LogSubmit): LogSubmit => {
   const index = submitLogs.findIndex(item => String(item.submitId) === String(log.submitId));
+  let current: LogSubmit;
   if (index === -1) {
     submitLogs.unshift(log);
+    current = log;
   } else {
     submitLogs[index] = {...submitLogs[index], ...log};
+    current = submitLogs[index];
   }
   if (String(activeSubmissionId.value) === String(log.submitId)) {
-    activeSubmission.value = submitLogs[index === -1 ? 0 : index];
+    activeSubmission.value = current;
   }
+  if (String(selectedSubmission.value?.submitId) === String(log.submitId)) {
+    selectedSubmission.value = {...selectedSubmission.value, ...current};
+  }
+  return current;
 };
 
 const startSubmissionPolling = async (submitId: IdType) => {
   const key = String(submitId);
   submissionPolls.get(key)?.();
   const stop = await pollSubmission(submitId, (log) => {
-    upsertSubmitLog(log);
+    const current = upsertSubmitLog(log);
     if (isTerminalJudgeState(log.status)) {
       submissionPolls.get(key)?.();
       submissionPolls.delete(key);
+      unlockOjSubmit();
+      openSubmissionDetail(current);
       finish();
+      emit('submitted');
     }
   }, 1000);
   submissionPolls.set(key, stop);
@@ -524,6 +558,7 @@ const submitOj = async () => {
     const data = await judge(payload, (message) => ElNotification.error({title: "提交失败", message}));
     if (!data?.submitId) {
       ElNotification.error({title: "提交失败", message: "服务没有返回提交编号"});
+      unlockOjSubmit();
       finish();
       return;
     }
@@ -539,15 +574,17 @@ const submitOj = async () => {
     activeSubmission.value = queuedLog;
     upsertSubmitLog(queuedLog);
     await startSubmissionPolling(data.submitId);
-    // 提交请求已经进入判题队列，按钮不再被整段判题过程锁住；后续状态由独立轮询更新。
+    // 提交请求已进入判题队列，按钮保持禁用，直到结果完成或 12 秒前端兜底计时结束。
     finish();
   } catch {
+    unlockOjSubmit();
     finish();
   }
 };
 
-// 提交入口不再 debounce；连续提交由判题队列按容量自然排队。
+// OJ 提交由前端即时锁定，后端 Redis 锁负责跨标签页、跨实例的最终兜底。
 const onHandleSubmit = async () => {
+  if (problemType.value === ProblemType.OJ && !lockOjSubmit()) return;
   stdout.value = "";
   errMsg.value = undefined;
   loading();
@@ -561,6 +598,7 @@ const onHandleSubmit = async () => {
     showAnswers.value = Array.isArray(data?.answers) && data.answers.length > 0;
     judgeResult.value = data;
     judgeResult.value?.answers?.sort((a, b) => a.index - b.index);
+    emit('submitted');
   } catch {
     // HTTP 层已经统一展示错误消息。
   } finally {
@@ -717,6 +755,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.onreset = null;
+  unlockOjSubmit();
   submissionPolls.forEach(stop => stop());
   testPollStop?.();
 })

@@ -36,7 +36,7 @@ import { debouncedGetUser, dict, type QueryUser, UserStatus, type UserView } fro
 import type { IdType } from '@/api/common'
 import Pagination from '@/components/pageination/Pagination.vue'
 
-const props = defineProps<{ ids: IdType[]; loading: boolean }>()
+const props = defineProps<{ ids: IdType[]; loading: boolean; selectionLimit?: number }>()
 const queryParams = reactive<QueryUser>({ asc: true, currentPage: 1, pageSize: 10, userId: undefined, userName: undefined, nikeName: undefined, email: undefined, status: undefined })
 const tableList = reactive<UserView[]>([])
 const total = ref(0)
@@ -52,9 +52,13 @@ const { loading: load, isLoading, get: getUser } = debouncedGetUser(queryParams,
 const getList = () => { load(); getUser() }
 const handleSelectionChange = (selection: UserView[]) => {
   const currentPageIds = new Set(tableList.map(user => String(user.userId)))
-  const selectedOnPage = new Set(selection.map(user => String(user.userId)))
+  const visibleSelection = props.selectionLimit ? selection.slice(-props.selectionLimit) : selection
+  const selectedOnPage = new Set(visibleSelection.map(user => String(user.userId)))
   const nextIds = selectedIds.filter(id => !currentPageIds.has(String(id)) || selectedOnPage.has(String(id)))
-  selection.forEach(user => { if (!nextIds.some(id => String(id) === String(user.userId))) nextIds.push(user.userId) })
+  visibleSelection.forEach(user => { if (!nextIds.some(id => String(id) === String(user.userId))) nextIds.push(user.userId) })
+  if (props.selectionLimit && nextIds.length > props.selectionLimit) {
+    nextIds.splice(0, nextIds.length - props.selectionLimit)
+  }
   selectedIds.splice(0, selectedIds.length, ...nextIds)
 }
 const resetQuery = () => { queryParams.currentPage = 1; queryParams.userId = undefined; queryParams.userName = undefined; queryParams.nikeName = undefined; queryParams.email = undefined; queryParams.status = undefined; queryParams.sortColumn = undefined; getList() }

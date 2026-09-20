@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     AccountMenu: typeof import('./src/components/AccountMenu/AccountMenu.vue')['default']
     ActivityList: typeof import('./src/components/activity/ActivityList.vue')['default']
+    ActivityResizablePanel: typeof import('./src/components/ActivityResizablePanel/ActivityResizablePanel.vue')['default']
     Avatar: typeof import('./src/components/Avatar/Avatar.vue')['default']
     AvatarCutter: typeof import('./src/components/AvatarCutter/AvatarCutter.vue')['default']
     ChoiceChoose: typeof import('./src/components/DetailProblem/ChoiceChoose.vue')['default']
@@ -86,6 +87,7 @@ declare module 'vue' {
     HomeSectionCard: typeof import('./src/components/HomeSectionCard/HomeSectionCard.vue')['default']
     IconLoader: typeof import('./src/components/IconLoader/IconLoader.vue')['default']
     IconPicker: typeof import('./src/components/IconPicker/IconPicker.vue')['default']
+    JudgeStatusBadge: typeof import('./src/components/JudgeStatusBadge/JudgeStatusBadge.vue')['default']
     ListView: typeof import('./src/components/ListView/ListView.vue')['default']
     MarkDownEditor: typeof import('./src/components/MarkDownEditor/MarkDownEditor.vue')['default']
     MarkdownPreview: typeof import('./src/components/MarkdownPreview.vue')['default']
@@ -105,6 +107,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SetEmail: typeof import('./src/components/SetEmail/SetEmail.vue')['default']
     SolutionCard: typeof import('./src/components/SolutionCard/SolutionCard.vue')['default']
+    SubmissionDetailPanel: typeof import('./src/components/SubmissionDetailPanel/SubmissionDetailPanel.vue')['default']
     ThemeTrigger: typeof import('./src/components/ThemeTrigger/ThemeTrigger.vue')['default']
     UserViewer: typeof import('./src/components/user-viewer/UserViewer.vue')['default']
   }

@@ -1,5 +1,5 @@
 <template>
-  <section class="oj-workbench" :class="{ 'oj-workbench--fullscreen': fullscreen }">
+  <section class="oj-workbench" :class="{ 'oj-workbench--fullscreen': fullscreen, 'oj-workbench--activity': contestId }">
     <aside v-if="!fullscreen" ref="problemPaneRef" class="oj-problem-pane">
       <div class="problem-pane__header">
         <div class="problem-kicker">延拓 Code · PROBLEM</div>
@@ -77,7 +77,7 @@
                 <div class="submission-item__main">
                   <span class="status-dot" :class="`status-dot--${statusTone(log.status)}`"></span>
                   <div>
-                    <strong>{{ statusLabel(log.status) }}</strong>
+                    <judge-status-badge :status="log.status" />
                     <small>#{{ log.submitId }} · {{ formatDate(log.submitTime) }}</small>
                   </div>
                 </div>
@@ -135,11 +135,13 @@
       <Teleport to="body">
         <Transition name="judge-toast">
           <div v-if="activeSubmission && statusVisible" class="judge-toast"
-               :class="`judge-toast--${statusTone(activeSubmission.status)}`">
+               :class="[`judge-toast--${statusTone(activeSubmission.status)}`, { 'judge-toast--interactive': !isPending(activeSubmission.status) }]"
+               role="status"
+               @click="!isPending(activeSubmission.status) && $emit('view-code', activeSubmission)">
             <span class="status-orb"><el-icon v-if="isPending(activeSubmission.status)"><Loading/></el-icon><el-icon
                 v-else><CircleCheck/></el-icon></span>
             <div class="judge-toast__copy">
-              <strong>{{ statusLabel(activeSubmission.status) }}</strong>
+              <judge-status-badge :status="activeSubmission.status" />
               <small>提交 #{{ activeSubmission.submitId }}</small>
             </div>
             <div class="judge-toast__metrics">
@@ -149,12 +151,11 @@
             </div>
             <el-progress v-if="isPending(activeSubmission.status)" :percentage="progress" :show-text="false"
                          :indeterminate="true"/>
-            <span v-if="activeSubmission.stderr" class="judge-toast__message">{{ activeSubmission.stderr }}</span>
           </div>
         </Transition>
       </Teleport>
 
-      <resizable-panel v-model:size="editorPanelSize" class="oj-code-split" :class="{ 'oj-code-split--test-collapsed': !testConsoleOpen }" direction="vertical" :min-size="42" :max-size="86">
+      <resizable-panel v-model:size="editorPanelSize" variant="editor" class="oj-code-split" :class="{ 'oj-code-split--test-collapsed': !testConsoleOpen }" direction="vertical" :min-size="42" :max-size="86">
         <template #sidebar>
           <div ref="editorHostRef" class="editor-host">
             <enhanced-code-editor
@@ -180,10 +181,7 @@
             </el-icon>
             <strong>自定义测试</strong><span>使用当前代码运行一组输入</span></div>
           <div class="test-console__tools">
-            <el-tag v-if="testResult" :type="testResult.judgeResult === OJResult.ACCEPT ? 'success' : 'danger'"
-                    effect="plain">
-              {{ testResult.judgeResult === OJResult.ACCEPT ? '运行成功' : statusLabel(testResult.judgeResult) }}
-            </el-tag>
+            <judge-status-badge v-if="testResult" :status="testResult.judgeResult" />
             <el-button text circle @click="$emit('toggle-test')">
               <el-icon>
                 <ArrowDown/>
@@ -229,9 +227,11 @@ import {Difficulty} from "@/api/problem";
 import type {JudgeForm, LogSubmit, TestResult} from "@/api/problem/judge";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import Solutions from "@/views/solutions/component/SolutionsComponent/SolutionsComponent.vue";
+import JudgeStatusBadge from "@/components/JudgeStatusBadge/JudgeStatusBadge.vue";
 import type {QuerySolution} from "@/api/solution";
 import EnhancedCodeEditor from "@/components/EnhancedCodeEdior/index.vue";
 import ResizablePanel from "@/components/ResizablePanel/ResizablePanel.vue";
+import {getJudgeStatusMeta, isPendingJudgeStatus} from "@/utils/problem/judgeStatus";
 
 const props = defineProps<{
   problem: ProblemDetailView;
@@ -278,20 +278,6 @@ const solutionParam = reactive<QuerySolution>({
   userId: undefined,
 });
 
-const OJResult = {
-  QUEUE: 'QUEUE',
-  COMPILING: 'compiling',
-  RUNNING: 'running',
-  ACCEPT: 'AC',
-  RUNTIME_ERROR: 'RE',
-  WRONG_ANSWER: 'WA',
-  TIME_LIMIT_EXCEEDED: 'TLE',
-  MEMORY_LIMIT_EXCEEDED: 'MLE',
-  COMPILE_ERROR: 'CE',
-  JUDGE_ERROR: 'JUDGE_ERROR'
-} as const;
-const pendingStates: string[] = [OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING];
-
 const openSubmissions = () => {
   activePane.value = 'submissions';
   emit('open-log');
@@ -325,12 +311,8 @@ const progress = computed(() => {
   return Math.min(95, Math.round(((current.passCount || 0) / current.totalCount) * 100));
 });
 
-const isPending = (status?: string) => !!status && pendingStates.includes(status as typeof OJResult[keyof typeof OJResult]);
-const statusLabel = (status?: string) => ({
-  QUEUE: '排队中', compiling: '编译中', running: '判题中', AC: 'Accepted', RE: '运行错误', WA: '答案错误',
-  TLE: '时间超限', MLE: '内存超限', CE: '编译错误', JUDGE_ERROR: '判题异常'
-} as Record<string, string>)[status || ''] || status || '未知状态';
-const statusTone = (status?: string) => isPending(status) ? 'pending' : status === OJResult.ACCEPT ? 'success' : status === OJResult.JUDGE_ERROR ? 'danger' : 'error';
+const isPending = (status?: string) => isPendingJudgeStatus(status);
+const statusTone = (status?: string) => getJudgeStatusMeta(status).tone;
 const formatDate = (value?: string) => value ? new Date(value).toLocaleString('zh-CN', {
   month: '2-digit',
   day: '2-digit',
@@ -411,6 +393,11 @@ onUnmounted(() => {
   padding: 16px;
   max-height: none;
   background: var(--el-bg-color-page);
+}
+
+.oj-workbench--activity {
+  height: 100%;
+  max-height: 100%;
 }
 
 .oj-problem-pane, .oj-code-pane {
@@ -652,6 +639,22 @@ onUnmounted(() => {
   background: var(--el-color-success);
 }
 
+.status-dot--primary {
+  background: var(--el-color-primary);
+}
+
+.status-dot--warning {
+  background: var(--el-color-warning);
+}
+
+.status-dot--info {
+  background: var(--el-color-info);
+}
+
+.status-dot--danger {
+  background: var(--el-color-danger);
+}
+
 .status-dot--pending {
   background: var(--el-color-warning);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--el-color-warning) 14%, transparent);
@@ -738,6 +741,10 @@ onUnmounted(() => {
 .judge-toast--success { --status-color: var(--el-color-success); }
 .judge-toast--error { --status-color: var(--el-color-danger); }
 .judge-toast--pending { --status-color: var(--el-color-warning); }
+.judge-toast--primary { --status-color: var(--el-color-primary); }
+.judge-toast--warning { --status-color: var(--el-color-warning); }
+.judge-toast--info { --status-color: var(--el-color-info); }
+.judge-toast--danger { --status-color: var(--el-color-danger); }
 .judge-toast .status-orb { display: grid; width: 27px; height: 27px; flex: 0 0 27px; place-items: center; border-radius: 9px; background: color-mix(in srgb, var(--status-color) 15%, transparent); color: var(--status-color); }
 .judge-toast__copy { display: flex; min-width: 92px; flex-direction: column; gap: 1px; }
 .judge-toast__copy strong, .judge-toast__copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -745,7 +752,8 @@ onUnmounted(() => {
 .judge-toast__copy small { color: var(--el-text-color-secondary); font-size: 10px; }
 .judge-toast__metrics { display: flex; flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-end; gap: 9px; color: var(--el-text-color-secondary); font-size: 10px; }
 .judge-toast .el-progress { position: absolute; right: 0; bottom: 0; left: 0; }
-.judge-toast__message { max-width: 180px; overflow: hidden; color: var(--el-color-danger); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.judge-toast--interactive { cursor: pointer; }
+.judge-toast--interactive:hover { box-shadow: 0 12px 32px rgb(15 23 42 / 20%); }
 .judge-toast-enter-active, .judge-toast-leave-active { transition: opacity .22s ease, transform .22s ease; }
 .judge-toast-enter-from, .judge-toast-leave-to { opacity: 0; transform: translate(-50%, -18px); }
 
