@@ -1,7 +1,7 @@
 <template>
   <main class="contest-workspace">
     <activity-resizable-panel v-model:size="sidebarSize" v-model:collapsed="sidebarCollapsed" class="contest-layout"
-                     :min-size="20" :max-size="36">
+                              :min-size="20" :max-size="36">
       <template #sidebar>
         <aside class="problem-sidebar">
           <div class="sidebar-scroll">
@@ -67,10 +67,11 @@
 
       <section class="problem-stage">
         <div v-if="currentRow" class="problem-stage__bar">
-          <div class="stage-heading"><span class="stage-index">第 {{ currentIndex + 1 }} 题</span><strong
-              :title="currentRow.title">{{ currentRow.title }}</strong><small>ID {{
-              shortId(currentRow.problemId)
-            }}</small></div>
+          <div class="stage-heading">
+            <span class="stage-index">第 {{ currentIndex + 1 }} 题</span>
+            <strong :title="currentRow.title">{{ currentRow.title }}</strong>
+            <small>ID {{ shortId(currentRow.problemId) }}</small>
+          </div>
           <el-button text :icon="House" @click="currentRow = undefined">活动概览</el-button>
         </div>
         <div v-if="currentRow" class="problem-detail-shell">
@@ -619,6 +620,7 @@ void loadPage()
 }
 
 .stage-heading {
+  display: flex;
   gap: 8px;
 }
 
