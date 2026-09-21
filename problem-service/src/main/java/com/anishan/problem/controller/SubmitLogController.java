@@ -6,10 +6,15 @@ import com.anishan.commons.domain.R;
 import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.problem.domain.entity.JudgeCaseLog;
+import com.anishan.problem.domain.dto.AdminJudgeLogQuery;
+import com.anishan.problem.domain.vo.AdminJudgeCaseLogVo;
+import com.anishan.problem.domain.vo.AdminSubmitLogVo;
 import com.anishan.problem.service.JudgeCaseLogService;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.api.client.problem.domain.vo.SubmitCaseResultVo;
 import com.anishan.problem.service.SubmitLogService;
+import com.anishan.commons.domain.vo.PagedResult;
+import com.anishan.commons.enumeration.JudgeResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
@@ -18,9 +23,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Api("内部接口，记录提交的")
@@ -113,18 +120,84 @@ public class SubmitLogController {
     @GetMapping("/admin/{submitId}/cases")
     @ApiOperation("查看提交的内部测试用例日志")
     @PreAuthorize("hasAuthority('problem:judge:case:read')")
-    public R<List<JudgeCaseLog>> caseLogs(@PathVariable Long submitId) {
+    public R<List<AdminJudgeCaseLogVo>> caseLogs(@PathVariable Long submitId) {
         return R.success(judgeCaseLogService.list(new LambdaQueryWrapper<JudgeCaseLog>()
                 .eq(JudgeCaseLog::getSubmitId, submitId)
-                .orderByAsc(JudgeCaseLog::getCaseIndex)));
+                .orderByAsc(JudgeCaseLog::getCaseIndex))
+                .stream()
+                .map(AdminJudgeCaseLogVo::from)
+                .collect(Collectors.toList()));
     }
 
     /** 管理员预留接口：查看提交级内部错误（例如无测试用例、投递失败、沙箱异常）。 */
     @GetMapping("/admin/{submitId}")
     @ApiOperation("查看提交内部诊断信息")
+    @PreAuthorize("hasAuthority('problem:judge:submit:read')")
+    public R<AdminSubmitLogVo> adminDetail(@PathVariable Long submitId) {
+        return R.success(AdminSubmitLogVo.from(submitLogService.getById(submitId)));
+    }
+
+    /** 管理侧查看用户一次完整提交的分页记录。 */
+    @GetMapping("/admin/submissions")
+    @ApiOperation("管理员分页查看判题提交记录")
+    @PreAuthorize("hasAuthority('problem:judge:submit:read')")
+    public R<PagedResult<AdminSubmitLogVo>> adminSubmissions(@Validated AdminJudgeLogQuery query) {
+        LambdaQueryWrapper<SubmitLog> wrapper = new LambdaQueryWrapper<SubmitLog>()
+                .eq(query.getSubmitId() != null, SubmitLog::getSubmitId, query.getSubmitId())
+                .eq(query.getUserId() != null, SubmitLog::getUserId, query.getUserId())
+                .eq(query.getProblemId() != null, SubmitLog::getProblemId, query.getProblemId())
+                .eq(query.getContestId() != null, SubmitLog::getContestId, query.getContestId())
+                .eq(org.springframework.util.StringUtils.hasText(query.getLanguage()), SubmitLog::getLanguage, query.getLanguage())
+                .orderByDesc(SubmitLog::getSubmitTime);
+        JudgeResult status = parseStatus(query.getStatus());
+        if (org.springframework.util.StringUtils.hasText(query.getStatus()) && status == null) {
+            return R.badRequest("不支持的判题状态");
+        }
+        wrapper.eq(status != null, SubmitLog::getStatus, status);
+        Page<SubmitLog> page = new Page<>(query.getCurrentPage(), query.getPageSize());
+        submitLogService.page(page, wrapper);
+        List<AdminSubmitLogVo> records = page.getRecords().stream()
+                .map(AdminSubmitLogVo::from)
+                .collect(Collectors.toList());
+        return PagedResult.<AdminSubmitLogVo, SubmitLog>fromPage(page, records, page.getTotal()).toR();
+    }
+
+    /** 管理侧查看逐测试用例的内部判题日志。 */
+    @GetMapping("/admin/cases")
+    @ApiOperation("管理员分页查看判题测试用例日志")
     @PreAuthorize("hasAuthority('problem:judge:case:read')")
-    public R<SubmitLog> adminDetail(@PathVariable Long submitId) {
-        return R.success(submitLogService.getById(submitId));
+    public R<PagedResult<AdminJudgeCaseLogVo>> adminCaseLogs(@Validated AdminJudgeLogQuery query) {
+        LambdaQueryWrapper<JudgeCaseLog> wrapper = new LambdaQueryWrapper<JudgeCaseLog>()
+                .eq(query.getSubmitId() != null, JudgeCaseLog::getSubmitId, query.getSubmitId())
+                .eq(query.getProblemId() != null, JudgeCaseLog::getProblemId, query.getProblemId())
+                .eq(query.getCaseId() != null, JudgeCaseLog::getCaseId, query.getCaseId())
+                .eq(query.getCaseIndex() != null, JudgeCaseLog::getCaseIndex, query.getCaseIndex())
+                .orderByDesc(JudgeCaseLog::getCreateTime)
+                .orderByAsc(JudgeCaseLog::getCaseIndex);
+        JudgeResult status = parseStatus(query.getStatus());
+        if (org.springframework.util.StringUtils.hasText(query.getStatus()) && status == null) {
+            return R.badRequest("不支持的判题状态");
+        }
+        wrapper.eq(status != null, JudgeCaseLog::getStatus, status);
+        Page<JudgeCaseLog> page = new Page<>(query.getCurrentPage(), query.getPageSize());
+        judgeCaseLogService.page(page, wrapper);
+        List<AdminJudgeCaseLogVo> records = page.getRecords().stream()
+                .map(AdminJudgeCaseLogVo::from)
+                .collect(Collectors.toList());
+        return PagedResult.<AdminJudgeCaseLogVo, JudgeCaseLog>fromPage(page, records, page.getTotal()).toR();
+    }
+
+    private JudgeResult parseStatus(String value) {
+        if (!org.springframework.util.StringUtils.hasText(value)) {
+            return null;
+        }
+        String normalized = value.trim().toUpperCase(Locale.ROOT);
+        for (JudgeResult result : JudgeResult.values()) {
+            if (result.name().equals(normalized) || result.getValue().equalsIgnoreCase(normalized)) {
+                return result;
+            }
+        }
+        return null;
     }
 
     @GetMapping("/recentSubmit/{problemId}")

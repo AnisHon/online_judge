@@ -148,6 +148,8 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (41, '缓存管理', 1, 4, 'cache-manage', 'I', '#', 'RefreshRight', 'backend/system/cache-manage/CacheManage');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (42, '文件管理', 2, 4, 'file-manage', 'I', '#', 'Files', 'backend/system/file-manage/FileManage');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (43, '通知管理', 3, 4, 'notice-manage', 'I', '#', 'Notification', 'backend/system/notice-manage/NoticeManage');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (44, '判题记录', 4, 4, 'judge-submit-log', 'I', 'problem:judge:submit:read', 'DocumentChecked', 'backend/system/judge-submit-log/JudgeSubmitLog');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (45, '判题日志', 5, 4, 'judge-case-log', 'I', 'problem:judge:case:read', 'DataAnalysis', 'backend/system/judge-case-log/JudgeCaseLog');
 
 
 # menu_id 10 题目编辑

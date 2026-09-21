@@ -11,7 +11,7 @@ export interface NoticeDto {
 }
 
 export interface Notice extends NoticeDto {
-    userId: number
+    userId: IdType
     updateTime: Date;
     createTime: Date;
 }

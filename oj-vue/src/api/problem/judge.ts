@@ -124,11 +124,11 @@ async function getSubmissionCases(id: IdType): Promise<SubmitCaseResult[]> {
     return data || [];
 }
 
-async function fetchLog(id: number, success: successCallback<LogSubmit>) {
-    const {data} = await get<LogSubmit, number>("/problem-api/log/submissions", id);
+async function fetchLog(id: IdType, success: successCallback<LogSubmit>) {
+    const {data} = await get<LogSubmit, IdType>("/problem-api/log/submissions", id);
     success(data);
     const intervalId = setInterval(async () => {
-        const {data} = await get<LogSubmit, number>("/problem-api/log/submissions", id);
+        const {data} = await get<LogSubmit, IdType>("/problem-api/log/submissions", id);
         success(data);
         if (data.status !== OJResult.COMPILING && data.status !== OJResult.QUEUE && data.status !== OJResult.RUNNING) {
             clearInterval(intervalId);

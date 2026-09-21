@@ -30,6 +30,7 @@ public class NoticeDto {
     private String title;
 
     @ApiModelProperty(value = "发送者ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @ApiModelProperty(value = "是否置顶")

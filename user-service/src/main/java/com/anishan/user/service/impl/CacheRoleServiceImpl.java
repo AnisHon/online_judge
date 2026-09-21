@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import javax.annotation.PostConstruct;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,6 +23,15 @@ public class CacheRoleServiceImpl implements CacheRoleService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final String userMenu = "user:menu:";
     private final String userTreedMenu = "user:treed-menu:";
+
+    /**
+     * 菜单表会通过线上迁移新增菜单；服务重启后不能继续使用旧的 Redis 菜单树，
+     * 否则新后台路由即使已经写入数据库也不会出现在前端。
+     */
+    @PostConstruct
+    public void clearMenuCacheOnStartup() {
+        refresh();
+    }
 
     private String getMenuKey(Long roleId) {
         return userMenu + roleId;

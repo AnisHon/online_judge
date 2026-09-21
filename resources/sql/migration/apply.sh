@@ -9,4 +9,7 @@ MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}"
 mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
   < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260912__judge_pipeline.sql"
 
-echo "OJ judge pipeline migration applied."
+mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
+  < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260920__judge_admin_pages.sql"
+
+echo "OJ judge pipeline and admin pages migrations applied."

@@ -26,8 +26,10 @@ public class SubmitLogVo {
     /**
      * 题目id
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long problemId;
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long contestId;
 
     /**

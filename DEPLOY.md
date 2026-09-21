@@ -68,7 +68,7 @@ MYSQL_HOST=127.0.0.1 MYSQL_PORT=3306 MYSQL_ROOT_PASSWORD='你的密码' \
 ```
 
 迁移会新增提交源代码、比赛 ID、测试用例统计、内部错误字段，创建 `judge_case_log`，并写入
-`problem:submit:read` 与 `problem:judge:case:read` 权限。脚本兼容 MySQL 8.0.27，可重复执行；内部错误字段和测试用例日志不要直接暴露给普通用户。
+`problem:submit:read`、`problem:judge:submit:read` 与 `problem:judge:case:read` 权限。脚本兼容 MySQL 8.0.27，可重复执行；内部错误字段和测试用例日志不要直接暴露给普通用户。
 
 判题机并发可通过 Nacos 的 `judge-server.yaml` 或环境变量调整：
 
@@ -80,5 +80,14 @@ OJ_JUDGE_QUEUE_CAPACITY=200
 
 普通用户查询提交结果使用 `GET /problem-api/log/submissions/{submitId}`，按约 1 秒短轮询即可；项目不再保留长连接推送接口。
 
-管理员诊断接口为 `GET /problem-api/log/admin/{submitId}` 和
-`GET /problem-api/log/admin/{submitId}/cases`，均要求 `problem:judge:case:read`。
+后台系统管理新增两个菜单：
+
+- `判题记录`：按一次完整用户提交查询，权限为 `problem:judge:submit:read`，接口为
+  `GET /problem-api/log/admin/submissions`；详情接口为
+  `GET /problem-api/log/admin/{submitId}`，可查看管理员需要的提交代码和提交级诊断信息。
+- `判题日志`：按测试用例查询判题机内部日志，权限为 `problem:judge:case:read`，接口为
+  `GET /problem-api/log/admin/cases`；单次提交的明细接口为
+  `GET /problem-api/log/admin/{submitId}/cases`。
+
+迁移默认将这两个菜单授予管理员和超级管理员。若服务已经运行过旧版本，执行迁移后重启
+`user-service` 清理菜单缓存，并让管理员重新登录一次以刷新权限。

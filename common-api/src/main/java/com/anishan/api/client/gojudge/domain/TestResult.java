@@ -1,6 +1,8 @@
 package com.anishan.api.client.gojudge.domain;
 
 import com.anishan.commons.enumeration.JudgeResult;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -8,6 +10,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class TestResult {
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
     /** 用于把轮询结果绑定到本次测试请求，避免读到上一次测试的结果。 */
     private String uuid;
