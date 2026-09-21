@@ -1,6 +1,7 @@
 package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
+import com.anishan.problem.domain.dto.ProblemListOrderItemDto;
 import com.anishan.problem.domain.entity.ProblemListRelation;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.github.yulichang.base.MPJBaseMapper;
@@ -18,8 +19,10 @@ public interface ProblemProblemListMapper extends MPJBaseMapper<ProblemProblemLi
     List<ProblemListRelation> getByListId(Long listId);
 
     int deleteBatch(@Param("relations") List<ProblemListRelationDto> relations);
-}
 
+    int updateProblemOrderBatch(@Param("listId") Long listId,
+                                @Param("items") List<ProblemListOrderItemDto> items);
+}
 
 
 

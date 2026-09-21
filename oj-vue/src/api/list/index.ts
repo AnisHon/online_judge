@@ -36,6 +36,11 @@ interface ProblemListRelation {
     score?: number
 }
 
+interface ProblemListOrderItem {
+    problemId: IdType;
+    problemOrder: number;
+}
+
 interface ProblemInListView extends ProblemView {
     problemOrder?: number;
     score?: number;
@@ -61,6 +66,13 @@ const addProblemToList = async (relations: ProblemListRelation[]) => {
 
 const updateProblemRelation = async (relation: ProblemListRelation) => {
     await update(relation, "/problem-api/list/updateProblem")
+}
+
+const batchUpdateProblemOrder = async (listId: IdType, items: ProblemListOrderItem[]) => {
+    await put<{ listId: IdType; items: ProblemListOrderItem[] }, boolean>(
+        "/problem-api/list/batch-update-order",
+        {listId, items}
+    );
 }
 
 const debouncedAddProblemToList = (relations: ProblemListRelation[], success: successCallback<void>) => {
@@ -186,6 +198,7 @@ export type {
     ListView,
     ListProblemQuery,
     ProblemListRelation,
+    ProblemListOrderItem,
     ProblemInListView,
 
 }
@@ -203,7 +216,7 @@ export {
     debouncedAddProblemToList,
     delProblemFromList,
     updateProblemRelation,
+    batchUpdateProblemOrder,
     debouncedUserGetProblem,
     getProblems
 }
-

@@ -5,6 +5,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
+import com.anishan.problem.domain.dto.ProblemListOrderBatchDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.anishan.problem.domain.vo.ProblemInListVo;
@@ -82,6 +83,13 @@ public class ListController {
                         .eq(ProblemProblemListRelation::getListId, relation.getListId())
         );
         return R.success(update);
+    }
+
+    @PutMapping("/batch-update-order")
+    @PreAuthorize("hasAuthority('problem:list:add-problem')")
+    @ApiOperation("批量修改题单题目顺序")
+    public R<Boolean> updateProblemOrder(@RequestBody @Validated ProblemListOrderBatchDto request) {
+        return R.success(problemListService.updateProblemOrder(request));
     }
 
     @PutMapping("/delProblem")

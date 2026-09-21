@@ -8,6 +8,8 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
+import com.anishan.problem.domain.dto.ProblemListOrderBatchDto;
+import com.anishan.problem.domain.dto.ProblemListOrderItemDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.Problem;
 import com.anishan.problem.domain.entity.ProblemList;
@@ -32,6 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
 * @author happy
@@ -119,6 +124,40 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateProblemOrder(ProblemListOrderBatchDto request) {
+        List<ProblemProblemListRelation> currentRelations = problemProblemListService.list(
+                new LambdaQueryWrapper<ProblemProblemListRelation>()
+                        .select(ProblemProblemListRelation::getProblemId)
+                        .eq(ProblemProblemListRelation::getListId, request.getListId())
+        );
+
+        Set<Long> currentProblemIds = currentRelations.stream()
+                .map(ProblemProblemListRelation::getProblemId)
+                .collect(Collectors.toSet());
+        Set<Long> requestedProblemIds = request.getItems().stream()
+                .map(ProblemListOrderItemDto::getProblemId)
+                .collect(Collectors.toSet());
+        Set<Integer> requestedOrders = request.getItems().stream()
+                .map(ProblemListOrderItemDto::getProblemOrder)
+                .collect(Collectors.toSet());
+        Set<Integer> expectedOrders = IntStream.rangeClosed(1, currentProblemIds.size())
+                .boxed()
+                .collect(Collectors.toSet());
+
+        if (currentProblemIds.isEmpty()
+                || currentProblemIds.size() != request.getItems().size()
+                || currentProblemIds.size() != requestedProblemIds.size()
+                || !currentProblemIds.equals(requestedProblemIds)
+                || !expectedOrders.equals(requestedOrders)) {
+            throw new IllegalArgumentException("题单题目顺序已发生变化，请刷新后重试");
+        }
+
+        // 不依赖 MySQL 是否开启 useAffectedRows：部分顺序本来就相同的时候，更新行数可能小于题目总数。
+        return problemProblemListMapper.updateProblemOrderBatch(request.getListId(), request.getItems()) > 0;
+    }
+
+    @Override
     public List<ProblemInListVo> getProblems(Long id) {
         MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
                 .selectAll(Problem.class)
@@ -152,7 +191,4 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
         return problemListMapper.selectProblemByListId(userId, id);
     }
 }
-
-
-
 

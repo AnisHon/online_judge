@@ -3,6 +3,7 @@ package com.anishan.problem.service;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
+import com.anishan.problem.domain.dto.ProblemListOrderBatchDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.ProblemList;
 import com.anishan.problem.domain.vo.ProblemInListVo;
@@ -33,6 +34,8 @@ public interface ProblemListService extends IService<ProblemList> {
     boolean addProblemList(List<ProblemListRelationDto> relations);
 
     boolean delProblem(List<ProblemListRelationDto> relations);
+
+    boolean updateProblemOrder(ProblemListOrderBatchDto request);
 
     List<ProblemInListVo> getProblems(Long id);
 

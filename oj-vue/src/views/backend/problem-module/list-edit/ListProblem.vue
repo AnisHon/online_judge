@@ -32,11 +32,22 @@
         <el-button
             type="success"
             plain
-            icon="plus"
+            icon="Edit"
             size="small"
             @click="isEdit = !isEdit"
             v-has="'problem:list:add-problem'"
-        >开启/关闭修改</el-button>
+        >{{ isEdit ? '完成编辑' : '编辑分数' }}</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+            type="primary"
+            :loading="isOrderSaving"
+            :disabled="!hasPendingOrderChanges"
+            icon="Upload"
+            size="small"
+            @click="saveProblemOrder"
+            v-has="'problem:list:add-problem'"
+        >保存排序<span v-if="pendingOrderCount">（{{ pendingOrderCount }}）</span></el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -53,7 +64,12 @@
     </el-row>
 
     <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
-    <el-table v-loading="isLoading" class="list-problem-table" :data="sortedTableList" @selection-change="handleSelectionChange">
+    <div v-if="hasPendingOrderChanges" class="order-notice">
+      <el-icon><InfoFilled /></el-icon>
+      <span>拖动题目调整顺序后，点击“保存排序”一次性提交。</span>
+      <el-button link type="primary" :disabled="isOrderSaving" @click="resetProblemOrder">撤销排序</el-button>
+    </div>
+    <el-table v-loading="isLoading" class="list-problem-table" :data="sortedTableList" row-key="problemId" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
@@ -77,12 +93,27 @@
       <el-table-column label="提示" width="60" align="center" prop="hint" v-if="columns[7].visible" />
       <el-table-column label="问题顺序" align="center" prop="problemOrder" v-if="columns[8].visible">
         <template v-slot="scope">
-          <el-input-number v-model="scope.row.tempOrder" :disabled="!isEdit" :controls="false" @keyup.enter="$event.target.blur()" @blur="handleUpdate(scope.row)"/>
+          <div
+              class="order-cell"
+              :class="{ 'is-drag-over': dragOverProblemId === String(scope.row.problemId) }"
+              @dragover.prevent="handleDragOver(scope.row)"
+              @drop.prevent="handleDrop(scope.row)"
+          >
+            <span
+                class="drag-handle"
+                :class="{ 'is-disabled': !isEdit }"
+                :draggable="isEdit"
+                title="拖动调整顺序"
+                @dragstart="handleDragStart(scope.row, $event)"
+                @dragend="handleDragEnd"
+            ><el-icon><Rank /></el-icon></span>
+            <span class="order-number">{{ scope.row.problemOrder }}</span>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="问题分数" align="center" prop="score" v-if="columns[9].visible" >
         <template v-slot="scope">
-          <el-input-number v-model="scope.row.tempScore" :disabled="!isEdit" @keyup.enter="$event.target.blur()"  :controls="false" :precision="2" @blur="handleUpdate(scope.row)"/>
+          <el-input-number v-model="scope.row.tempScore" :disabled="!isEdit" @keyup.enter="$event.target.blur()"  :controls="false" :precision="2" @blur="handleScoreUpdate(scope.row)"/>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -131,7 +162,7 @@ import {
 import {useStatuesColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElInputNumber, ElMessageBox} from "element-plus";
+import {ElDialog, ElInputNumber, ElMessage, ElMessageBox} from "element-plus";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {useRoute, useRouter} from "vue-router";
@@ -139,11 +170,11 @@ import {
   debouncedAddProblemToList,
   debouncedGetProblem, delProblemFromList,
   type ListProblemQuery, type ProblemInListView,
-  type ProblemListRelation, updateProblemRelation
+  type ProblemListRelation, batchUpdateProblemOrder, updateProblemRelation
 } from "@/api/list";
 import ListProblemView from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemView.vue";
 import type {IdType} from "@/api/common.ts";
-import {List} from "@element-plus/icons-vue";
+import {InfoFilled, List, Rank} from "@element-plus/icons-vue";
 import ProblemModuleShell from "@/views/backend/problem-module/component/ProblemModuleShell.vue";
 
 const route = useRoute();
@@ -189,9 +220,12 @@ const {loading, isLoading, get: getProblem} = debouncedGetProblem(listId.value, 
   if (data) {
     tableList.length = 0;
     tableList.push(...data)
+    tableList.sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0));
+    orderSnapshot.clear();
     tableList.forEach(x => {
       x.tempOrder = x.problemOrder
       x.tempScore = x.score
+      orderSnapshot.set(String(x.problemId), x.problemOrder ?? 0);
     })
   }
 
@@ -200,10 +234,21 @@ const {loading, isLoading, get: getProblem} = debouncedGetProblem(listId.value, 
 
 const tableList = reactive<ProblemInListView[]>([]);
 const sortedTableList = computed(() => {
-  tableList.sort((a, b) => <number>a.problemOrder - <number>b.problemOrder)
-  return tableList;
+  return [...tableList].sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0));
 })
 const total = ref<number>(0);
+const orderSnapshot = new Map<string, number>();
+const isOrderSaving = ref(false);
+const draggingProblemId = ref<string | null>(null);
+const dragOverProblemId = ref<string | null>(null);
+
+const hasPendingOrderChanges = computed(() => {
+  return sortedTableList.value.some(row => orderSnapshot.get(String(row.problemId)) !== row.problemOrder);
+});
+
+const pendingOrderCount = computed(() => {
+  return sortedTableList.value.filter(row => orderSnapshot.get(String(row.problemId)) !== row.problemOrder).length;
+});
 
 // 获取列表
 const getList = () => {
@@ -261,23 +306,103 @@ const handleDelete = (row: ProblemInListView | Event) => {
 const handleAdd = () => {
   open.value = true;
 }
-const handleUpdate = (data: ProblemInListView) => {
-  if (data.tempScore === undefined || data.tempOrder === undefined) {
+const handleScoreUpdate = (data: ProblemInListView) => {
+  if (data.tempScore === undefined) {
     data.tempScore = data.score;
-    data.tempOrder = data.problemOrder;
   }
 
-  if (data.tempScore === data.score && data.tempOrder === data.problemOrder) {
+  if (data.tempScore === data.score) {
     return;
   }
   data.score = data.tempScore;
-  data.problemOrder = data.tempOrder;
   updateProblemRelation({
     listId: listId.value,
     problemId: data.problemId,
-    problemOrder: data.problemOrder,
     score: data.score
   })
+}
+
+const handleDragStart = (row: ProblemInListView, event: DragEvent) => {
+  if (!isEdit.value) {
+    event.preventDefault();
+    return;
+  }
+  draggingProblemId.value = String(row.problemId);
+  event.dataTransfer?.setData('text/plain', String(row.problemId));
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+  }
+}
+
+const handleDragOver = (row: ProblemInListView) => {
+  if (draggingProblemId.value && draggingProblemId.value !== String(row.problemId)) {
+    dragOverProblemId.value = String(row.problemId);
+  }
+}
+
+const handleDrop = (target: ProblemInListView) => {
+  const sourceId = draggingProblemId.value;
+  if (!sourceId || sourceId === String(target.problemId)) {
+    handleDragEnd();
+    return;
+  }
+
+  const current = sortedTableList.value;
+  const sourceIndex = current.findIndex(row => String(row.problemId) === sourceId);
+  const targetIndex = current.findIndex(row => String(row.problemId) === String(target.problemId));
+  if (sourceIndex < 0 || targetIndex < 0) {
+    handleDragEnd();
+    return;
+  }
+
+  const reordered = [...current];
+  const [moved] = reordered.splice(sourceIndex, 1);
+  const targetIndexAfterMove = reordered.findIndex(row => String(row.problemId) === String(target.problemId));
+  reordered.splice(targetIndexAfterMove + 1, 0, moved);
+  reordered.forEach((row, index) => {
+    row.problemOrder = index + 1;
+    row.tempOrder = index + 1;
+  });
+  tableList.splice(0, tableList.length, ...reordered);
+  handleDragEnd();
+}
+
+const handleDragEnd = () => {
+  draggingProblemId.value = null;
+  dragOverProblemId.value = null;
+}
+
+const saveProblemOrder = async () => {
+  if (!hasPendingOrderChanges.value || isOrderSaving.value) {
+    return;
+  }
+  isOrderSaving.value = true;
+  try {
+    await batchUpdateProblemOrder(listId.value, sortedTableList.value.map((row, index) => ({
+      problemId: row.problemId,
+      problemOrder: index + 1
+    })));
+    sortedTableList.value.forEach((row, index) => {
+      row.problemOrder = index + 1;
+      row.tempOrder = index + 1;
+      orderSnapshot.set(String(row.problemId), index + 1);
+    });
+    ElMessage.success('题单顺序已保存');
+  } catch {
+    ElMessage.error('题单顺序保存失败，请刷新后重试');
+  } finally {
+    isOrderSaving.value = false;
+  }
+}
+
+const resetProblemOrder = () => {
+  tableList.forEach(row => {
+    const savedOrder = orderSnapshot.get(String(row.problemId));
+    if (savedOrder !== undefined) {
+      row.problemOrder = savedOrder;
+      row.tempOrder = savedOrder;
+    }
+  });
 }
 
 const getAuthText = (auth: ProblemAuth) => {
@@ -355,5 +480,7 @@ getList();
 }
 
 .list-problem-table { border-radius: 14px; overflow: hidden; }
+.order-notice { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--el-color-primary-light-7); border-radius: 10px; color: var(--el-text-color-secondary); background: var(--el-color-primary-light-9); font-size: 12px; }.order-notice .el-icon { color: var(--el-color-primary); }.order-notice .el-button { margin-left: auto; }
+.order-cell { display: inline-flex; align-items: center; gap: 9px; min-width: 76px; min-height: 30px; padding: 2px 7px; border: 1px dashed transparent; border-radius: 8px; transition: border-color .2s, background-color .2s; }.order-cell.is-drag-over { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.drag-handle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; color: var(--el-text-color-secondary); cursor: grab; }.drag-handle:hover { color: var(--el-color-primary); background: var(--el-fill-color-light); }.drag-handle:active { cursor: grabbing; }.drag-handle.is-disabled { cursor: not-allowed; opacity: .45; }.order-number { min-width: 20px; font-variant-numeric: tabular-nums; }
 .dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: rgb(5 150 105 / 12%); color: var(--el-color-success); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.picker-body { min-height: 420px; max-height: 62vh; overflow: auto; }.selection-summary { margin-right: auto; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

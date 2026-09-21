@@ -19,6 +19,20 @@
         </foreach>
     </delete>
 
+    <update id="updateProblemOrderBatch">
+        update problem_problem_list
+        set problem_order = case problem_id
+        <foreach collection="items" item="item">
+            when #{item.problemId} then #{item.problemOrder}
+        </foreach>
+        else problem_order end
+        where list_id = #{listId}
+          and problem_id in
+        <foreach collection="items" item="item" separator="," open="(" close=")">
+            #{item.problemId}
+        </foreach>
+    </update>
+
     <resultMap id="ProblemListRelation" type="com.anishan.problem.domain.entity.ProblemListRelation">
         <id column="list_id"/>
         <id column="problem_id"/>
