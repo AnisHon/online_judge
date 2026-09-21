@@ -16,6 +16,7 @@
 
       <el-button-group>
         <el-button
+            v-has="'content:file:add'"
             type="primary"
             icon="upload"
             @click="openUpload = true"
@@ -23,6 +24,7 @@
             round
         >上传文件</el-button>
         <el-button
+            v-has="'content:file:add'"
             type="primary"
             icon="DocumentAdd"
             @click="handleAddDir"
@@ -91,12 +93,14 @@
           <template v-slot="scope">
             <div class="file-link">
               <el-link
+                  v-has="'content:file:edit'"
                   size="small"
                   type="primary"
                   icon="edit"
                   @click.stop="handleRename(scope.row)"
               >重命名</el-link>
               <el-link
+                  v-has="'content:file:remove'"
                   size="small"
                   type="primary"
                   icon="remove"

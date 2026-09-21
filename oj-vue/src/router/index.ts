@@ -4,7 +4,7 @@ import Layout from "@/layout/Layout.vue";
 import Forbidden from "@/views/error/Forbidden.vue";
 import NotFound from "@/views/error/NotFound.vue";
 import {useMenuStore} from "@/stores/useMenuStore";
-import {loadDynamicRoutes} from "@/router/dynamic";
+import {isDynamicLoading, loadDynamicRoutes, resetDynamicRoutes} from "@/router/dynamic";
 
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
@@ -120,6 +120,7 @@ export const constRoutes =  [
         component: () => import('@/views/authentication/Login.vue'),
         meta: {
           name: "登录",
+          isLoginAccess: true,
         }
       },
       {
@@ -128,6 +129,7 @@ export const constRoutes =  [
         component: () => import('@/views/authentication/SignUp.vue'),
         meta: {
           name: "注册",
+          isLoginAccess: true,
         }
       },
       {
@@ -136,6 +138,7 @@ export const constRoutes =  [
         component: () => import('@/views/authentication/ForgetPassword.vue'),
         meta: {
           name: "找回密码",
+          isLoginAccess: true,
         }
       }
     ]
@@ -250,14 +253,28 @@ router.beforeEach(async (to) => {
   const menu = useMenuStore()
   const token = useToken();
 
+  if (token.hasToken() && to.path.startsWith('/auth')) {
+    return {name: 'home', replace: true};
+  }
+
+  if (!token.hasToken()) {
+    if (router.hasRoute('backend') || menu.isDynamicReady() || isDynamicLoading()) {
+      resetDynamicRoutes();
+      menu.clear();
+    }
+    if (needLogin || to.path.startsWith('/backend') || !isMatched) return {name: 'login', replace: true};
+    if (!isLoginAccess) return {name: '403', replace: true};
+    return true;
+  }
+
   if (token.hasToken()) {
     // 已经登陆
     if (!menu.isDynamicReady()) {
 
-      // 动态路由没有加载成功，加载路由
+        // 动态路由没有加载成功，加载路由
       try {
         await loadDynamicRoutes();
-        return { ...to, replace: true };
+        return {path: to.fullPath, replace: true};
       } catch (error) {
         if (typeof error === 'object' && error !== null && 'code' in error && error.code === 401) {
           token.clearToken();
@@ -267,10 +284,12 @@ router.beforeEach(async (to) => {
       }
     }
     if (!isMatched) return {name: '404', replace: true};
+    if (to.path.startsWith('/backend') && !menu.hasBackendAccess()) {
+      return {name: '403', replace: true};
+    }
     if (!needLogin && !isLoginAccess) return {name: '403', replace: true};
     return true;
   }
-  if (needLogin || !isMatched) return {name: 'login', replace: true};
   return true;
 });
 

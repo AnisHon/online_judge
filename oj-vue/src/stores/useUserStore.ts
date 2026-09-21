@@ -17,12 +17,35 @@ export interface LoginUser {
 export const useUserStore = defineStore('user', () => {
     const user =  ref<LoginUser | null>(null)
     const avatarVersions = ref<Record<string, number>>({})
+    let loadPromise: Promise<LoginUser> | null = null;
+    let sessionVersion = 0;
 
-    const loadUser = async () => {
-        user.value = await getMe()
+    const loadUser = async (force = false): Promise<LoginUser> => {
+        if (!force && user.value) {
+            return user.value;
+        }
+        if (loadPromise) {
+            return loadPromise;
+        }
+
+        const version = sessionVersion;
+        const request = getMe().then((data) => {
+            if (version === sessionVersion) {
+                user.value = data;
+            }
+            return data;
+        });
+        loadPromise = request;
+        request.then(
+            () => { if (loadPromise === request) loadPromise = null; },
+            () => { if (loadPromise === request) loadPromise = null; },
+        );
+        return request;
     }
 
     const clear = () => {
+        sessionVersion++;
+        loadPromise = null;
         user.value = null
     }
 
@@ -40,10 +63,7 @@ export const useUserStore = defineStore('user', () => {
     }
 
     const getAuths = (): string[] => {
-        if (!user.value) {
-            return []
-        }
-        return (<LoginUser>user.value).auths
+        return user.value?.auths || []
     }
 
     return {

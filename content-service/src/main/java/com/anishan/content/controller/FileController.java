@@ -52,21 +52,57 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileController {
 
+    /**
+     * 头像会被覆盖，不能使用 immutable；短缓存配合 ETag 可以避免页面重复拉取，
+     * 同时把头像更新后的可见延迟控制在几分钟内。前端自己的头像还会追加版本号立即刷新。
+     */
+    private static final String AVATAR_CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=86400";
+
+    /** 图片上传后路径不会复用，适合长期缓存，题解/公告中的图片不再每次经过 MinIO 转发。 */
+    private static final String IMAGE_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
 
     private final FileService fileService;
     private final FileOperation fileOperation;
     private final CloudFilesService cloudFilesService;
     private final ChunkUploadService chunkUploadService;
 
-    private void responseFile(String filePath, HttpServletResponse response) {
+    private void responseFile(String filePath,
+                              HttpServletRequest request,
+                              HttpServletResponse response,
+                              String cacheControl) {
         try (OssFileInputStream is = fileOperation.getFile(filePath)) {
 
 
             String contentType = FileUtil.getMimeType(filePath);
 
             String filename = StrUtil.subAfter(filePath, "/", true);
-            response.setContentType(contentType);
+            if (StrUtil.isNotBlank(contentType)) {
+                response.setContentType(contentType);
+            }
             response.addHeader("download-filename", filename);
+            response.setHeader("X-Content-Type-Options", "nosniff");
+
+            if (StrUtil.isNotBlank(cacheControl)) {
+                response.setHeader("Cache-Control", cacheControl);
+
+                String etag = is.getHeaders().get("ETag");
+                if (StrUtil.isNotBlank(etag)) {
+                    response.setHeader("ETag", etag);
+                    if (request != null && etag.equals(request.getHeader("If-None-Match"))) {
+                        response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                        return;
+                    }
+                }
+
+                String lastModified = is.getHeaders().get("Last-Modified");
+                if (StrUtil.isNotBlank(lastModified)) {
+                    response.setHeader("Last-Modified", lastModified);
+                }
+            } else {
+                // 用户文件下载不缓存，避免下载链接对应的权限/内容被浏览器长期复用。
+                response.setHeader("Cache-Control", "no-store");
+            }
 
             ServletOutputStream os = response.getOutputStream();
 
@@ -94,9 +130,11 @@ public class FileController {
     @ApiOperation("获取头像")
     @GetMapping("/avatar/{userId}")
     @PermitAll
-    public void getAvatar(@PathVariable Long userId, HttpServletResponse response) {
+    public void getAvatar(@PathVariable Long userId,
+                          HttpServletRequest request,
+                          HttpServletResponse response) {
         String avatarPath = fileService.getAvatarPath(userId);
-        responseFile(avatarPath, response);
+        responseFile(avatarPath, request, response, AVATAR_CACHE_CONTROL);
     }
 
 
@@ -123,7 +161,7 @@ public class FileController {
     @PermitAll
     public void getImage(HttpServletRequest req, @NotNull HttpServletResponse response) {
         String uri = StrUtil.subSuf(req.getRequestURI(), "/image/".length());
-        responseFile(uri, response);
+        responseFile(uri, req, response, IMAGE_CACHE_CONTROL);
     }
 
 
@@ -137,8 +175,10 @@ public class FileController {
     @ApiOperation("下载文件")
     @GetMapping("/file")
     @PermitAll
-    public void getFile(@NotNull String path, HttpServletResponse response) {
-        responseFile(path, response);
+    public void getFile(@NotNull String path,
+                        HttpServletRequest request,
+                        HttpServletResponse response) {
+        responseFile(path, request, response, null);
     }
 
     @PutMapping("/file")
@@ -236,7 +276,10 @@ public class FileController {
     }
 
     @GetMapping("/file/download")
-    public void download(String fileName, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    @PermitAll
+    public void download(@RequestParam("fileName") String fileName,
+                         HttpServletRequest request,
+                         HttpServletResponse response) throws Exception {
         if (fileName == null) {
             return;
         }

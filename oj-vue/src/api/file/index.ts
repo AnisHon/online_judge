@@ -212,7 +212,7 @@ export const mergeFile = (md5: string) => {
 
 export function downloadFile(url: string, filename: string) {
     const link = document.createElement('a');
-    link.href = `${baseURL}/file/download?fileName=${url}`;
+    link.href = `${baseURL}/file/download?fileName=${encodeURIComponent(url)}`;
     link.download = filename || 'file'; // 设置下载文件的默认名称
     document.body.appendChild(link);
     link.click();

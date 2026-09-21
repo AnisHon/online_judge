@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import BackendMenu from "@/layout-backend/component/BackendMenu/BackendMenu.vue";
-import {computed, provide, ref} from "vue";
+import {computed, onBeforeUnmount, provide, ref} from "vue";
 import HeaderBar from "@/layout-backend/component/HeaderBar/HeaderBar.vue";
 import type {ElMain} from "element-plus";
 import CustomTab from "@/layout-backend/component/CustomTab/CustomTab.vue";
@@ -59,6 +59,9 @@ const excludeRoutes = computed((): string[] => {
       .filter(route => !!route.meta?.noKeepAlive)
       .map(route => route.meta.component);
 })
+
+// 后台布局销毁即代表退出后台会话，不能把上一个账号的标签页留给下一个账号。
+onBeforeUnmount(() => tabStore.reset());
 
 const elMainRef = ref<InstanceType<typeof ElMain>>();
 

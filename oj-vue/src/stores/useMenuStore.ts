@@ -1,52 +1,53 @@
 import {defineStore} from "pinia";
-import {getTreedMenu, type MenuView, type TreedMenu} from "@/api/auth/menu";
-import {getAuth} from "@/api/auth/menu"
+import {getTreedMenu, type TreedMenu} from "@/api/auth/menu";
 import {ref} from "vue";
 import __ from "lodash";
 import type {RouteRecordRaw} from "vue-router";
 
 export const useMenuStore = defineStore('menuStore', () => {
-    const auths = ref<MenuView[]>();
     const menuTrees = ref<TreedMenu[]>();
     const menu = ref<RouteRecordRaw[]>()
-
-    const exist = (): boolean => {
-        return __.has(auths, 'value');
-    }
-
-    const loadAuths = async () => {
-        auths.value = await getAuth();
-    }
-
-    const getAuths = () => {
-        return auths.value || [];
-    }
-
-    const getMenuTrees = async () => {
-        if (!exist()) {
-            menuTrees.value = await getTreedMenu();
-        }
-        return menuTrees.value;
-    }
+    let loadPromise: Promise<TreedMenu[]> | null = null;
+    let sessionVersion = 0;
 
     const isDynamicReady = () => {
         return !__.isUndefined(menu.value);
     }
 
     const clear = () => {
-        auths.value = undefined;
+        sessionVersion++;
+        loadPromise = null;
         menuTrees.value = undefined;
         menu.value = undefined;
     }
 
+    const load = async (force = false): Promise<TreedMenu[]> => {
+        if (!force && menuTrees.value !== undefined) {
+            return menuTrees.value;
+        }
+        if (loadPromise) {
+            return loadPromise;
+        }
+
+        const version = sessionVersion;
+        const request = getTreedMenu().then((data) => {
+            const trees = data || [];
+            if (version === sessionVersion) {
+                menuTrees.value = trees;
+            }
+            return trees;
+        });
+        loadPromise = request;
+        request.then(
+            () => { if (loadPromise === request) loadPromise = null; },
+            () => { if (loadPromise === request) loadPromise = null; },
+        );
+        return request;
+    };
+
 
     const getTree = async () => {
-        if (isDynamicReady()) {
-            return <TreedMenu[]>menuTrees.value;
-        }
-        const data = await getMenuTrees();
-        await loadAuths();
-        return data || [];
+        return load();
     };
 
     const setMenu = (raw: RouteRecordRaw[]) => {
@@ -54,16 +55,22 @@ export const useMenuStore = defineStore('menuStore', () => {
     }
 
     const getMenu = (): RouteRecordRaw[] => {
-        return menu.value as RouteRecordRaw[];
+        return menu.value || [];
+    }
+
+    const hasBackendAccess = (): boolean => {
+        // 只有按钮权限（例如查看本人提交）不能作为进入后台的依据。
+        return (menuTrees.value?.length || 0) > 0;
     }
 
     return  {
-        getAuths,
         isDynamicReady,
         clear,
+        load,
         getTree,
         setMenu,
-        getMenu
+        getMenu,
+        hasBackendAccess
     }
 
 }, {persist: false})

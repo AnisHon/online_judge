@@ -44,7 +44,7 @@ const handleCommand = (key: string) => {
 const menuStore = useMenuStore();
 
 const hasAccessToBackend = computed(() => {
-  return !!menuStore.getAuths() && menuStore.getAuths().length > 0 && !route.fullPath.startsWith("/backend");
+  return menuStore.hasBackendAccess() && !route.fullPath.startsWith("/backend");
 });
 
 const returnToUserPage = computed(() => {

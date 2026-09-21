@@ -1,64 +1,80 @@
-import {useMenuStore} from "@/stores/useMenuStore";
-import type {DirectiveBinding} from "vue";
+import {watch, type DirectiveBinding} from "vue";
+import {useUserStore} from "@/stores/useUserStore";
+
+type PermissionValue = string | string[] | undefined;
+type PermissionElement = HTMLElement & {
+    __permissionStop?: () => void;
+};
+
+const normalize = (value: PermissionValue): string[] => {
+    if (!value) return [];
+    return Array.isArray(value) ? value : [value];
+};
+
+const hasAll = (permissions: string[], required: PermissionValue): boolean => {
+    const values = normalize(required);
+    return values.length === 0 || values.every(permission => permissions.includes(permission));
+};
+
+const hasAnyPermission = (permissions: string[], required: PermissionValue): boolean => {
+    const values = normalize(required);
+    return values.length === 0 || values.some(permission => permissions.includes(permission));
+};
+
+const applyVisibility = (element: PermissionElement, allowed: boolean) => {
+    element.hidden = !allowed;
+    if (allowed) {
+        element.removeAttribute('aria-hidden');
+    } else {
+        element.setAttribute('aria-hidden', 'true');
+    }
+};
+
+const mountPermission = (
+    element: PermissionElement,
+    binding: DirectiveBinding<PermissionValue>,
+    matcher: (permissions: string[], required: PermissionValue) => boolean,
+) => {
+    const userStore = useUserStore();
+    const update = () => applyVisibility(element, matcher(userStore.getAuths(), binding.value));
+
+    // 权限异步加载完成后自动恢复按钮，不能再通过 removeChild 永久删除节点。
+    update();
+    element.__permissionStop?.();
+    element.__permissionStop = watch(
+        () => userStore.getAuths().slice().sort().join('\u001f'),
+        update,
+        {flush: 'sync'},
+    );
+};
+
+const unmountPermission = (element: PermissionElement) => {
+    element.__permissionStop?.();
+    delete element.__permissionStop;
+};
 
 const has = {
-
-
-    mounted(el: any, binding: DirectiveBinding<string | string[], string, string>) {
-
-
-
-        const requiredPerms = binding.value
-        const menu = useMenuStore()
-        let result = true;
-        if (requiredPerms instanceof Array) {
-            requiredPerms.forEach((value) => {
-
-                result = menu.getAuths().some((v) => v.perms === value) && result
-            })
-        } else {
-
-            result = menu.getAuths().some((v) => v.perms === requiredPerms) || false
-
-        }
-
-        if (!result) {
-
-            el.parentNode.removeChild(el);
-        }
-    }
-
-}
+    mounted(element: PermissionElement, binding: DirectiveBinding<PermissionValue>) {
+        mountPermission(element, binding, hasAll);
+    },
+    updated(element: PermissionElement, binding: DirectiveBinding<PermissionValue>) {
+        applyVisibility(element, hasAll(useUserStore().getAuths(), binding.value));
+    },
+    unmounted(element: PermissionElement) {
+        unmountPermission(element);
+    },
+};
 
 const hasAny = {
-
-
-    mounted(el: any, binding: DirectiveBinding<string | string[], string, string>) {
-
-
-
-        const requiredPerms = binding.value
-        const menu = useMenuStore()
-        let result = false;
-        if (requiredPerms instanceof Array) {
-            requiredPerms.forEach((value) => {
-                result = menu.getAuths().some((v) => v.perms === value) || result
-            })
-        } else {
-
-            result = menu.getAuths().some((v) => v.perms === requiredPerms) || false
-
-        }
-
-
-        if (!result) {
-            el.parentNode.removeChild(el);
-        }
-    }
-
-}
-
-export {
-    has,
-    hasAny
+    mounted(element: PermissionElement, binding: DirectiveBinding<PermissionValue>) {
+        mountPermission(element, binding, hasAnyPermission);
+    },
+    updated(element: PermissionElement, binding: DirectiveBinding<PermissionValue>) {
+        applyVisibility(element, hasAnyPermission(useUserStore().getAuths(), binding.value));
+    },
+    unmounted(element: PermissionElement) {
+        unmountPermission(element);
+    },
 };
+
+export {has, hasAny};

@@ -12,13 +12,14 @@ export interface TabStoreType {
 
 export const useTabStore = defineStore("tabStore", () => {
 
-    const tabs = ref<TabStoreType[]>([{
+    const homeTab: TabStoreType = {
         title: '首页',
         name: 'backend-index',
         closable: false,
         component: 'Index',
         url: "/backend"
-    }]);
+    };
+    const tabs = ref<TabStoreType[]>([{...homeTab}]);
 
     const currentTab = ref("backend-index");
 
@@ -67,11 +68,17 @@ export const useTabStore = defineStore("tabStore", () => {
         currentTab.value = name;
     }
 
+    const reset = () => {
+        tabs.value = [{...homeTab}];
+        currentTab.value = homeTab.name;
+    }
+
     return {
         tabs,
         currentTab,
         removeTab,
         open,
-        getUrl
+        getUrl,
+        reset
     }
 })

@@ -14,6 +14,7 @@ export const dynamicRoute: RouteRecordRaw = {
     component: () => import("@/layout-backend/LayoutBackEnd.vue"),
     meta: {
         name: "首页",
+        requireAuth: true,
         isLoginAccess: true,
     },
     children: [
@@ -47,7 +48,7 @@ export const dynamicRoute: RouteRecordRaw = {
             sensitive: true,
             component: () => import("@/views/backend/problem-module/problem-edit/ProblemEditView.vue"),
             meta: {
-                has: ["problem:problem:list", "problem:list:add-problem", "problem:list:del-problem"],
+                has: ["problem:problem:list"],
                 name: "编辑题目",
                 component: 'ProblemEditView',
                 noKeepAlive: true,
@@ -58,7 +59,7 @@ export const dynamicRoute: RouteRecordRaw = {
             name: 'list-problem',
             component: () => import("@/views/backend/problem-module/list-edit/ListProblem.vue"),
             meta: {
-                has: ["problem:problem:add", "problem:problem:remove"],
+                hasAny: ["problem:list:add-problem", "problem:list:del-problem", "problem:problem:list"],
                 name: "列表题目编辑",
                 component: 'ListProblem',
                 noKeepAlive: true,
@@ -170,7 +171,10 @@ export const menuTree: RouteRecordRaw[] = [
     },
 ]
 
-const len = menuTree.length;
+const staticMenuTree = [...menuTree];
+const fixedDynamicChildren = [...dynamicRoute.children];
+let routeLoadPromise: Promise<void> | null = null;
+let routeGeneration = 0;
 
 // import对象用于加载路由
 const modules = import.meta.glob('../views/**/*.vue')
@@ -234,27 +238,56 @@ const recursiveBuildRoutes = (treedMenus: TreedMenu[], parent: string): RouteRec
 
 // 过滤一下上面那几个固定的动态路由
 export const filterDynamic = async () => {
-    await useUserStore().loadUser();
-    dynamicRoute.children = __.filter(dynamicRoute.children, (data) => {
+    const userStore = useUserStore();
+    await userStore.loadUser();
+    dynamicRoute.children = __.filter(fixedDynamicChildren, (data) => {
         // @ts-ignore
         return hasPerm(data.meta.has) && hasAnyPerm(data.meta.hasAny);
     })
 }
 
+export const resetDynamicRoutes = () => {
+    routeGeneration++;
+    routeLoadPromise = null;
+    if (router.hasRoute('backend')) {
+        router.removeRoute('backend');
+    }
+    menuTree.splice(0, menuTree.length, ...staticMenuTree);
+    dynamicRoute.children = [...fixedDynamicChildren];
+};
+
+/**
+ * 用于退出登录时中断“正在加载动态路由”的旧会话请求。
+ * 仅检查 backend 是否已注册不够，因为请求可能还停留在接口等待阶段。
+ */
+export const isDynamicLoading = () => routeLoadPromise !== null;
+
 // 加载最终menu
 export const loadDynamicRoutes = async () => {
-
     const menuStore = useMenuStore();
+    if (menuStore.isDynamicReady() && router.hasRoute('backend')) return;
+    if (routeLoadPromise) return routeLoadPromise;
 
-    await filterDynamic();
+    const generation = routeGeneration;
+    const request = (async () => {
+        await filterDynamic();
+        const treedMenus = await menuStore.getTree();
+        if (generation !== routeGeneration) return;
 
-    const treedMenus = await menuStore.getTree();
-
-    // 防重复加载，忘记怎么回事了
-    if (len == menuTree.length) {
+        // 权限可能在不同账号之间切换，不能复用上一个账号已经拼接过的全局路由。
+        if (router.hasRoute('backend')) {
+            router.removeRoute('backend');
+        }
+        menuTree.splice(0, menuTree.length, ...staticMenuTree);
         menuTree.push(...recursiveBuildRoutes(treedMenus, "/backend"));
         dynamicRoute.children.push(...menuTree);
         router.addRoute(dynamicRoute);
-    }
-    menuStore.setMenu(menuTree);
+        menuStore.setMenu(menuTree);
+    })();
+    routeLoadPromise = request;
+    request.then(
+        () => { if (routeLoadPromise === request) routeLoadPromise = null; },
+        () => { if (routeLoadPromise === request) routeLoadPromise = null; },
+    );
+    return request;
 }
