@@ -102,3 +102,24 @@
 3. 大量 Redis key 时接口分页且不会长时间阻塞，value 超大时页面不崩。
 4. 过期 token 下载文件能走统一刷新/错误提示；无 download 权限用户没有操作入口。
 5. 判题详情快速打开 A/B，模拟 A 慢响应和 B 失败，页面不串数据并显示可重试错误。
+
+## 本次修复记录（2026-09-22）
+
+- 公告和文件列表继续使用后端分页筛选，前端提交查询快照，不再对当前页做伪全局过滤；公告列表接口增加 `content:notice:list` 权限。
+- 文件下载继续走统一 `binaryService`，错误 Blob 会安全解析为通用提示；下载入口使用独立的 `content:file:download` 权限，后端下载接口同步校验。
+- 缓存键接口改为有界 Redis `SCAN`，返回 `keys/nextCursor/hasMore`，前端支持“加载更多”，不再一次性读取全部 key。
+- 缓存值读取拆分为 `content:cache:read`；后端对 token、验证码、session、password、secret、refresh 等敏感键脱敏，并将超长值截断到 20,000 字符。
+- 缓存类别、键和值请求均使用 request id；切换类别、快速切换 key、删除后刷新时，旧响应不能覆盖当前选择。
+- 缓存、文件、公告 mutation API 改为返回明确 boolean，由页面在明确成功后提示，避免底层 helper 和页面重复提示或把 `false` 当成功。
+- 公告详情、公告删除、文件删除和缓存删除补充加载/失败/取消状态，避免确认框取消产生未处理 Promise。
+- 判题提交记录和测试用例日志增加列表查询快照、请求序列、失败提示和权限守卫；日志详情请求失败时保留稳定错误状态，不展示原始异常。
+- 系统时间统一通过 `formatAdminDateTime` 展示；缓存过期秒数统一转换为可读单位。
+- 公告、文件和日志小屏不再隐藏固定操作列，改为保留表格横向滚动，下载、删除和详情入口不会消失。
+- 新增 `V20260922__system_permissions.sql`，并同步更新 `db_user.sql` 与迁移脚本：缓存读取、文件下载、公告列表权限及角色授权均可迁移。
+
+## 验证记录
+
+- `pnpm run type-check`（`oj-vue`）通过。
+- `pnpm run build-only`（`oj-vue`）通过；仅保留项目原有动态导入和大 chunk 警告。
+- Java 11：`mvn -pl content-service -am -DskipTests compile` 通过。
+- `git diff --check` 和 `bash -n resources/sql/migration/apply.sh` 通过。
