@@ -170,7 +170,8 @@ export const constRoutes =  [
         name: "profile",
         component: () => import('@/views/profile/Profile.vue'),
         meta: {
-          name: "个人主页"
+          name: "个人主页",
+          disableLayoutTransition: true
         }
       },
       {
@@ -259,10 +260,16 @@ const router = createRouter({
 
 
 
-router.beforeEach(async (to) => {
-  try {
-    NProgress.start()
-  } catch (ignore) {}
+router.beforeEach(async (to, from) => {
+  const isProfileTabChange = to.name === 'profile'
+    && from.name === 'profile'
+    && to.path === from.path
+    && to.query.tab !== from.query.tab;
+  if (!isProfileTabChange) {
+    try {
+      NProgress.start()
+    } catch (ignore) {}
+  }
   const needLogin = to.matched.some((v) => v.meta.requireAuth);
   const isLoginAccess = to.matched.some(v => v.meta.isLoginAccess);
   const isMatched = to.matched.length > 0;

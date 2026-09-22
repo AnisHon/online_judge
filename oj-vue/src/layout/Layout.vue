@@ -9,9 +9,10 @@
             <div class="main-content__inner">
               <router-view v-slot="{Component, route}">
 
-                <transition name="el-zoom-in-top" mode="out-in">
+                <transition :name="route.meta.disableLayoutTransition ? '' : 'el-zoom-in-top'" mode="out-in">
                   <keep-alive include="Home,ProblemSet,Contest,List,Homework,Solution">
-                    <component :is="Component" :key="route.fullPath" />
+                    <component :is="Component"
+                               :key="route.meta.disableLayoutTransition ? route.path : route.fullPath" />
                   </keep-alive>
 
                 </transition>

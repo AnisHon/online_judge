@@ -533,7 +533,7 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 .profile-sidebar {
   display: grid;
   gap: 12px;
-  align-self: stretch;
+  align-self: start;
   grid-column: 2;
   grid-row: 1;
 }
@@ -623,6 +623,7 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 .profile-main {
   display: flex;
   min-width: 0;
+  min-height: 520px;
   align-self: stretch;
   grid-column: 1;
   grid-row: 1;
@@ -631,11 +632,12 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 .profile-transition {
   width: 100%;
   min-width: 0;
-  min-height: 520px;
+  min-height: 100%;
   overflow: clip;
 }
 
 .profile-tabs {
+  align-self: start;
   display: grid;
   gap: 5px;
   padding: 6px;
@@ -689,7 +691,7 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 .profile-panel {
   width: 100%;
   min-width: 0;
-  min-height: 520px;
+  min-height: 100%;
   box-sizing: border-box;
   padding: 22px;
 }
@@ -904,6 +906,10 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 
   .profile-transition,
   .profile-panel {
+    min-height: 420px;
+  }
+
+  .profile-main {
     min-height: 420px;
   }
 
