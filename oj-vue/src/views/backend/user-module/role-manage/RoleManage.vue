@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref } from 'vue'
 import { Delete, EditPen, Filter, Key, Lock, Memo, MoreFilled, Plus, Refresh, RefreshRight, Search, Select, User, UserFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElTree, type FormInstance, type TableInstance } from 'element-plus'
 import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
@@ -309,18 +309,26 @@ function menuTypeRank(type: string) { return type === 'M' ? 0 : type === 'I' ? 1
 function sortMenuTree(nodes: TreedMenu[]): TreedMenu[] {
   return [...nodes].sort((a, b) => menuTypeRank(a.menu.menuType) - menuTypeRank(b.menu.menuType) || (a.menu.orderNum ?? 0) - (b.menu.orderNum ?? 0) || String(a.menu.menuName).localeCompare(String(b.menu.menuName), 'zh-CN')).map(node => ({ ...node, children: sortMenuTree(node.children || []) }))
 }
-async function loadMenuTree() {
-  const data = await getAllTreedMenu()
-  setTreeId(data)
-  menuTree.splice(0, menuTree.length, ...sortMenuTree(data))
-}
 const sameId = (left: IdType, right: IdType) => String(left) === String(right)
 
-const restorePermissionSnapshot = async (ids: IdType[], session: number) => {
+const isPermissionSessionActive = (session: number, roleId?: IdType) => {
+  if (session !== permissionSession || !openDataScope.value) return false
+  return roleId === undefined || (permissionRoleId.value !== undefined && sameId(permissionRoleId.value, roleId))
+}
+
+const restorePermissionSnapshot = async (ids: IdType[], session: number, roleId?: IdType) => {
   await nextTick()
-  if (session !== permissionSession) return
+  if (!isPermissionSessionActive(session, roleId)) return
   treeRef.value?.setCheckedKeys(ids, false)
   checkedPermissionIds.value = [...ids]
+}
+
+async function loadMenuTree(session: number, roleId: IdType) {
+  const data = await getAllTreedMenu()
+  if (!isPermissionSessionActive(session, roleId)) return false
+  setTreeId(data)
+  menuTree.splice(0, menuTree.length, ...sortMenuTree(data))
+  return true
 }
 
 const handlePermissionCheck = (_data: unknown, state: { checkedKeys: Array<IdType | number | string> }) => {
@@ -337,10 +345,10 @@ const handlePermissionCheck = (_data: unknown, state: { checkedKeys: Array<IdTyp
 
 const loadRolePermissions = async (roleId: IdType, session: number) => {
   const data = await listRoleMenu(roleId)
-  if (session !== permissionSession) return
+  if (!isPermissionSessionActive(session, roleId)) return
   const ids = data.map(item => item.menuId)
   originalPermissionIds.value = [...ids]
-  await restorePermissionSnapshot(ids, session)
+  await restorePermissionSnapshot(ids, session, roleId)
 }
 
 const handleMenu = async (row: RoleView) => {
@@ -352,7 +360,7 @@ const handleMenu = async (row: RoleView) => {
   loadingRole.value = true
   checkedPermissionIds.value = []
   try {
-    await loadMenuTree()
+    if (!await loadMenuTree(session, row.roleId)) return
     await loadRolePermissions(row.roleId, session)
   } catch { if (session === permissionSession) ElMessage.error('角色权限加载失败，请稍后重试') } finally { if (session === permissionSession) loadingRole.value = false }
 }
@@ -374,7 +382,7 @@ const submitMenu = async () => {
   permissionSaving.value = true
   try {
     const results = await Promise.allSettled(requests)
-    if (session !== permissionSession) return
+    if (!isPermissionSessionActive(session, roleId)) return
     if (results.some(result => result.status === 'rejected')) {
       ElMessage.error('权限保存未完成，请刷新后确认当前授权状态')
       await loadRolePermissions(roleId, session)
@@ -394,6 +402,10 @@ const cancelMenu = () => {
   originalPermissionIds.value = []
   checkedPermissionIds.value = []
 }
+
+onBeforeUnmount(() => {
+  permissionSession += 1
+})
 
 getList()
 </script>
