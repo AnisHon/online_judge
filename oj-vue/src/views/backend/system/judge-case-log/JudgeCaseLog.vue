@@ -8,7 +8,7 @@
     :stats="summaryStats"
   >
     <template #actions>
-      <el-button :icon="Refresh" :loading="loading" @click="getList">刷新日志</el-button>
+      <el-button v-has="'problem:judge:case:read'" :icon="Refresh" :loading="loading" @click="getList">刷新日志</el-button>
     </template>
 
     <section class="log-panel">
@@ -19,8 +19,8 @@
           <p>这里展示每个测试用例的状态和判题机错误，不向普通用户暴露内部细节。</p>
         </div>
         <div class="filter-actions">
-          <el-button plain :icon="RefreshRight" @click="resetQuery">重置</el-button>
-          <el-button type="primary" :icon="Search" :loading="loading" @click="search">查询</el-button>
+          <el-button v-has="'problem:judge:case:read'" plain :icon="RefreshRight" @click="resetQuery">重置</el-button>
+          <el-button v-has="'problem:judge:case:read'" type="primary" :icon="Search" :loading="loading" @click="search">查询</el-button>
         </div>
       </div>
 
@@ -122,14 +122,18 @@ const summaryStats = computed(() => [
   {label: '当前通过', value: records.value.filter(item => judgeStatusMeta(item.status).value === 'ACCEPT').length, tone: 'green'},
 ])
 
+let listRequestId = 0
 const getList = async () => {
+  const requestId = ++listRequestId
+  const querySnapshot = {...query}
   loading.value = true
   try {
-    const data = await getAdminCaseLogs(query)
+    const data = await getAdminCaseLogs(querySnapshot)
+    if (requestId !== listRequestId) return
     records.value = data?.data || []
     total.value = data?.totalRecords || 0
   } finally {
-    loading.value = false
+    if (requestId === listRequestId) loading.value = false
   }
 }
 

@@ -10,7 +10,7 @@
     <template #actions>
       <el-button :icon="ArrowLeft" @click="router.push({ name: 'role-manage' })">返回角色管理</el-button>
       <el-button :icon="Refresh" :loading="isLoading" @click="getList">刷新成员</el-button>
-      <el-button v-has="'user:role:grant'" type="primary" :icon="Plus" @click="handleAdd()">分配成员</el-button>
+      <el-button v-has="'user:role:grant'" type="primary" :disabled="!roleReady" :icon="Plus" @click="handleAdd()">分配成员</el-button>
     </template>
 
     <section class="member-panel">
@@ -41,12 +41,12 @@
       </div>
 
       <div class="list-toolbar">
-        <div class="list-toolbar__left"><span class="selection-status" :class="{ 'has-selection': selectedIds.length }"><el-icon><Select /></el-icon>{{ selectedIds.length ? `已选择 ${selectedIds.length} 位成员` : '未选择成员' }}</span><el-button v-has="'user:role:revoke'" type="danger" plain :disabled="!selectedIds.length || actionLoading" :icon="Remove" @click="handleRevoke()">批量撤销</el-button></div>
+        <div class="list-toolbar__left"><span class="selection-status" :class="{ 'has-selection': selectedIds.length }"><el-icon><Select /></el-icon>{{ selectedIds.length ? `已选择 ${selectedIds.length} 位成员` : '未选择成员' }}</span><el-button v-has="'user:role:revoke'" type="danger" plain :disabled="!selectedIds.length || actionLoading || !roleReady" :icon="Remove" @click="handleRevoke()">批量撤销</el-button></div>
         <RightToolBar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
       </div>
 
-      <el-table v-loading="isLoading" class="member-table" :data="tableList" row-key="userId" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="52" align="center" reserve-selection />
+      <el-table v-loading="isLoading" ref="memberTable" class="member-table" :data="tableList" row-key="userId" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="52" align="center" />
         <el-table-column v-if="columns[0].visible" label="成员" min-width="300">
           <template #default="{ row }"><div class="user-cell"><span class="user-avatar" :class="{ 'is-banned': row.status === UserStatus.BANNED }">{{ userInitial(row) }}</span><div class="user-cell__main"><div class="user-cell__title"><strong :title="row.nikeName || row.userName">{{ row.nikeName || '未设置昵称' }}</strong><span v-if="row.status === UserStatus.BANNED" class="mini-badge">已封禁</span></div><span class="user-cell__sub"><span>@{{ row.userName }}</span><span class="separator">·</span><span :title="String(row.userId)">ID {{ shortId(row.userId) }}</span></span></div></div></template>
         </el-table-column>
@@ -63,7 +63,7 @@
     <el-dialog v-model="open" class="grant-dialog" title="分配角色成员" width="min(920px, 94vw)" append-to-body destroy-on-close>
       <div class="dialog-intro"><span class="dialog-intro__icon"><el-icon><UserFilled /></el-icon></span><div><strong>为“{{ roleName }}”选择成员</strong><p>支持搜索、跨页勾选；已选成员提交后会获得该角色的全部授权。</p></div><span class="dialog-selected">已选 {{ grantSelectedIds.length }} 人</span></div>
       <UserViewer v-model:ids="grantSelectedIds" :loading="isGranting" />
-      <template #footer><el-button @click="cancel">取消</el-button><el-button v-has="'user:role:grant'" type="primary" :loading="isGranting" @click="submit">确认分配</el-button></template>
+      <template #footer><el-button :disabled="isGranting" @click="cancel">取消</el-button><el-button v-has="'user:role:grant'" type="primary" :loading="isGranting" @click="submit">确认分配</el-button></template>
     </el-dialog>
   </ContestSubPageShell>
 </template>
@@ -77,17 +77,19 @@ import ContestSubPageShell from '@/views/backend/teacher/contest-manage/componen
 import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
 import Pagination from '@/components/pageination/Pagination.vue'
 import UserViewer from '@/components/user-viewer/UserViewer.vue'
-import { debouncedGetRoleUser, type QueryRoleUser, type UserView, UserStatus } from '@/api/user'
-import { debouncedGrant, revoke, type UserRoleRelation } from '@/api/role'
+import { getRoleUser, type QueryRoleUser, type UserView, UserStatus } from '@/api/user'
+import { grant, revoke } from '@/api/role'
 import type { IdType } from '@/api/common'
 import { useColumn } from '@/hooks/useColumn'
 import { getRole, type RoleView } from '@/api/role'
+import type { TableInstance } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
 const roleId = String(route.params.id || '')
 const roleName = ref(`角色 ${roleId}`)
 const role = ref<RoleView>()
+const roleReady = ref(false)
 const queryParams = reactive<QueryRoleUser>({ currentPage: 1, pageSize: 20, roleId, userId: undefined, username: undefined, nikeName: undefined, email: undefined })
 const tableList = reactive<UserView[]>([])
 const total = ref(0)
@@ -96,14 +98,30 @@ const grantSelectedIds = reactive<IdType[]>([])
 const showSearch = ref(true)
 const open = ref(false)
 const actionLoading = ref(false)
-const addForm = reactive<UserRoleRelation[]>([])
+const memberTable = ref<TableInstance>()
 const { columns } = useColumn(['成员', '邮箱地址', '账号状态', '加入时间', '备注'])
 
 const activeFilterCount = computed(() => [queryParams.username, queryParams.nikeName, queryParams.email, queryParams.userId].filter(value => value !== undefined && value !== '').length)
 const summaryStats = computed(() => [{ label: '角色成员', value: total.value, tone: 'blue' }, { label: '当前页正常', value: tableList.filter(user => user.status === UserStatus.NORMAL).length, tone: 'green' }, { label: '当前页封禁', value: tableList.filter(user => user.status === UserStatus.BANNED).length, tone: 'amber' }, { label: '已选择', value: selectedIds.value.length, tone: 'violet' }])
 
-const { loading, isLoading, get: getUser } = debouncedGetRoleUser(queryParams, data => { tableList.splice(0, tableList.length, ...data.data); total.value = data.totalRecords; selectedIds.value = [] })
-const getList = () => { loading(); getUser() }
+const isLoading = ref(false)
+let listRequestId = 0
+const getList = async () => {
+  const requestId = ++listRequestId
+  isLoading.value = true
+  try {
+    const data = await getRoleUser({...queryParams})
+    if (requestId !== listRequestId) return
+    tableList.splice(0, tableList.length, ...data.data)
+    total.value = data.totalRecords
+    selectedIds.value = []
+    memberTable.value?.clearSelection()
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('角色成员加载失败，请稍后重试')
+  } finally {
+    if (requestId === listRequestId) isLoading.value = false
+  }
+}
 
 function userInitial(user: UserView) { return String(user.nikeName || user.userName || '?').slice(0, 1).toUpperCase() }
 function shortId(value: IdType) { const text = String(value); return text.length > 18 ? `${text.slice(0, 8)}…${text.slice(-6)}` : text }
@@ -119,10 +137,16 @@ async function loadRole() {
     const data = await getRole({ asc: true, currentPage: 1, pageSize: 1, roleId })
     role.value = data.data[0]
     if (role.value?.roleName) roleName.value = role.value.roleName
-  } catch { /* 页面仍可使用角色 ID 管理成员 */ }
+    roleReady.value = Boolean(role.value)
+    if (!roleReady.value) ElMessage.error('角色不存在或已被删除')
+  } catch {
+    roleReady.value = false
+    ElMessage.error('角色信息加载失败，暂时不能管理成员')
+  }
 }
 
 const handleRevoke = async (row?: UserView) => {
+  if (!roleReady.value) return
   const ids = row ? [row.userId] : selectedIds.value
   if (!ids.length) { ElMessage.warning('请先选择要撤销的成员'); return }
   const message = row ? `确定撤销用户“${row.nikeName || row.userName}”的角色吗？` : `确定撤销选中的 ${ids.length} 位成员吗？`
@@ -141,16 +165,29 @@ const handleRevoke = async (row?: UserView) => {
 
 const handleAdd = () => { grantSelectedIds.splice(0, grantSelectedIds.length); open.value = true }
 const cancel = () => { open.value = false; grantSelectedIds.splice(0, grantSelectedIds.length) }
-const { loading: startGrantLoading, isLoading: isGranting, add } = debouncedGrant(addForm, () => { ElMessage.success('角色成员已更新'); cancel(); getList() })
-const submit = () => {
+const isGranting = ref(false)
+const submit = async () => {
+  if (!roleReady.value) return
   if (!grantSelectedIds.length) { ElMessage.warning('请至少选择一位用户'); return }
-  addForm.splice(0, addForm.length, ...grantSelectedIds.map(userId => ({ roleId, userId })))
-  startGrantLoading()
-  add()
+  const relations = grantSelectedIds.map(userId => ({ roleId, userId }))
+  isGranting.value = true
+  try {
+    await grant(relations)
+    ElMessage.success('角色成员已更新')
+    cancel()
+    getList()
+  } catch {
+    ElMessage.error('角色成员分配失败，请稍后重试')
+  } finally {
+    isGranting.value = false
+  }
 }
 
-loadRole()
-getList()
+const initialize = async () => {
+  await loadRole()
+  if (roleReady.value) getList()
+}
+initialize()
 </script>
 
 <style lang="scss" scoped>

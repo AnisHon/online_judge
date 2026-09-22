@@ -10,7 +10,7 @@ import com.anishan.content.domain.entity.Notice;
 import com.anishan.content.domain.entity.NoticeContent;
 import com.anishan.content.service.NoticeContentService;
 import com.anishan.content.service.NoticeService;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +35,7 @@ public class NoticeController {
 
     @GetMapping("/recent")
     public R<List<NoticeDto>> recent() {
-        LambdaUpdateWrapper<Notice> wrapper = Wrappers.lambdaUpdate(Notice.class)
+        LambdaQueryWrapper<Notice> wrapper = Wrappers.lambdaQuery(Notice.class)
                 .orderByDesc(Notice::getCreateTime);
         Page<Notice> page = new Page<>(1, 10);
         List<Notice> list = noticeService.list(page, wrapper);
@@ -59,10 +60,18 @@ public class NoticeController {
 
 
     @GetMapping("/list")
-    public R<PagedResult<NoticeDto>> getNoticeList(PagedQuery<Notice> query) {
+    public R<PagedResult<NoticeDto>> getNoticeList(PagedQuery<Notice> query,
+                                                   @RequestParam(required = false) String keyword,
+                                                   @RequestParam(required = false) Boolean topUp) {
         Page<Notice> page = query.page();
-        LambdaUpdateWrapper<Notice> wrapper = Wrappers.lambdaUpdate(Notice.class)
+        LambdaQueryWrapper<Notice> wrapper = Wrappers.lambdaQuery(Notice.class)
                 .orderByDesc(Notice::getCreateTime);
+        if (StringUtils.hasText(keyword)) {
+            wrapper.like(Notice::getTitle, keyword.trim());
+        }
+        if (topUp != null) {
+            wrapper.eq(Notice::getTopUp, topUp);
+        }
 
         page = noticeService.page(page, wrapper);
 

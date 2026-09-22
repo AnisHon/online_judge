@@ -68,7 +68,7 @@
         <RightToolBar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
       </div>
 
-      <el-table v-loading="isLoading" class="role-table" :data="tableList" row-key="roleId" @selection-change="handleSelectionChange">
+      <el-table ref="tableRef" v-loading="isLoading" class="role-table" :data="tableList" row-key="roleId" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="52" align="center" />
         <el-table-column v-if="columns[0].visible" label="角色" min-width="290">
           <template #default="{ row }">
@@ -136,7 +136,7 @@
           <el-form-item label="内部备注" prop="remark"><el-input v-model="form.remark" type="textarea" :rows="4" maxlength="450" show-word-limit placeholder="记录角色用途、适用范围或维护说明" /></el-form-item>
         </section>
       </el-form>
-      <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">{{ dialogState === 'add' ? '创建角色' : '保存修改' }}</el-button></template>
+      <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitForm">{{ dialogState === 'add' ? '创建角色' : '保存修改' }}</el-button></template>
     </el-dialog>
 
     <el-dialog v-model="openDataScope" class="permission-dialog" title="配置资源权限" width="min(680px, 92vw)" append-to-body destroy-on-close>
@@ -147,7 +147,7 @@
       <div v-loading="loadingRole" class="permission-tree-wrap">
         <el-tree ref="treeRef" :data="menuTree" node-key="id" show-checkbox check-strictly :expand-on-click-node="false" :default-expand-all="false" :props="treeProps" empty-text="暂无资源权限" @check="handlePermissionCheck" />
       </div>
-      <template #footer><el-button @click="cancelMenu">取消</el-button><el-button type="primary" :loading="isGrantLoading || isRevokeLoading" @click="submitMenu">保存权限</el-button></template>
+      <template #footer><el-button :disabled="permissionSaving" @click="cancelMenu">取消</el-button><el-button type="primary" :loading="permissionSaving" :disabled="loadingRole" @click="submitMenu">保存权限</el-button></template>
     </el-dialog>
   </ContestSubPageShell>
 </template>
@@ -155,12 +155,12 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref } from 'vue'
 import { Delete, EditPen, Filter, Key, Lock, Memo, MoreFilled, Plus, Refresh, RefreshRight, Search, Select, User, UserFilled } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox, ElTree, type FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox, ElTree, type FormInstance, type TableInstance } from 'element-plus'
 import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
 import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
 import Pagination from '@/components/pageination/Pagination.vue'
-import { debouncedAddRole, debouncedGetRole, debouncedUpdateRole, dict, refreshRoleCache, removeRole, RoleStatus, type QueryRole, type RoleForm, type RoleView } from '@/api/role'
-import { debouncedGrant, debouncedRevoke, listRoleMenu, type MenuRoleRelation, type TreedMenu } from '@/api/auth/menu'
+import { addRole, dict, getRole as fetchRoles, refreshRoleCache, removeRole, RoleStatus, type QueryRole, type RoleForm, type RoleView, updateRole } from '@/api/role'
+import { grant as grantMenu, listRoleMenu, revoke as revokeMenu, type MenuRoleRelation, type TreedMenu } from '@/api/auth/menu'
 import { getAllTreedMenu } from '@/api/menu'
 import { setTreeId } from '@/utils/menu'
 import { useColumn } from '@/hooks/useColumn'
@@ -180,7 +180,9 @@ const openDataScope = ref(false)
 const dialogState = ref<DialogState>('add')
 const showSearch = ref(true)
 const actionLoading = ref(false)
+const submitting = ref(false)
 const tableList = reactive<RoleView[]>([])
+const tableRef = ref<TableInstance>()
 const total = ref(0)
 const selectedIds = ref<IdType[]>([])
 const { columns } = useColumn(['角色', '状态', '创建时间', '备注'])
@@ -202,12 +204,24 @@ const summaryStats = computed(() => [
   { label: '已选择', value: selectedIds.value.length, tone: 'violet' },
 ])
 
-const { loading, isLoading, get: getRole } = debouncedGetRole(queryParams, data => {
-  tableList.splice(0, tableList.length, ...data.data)
-  total.value = data.totalRecords
-  selectedIds.value = []
-})
-const getList = () => { loading(); getRole() }
+const isLoading = ref(false)
+let listRequestId = 0
+const getList = async () => {
+  const requestId = ++listRequestId
+  isLoading.value = true
+  try {
+    const data = await fetchRoles({...queryParams})
+    if (requestId !== listRequestId) return
+    tableList.splice(0, tableList.length, ...data.data)
+    total.value = data.totalRecords
+    selectedIds.value = []
+    tableRef.value?.clearSelection()
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('角色列表加载失败，请稍后重试')
+  } finally {
+    if (requestId === listRequestId) isLoading.value = false
+  }
+}
 
 function roleStatusText(status: RoleStatus) { return status === RoleStatus.NORMAL ? '正常' : '停用' }
 function statusTone(status: RoleStatus) { return status === RoleStatus.NORMAL ? 'green' : 'amber' }
@@ -231,12 +245,20 @@ const handleUpdate = (row?: RoleView) => {
   open.value = true
 }
 
-const { loading: updateLoading, isLoading: isUpdateLoading, update } = debouncedUpdateRole(form, finishDialog)
-const { loading: addLoading, isLoading: isAddLoading, add } = debouncedAddRole(form, finishDialog)
 const submitForm = async () => {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
-  if (dialogState.value === 'add') { addLoading(); add() } else { updateLoading(); update() }
+  submitting.value = true
+  try {
+    if (dialogState.value === 'add') await addRole({...form})
+    else await updateRole({...form})
+    ElMessage.success(dialogState.value === 'add' ? '角色已创建' : '角色已更新')
+    finishDialog()
+  } catch {
+    ElMessage.error(dialogState.value === 'add' ? '角色创建失败，请稍后重试' : '角色更新失败，请稍后重试')
+  } finally {
+    submitting.value = false
+  }
 }
 function finishDialog() { open.value = false; resetForm(); getList() }
 const cancel = () => { open.value = false; resetForm() }
@@ -270,7 +292,8 @@ const originalPermissionIds = ref<IdType[]>([])
 const checkedPermissionIds = ref<IdType[]>([])
 const delArray = ref<MenuRoleRelation[]>([])
 const addArray = ref<MenuRoleRelation[]>([])
-let pendingPermissionRequests = 0
+const permissionSaving = ref(false)
+let permissionSession = 0
 
 const treeProps = reactive<TreeOptionProps>({
   children: 'children',
@@ -284,24 +307,14 @@ function sortMenuTree(nodes: TreedMenu[]): TreedMenu[] {
   return [...nodes].sort((a, b) => menuTypeRank(a.menu.menuType) - menuTypeRank(b.menu.menuType) || (a.menu.orderNum ?? 0) - (b.menu.orderNum ?? 0) || String(a.menu.menuName).localeCompare(String(b.menu.menuName), 'zh-CN')).map(node => ({ ...node, children: sortMenuTree(node.children || []) }))
 }
 async function loadMenuTree() {
-  if (menuTree.length) return
   const data = await getAllTreedMenu()
   setTreeId(data)
-  menuTree.push(...sortMenuTree(data))
+  menuTree.splice(0, menuTree.length, ...sortMenuTree(data))
 }
 const handlePermissionCheck = () => { checkedPermissionIds.value = treeRef.value?.getCheckedKeys() as IdType[] || [] }
 
-const finishPermissionRequest = () => {
-  pendingPermissionRequests -= 1
-  if (pendingPermissionRequests <= 0) {
-    ElMessage.success('角色权限已更新')
-    cancelMenu()
-  }
-}
-const { isLoading: isGrantLoading, loading: grantLoading, add: grant } = debouncedGrant(addArray.value, finishPermissionRequest)
-const { isLoading: isRevokeLoading, loading: revokeLoading, add: revoke } = debouncedRevoke(delArray.value, finishPermissionRequest)
-
 const handleMenu = async (row: RoleView) => {
+  const session = ++permissionSession
   form.roleId = row.roleId
   form.roleName = row.roleName
   openDataScope.value = true
@@ -310,26 +323,40 @@ const handleMenu = async (row: RoleView) => {
   try {
     await loadMenuTree()
     const data = await listRoleMenu(row.roleId)
+    if (session !== permissionSession) return
     originalPermissionIds.value = data.map(item => item.menuId)
     await nextTick()
     treeRef.value?.setCheckedKeys(originalPermissionIds.value, false)
     checkedPermissionIds.value = [...originalPermissionIds.value]
-  } catch { ElMessage.error('角色权限加载失败，请稍后重试') } finally { loadingRole.value = false }
+  } catch { if (session === permissionSession) ElMessage.error('角色权限加载失败，请稍后重试') } finally { if (session === permissionSession) loadingRole.value = false }
 }
 
-const submitMenu = () => {
+const submitMenu = async () => {
   if (!form.roleId) return
   const current = (treeRef.value?.getCheckedKeys() || []) as IdType[]
   const removed = originalPermissionIds.value.filter(id => !current.some(item => String(item) === String(id)))
   const added = current.filter(id => !originalPermissionIds.value.some(item => String(item) === String(id)))
   delArray.value.splice(0, delArray.value.length, ...removed.map(menuId => ({ roleId: form.roleId!, menuId })))
   addArray.value.splice(0, addArray.value.length, ...added.map(menuId => ({ roleId: form.roleId!, menuId })))
-  pendingPermissionRequests = Number(Boolean(removed.length)) + Number(Boolean(added.length))
-  if (!pendingPermissionRequests) { ElMessage.info('权限没有变化'); cancelMenu(); return }
-  if (removed.length) { revokeLoading(); revoke() }
-  if (added.length) { grantLoading(); grant() }
+  if (!removed.length && !added.length) { ElMessage.info('权限没有变化'); cancelMenu(); return }
+  const roleId = form.roleId
+  const requests: Promise<void>[] = []
+  if (removed.length) requests.push(revokeMenu(removed.map(menuId => ({ roleId, menuId }))))
+  if (added.length) requests.push(grantMenu(added.map(menuId => ({ roleId, menuId }))))
+  permissionSaving.value = true
+  try {
+    const results = await Promise.allSettled(requests)
+    if (results.some(result => result.status === 'rejected')) {
+      ElMessage.error('权限保存未完成，请刷新后确认当前授权状态')
+      return
+    }
+    ElMessage.success('角色权限已更新')
+    cancelMenu()
+  } finally {
+    permissionSaving.value = false
+  }
 }
-const cancelMenu = () => { openDataScope.value = false; originalPermissionIds.value = []; checkedPermissionIds.value = []; delArray.value.length = 0; addArray.value.length = 0; pendingPermissionRequests = 0 }
+const cancelMenu = () => { permissionSession += 1; openDataScope.value = false; originalPermissionIds.value = []; checkedPermissionIds.value = []; delArray.value.length = 0; addArray.value.length = 0 }
 
 getList()
 </script>

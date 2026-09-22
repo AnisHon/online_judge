@@ -16,13 +16,18 @@ export interface Notice extends NoticeDto {
     createTime: Date;
 }
 
+export interface NoticeQuery extends PagedType {
+    keyword?: string;
+    topUp?: boolean;
+}
+
 
 export const updateNotice = async (notice: NoticeDto) => {
     await update(notice, "/content-api/notice");
 }
 
-export const listNotice = async (page: PagedType) => {
-    const {data} = await getWithParams<PagedResponse<Notice>, PagedType>("/content-api/notice/list", page);
+export const listNotice = async (page: NoticeQuery) => {
+    const {data} = await getWithParams<PagedResponse<Notice>, NoticeQuery>("/content-api/notice/list", page);
     return data;
 }
 

@@ -13,9 +13,13 @@ export interface FileInfo {
     uploadTime: Date;
 }
 
+export interface FileInfoQuery extends PagedType {
+    keyword?: string;
+}
 
-export const listFileInfo = async (page: PagedType) => {
-    const {data} = await getWithParams<PagedResponse<FileInfo>, PagedType>("/content-api/fileInfo/list", page);
+
+export const listFileInfo = async (page: FileInfoQuery) => {
+    const {data} = await getWithParams<PagedResponse<FileInfo>, FileInfoQuery>("/content-api/fileInfo/list", page);
     return data;
 }
 

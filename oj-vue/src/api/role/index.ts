@@ -57,9 +57,13 @@ const removeRole = async (id: IdType | IdType[]) => {
 
 
 const refreshRoleCache = async () => {
-    await del("/user-api/role/refresh")
-        .then(() => ElNotification.success("刷新成功"))
-        .catch(() => ElNotification.warning("刷新失败"));
+    try {
+        await del("/user-api/role/refresh");
+        ElNotification.success("刷新成功");
+    } catch (error) {
+        ElNotification.warning("刷新失败");
+        throw error;
+    }
 }
 
 const addRole = async (form: RoleForm) => {
@@ -141,11 +145,11 @@ export {
     updateRole,
     debouncedUpdateRole,
     debouncedGrant,
+    grant,
     RoleStatus,
     refreshRoleCache,
     revoke,
     dict
 }
-
 
 

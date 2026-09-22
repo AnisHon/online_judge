@@ -8,7 +8,7 @@
     :stats="summaryStats"
   >
     <template #actions>
-      <el-button :icon="Refresh" :loading="loading" @click="refreshCurrent">刷新缓存</el-button>
+      <el-button v-has="'content:cache:list'" :icon="Refresh" :loading="loading" @click="refreshCurrent">刷新缓存</el-button>
     </template>
 
     <section class="cache-panel">
@@ -115,6 +115,9 @@ const keyList = ref<string[]>([])
 const prefix = ref('')
 const selectedKey = ref('')
 const cacheInfo = ref<CacheInfo>({ key: '', value: '', expireTime: undefined })
+let listRequestId = 0
+let keyRequestId = 0
+let valueRequestId = 0
 
 const summaryStats = computed(() => [
   { label: '缓存类别', value: cacheList.value.length, tone: 'violet' },
@@ -124,24 +127,32 @@ const summaryStats = computed(() => [
 ])
 
 const getCacheList = async () => {
+  const requestId = ++listRequestId
   loading.value = true
   try {
-    cacheList.value = (await listCacheDesc()) || []
+    const data = (await listCacheDesc()) || []
+    if (requestId === listRequestId) cacheList.value = data
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('缓存类别加载失败，请稍后重试')
   } finally {
-    loading.value = false
+    if (requestId === listRequestId) loading.value = false
   }
 }
 
-const getKeyList = async () => {
-  if (!prefix.value) {
+const getKeyList = async (prefixValue = prefix.value) => {
+  const requestId = ++keyRequestId
+  if (!prefixValue) {
     keyList.value = []
     return
   }
   keysLoading.value = true
   try {
-    keyList.value = (await getCacheKeys(prefix.value)) || []
+    const data = (await getCacheKeys(prefixValue)) || []
+    if (requestId === keyRequestId && prefix.value === prefixValue) keyList.value = data
+  } catch {
+    if (requestId === keyRequestId) ElMessage.error('缓存键加载失败，请稍后重试')
   } finally {
-    keysLoading.value = false
+    if (requestId === keyRequestId) keysLoading.value = false
   }
 }
 
@@ -149,12 +160,18 @@ const handleDescClickRow = async (row: CacheDesc) => {
   prefix.value = row.type
   selectedKey.value = ''
   cacheInfo.value = { key: '', value: '', expireTime: undefined }
-  await getKeyList()
+  await getKeyList(row.type)
 }
 
 const handleKeyClickRow = async (row: string) => {
+  const requestId = ++valueRequestId
   selectedKey.value = row
-  cacheInfo.value = await getCacheInfo(row)
+  try {
+    const data = await getCacheInfo(row)
+    if (requestId === valueRequestId && selectedKey.value === row) cacheInfo.value = data
+  } catch {
+    if (requestId === valueRequestId) ElMessage.error('缓存内容加载失败，请稍后重试')
+  }
 }
 
 const handleDelete = async (key: string) => {
@@ -168,14 +185,14 @@ const handleDelete = async (key: string) => {
     selectedKey.value = ''
     cacheInfo.value = { key: '', value: '', expireTime: undefined }
   }
-  await getKeyList()
+  await getKeyList(prefix.value)
   ElMessage.success('缓存已删除')
 }
 
 const refreshCurrent = async () => {
   await getCacheList()
-  await getKeyList()
-  if (selectedKey.value) cacheInfo.value = await getCacheInfo(selectedKey.value)
+  await getKeyList(prefix.value)
+  if (selectedKey.value) await handleKeyClickRow(selectedKey.value)
 }
 
 onMounted(getCacheList)

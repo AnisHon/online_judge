@@ -48,6 +48,7 @@ public class CacheController {
 
     @ApiOperation("列出所有的缓存类型")
     @GetMapping("/type")
+    @PreAuthorize("hasAuthority('content:cache:list')")
     public R<List<CacheTypeVo>> type() {
         return R.success(cacheTypes);
     }

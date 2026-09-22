@@ -156,10 +156,13 @@ const debouncedUpdateUser = (form: UserUpdateForm, success: successCallback<void
 
 const getUser = async (queryData: QueryUser): Promise<PagedResponse<UserView>> => {
     // 后端 UserState 按枚举名称绑定查询参数，不能把数字枚举值直接传成 "0/1"。
-    const statusValue = String(queryData.status ?? '').toUpperCase();
     const status = queryData.status === undefined
         ? undefined
-        : statusValue === String(UserStatus.BANNED) || statusValue === 'BANNED' ? 'BANNED' : 'NORMAL';
+        : queryData.status === UserStatus.BANNED || String(queryData.status).toUpperCase() === 'BANNED'
+            ? 'BANNED'
+            : queryData.status === UserStatus.NORMAL || String(queryData.status).toUpperCase() === 'NORMAL'
+                ? 'NORMAL'
+                : undefined;
     return await fetch({...queryData, status} as unknown as QueryUser, "/user-api/user/page", "/user-api/user/query")
 }
 

@@ -34,6 +34,8 @@
           class="keyword-input"
           :prefix-icon="Search"
           placeholder="搜索文件名、路径或 MD5"
+          @keyup.enter="search"
+          @clear="search"
         />
       </div>
 
@@ -44,8 +46,9 @@
 
       <el-table
         v-loading="loading"
+        ref="tableRef"
         class="file-table"
-        :data="filteredList"
+        :data="tableList"
         row-key="fileId"
         @selection-change="handleSelectionChange"
       >
@@ -79,7 +82,7 @@
         <el-table-column label="操作" width="180" fixed="right" align="right">
           <template #default="{ row }">
             <el-space>
-              <el-button link type="primary" :icon="Download" @click="handleDownload(row)">下载</el-button>
+              <el-button v-has="'content:file:list'" link type="primary" :icon="Download" @click="handleDownload(row)">下载</el-button>
               <el-button
                 v-has="'content:file:remove'"
                 link
@@ -109,12 +112,11 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Delete, Document, Download, Folder, Refresh, Search } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, type TableInstance } from 'element-plus'
 import ContestSubPageShell from '../../teacher/contest-manage/component/ContestSubPageShell.vue'
 import Pagination from '@/components/pageination/Pagination.vue'
 import type { IdType } from '@/api/common'
-import type { PagedType } from '@/api/pagedType'
-import { type FileInfo, listFileInfo, removeFileInfo } from '@/api/file/fileInfo'
+import { type FileInfo, type FileInfoQuery, listFileInfo, removeFileInfo } from '@/api/file/fileInfo'
 import { bytesToSize } from '@/utils/byte2size'
 import { downloadFile } from '@/api/file'
 
@@ -123,17 +125,8 @@ const keyword = ref('')
 const tableList = ref<FileInfo[]>([])
 const selectedIds = ref<IdType[]>([])
 const total = ref(0)
-const queryParams = reactive<PagedType>({ currentPage: 1, pageSize: 20 })
-
-const filteredList = computed(() => {
-  const normalizedKeyword = keyword.value.trim().toLowerCase()
-  if (!normalizedKeyword) return tableList.value
-  return tableList.value.filter((item) =>
-    [item.fileName, item.filePath, item.fileMd5, item.fileType, item.fileId]
-      .map((value) => String(value || '').toLowerCase())
-      .some((value) => value.includes(normalizedKeyword)),
-  )
-})
+const tableRef = ref<TableInstance>()
+const queryParams = reactive<FileInfoQuery>({ currentPage: 1, pageSize: 20, keyword: undefined })
 
 const summaryStats = computed(() => [
   { label: '文件总数', value: total.value, tone: 'blue' },
@@ -142,17 +135,27 @@ const summaryStats = computed(() => [
   { label: '当前页', value: tableList.value.length, tone: 'amber' },
 ])
 
+let listRequestId = 0
 const getList = async () => {
+  queryParams.keyword = keyword.value.trim() || undefined
+  const requestId = ++listRequestId
+  const querySnapshot = {...queryParams}
   loading.value = true
   try {
-    const result = await listFileInfo(queryParams)
+    const result = await listFileInfo(querySnapshot)
+    if (requestId !== listRequestId) return
     tableList.value = result.data || []
     total.value = result.totalRecords || 0
     selectedIds.value = []
+    tableRef.value?.clearSelection()
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('文件列表加载失败，请稍后重试')
   } finally {
-    loading.value = false
+    if (requestId === listRequestId) loading.value = false
   }
 }
+
+const search = () => { queryParams.currentPage = 1; void getList() }
 
 const handleSelectionChange = (selection: FileInfo[]) => {
   selectedIds.value = selection.map((item) => item.fileId)

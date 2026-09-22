@@ -55,7 +55,8 @@
             plain
             icon="delete"
             size="small"
-            :disabled="multiple"
+            :disabled="multiple || isDeleting"
+            :loading="isDeleting"
             @click="handleDelete"
             v-has="'problem:list:del-problem'"
         >删除题目</el-button>
@@ -119,7 +120,7 @@
       </el-table-column>
       <el-table-column label="问题分数" align="center" prop="score" v-if="columns[9].visible" >
         <template v-slot="scope">
-          <el-input-number v-model="scope.row.tempScore" :disabled="!isEdit" @keyup.enter="$event.target.blur()"  :controls="false" :precision="2" @blur="handleScoreUpdate(scope.row)"/>
+          <el-input-number v-model="scope.row.tempScore" :disabled="!isEdit || savingScoreIds.has(String(scope.row.problemId))" @keyup.enter="$event.target.blur()"  :controls="false" :precision="2" @blur="handleScoreUpdate(scope.row)"/>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -220,6 +221,9 @@ const dragOverProblemId = ref<string | null>(null);
 const tableRef = ref<TableInstance>();
 const isLoading = ref(false);
 const isAddLoading = ref(false);
+const isDeleting = ref(false);
+const savingScoreIds = ref<Set<string>>(new Set());
+let listRequestId = 0;
 
 const hasPendingOrderChanges = computed(() => {
   return sortedTableList.value.some(row => orderSnapshot.get(String(row.problemId)) !== row.problemOrder);
@@ -231,9 +235,12 @@ const pendingOrderCount = computed(() => {
 
 // 获取列表
 const getList = async () => {
+  const requestId = ++listRequestId;
+  const currentListId = listId.value;
   isLoading.value = true;
   try {
-    const data = await getProblemsAdmin(listId.value);
+    const data = await getProblemsAdmin(currentListId);
+    if (requestId !== listRequestId || String(currentListId) !== String(listId.value)) return;
     tableList.splice(0, tableList.length, ...data);
     tableList.sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0));
     total.value = tableList.length;
@@ -244,7 +251,7 @@ const getList = async () => {
       orderSnapshot.set(String(row.problemId), row.problemOrder ?? 0);
     });
   } finally {
-    isLoading.value = false;
+    if (requestId === listRequestId) isLoading.value = false;
   }
 }
 
@@ -282,12 +289,15 @@ const handleDelete = async (row?: ProblemInListView) => {
       cancelButtonText: '取消',
       type: 'warning'
     });
+    isDeleting.value = true;
     await delProblemFromList(relations);
     ids.value = [];
     tableRef.value?.clearSelection();
     await getList();
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') throw error;
+    if (error !== 'cancel' && error !== 'close') ElMessage.error('移除题目失败，请稍后重试');
+  } finally {
+    isDeleting.value = false;
   }
 }
 
@@ -295,7 +305,7 @@ const handleDelete = async (row?: ProblemInListView) => {
 const handleAdd = () => {
   open.value = true;
 }
-const handleScoreUpdate = (data: ProblemInListView) => {
+const handleScoreUpdate = async (data: ProblemInListView) => {
   if (data.tempScore === undefined) {
     data.tempScore = data.score;
   }
@@ -304,16 +314,24 @@ const handleScoreUpdate = (data: ProblemInListView) => {
     return;
   }
   const previousScore = data.score;
+  const problemKey = String(data.problemId);
+  savingScoreIds.value = new Set(savingScoreIds.value).add(problemKey);
   data.score = data.tempScore;
-  updateProblemRelation({
-    listId: listId.value,
-    problemId: data.problemId,
-    score: data.score
-  }).catch(() => {
+  try {
+    await updateProblemRelation({
+      listId: listId.value,
+      problemId: data.problemId,
+      score: data.score
+    });
+  } catch {
     data.score = previousScore;
     data.tempScore = previousScore;
     ElMessage.error('分数保存失败，请重试');
-  });
+  } finally {
+    const next = new Set(savingScoreIds.value);
+    next.delete(problemKey);
+    savingScoreIds.value = next;
+  }
 }
 
 const handleDragStart = (row: ProblemInListView, event: DragEvent) => {

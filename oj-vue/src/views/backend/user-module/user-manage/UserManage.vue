@@ -78,7 +78,7 @@
         <RightToolBar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
       </div>
 
-      <el-table v-loading="isLoading" class="user-table" :data="tableList" row-key="userId"
+      <el-table ref="tableRef" v-loading="isLoading" class="user-table" :data="tableList" row-key="userId"
                 @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="52" align="center"/>
         <el-table-column v-if="columns[0].visible" label="用户" min-width="280">
@@ -216,7 +216,7 @@
       </el-form>
       <template #footer>
         <el-button @click="cancel">取消</el-button>
-        <el-button type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">
+        <el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitForm">
           {{ dialogState === 'add' ? '创建用户' : '保存修改' }}
         </el-button>
       </template>
@@ -240,21 +240,20 @@ import {
   Unlock,
   User
 } from '@element-plus/icons-vue'
-import {ElMessage, ElMessageBox, type FormInstance} from 'element-plus'
+import {ElMessage, ElMessageBox, type FormInstance, type TableInstance} from 'element-plus'
 import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
 import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
 import Pagination from '@/components/pageination/Pagination.vue'
 import {
   banUser,
-  debouncedAddUser,
-  debouncedGetUser,
-  debouncedUpdateUser,
+  addUser,
+  getUser,
+  updateUser,
   dict,
   type QueryUser,
   resetToDefault,
   unbanUser,
   type UserAddForm,
-  type UserUpdateForm,
   UserStatus,
   type UserView
 } from '@/api/user'
@@ -281,10 +280,9 @@ const editorForm = reactive<UserAddForm & { userId?: IdType }>({
   email: '',
   password: '',
   status: UserStatus.NORMAL,
-  role: '1',
+  role: '',
   remark: ''
 })
-const updateForm = reactive<UserUpdateForm>({})
 const ruleFormRef = ref<FormInstance>()
 const open = ref(false)
 const dialogState = ref<DialogState>('add')
@@ -292,7 +290,9 @@ const showSearch = ref(true)
 const roles = reactive<RoleView[]>([])
 const rolesLoading = ref(false)
 const actionLoading = ref(false)
+const submitting = ref(false)
 const tableList = reactive<UserView[]>([])
+const tableRef = ref<TableInstance>()
 const total = ref(0)
 const selectedIds = ref<IdType[]>([])
 const {columns} = useColumn(['用户', '邮箱地址', '用户状态', '创建时间', '奖励分', '标记'])
@@ -336,15 +336,24 @@ const formatDate = (value: Date | string | undefined) => value ? new Date(value)
   day: '2-digit'
 }) : '—'
 
-const {loading, isLoading, get: getUser} = debouncedGetUser(queryParams, (data) => {
-  tableList.length = 0;
-  tableList.push(...data.data);
-  total.value = data.totalRecords;
-  selectedIds.value = []
-})
-const getList = () => {
-  loading();
-  getUser()
+const isLoading = ref(false)
+let listRequestId = 0
+const getList = async () => {
+  const requestId = ++listRequestId
+  isLoading.value = true
+  try {
+    const data = await getUser({...queryParams})
+    if (requestId !== listRequestId) return
+    tableList.length = 0
+    tableList.push(...data.data)
+    total.value = data.totalRecords
+    selectedIds.value = []
+    tableRef.value?.clearSelection()
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('用户列表加载失败，请稍后重试')
+  } finally {
+    if (requestId === listRequestId) isLoading.value = false
+  }
 }
 const handleSelectionChange = (selection: UserView[]) => {
   selectedIds.value = selection.map((user) => user.userId)
@@ -371,13 +380,8 @@ const resetEditor = () => {
   editorForm.email = '';
   editorForm.password = '';
   editorForm.status = UserStatus.NORMAL;
-  editorForm.role = '1';
+  editorForm.role = roles[0]?.roleId || '';
   editorForm.remark = '';
-  updateForm.userId = undefined;
-  updateForm.nikeName = undefined;
-  updateForm.email = undefined;
-  updateForm.status = UserStatus.NORMAL;
-  updateForm.remark = undefined;
   ruleFormRef.value?.clearValidate()
 }
 const handleAdd = () => {
@@ -393,13 +397,6 @@ const handleUpdate = (row?: UserView) => {
   }
   resetEditor();
   Object.assign(editorForm, target, {password: ''});
-  Object.assign(updateForm, {
-    userId: target.userId,
-    nikeName: target.nikeName,
-    email: target.email,
-    status: target.status,
-    remark: target.remark
-  });
   dialogState.value = 'edit';
   open.value = true
 }
@@ -412,19 +409,26 @@ const submitForm = async () => {
     ElMessage.warning('角色列表尚未加载完成，暂时无法创建用户')
     return
   }
-  if (dialogState.value === 'add') {
-    addLoading();
-    add()
-  } else {
-    Object.assign(updateForm, {
-      userId: editorForm.userId,
-      nikeName: editorForm.nikeName,
-      email: editorForm.email,
-      status: editorForm.status,
-      remark: editorForm.remark
-    });
-    updateLoading();
-    update()
+  submitting.value = true
+  try {
+    if (dialogState.value === 'add') {
+      await addUser({...editorForm})
+    } else {
+      const payload = {
+        userId: editorForm.userId,
+        nikeName: editorForm.nikeName,
+        email: editorForm.email,
+        status: editorForm.status,
+        remark: editorForm.remark
+      }
+      await updateUser(payload)
+    }
+    ElMessage.success(dialogState.value === 'add' ? '用户已创建' : '用户已更新')
+    finishDialog()
+  } catch {
+    ElMessage.error(dialogState.value === 'add' ? '用户创建失败，请稍后重试' : '用户更新失败，请稍后重试')
+  } finally {
+    submitting.value = false
   }
 }
 const finishDialog = () => {
@@ -432,9 +436,6 @@ const finishDialog = () => {
   resetEditor();
   getList()
 }
-const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateUser(updateForm, finishDialog)
-const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddUser(editorForm, finishDialog)
-
 const isCancelled = (error: unknown) => error === 'cancel' || error === 'close'
 const handleBan = async (row?: UserView) => {
   const ids = row ? [row.userId] : selectedIds.value;
@@ -497,7 +498,8 @@ const loadRoles = async () => {
   rolesLoading.value = true;
   try {
     const result = await getRole({currentPage: 1, pageSize: 200, asc: true});
-    roles.push(...result.data)
+    roles.splice(0, roles.length, ...result.data)
+    if (!editorForm.role && roles[0]) editorForm.role = roles[0].roleId
   } catch {
     ElMessage.warning('角色列表加载失败，暂时无法创建用户')
   } finally {

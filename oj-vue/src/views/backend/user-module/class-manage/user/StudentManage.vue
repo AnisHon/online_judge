@@ -10,7 +10,7 @@
     <template #actions>
       <el-button :icon="Refresh" :loading="isLoading" @click="getList">刷新名单</el-button>
       <el-button v-has="'user:class:edit'" type="primary" :icon="Plus" @click="openAddDialog">添加学生</el-button>
-      <el-button v-has="'user:class:edit'" type="danger" plain :disabled="!selectedIds.length || isLoading" :icon="Delete" @click="handleRemove()">批量移除</el-button>
+      <el-button v-has="'user:class:edit'" type="danger" plain :disabled="!selectedIds.length || isLoading || actionLoading" :icon="Delete" @click="handleRemove()">批量移除</el-button>
     </template>
 
     <section class="member-panel">
@@ -28,7 +28,7 @@
         <RightToolBar :columns="columns" @queryTable="getList" />
       </div>
 
-      <el-table v-loading="isLoading" class="member-table" :data="tableList" row-key="userId" @selection-change="handleSelectionChange">
+      <el-table ref="tableRef" v-loading="isLoading" class="member-table" :data="tableList" row-key="userId" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="52" align="center" />
         <el-table-column v-if="columns[0].visible" label="学生" min-width="280">
           <template #default="{ row }"><div class="user-cell"><span class="user-avatar" :class="{ 'is-banned': row.status === UserStatus.BANNED }">{{ userInitial(row) }}</span><div class="user-cell__main"><strong :title="row.nikeName || row.userName">{{ row.nikeName || '未设置昵称' }}</strong><span><b>@{{ row.userName }}</b><i>·</i><span :title="String(row.userId)">ID {{ shortId(row.userId) }}</span></span></div></div></template>
@@ -51,9 +51,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { Delete, Plus, Refresh, Select, UserFilled } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, type TableInstance } from 'element-plus'
 import { useRoute } from 'vue-router'
 import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
 import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
@@ -65,7 +65,7 @@ import { UserStatus } from '@/api/user'
 import { useColumn } from '@/hooks/useColumn'
 
 const route = useRoute()
-const classId = route.params.classId as IdType
+const classId = computed<IdType>(() => String(route.params.classId || ''))
 const tableList = reactive<UserView[]>([])
 const selectedIds = ref<IdType[]>([])
 const userIds = reactive<IdType[]>([])
@@ -73,6 +73,8 @@ const userDialog = ref(false)
 const isLoading = ref(false)
 const submitLoading = ref(false)
 const removingId = ref<IdType>()
+const actionLoading = ref(false)
+const tableRef = ref<TableInstance>()
 const columns = useColumn(['学生', '邮箱地址', '账号状态', '加入信息', '用户备注']).columns
 
 const shortId = (value: IdType) => { const text = String(value); return text.length > 18 ? `${text.slice(0, 8)}…${text.slice(-6)}` : text }
@@ -84,8 +86,10 @@ const summaryStats = computed(() => [{ label: '班级成员', value: tableList.l
 const getList = async () => {
   isLoading.value = true
   try {
-    tableList.splice(0, tableList.length, ...(await getUserByClass(classId)))
+    if (!classId.value) return
+    tableList.splice(0, tableList.length, ...(await getUserByClass(classId.value)))
     selectedIds.value = []
+    tableRef.value?.clearSelection()
   } catch {
     ElMessage.error('班级成员加载失败，请稍后重试')
   } finally {
@@ -101,14 +105,16 @@ const handleRemove = async (row?: UserView) => {
   if (!ids.length) return
   try {
     await ElMessageBox.confirm(row ? `确定将 @${row.userName} 移出当前班级吗？` : `确定将选中的 ${ids.length} 位学生移出当前班级吗？`, '移除班级成员', { confirmButtonText: '确认移除', cancelButtonText: '取消', type: 'warning' })
+    actionLoading.value = true
     if (row) removingId.value = row.userId
-    await removeUserForClass(classId, row ? ids[0] : ids)
+    await removeUserForClass(classId.value, row ? ids[0] : ids)
     ElMessage.success('班级成员已移除')
     await getList()
   } catch (error) {
     if (error !== 'cancel' && error !== 'close') ElMessage.error('移除失败，请稍后重试')
   } finally {
     removingId.value = undefined
+    actionLoading.value = false
   }
 }
 
@@ -116,7 +122,7 @@ const submit = async () => {
   if (!userIds.length) { ElMessage.warning('请至少选择一位用户'); return }
   submitLoading.value = true
   try {
-    await addUserForClass(classId, userIds)
+    await addUserForClass(classId.value, [...userIds])
     userDialog.value = false
     ElMessage.success('学生已添加到班级')
     await getList()
@@ -127,7 +133,7 @@ const submit = async () => {
   }
 }
 
-getList()
+watch(() => classId.value, () => { void getList() }, { immediate: true })
 </script>
 
 <style lang="scss" scoped>

@@ -28,8 +28,10 @@
             class="keyword-input"
             :prefix-icon="Search"
             placeholder="搜索公告标题"
+            @keyup.enter="search"
+            @clear="search"
           />
-          <el-select v-model="priorityFilter" class="priority-select" placeholder="公告级别">
+          <el-select v-model="priorityFilter" class="priority-select" placeholder="公告级别" @change="search">
             <el-option label="全部公告" value="all" />
             <el-option label="重要公告" value="important" />
             <el-option label="普通公告" value="normal" />
@@ -46,8 +48,9 @@
 
       <el-table
         v-loading="loading"
+        ref="tableRef"
         class="notice-table"
-        :data="filteredList"
+        :data="tableList"
         row-key="noticeId"
         @selection-change="handleSelectionChange"
       >
@@ -116,7 +119,7 @@
     </section>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="min(1080px, 94vw)" append-to-body>
-      <el-form ref="formRef" class="notice-form" label-position="top" :model="form" :rules="rules">
+      <el-form ref="formRef" v-loading="detailLoading" class="notice-form" label-position="top" :model="form" :rules="rules">
         <div class="form-intro">
           <span class="panel-eyebrow">{{ dialogState === 'add' ? 'NEW ANNOUNCEMENT' : 'EDIT ANNOUNCEMENT' }}</span>
           <p>标题负责让用户快速理解通知内容，正文支持 Markdown。</p>
@@ -133,7 +136,7 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">保存公告</el-button>
+        <el-button type="primary" :loading="submitting || detailLoading" :disabled="detailLoading" @click="submitForm">保存公告</el-button>
       </template>
     </el-dialog>
   </ContestSubPageShell>
@@ -151,13 +154,12 @@ import {
   Search,
   View,
 } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type TableInstance } from 'element-plus'
 import ContestSubPageShell from '../../teacher/contest-manage/component/ContestSubPageShell.vue'
 import Pagination from '@/components/pageination/Pagination.vue'
 import MarkDownEditor from '@/components/MarkDownEditor/MarkDownEditor.vue'
 import type { IdType } from '@/api/common'
-import type { PagedType } from '@/api/pagedType'
-import { addNotice, getNotice, listNotice, type Notice, type NoticeDto, removeNotice, updateNotice } from '@/api/notice'
+import { addNotice, getNotice, listNotice, type Notice, type NoticeDto, type NoticeQuery, removeNotice, updateNotice } from '@/api/notice'
 
 type PriorityFilter = 'all' | 'important' | 'normal'
 type DialogState = 'add' | 'edit'
@@ -173,7 +175,9 @@ const priorityFilter = ref<PriorityFilter>('all')
 const selectedIds = ref<IdType[]>([])
 const tableList = ref<Notice[]>([])
 const total = ref(0)
-const queryParams = reactive<PagedType>({ currentPage: 1, pageSize: 20 })
+const tableRef = ref<TableInstance>()
+const detailLoading = ref(false)
+const queryParams = reactive<NoticeQuery>({ currentPage: 1, pageSize: 20, keyword: undefined, topUp: undefined })
 const form = reactive<NoticeDto>({ noticeId: '', title: '', content: '', topUp: false })
 
 const rules: FormRules<NoticeDto> = {
@@ -182,18 +186,6 @@ const rules: FormRules<NoticeDto> = {
 }
 
 const dialogTitle = computed(() => (dialogState.value === 'add' ? '发布公告' : '编辑公告'))
-const filteredList = computed(() => {
-  const normalizedKeyword = keyword.value.trim().toLowerCase()
-  return tableList.value.filter((item) => {
-    const matchesKeyword = !normalizedKeyword || item.title.toLowerCase().includes(normalizedKeyword)
-    const matchesPriority =
-      priorityFilter.value === 'all' ||
-      (priorityFilter.value === 'important' && item.topUp) ||
-      (priorityFilter.value === 'normal' && !item.topUp)
-    return matchesKeyword && matchesPriority
-  })
-})
-
 const summaryStats = computed(() => [
   { label: '公告总数', value: total.value, tone: 'blue' },
   { label: '当前重要', value: tableList.value.filter((item) => item.topUp).length, tone: 'amber' },
@@ -206,17 +198,29 @@ const resetForm = () => {
   formRef.value?.clearValidate()
 }
 
+let listRequestId = 0
+let detailRequestId = 0
 const getList = async () => {
+  queryParams.keyword = keyword.value.trim() || undefined
+  queryParams.topUp = priorityFilter.value === 'all' ? undefined : priorityFilter.value === 'important'
+  const requestId = ++listRequestId
+  const querySnapshot = {...queryParams}
   loading.value = true
   try {
-    const data = await listNotice(queryParams)
+    const data = await listNotice(querySnapshot)
+    if (requestId !== listRequestId) return
     tableList.value = data.data || []
     total.value = data.totalRecords || 0
     selectedIds.value = []
+    tableRef.value?.clearSelection()
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('公告列表加载失败，请稍后重试')
   } finally {
-    loading.value = false
+    if (requestId === listRequestId) loading.value = false
   }
 }
+
+const search = () => { queryParams.currentPage = 1; void getList() }
 
 const handleSelectionChange = (selection: Notice[]) => {
   selectedIds.value = selection.map((item) => item.noticeId)
@@ -231,10 +235,22 @@ const handleAdd = () => {
 const handleUpdate = async (notice?: Notice) => {
   const id = notice?.noticeId || selectedIds.value[0]
   if (!id) return
+  const requestId = ++detailRequestId
   resetForm()
   dialogState.value = 'edit'
   dialogVisible.value = true
-  Object.assign(form, await getNotice(id))
+  detailLoading.value = true
+  try {
+    const data = await getNotice(id)
+    if (requestId === detailRequestId) Object.assign(form, data)
+  } catch {
+    if (requestId === detailRequestId) {
+      dialogVisible.value = false
+      ElMessage.error('公告详情加载失败，请稍后重试')
+    }
+  } finally {
+    if (requestId === detailRequestId) detailLoading.value = false
+  }
 }
 
 const submitForm = async () => {

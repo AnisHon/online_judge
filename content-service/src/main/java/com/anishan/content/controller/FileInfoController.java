@@ -8,6 +8,8 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.content.domain.entity.FileInfo;
 import com.anishan.content.service.FileInfoService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +28,17 @@ public class FileInfoController {
 
     @GetMapping("/list")
     @PreAuthorize("hasAuthority('content:file:list')")
-    public R<PagedResult<FileInfo>> list(PagedQuery<FileInfo> query) {
-        Page<FileInfo> page = fileInfoService.page(query.page());
+    public R<PagedResult<FileInfo>> list(PagedQuery<FileInfo> query,
+                                         @RequestParam(required = false) String keyword) {
+        LambdaQueryWrapper<FileInfo> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            String normalized = keyword.trim();
+            wrapper.and(item -> item.like(FileInfo::getFileName, normalized)
+                    .or().like(FileInfo::getFilePath, normalized)
+                    .or().like(FileInfo::getFileMd5, normalized)
+                    .or().like(FileInfo::getFileType, normalized));
+        }
+        Page<FileInfo> page = fileInfoService.page(query.page(), wrapper);
         return R.success(PagedResult.build(page));
     }
 

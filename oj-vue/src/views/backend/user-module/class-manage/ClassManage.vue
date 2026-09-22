@@ -45,7 +45,7 @@
         <RightToolBar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
       </div>
 
-      <el-table v-loading="isLoading" class="class-table" :data="tableList" row-key="classId" @selection-change="handleSelectionChange">
+      <el-table ref="tableRef" v-loading="isLoading" class="class-table" :data="tableList" row-key="classId" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="52" align="center" />
         <el-table-column v-if="columns[0].visible" label="班级" min-width="310">
           <template #default="{ row }">
@@ -95,7 +95,7 @@
           <el-form-item label="备注" prop="remark"><el-input v-model="form.remark" type="textarea" :rows="4" maxlength="450" show-word-limit placeholder="例如：春季学期、辅导员或班级来源" /></el-form-item>
         </section>
       </el-form>
-      <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">{{ dialogState === 'add' ? '创建班级' : '保存修改' }}</el-button></template>
+      <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitForm">{{ dialogState === 'add' ? '创建班级' : '保存修改' }}</el-button></template>
     </el-dialog>
   </ContestSubPageShell>
 </template>
@@ -103,12 +103,12 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import { DataBoard, Delete, EditPen, Filter, Key, Plus, Refresh, Search, Select, UserFilled } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type TableInstance } from 'element-plus'
 import { useRouter } from 'vue-router'
 import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
 import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
 import Pagination from '@/components/pageination/Pagination.vue'
-import { type ClassForm, type ClassView, debouncedAddClass, debouncedGetClass, debouncedUpdateClass, type QueryClass, removeClass } from '@/api/class'
+import { addClass, type ClassForm, type ClassView, updateClass, type QueryClass, getClass, removeClass } from '@/api/class'
 import type { IdType } from '@/api/common'
 import { useColumn } from '@/hooks/useColumn'
 
@@ -121,7 +121,9 @@ const open = ref(false)
 const dialogState = ref<DialogState>('add')
 const showSearch = ref(true)
 const actionLoading = ref(false)
+const submitting = ref(false)
 const tableList = reactive<ClassView[]>([])
+const tableRef = ref<TableInstance>()
 const selectedIds = ref<IdType[]>([])
 const total = ref(0)
 const { columns } = useColumn(['班级', '创建时间', '内部备注'])
@@ -140,13 +142,25 @@ const summaryStats = computed(() => [
 const shortId = (value: IdType) => { const text = String(value); return text.length > 18 ? `${text.slice(0, 8)}…${text.slice(-6)}` : text }
 const formatDate = (value: Date | string | undefined) => value ? new Date(value).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '—'
 
-const { loading, isLoading, get: getClass } = debouncedGetClass(queryParams, (data) => {
-  tableList.length = 0
-  tableList.push(...data.data)
-  total.value = data.totalRecords
-  selectedIds.value = []
-})
-const getList = () => { loading(); getClass() }
+const isLoading = ref(false)
+let listRequestId = 0
+const getList = async () => {
+  const requestId = ++listRequestId
+  isLoading.value = true
+  try {
+    const data = await getClass({...queryParams})
+    if (requestId !== listRequestId) return
+    tableList.length = 0
+    tableList.push(...data.data)
+    total.value = data.totalRecords
+    selectedIds.value = []
+    tableRef.value?.clearSelection()
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('班级列表加载失败，请稍后重试')
+  } finally {
+    if (requestId === listRequestId) isLoading.value = false
+  }
+}
 const handleSelectionChange = (selection: ClassView[]) => { selectedIds.value = selection.map((item) => item.classId) }
 const resetQuery = () => { queryParams.currentPage = 1; queryParams.classId = undefined; queryParams.className = undefined; queryParams.sortColumn = undefined; getList() }
 const handleQuery = () => { queryParams.currentPage = 1; getList() }
@@ -165,11 +179,19 @@ const submitForm = async () => {
   if (!formRef.value) return
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
-  if (dialogState.value === 'add') { addLoading(); add() } else { updateLoading(); update() }
+  submitting.value = true
+  try {
+    if (dialogState.value === 'add') await addClass({...form})
+    else await updateClass({...form})
+    ElMessage.success(dialogState.value === 'add' ? '班级已创建' : '班级已更新')
+    finishDialog()
+  } catch {
+    ElMessage.error(dialogState.value === 'add' ? '班级创建失败，请稍后重试' : '班级更新失败，请稍后重试')
+  } finally {
+    submitting.value = false
+  }
 }
 const finishDialog = () => { open.value = false; resetForm(); getList() }
-const { loading: updateLoading, isLoading: isUpdateLoading, update } = debouncedUpdateClass(form, finishDialog)
-const { loading: addLoading, isLoading: isAddLoading, add } = debouncedAddClass(form, finishDialog)
 
 const handleDelete = async (row?: ClassView) => {
   const ids = row ? [row.classId] : selectedIds.value

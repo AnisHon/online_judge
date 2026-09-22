@@ -209,7 +209,7 @@
       </el-form>
       <template #footer>
         <el-button @click="cancel">取消</el-button>
-        <el-button type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">
+        <el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitForm">
           {{ dialogState === 'add' ? '创建资源' : '保存修改' }}
         </el-button>
       </template>
@@ -218,13 +218,13 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, reactive, ref} from 'vue'
+import {computed, nextTick, reactive, ref, watch} from 'vue'
 import {Delete, EditPen, Expand, Filter, Fold, Key, Lock, Plus, Refresh, Search, Select} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox, type FormInstance, type TableInstance} from 'element-plus'
 import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
 import IconPicker from '@/components/IconPicker/IconPicker.vue'
 import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
-import {debouncedAddMenu, debouncedUpdateMenu, dict, getAllTreedMenu, type QueryMenu, removeMenu} from '@/api/menu'
+import {addMenu, dict, getAllTreedMenu, type QueryMenu, removeMenu, updateMenu} from '@/api/menu'
 import {MenuType, type MenuForm, type MenuView, type TreedMenu} from '@/api/auth/menu'
 import type {IdType} from '@/api/common'
 import {useColumn} from '@/hooks/useColumn'
@@ -262,6 +262,7 @@ const open = ref(false)
 const dialogState = ref<DialogState>('add')
 const isLoading = ref(false)
 const actionLoading = ref(false)
+const submitting = ref(false)
 const expandedAll = ref(false)
 const columns = useColumn(['资源', '权限标识', '路由 / 组件', '顺序', '创建时间', '备注']).columns
 
@@ -302,11 +303,31 @@ function flattenTree(nodes: TreedMenu[]): TreedMenu[] {
 }
 
 function toParentOptions(nodes: TreedMenu[], currentId?: IdType): TreeOption[] {
-  return nodes.filter(node => node.menu.menuType !== MenuType.BUTTON && String(node.menu.menuId) !== String(currentId)).map(node => ({
+  const blockedIds = new Set<string>()
+  if (currentId !== undefined) {
+    const current = findNode(nodes, currentId)
+    if (current) collectNodeIds(current, blockedIds)
+    blockedIds.add(String(currentId))
+  }
+  return nodes.filter(node => node.menu.menuType !== MenuType.BUTTON && !blockedIds.has(String(node.menu.menuId))).map(node => ({
     id: node.menu.menuId,
     label: `${node.menu.menuName} · ${typeLabel(node.menu.menuType)}`,
-    children: node.children?.length ? toParentOptions(node.children, currentId) : undefined
+    children: node.children?.length ? toParentOptions(node.children, currentId).filter(child => !blockedIds.has(String(child.id))) : undefined
   }))
+}
+
+function findNode(nodes: TreedMenu[], id: IdType): TreedMenu | undefined {
+  for (const node of nodes) {
+    if (String(node.menu.menuId) === String(id)) return node
+    const found = node.children?.length ? findNode(node.children, id) : undefined
+    if (found) return found
+  }
+  return undefined
+}
+
+function collectNodeIds(node: TreedMenu, result: Set<string>) {
+  result.add(String(node.menu.menuId))
+  node.children?.forEach(child => collectNodeIds(child, result))
 }
 
 function nodeMatches(node: TreedMenu): boolean {
@@ -379,14 +400,15 @@ const getList = async () => {
 }
 const handleQuery = () => {
   expandedAll.value = true;
-  setTimeout(() => expandVisibleRows(true), 0)
+  void nextTick(() => expandVisibleRows(true))
 }
 const clearFilters = () => {
   queryParams.menuId = undefined;
   queryParams.menuName = undefined;
   queryParams.perms = undefined;
   queryParams.menuType = undefined;
-  handleQuery()
+  expandedAll.value = false
+  void nextTick(() => expandVisibleRows(false))
 }
 const expandVisibleRows = (expanded: boolean) => {
   void expandRows(filteredTree.value, expanded)
@@ -451,12 +473,16 @@ const submitForm = async () => {
     ElMessage.warning('菜单栏和菜单项必须填写路由地址');
     return
   }
-  if (dialogState.value === 'add') {
-    addLoading();
-    add()
-  } else {
-    updateLoading();
-    update()
+  submitting.value = true
+  try {
+    if (dialogState.value === 'add') await addMenu({...form})
+    else await updateMenu({...form})
+    ElMessage.success(dialogState.value === 'add' ? '资源已创建' : '资源已更新')
+    finishDialog()
+  } catch {
+    ElMessage.error(dialogState.value === 'add' ? '资源创建失败，请稍后重试' : '资源更新失败，请稍后重试')
+  } finally {
+    submitting.value = false
   }
 }
 const finishDialog = () => {
@@ -464,9 +490,6 @@ const finishDialog = () => {
   resetForm();
   getList()
 }
-const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddMenu(form, finishDialog)
-const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateMenu(form, finishDialog)
-
 const handleDelete = async (node?: TreedMenu) => {
   const ids = node ? [node.menu.menuId] : selectedIds.value;
   if (!ids.length) return;
@@ -490,6 +513,16 @@ const cancel = () => {
   open.value = false;
   resetForm()
 }
+
+watch(() => form.menuType, (type) => {
+  if (type === MenuType.BUTTON) {
+    form.icon = '#'
+    form.router = ''
+    form.component = ''
+  } else if (type === MenuType.MENU) {
+    form.perms = ''
+  }
+})
 
 getList()
 </script>

@@ -8,7 +8,7 @@
     :stats="summaryStats"
   >
     <template #actions>
-      <el-button :icon="Refresh" :loading="loading" @click="getList">刷新记录</el-button>
+      <el-button v-has="'problem:judge:submit:read'" :icon="Refresh" :loading="loading" @click="getList">刷新记录</el-button>
     </template>
 
     <section class="log-panel">
@@ -19,8 +19,8 @@
           <p>每条记录对应用户的一次判题提交；内部沙箱错误请到“判题日志”查看。</p>
         </div>
         <div class="filter-actions">
-          <el-button plain :icon="RefreshRight" @click="resetQuery">重置</el-button>
-          <el-button type="primary" :icon="Search" :loading="loading" @click="search">查询</el-button>
+          <el-button v-has="'problem:judge:submit:read'" plain :icon="RefreshRight" @click="resetQuery">重置</el-button>
+          <el-button v-has="'problem:judge:submit:read'" type="primary" :icon="Search" :loading="loading" @click="search">查询</el-button>
         </div>
       </div>
 
@@ -68,7 +68,7 @@
         </el-table-column>
         <el-table-column label="提交时间" min-width="175" prop="submitTime" show-overflow-tooltip />
         <el-table-column label="操作" width="110" fixed="right" align="right">
-          <template #default="{row}"><el-button link type="primary" :icon="View" @click="openDetail(row.submitId)">查看详情</el-button></template>
+          <template #default="{row}"><el-button v-has="'problem:judge:submit:read'" link type="primary" :icon="View" @click="openDetail(row.submitId)">查看详情</el-button></template>
         </el-table-column>
         <template #empty><el-empty description="暂无判题记录" /></template>
       </el-table>
@@ -105,6 +105,7 @@
           <pre>{{ detail.stderr }}</pre>
         </section>
       </div>
+      <el-empty v-else-if="detailError" description="判题记录详情加载失败，请稍后重试" />
       <el-skeleton v-else :rows="8" animated />
     </el-drawer>
   </ContestSubPageShell>
@@ -113,6 +114,7 @@
 <script setup lang="ts">
 import {computed, onMounted, reactive, ref} from 'vue'
 import {DocumentChecked, Refresh, RefreshRight, Search, View} from '@element-plus/icons-vue'
+import {ElMessage} from 'element-plus'
 import ContestSubPageShell from '../../teacher/contest-manage/component/ContestSubPageShell.vue'
 import Pagination from '@/components/pageination/Pagination.vue'
 import {
@@ -142,14 +144,20 @@ const summaryStats = computed(() => [
 const formatProgress = (row: AdminSubmitLog) => row.totalCount == null ? '—' : `${row.passCount ?? 0} / ${row.totalCount}`
 const formatResource = (row: AdminSubmitLog) => `${row.time ?? '—'} ms · ${row.memory ?? '—'} KB`
 
+let listRequestId = 0
+let detailRequestId = 0
+const detailError = ref(false)
 const getList = async () => {
+  const requestId = ++listRequestId
+  const querySnapshot = {...query}
   loading.value = true
   try {
-    const data = await getAdminSubmitLogs(query)
+    const data = await getAdminSubmitLogs(querySnapshot)
+    if (requestId !== listRequestId) return
     records.value = data?.data || []
     total.value = data?.totalRecords || 0
   } finally {
-    loading.value = false
+    if (requestId === listRequestId) loading.value = false
   }
 }
 
@@ -164,9 +172,19 @@ const resetQuery = () => {
 }
 
 const openDetail = async (submitId: IdType) => {
+  const requestId = ++detailRequestId
   detailVisible.value = true
   detail.value = undefined
-  detail.value = await getAdminSubmitLog(submitId)
+  detailError.value = false
+  try {
+    const data = await getAdminSubmitLog(submitId)
+    if (requestId === detailRequestId) detail.value = data
+  } catch {
+    if (requestId === detailRequestId) {
+      detailError.value = true
+      ElMessage.error('判题记录详情加载失败，请稍后重试')
+    }
+  }
 }
 
 onMounted(getList)

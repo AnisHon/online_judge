@@ -99,6 +99,8 @@ export {
     MenuType,
     getTreedMenu,
     getAuth,
+    grant,
+    revoke,
     debouncedGrant,
     debouncedRevoke,
     listRoleMenu
