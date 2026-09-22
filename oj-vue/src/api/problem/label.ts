@@ -9,7 +9,7 @@ export interface TagView {
     tagId: IdType;
     tagName: string;
     tagColor: string;
-    createTime: Date;
+    createTime?: string | Date;
 }
 
 export interface ProblemTagRelation {
@@ -37,11 +37,11 @@ const addTagForProblem = async (param: ProblemTagRelation | ProblemTagRelation[]
 
 const debouncedAddTagProblem = (param: ProblemTagRelation | ProblemTagRelation[], success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const add = debounce(() => {
+    const add = () => {
         addTagForProblem(param)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, add, finish};
 }
 
@@ -53,6 +53,7 @@ async function getAllTags(): Promise<TagView[]> {
 export {
     getAllTags,
     delTagForProblem,
+    addTagForProblem,
     debouncedAddTagProblem,
     fetchTagByProblemId
 }

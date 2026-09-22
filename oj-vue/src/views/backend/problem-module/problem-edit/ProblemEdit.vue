@@ -88,7 +88,7 @@
     </el-row>
 
 <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
-    <el-table v-loading="isLoading" class="problem-table" :data="tableList" @selection-change="handleSelectionChange">
+    <el-table ref="tableRef" v-loading="isLoading" class="problem-table" :data="tableList" row-key="problemId" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip/>
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" show-overflow-tooltip/>
@@ -167,7 +167,7 @@
           </el-check-tag>
         </el-space>
       </div>
-      <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" @click="submit" :loading="addIsLoading">保存标签</el-button></template>
+      <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" @click="submit" :loading="tagSubmitting">保存标签</el-button></template>
     </el-dialog>
 
     <el-dialog title="上传题目" v-model="openUpload" class="upload-dialog" width="min(680px, 92vw)" append-to-body destroy-on-close>
@@ -176,7 +176,9 @@
           drag
           ref="uploadRef"
           action="/api/problem-api/problem/upload"
-          multiple
+          :headers="uploadHeaders"
+          :limit="1"
+          :on-change="handleUploadChange"
           :on-error="uploadError"
           :on-success="uploadSuccess"
           accept="application/json"
@@ -192,7 +194,7 @@
           </div>
         </template>
       </el-upload>
-      <template #footer><el-button @click="onUploadCancel">取消</el-button><el-button type="primary" @click="onHandleSubmit" :loading="isLoading">开始导入</el-button></template>
+      <template #footer><el-button @click="onUploadCancel">取消</el-button><el-button type="primary" @click="onHandleSubmit" :loading="uploadSubmitting">开始导入</el-button></template>
     </el-dialog>
   </ProblemModuleShell>
 </template>
@@ -201,7 +203,7 @@
 import {computed, reactive, ref} from "vue";
 import {
   type AdminQueryProblem,
-  debouncedGetProblem,
+  getProblemsAdmin,
   dict,
   ProblemAuth,
   type ProblemView,
@@ -210,25 +212,23 @@ import {
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElMessageBox, type UploadInstance} from "element-plus";
+import {ElMessage, ElMessageBox, type TableInstance, type UploadFile, type UploadInstance} from "element-plus";
 import {problemTypeToString} from "@/utils/problem";
 import {
-  debouncedAddTagProblem, delTagForProblem,
+  addTagForProblem, delTagForProblem,
   fetchTagByProblemId,
   getAllTags,
-  type ProblemTagRelation,
   type TagView
 } from "@/api/problem/label";
-import __ from "lodash";
+// 题库页面不再依赖 lodash 处理选择集合，避免对象引用比较导致标签差异判断错误。
 import {useRouter} from "vue-router";
-import {UploadFilled} from "@element-plus/icons-vue";
-import {Collection} from "@element-plus/icons-vue";
-import {CollectionTag} from "@element-plus/icons-vue";
+import {Collection, CollectionTag, UploadFilled} from "@element-plus/icons-vue";
 import ProblemModuleShell from "@/views/backend/problem-module/component/ProblemModuleShell.vue";
 import type {UploadAjaxError} from "element-plus/es/components/upload/src/ajax";
 import type {AjaxResult} from "@/utils/http";
 import type {IdType} from "@/api/common.ts";
 import {hasAnyPerm} from "@/utils/authUtil.ts";
+import {useToken} from "@/stores/useToken";
 
 const router = useRouter();
 const canUseMore = computed(() => hasAnyPerm(['problem:tag:add', 'problem:problem:edit']));
@@ -246,30 +246,37 @@ const {columns} = useColumn(['问题ID', '题目', '问题描述', '问题来源
 
 // 重制列表
 const resetQuery = () => {
+  queryParams.currentPage = 1;
   queryParams.problemId = undefined;
   queryParams.title = undefined;
   queryParams.type =  undefined;
-
-  getList();
+  clearSelection();
+  void getList();
 };
 
 const uploadRef = ref<UploadInstance>();
 const showSearch = ref(true);
-
-const {loading, isLoading, get: getProblem} = debouncedGetProblem(queryParams, (data) => {
-  tableList.length = 0;
-  total.value = data.totalRecords
-  tableList.push(...data.data)
-});
-
+const tableRef = ref<TableInstance>();
+const uploadSubmitting = ref(false);
+const selectedUploadFile = ref<UploadFile>();
+const tokenStore = useToken();
+const uploadHeaders = computed(() => ({token: tokenStore.token}));
 
 const tableList = reactive<ProblemView[]>([]);
 const total = ref<number>(0);
+const isLoading = ref(false);
 
 // 获取列表
-const getList = () => {
-  loading();
-  getProblem();
+const getList = async () => {
+  clearSelection();
+  isLoading.value = true;
+  try {
+    const data = await getProblemsAdmin({...queryParams});
+    tableList.splice(0, tableList.length, ...data.data);
+    total.value = data.totalRecords;
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 // 多选或者单选
@@ -285,6 +292,13 @@ const handleSelectionChange = (selection: ProblemView[]) => {
   multiple.value = !selection.length;
 }
 
+const clearSelection = () => {
+  ids.value = [];
+  single.value = true;
+  multiple.value = true;
+  tableRef.value?.clearSelection();
+};
+
 // 上传对话框
 const openUpload = ref(false);
 
@@ -293,27 +307,39 @@ const handleUpload = () => {
   openUpload.value = true;
 }
 
-// 提交上传
-
-const up = __.debounce(() => uploadRef.value?.submit(), 1000)
-
 const onHandleSubmit = () => {
-
-  isLoading.value = true;
-  up();
+  const file = selectedUploadFile.value?.raw;
+  if (!file) {
+    ElMessage.warning('请先选择一个 JSON 文件');
+    return;
+  }
+  if (file.size > 500 * 1024) {
+    ElMessage.warning('文件不能超过 500KB');
+    return;
+  }
+  uploadSubmitting.value = true;
+  uploadRef.value?.submit();
 }
+
+const handleUploadChange = (file: UploadFile) => {
+  selectedUploadFile.value = file;
+};
 
 // 取消
 const onUploadCancel = () => {
   uploadRef.value?.clearFiles();
+  selectedUploadFile.value = undefined;
+  uploadSubmitting.value = false;
   openUpload.value = false;
 }
 
 // 上传成功
 const uploadSuccess = (resp: AjaxResult<boolean>) => {
   uploadRef.value?.clearFiles();
-  isLoading.value = false;
-  getList();
+  selectedUploadFile.value = undefined;
+  uploadSubmitting.value = false;
+  openUpload.value = false;
+  void getList();
 
   if (resp.data) {
     ElMessage.success("导入成功");
@@ -326,33 +352,47 @@ const uploadSuccess = (resp: AjaxResult<boolean>) => {
 
 
 const uploadError = (evt: UploadAjaxError) => {
-  isLoading.value = false;
-  const msg = JSON.parse(evt.message).message;
-  ElMessage.error(msg)
+  uploadSubmitting.value = false;
+  let message = evt.message || '题目导入失败';
+  try {
+    message = JSON.parse(message)?.message || message;
+  } catch {
+    // 上传接口也可能返回纯文本错误，保留原始信息。
+  }
+  ElMessage.error(message);
 }
 
-const handleDelete = (row?: ProblemView) => {
-  const id = row ? row.problemId : ids.value[0];
-  ElMessageBox.confirm(`您是否要删除ID为${id}的数据项？`, {
+const handleDelete = async (row?: ProblemView) => {
+  const targetIds = row ? [row.problemId] : [...ids.value];
+  if (!targetIds.length) {
+    ElMessage.warning('请先选择要删除的题目');
+    return;
+  }
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${targetIds.length} 道题目吗？`, {
     confirmButtonText: '确定',
-    cancelButtonText: '取消'
-  })
-      .then(() => {
-        removeProblems(id).then(getList);
-      })
+    cancelButtonText: '取消',
+    type: 'warning'
+    });
+    await removeProblems(targetIds);
+    clearSelection();
+    await getList();
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') throw error;
+  }
 }
 
 // 搜索按钮
 const handleQuery = () => {
-  getList();
-  single.value = false
-  multiple.value = false;
+  queryParams.currentPage = 1;
+  clearSelection();
+  void getList();
 }
 
 const handleAdd = () => {
   router.push({name: "edit-problem"});
 }
-const handleUpdate = (data: ProblemView) => {
+const handleUpdate = (data?: ProblemView) => {
   const problemId = data?.problemId || ids.value[0];
   router.push({name: "edit-problem", query: {id: problemId}});
 }
@@ -364,20 +404,18 @@ const getAuthCardType = (auth: ProblemAuth) => {
   return auth === ProblemAuth.CONTEST ? "danger" : "success";
 }
 
-const delCardIds = ref<ProblemTagRelation[]>([]);
-const addCardIds = ref<ProblemTagRelation[]>([]);
 const currentCards = ref<TagView[]>([]);
 const originCards = ref<TagView[]>([]);
 const allCards = ref<TagView[]>([]);
-const status = reactive<boolean[]>([])
 const open = ref(false)
-const currentProblemId = ref('0')
+const currentProblemId = ref<IdType>('0')
+const tagSubmitting = ref(false)
 
 const onChange = (bool: boolean, id: TagView) => {
 
   if (!bool) {
-    __.remove(currentCards.value, x => x.tagId === id.tagId);
-  } else {
+    currentCards.value = currentCards.value.filter(x => x.tagId !== id.tagId);
+  } else if (!currentCards.value.some(x => x.tagId === id.tagId)) {
     currentCards.value.push(id);
   }
 }
@@ -385,70 +423,64 @@ const onChange = (bool: boolean, id: TagView) => {
 
 
 const cancel = () => {
-  currentCards.value.length = 0;
-  addCardIds.value.length = 0;
-  delCardIds.value.length = 0;
+  currentCards.value = [];
+  originCards.value = [];
   open.value = false;
 }
 
 const loadingCard = ref(false)
-const {isLoading: addIsLoading, loading: addLoading,add: tagAdd, finish} = debouncedAddTagProblem(addCardIds.value, () => {
-  open.value = false;
-})
-
-const submit = () => {
-
-  addCardIds.value.length = 0;
-  addCardIds.value.push(...__.difference(currentCards.value, originCards.value).map(item => {return {tagId: item.tagId,  problemId: currentProblemId.value}}));
-  delCardIds.value = __.difference(originCards.value, currentCards.value).map(item => {return {tagId: item.tagId,  problemId: currentProblemId.value}});
-  if (addCardIds.value.length > 0) {
-    addLoading();
-    tagAdd();
+const submit = async () => {
+  const selected = new Set(currentCards.value.map(item => String(item.tagId)));
+  const original = new Set(originCards.value.map(item => String(item.tagId)));
+  const addIds = currentCards.value.filter(item => !original.has(String(item.tagId)))
+      .map(item => ({tagId: item.tagId, problemId: currentProblemId.value}));
+  const deleteIds = originCards.value.filter(item => !selected.has(String(item.tagId)))
+      .map(item => ({tagId: item.tagId, problemId: currentProblemId.value}));
+  if (!addIds.length && !deleteIds.length) {
+    open.value = false;
+    return;
   }
-
-  if (delCardIds.value.length > 0) {
-    addLoading();
-    delTagForProblem(delCardIds.value).then(() => {
-      finish();
-      open.value = false;
-    });
+  tagSubmitting.value = true;
+  try {
+    await Promise.all([
+      addIds.length ? addTagForProblem(addIds) : Promise.resolve(),
+      deleteIds.length ? delTagForProblem(deleteIds) : Promise.resolve()
+    ]);
+    ElMessage.success('题目标签已更新');
+    open.value = false;
+  } finally {
+    tagSubmitting.value = false;
   }
-
 }
 
 const manageTag = (id: IdType) => {
-  getTag();
+  currentProblemId.value = id;
   open.value = true;
-  loadingCard.value = true
+  loadingCard.value = true;
   fetchTagByProblemId(id)
       .then((data) => {
-        originCards.value.length = 0;
-        currentCards.value = data;
-        originCards.value.push(...data);
-        loadingCard.value = false
+        originCards.value = [...data];
+        currentCards.value = [...data];
       })
+      .finally(() => { loadingCard.value = false; });
 
 }
 
 const handleCommand = (command: string, row: ProblemView) => {
-  const map: Record<string, Function> = {
+  const map: Record<string, () => void> = {
     "handleCase": () => {router.push({name: 'case-edit', params: {problemId: row.problemId}})},
-    "handleCard": () => {manageTag(row.problemId);currentProblemId.value = row.problemId;}
+    "handleCard": () => { manageTag(row.problemId); }
   }
-  map[command]();
+  map[command]?.();
 }
 
-const getTag = () => {
-  getAllTags()
-      .then((data) => {
-        allCards.value = data;
-        data.forEach(() => status.push(false));
-      } )
+const getTag = async () => {
+  allCards.value = await getAllTags();
 }
 
 // created -> 获取列表
-getList();
-getTag();
+void getList();
+void getTag();
 </script>
 
 <style lang="scss" scoped>

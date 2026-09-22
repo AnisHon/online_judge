@@ -36,7 +36,7 @@ export interface ProblemView {
     source: string,
     type: ProblemType
     auth: ProblemAuth,
-    createTime: Date,
+    createTime: string | Date,
     hint?: string | null,
 }
 
@@ -48,10 +48,11 @@ const dict = {
         {label: "多选题", value: ProblemType.MULTI_CHOICE},
     ],
     problemTypeStr:[
-        {label: "OJ题", value: 'OJ'},
-        {label: "填空题", value: 'FILL'},
-        {label: "选择题", value: 'CHOICE'},
-        {label: "多选题", value: 'MULTI_CHOICE'},
+        // 保留旧字段名，值统一使用后端 ProblemType 数字枚举，避免查询参数把字符串发给后端。
+        {label: "OJ题", value: ProblemType.OJ},
+        {label: "填空题", value: ProblemType.FILL},
+        {label: "选择题", value: ProblemType.CHOICE},
+        {label: "多选题", value: ProblemType.MULTI_CHOICE},
     ],
     difficultyStr: [
         {label: '不确定', value: 'UNKNOWN'},
@@ -241,11 +242,12 @@ async function addProblems(form: ProblemForm) {
 
 const debouncedAddProblem = (form: ProblemForm, success: successCallback<IdType>) => {
     const {loading, isLoading, finish} = useLoading()
-    const add = debounce(() => {
+    // 保存动作不应延迟读取外部 reactive form；调用时立即提交当前快照。
+    const add = () => {
         addProblems(form)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, add};
 }
 
@@ -255,11 +257,11 @@ async function updateProblems(form: ProblemForm) {
 
 const debouncedUpdateProblem = (form: ProblemForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const update = debounce(() => {
+    const update = () => {
         updateProblems(form)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, update};
 }
 

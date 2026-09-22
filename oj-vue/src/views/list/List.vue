@@ -41,7 +41,7 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-empty class="empty-status" v-show="tableList.length === 0" description="选择题单后开始练习"/>
+        <el-empty class="empty-status" v-show="!isLoading && tableList.length === 0" :description="loadError || '选择题单后开始练习'"/>
       </el-col>
     </el-row>
   </main>
@@ -71,6 +71,7 @@ const selectedName = ref("");
 const orderedTableList = computed(() => [...tableList].sort((a, b) => <number>a.problemOrder - <number>b.problemOrder));
 
 const isLoading = ref<boolean>(false);
+const loadError = ref('');
 
 const isFile = (type: string) => {
   return type === FolderType.FILE;
@@ -85,23 +86,37 @@ const handleClickProblem = (id: IdType) => {
 }
 
 const handleNodeClick = (node: TreedFolderView) => {
+  selectedName.value = node.folder.folderName;
+  tableList.length = 0;
+  loadError.value = '';
   if (isFile(node.folder.folderType)) {
-    selectedName.value = node.folder.folderName;
-    if (isNullObj(node.folder.listId)) {
+    const listId = node.folder.listId;
+    if (listId === undefined || listId === null || isNullObj(listId)) {
       ElNotification.info("该题单还未开放");
       return;
     }
-    getProblems(node.folder.listId)
+    isLoading.value = true;
+    getProblems(listId)
         .then(data => {
-          tableList.length = 0;
           tableList.push(...data);
         })
+        .catch(() => {
+          loadError.value = '题单内容加载失败，请稍后重试';
+        })
+        .finally(() => {
+          isLoading.value = false;
+        })
+  } else {
+    loadError.value = '请选择一个题单文件开始练习';
   }
 }
 
 // created
+isLoading.value = true;
 getTreedFolderView()
-    .then((data) => treedViews.push(...data));
+    .then((data) => treedViews.push(...data))
+    .catch(() => { loadError.value = '目录加载失败，请稍后重试'; })
+    .finally(() => { isLoading.value = false; });
 
 
 </script>

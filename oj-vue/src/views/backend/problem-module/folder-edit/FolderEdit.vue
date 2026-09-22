@@ -57,7 +57,7 @@ import { ElMessage, ElMessageBox, ElTree, type FormInstance, type FormRules } fr
 import ProblemModuleShell from '@/views/backend/problem-module/component/ProblemModuleShell.vue'
 import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
 import ListView from '@/components/ListView/ListView.vue'
-import { debouncedAddFolder, debouncedGetTreedFolder, debouncedUpdateFolder, dict, type FolderForm, FolderType, removeFolder, type TreedFolderView } from '@/api/folder'
+import { addFolder, dict, type FolderForm, FolderType, getTreedFolderView, removeFolder, updateFolder, type TreedFolderView } from '@/api/folder'
 import { getList as fetchProblemLists, type ListView as ProblemListView } from '@/api/list'
 import type { IdType } from '@/api/common'
 import { useColumn } from '@/hooks/useColumn'
@@ -80,7 +80,12 @@ const selectedIds = ref<IdType[]>([])
 const excludedParentIds = ref<Set<string>>(new Set())
 const tableList = reactive<FolderTreeNode[]>([])
 const { columns } = useColumn(['目录', '节点类型', '关联题单', '父级目录', '顺序'])
-const rules: FormRules<FolderForm> = { folderName: [{ required: true, message: '请输入节点名称', trigger: 'blur' }], folderType: [{ required: true, message: '请选择节点类型', trigger: 'change' }], order: [{ required: true, message: '请输入显示顺序', trigger: 'change' }] }
+const rules = computed<FormRules<FolderForm>>(() => ({
+  folderName: [{ required: true, message: '请输入节点名称', trigger: 'blur' }],
+  folderType: [{ required: true, message: '请选择节点类型', trigger: 'change' }],
+  order: [{ required: true, message: '请输入显示顺序', trigger: 'change' }],
+  listId: form.folderType === FolderType.FILE ? [{ required: true, message: '文件节点必须选择题单', trigger: 'change' }] : []
+}))
 const defaultProps = { children: 'children', label: (data: unknown) => (data as FolderTreeNode).folder.folderName }
 
 const shortId = (value: IdType) => { const text = String(value); return text.length > 18 ? `${text.slice(0, 8)}…${text.slice(-6)}` : text }
@@ -93,8 +98,7 @@ const filteredCount = computed(() => flattenTree(filteredTree.value).length)
 const activeFilterCount = computed(() => [keyword.value, typeFilter.value].filter(value => value !== undefined && value !== '').length)
 
 function flattenTree(nodes: TreedFolderView[]): TreedFolderView[] { return nodes.reduce<TreedFolderView[]>((result, node) => { result.push(node); if (node.children?.length) result.push(...flattenTree(node.children)); return result }, []) }
-function folderTypeRank(type: FolderType) { return type === FolderType.DIRECTORY ? 0 : type === FolderType.MENU ? 1 : 2 }
-function decorateTree(nodes: TreedFolderView[], depth = 0): FolderTreeNode[] { return [...nodes].sort((a, b) => folderTypeRank(a.folder.folderType) - folderTypeRank(b.folder.folderType) || (a.folder.order ?? 0) - (b.folder.order ?? 0) || String(a.folder.folderName).localeCompare(String(b.folder.folderName), 'zh-CN')).map(node => ({ ...node, depth, children: decorateTree(node.children || [], depth + 1) })) }
+function decorateTree(nodes: TreedFolderView[], depth = 0): FolderTreeNode[] { return [...nodes].sort((a, b) => (a.folder.order ?? 0) - (b.folder.order ?? 0) || String(a.folder.folderName).localeCompare(String(b.folder.folderName), 'zh-CN')).map(node => ({ ...node, depth, children: decorateTree(node.children || [], depth + 1) })) }
 function nodeMatches(node: TreedFolderView) { const text = keyword.value.trim().toLowerCase(); return (!text || String(node.folder.folderName).toLowerCase().includes(text) || String(node.folder.folderId).includes(text)) && (!typeFilter.value || node.folder.folderType === typeFilter.value) }
 function filterTree(nodes: FolderTreeNode[]): FolderTreeNode[] { return nodes.reduce<FolderTreeNode[]>((result, node) => { const children = node.children.length ? filterTree(node.children) : []; if (nodeMatches(node) || children.length) result.push({ ...node, children }); return result }, []) }
 function filterParentTree(nodes: FolderTreeNode[]): FolderTreeNode[] { return nodes.reduce<FolderTreeNode[]>((result, node) => { if (node.folder.folderType === FolderType.FILE || excludedParentIds.value.has(String(node.folder.folderId))) return result; result.push({ ...node, children: filterParentTree(node.children) }); return result }, []) }
@@ -106,8 +110,19 @@ function setNodeKey(nodes: TreedFolderView[]) { nodes.forEach(node => { node.id 
 function treeRowStyle({ row }: { row: FolderTreeNode }) { return { '--tree-offset': `${row.depth * 24}px` } }
 function folderCellStyle(row: FolderTreeNode) { return row.children.length ? undefined : { paddingLeft: `${row.depth * 24}px` } }
 
-const { loading, isLoading, get: getFolder } = debouncedGetTreedFolder(data => { setNodeKey(data); tableList.splice(0, tableList.length, ...decorateTree(data)); void nextTick().then(() => expandVisibleRows(expandedAll.value)) })
-const getList = () => { loading(); getFolder() }
+const isLoading = ref(false)
+const getList = async () => {
+  isLoading.value = true
+  try {
+    const data = await getTreedFolderView()
+    setNodeKey(data)
+    tableList.splice(0, tableList.length, ...decorateTree(data))
+    selectedIds.value = []
+    void nextTick().then(() => expandVisibleRows(expandedAll.value))
+  } finally {
+    isLoading.value = false
+  }
+}
 const handleSelectionChange = (selection: FolderTreeNode[]) => { selectedIds.value = selection.map(item => item.folder.folderId) }
 const handleQuery = () => { expandedAll.value = true; setTimeout(() => expandVisibleRows(true), 0) }
 const resetQuery = () => { keyword.value = ''; typeFilter.value = undefined; expandedAll.value = false; getList() }
@@ -124,10 +139,23 @@ const handleUpdate = async (node: TreedFolderView) => { resetForm(); Object.assi
 const handleFolderTypeChange = (value: FolderType) => { if (value !== FolderType.FILE) { form.listId = undefined; selectedListName.value = '' } }
 const handleListSelect = (list: ProblemListView) => { form.listId = list.listId; selectedListName.value = list.listName; openSelectList.value = false }
 const handleParentCheck = (data: unknown, checkedInfo: unknown) => { const node = data as FolderTreeNode; const checkedKeys = (checkedInfo as { checkedKeys?: unknown[] }).checkedKeys || []; const checked = checkedKeys.some(key => String(key) === String(node.folder.folderId)); parentTreeRef.value?.setCheckedKeys(checked ? [node.folder.folderId] : []) }
-const submitForm = async () => { if (form.folderType === FolderType.FILE && !form.listId) { ElMessage.warning('文件节点必须选择一个题单'); return } if (!(await formRef.value?.validate().catch(() => false))) return; const keys = parentTreeRef.value?.getCheckedKeys() as IdType[] || []; form.parentId = hasParentId.value && keys.length ? keys[0] : '0'; if (dialogState.value === 'add') { addLoading(); add() } else { updateLoading(); update() } }
+const submitForm = async () => {
+  if (!(await formRef.value?.validate().catch(() => false))) return
+  const keys = parentTreeRef.value?.getCheckedKeys() as IdType[] || []
+  const payload = {...form, parentId: hasParentId.value && keys.length ? keys[0] : '0'}
+  actionLoading.value = true
+  try {
+    if (dialogState.value === 'add') await addFolder(payload)
+    else await updateFolder(payload)
+    ElMessage.success(dialogState.value === 'add' ? '目录节点已创建' : '目录节点已更新')
+    finishDialog()
+  } finally {
+    actionLoading.value = false
+  }
+}
 const finishDialog = () => { open.value = false; resetForm(); getList() }
-const { loading: updateLoading, isLoading: isUpdateLoading, update } = debouncedUpdateFolder(form, finishDialog)
-const { loading: addLoading, isLoading: isAddLoading, add } = debouncedAddFolder(form, finishDialog)
+const isUpdateLoading = computed(() => actionLoading.value && dialogState.value === 'edit')
+const isAddLoading = computed(() => actionLoading.value && dialogState.value === 'add')
 const cancel = () => { open.value = false; resetForm() }
 
 getList()

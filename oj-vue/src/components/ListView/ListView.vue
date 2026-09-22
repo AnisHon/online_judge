@@ -35,6 +35,7 @@
           </div>
         </template>
       </el-table-column>
+      <template #empty><el-empty :description="errorMessage || '还没有可选择的题单'"><el-button v-if="errorMessage" type="primary" link @click="getList">重试</el-button></el-empty></template>
       <el-table-column label="列表描述" align="center" prop="description" v-if="columns[2].visible" />
       <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[3].visible" />
       <el-table-column label="操作" align="right" width="90" fixed="right">
@@ -64,7 +65,7 @@
 import {reactive, ref} from "vue";
 import {
   type ListView,
-  debouncedGetList,
+  getList as fetchLists,
   type QueryList,
 } from "@/api/list";
 import {useColumn} from "@/hooks/useColumn";
@@ -99,34 +100,43 @@ const resetQuery = () => {
   queryParams.listId = undefined;
   queryParams.sortColumn = undefined;
 
-  getList();
+  void getList();
 };
 
 
 
 const showSearch = ref(true);
 
-const {loading, isLoading, get} = debouncedGetList(queryParams, (data) => {
-  tableList.length = 0;
-  total.value = data.totalRecords
-  tableList.push(...data.data)
-});
-
 const tableList = reactive<ListView[]>([]);
 const total = ref<number>(0);
+const isLoading = ref(false);
+const errorMessage = ref('');
+let requestVersion = 0;
 
 // 获取列表
-const getList = () => {
-  loading();
-  get();
-
+const getList = async () => {
+  const version = ++requestVersion;
+  isLoading.value = true;
+  errorMessage.value = '';
+  try {
+    const data = await fetchLists({...queryParams});
+    if (version !== requestVersion) return;
+    tableList.splice(0, tableList.length, ...data.data);
+    total.value = data.totalRecords;
+  } catch (error) {
+    if (version !== requestVersion) return;
+    errorMessage.value = error instanceof Error ? error.message : '题单加载失败，请稍后重试';
+  } finally {
+    if (version === requestVersion) isLoading.value = false;
+  }
 }
 
 
 
 // 搜索按钮
 const handleQuery = () => {
-  getList();
+  queryParams.currentPage = 1;
+  void getList();
 }
 
 const handleChoose = (data: ListView) => {
@@ -137,7 +147,7 @@ const handleChoose = (data: ListView) => {
 
 
 // created -> 获取列表
-getList()
+void getList()
 
 </script>
 

@@ -27,10 +27,10 @@
       <div>
         <span>题目类型： </span>
         <el-radio-group v-model="queryForm.type">
-          <el-radio :value="1">OJ</el-radio>
-          <el-radio :value="2">填空</el-radio>
-          <el-radio :value="3">选择</el-radio>
-          <el-radio :value="4">多选</el-radio>
+          <el-radio :value="ProblemType.OJ">OJ</el-radio>
+          <el-radio :value="ProblemType.FILL">填空</el-radio>
+          <el-radio :value="ProblemType.CHOICE">选择</el-radio>
+          <el-radio :value="ProblemType.MULTI_CHOICE">多选</el-radio>
         </el-radio-group>
       </div>
       <el-col :span="18">
@@ -75,6 +75,7 @@
 import {computed, type ModelRef, onMounted, reactive, ref} from "vue";
 import {getAllTags} from "@/api/problem/label";
 import {type TagView} from "@/api/problem/label"
+import {ProblemType} from "@/api/problem"
 import type {ListProblemQuery} from "@/api/list";
 import __ from "lodash";
 import type {IdType} from "@/api/common.ts";

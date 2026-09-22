@@ -69,7 +69,7 @@
       <span>拖动题目调整顺序后，点击“保存排序”一次性提交。</span>
       <el-button link type="primary" :disabled="isOrderSaving" @click="resetProblemOrder">撤销排序</el-button>
     </div>
-    <el-table v-loading="isLoading" class="list-problem-table" :data="sortedTableList" row-key="problemId" @selection-change="handleSelectionChange">
+    <el-table ref="tableRef" v-loading="isLoading" class="list-problem-table" :data="sortedTableList" row-key="problemId" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
@@ -99,14 +99,20 @@
               @dragover.prevent="handleDragOver(scope.row)"
               @drop.prevent="handleDrop(scope.row)"
           >
-            <span
+            <button
+                type="button"
                 class="drag-handle"
                 :class="{ 'is-disabled': !isEdit }"
                 :draggable="isEdit"
-                title="拖动调整顺序"
+                :aria-disabled="!isEdit"
+                :aria-grabbed="draggingProblemId === String(scope.row.problemId)"
+                :aria-label="`调整 ${scope.row.title || '题目'} 的顺序，可使用上下方向键移动`"
+                title="拖动调整顺序；编辑状态下也可使用上下方向键"
                 @dragstart="handleDragStart(scope.row, $event)"
                 @dragend="handleDragEnd"
-            ><el-icon><Rank /></el-icon></span>
+                @keydown.up.prevent="moveRow(scope.$index, -1)"
+                @keydown.down.prevent="moveRow(scope.$index, 1)"
+            ><el-icon><Rank /></el-icon></button>
             <span class="order-number">{{ scope.row.problemOrder }}</span>
           </div>
         </template>
@@ -155,22 +161,22 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
+import {computed, reactive, ref, watch} from "vue";
 import {
   ProblemAuth,
 } from "@/api/problem";
 import {useStatuesColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
-import {ElDialog, ElInputNumber, ElMessage, ElMessageBox} from "element-plus";
+import {ElInputNumber, ElMessage, ElMessageBox, type TableInstance} from "element-plus";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {useRoute, useRouter} from "vue-router";
 import {
-  debouncedAddProblemToList,
-  debouncedGetProblem, delProblemFromList,
+  addProblemToList,
+  getProblemsAdmin, delProblemFromList,
   type ListProblemQuery, type ProblemInListView,
-  type ProblemListRelation, batchUpdateProblemOrder, updateProblemRelation
+  batchUpdateProblemOrder, updateProblemRelation
 } from "@/api/list";
 import ListProblemView from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemView.vue";
 import type {IdType} from "@/api/common.ts";
@@ -192,20 +198,6 @@ const queryParams = reactive<ListProblemQuery>({
   type: undefined
 });
 
-// 添加 删除问题的参数
-const relations = reactive<ProblemListRelation[]>([])
-
-// 更新问题的参数
-const form = reactive<ProblemListRelation>({
-  listId: listId.value,
-  problemId: undefined,
-  score: 0,
-  problemOrder: 0
-})
-
-
-
-
 const {columns} = useStatuesColumn(
     ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示', '问题顺序', '分数'],
     [true, true, false, false, true, true, false, false, true, true]
@@ -216,22 +208,6 @@ const open = ref(false)
 
 const showSearch = ref(true);
 
-const {loading, isLoading, get: getProblem} = debouncedGetProblem(listId.value, (data) => {
-  if (data) {
-    tableList.length = 0;
-    tableList.push(...data)
-    tableList.sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0));
-    orderSnapshot.clear();
-    tableList.forEach(x => {
-      x.tempOrder = x.problemOrder
-      x.tempScore = x.score
-      orderSnapshot.set(String(x.problemId), x.problemOrder ?? 0);
-    })
-  }
-
-});
-
-
 const tableList = reactive<ProblemInListView[]>([]);
 const sortedTableList = computed(() => {
   return [...tableList].sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0));
@@ -241,6 +217,9 @@ const orderSnapshot = new Map<string, number>();
 const isOrderSaving = ref(false);
 const draggingProblemId = ref<string | null>(null);
 const dragOverProblemId = ref<string | null>(null);
+const tableRef = ref<TableInstance>();
+const isLoading = ref(false);
+const isAddLoading = ref(false);
 
 const hasPendingOrderChanges = computed(() => {
   return sortedTableList.value.some(row => orderSnapshot.get(String(row.problemId)) !== row.problemOrder);
@@ -251,9 +230,22 @@ const pendingOrderCount = computed(() => {
 });
 
 // 获取列表
-const getList = () => {
-  loading();
-  getProblem();
+const getList = async () => {
+  isLoading.value = true;
+  try {
+    const data = await getProblemsAdmin(listId.value);
+    tableList.splice(0, tableList.length, ...data);
+    tableList.sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0));
+    total.value = tableList.length;
+    orderSnapshot.clear();
+    tableList.forEach(row => {
+      row.tempOrder = row.problemOrder;
+      row.tempScore = row.score;
+      orderSnapshot.set(String(row.problemId), row.problemOrder ?? 0);
+    });
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 // 多选或者单选
@@ -277,28 +269,25 @@ const handleSelectionChange = (selection: ProblemInListView[]) => {
 
 
 
-const handleDelete = (row: ProblemInListView | Event) => {
-  const relations = ids.value.map(x => {
-    return {
-      listId: listId.value,
-      problemId: x
-    }})
-  if (row instanceof Event) {
-    ElMessageBox.confirm(`您是否要删除ID为${ids.value}的数据项？`, {
+const handleDelete = async (row?: ProblemInListView) => {
+  const targetIds = row ? [row.problemId] : [...ids.value];
+  if (!targetIds.length) {
+    ElMessage.warning('请先选择要移除的题目');
+    return;
+  }
+  const relations = targetIds.map(problemId => ({listId: listId.value, problemId}));
+  try {
+    await ElMessageBox.confirm(`确定从题单移除选中的 ${targetIds.length} 道题目吗？`, '移除题目', {
       confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          delProblemFromList(relations).then(getList);
-        })
-  } else {
-    ElMessageBox.confirm('是否确认删除题目为"' + row.title + '"的问题？', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-        .then(() => {
-          delProblemFromList(relations).then(getList);
-        })
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+    await delProblemFromList(relations);
+    ids.value = [];
+    tableRef.value?.clearSelection();
+    await getList();
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') throw error;
   }
 }
 
@@ -314,12 +303,17 @@ const handleScoreUpdate = (data: ProblemInListView) => {
   if (data.tempScore === data.score) {
     return;
   }
+  const previousScore = data.score;
   data.score = data.tempScore;
   updateProblemRelation({
     listId: listId.value,
     problemId: data.problemId,
     score: data.score
-  })
+  }).catch(() => {
+    data.score = previousScore;
+    data.tempScore = previousScore;
+    ElMessage.error('分数保存失败，请重试');
+  });
 }
 
 const handleDragStart = (row: ProblemInListView, event: DragEvent) => {
@@ -372,6 +366,20 @@ const handleDragEnd = () => {
   dragOverProblemId.value = null;
 }
 
+const moveRow = (index: number, direction: -1 | 1) => {
+  if (!isEdit.value) return;
+  const current = [...sortedTableList.value];
+  const targetIndex = index + direction;
+  if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return;
+  const [moved] = current.splice(index, 1);
+  current.splice(targetIndex, 0, moved);
+  current.forEach((row, order) => {
+    row.problemOrder = order + 1;
+    row.tempOrder = order + 1;
+  });
+  tableList.splice(0, tableList.length, ...current);
+};
+
 const saveProblemOrder = async () => {
   if (!hasPendingOrderChanges.value || isOrderSaving.value) {
     return;
@@ -419,44 +427,43 @@ const getAuthCardType = (auth: ProblemAuth) => {
 
 const reset = () => {
   open.value = false;
-  relations.length = 0;
   addProblemIds.value.length = 0;
-  form.problemId = undefined;
-  form.problemOrder = 0;
-
 }
-const {isLoading: isAddLoading, add, loading: addLoading} = debouncedAddProblemToList(relations, () => {
-  reset();
-  getList();
-})
-
-
 const cancel = () => {
   reset();
 }
 
-const submit = () => {
-  addLoading();
-
-  relations.length = 0;
-  relations.push(...addProblemIds.value.map(x => {return {
+const submit = async () => {
+  const problemIds = [...addProblemIds.value];
+  if (!problemIds.length) return;
+  const payload = problemIds.map(problemId => ({
     listId: listId.value,
-    problemId: x,
+    problemId,
     problemOrder: 0,
     score: 0
-  }}));
-
-  add();
+  }));
+  isAddLoading.value = true;
+  try {
+    await addProblemToList(payload);
+    ElMessage.success('题目已加入题单');
+    reset();
+    await getList();
+  } finally {
+    isAddLoading.value = false;
+  }
 }
 
 
 // 返回
 const back = () => {
-  router.push({name: "list-edit"})
+  void router.push({name: "list-edit"})
 }
 
-// created -> 获取列表
-getList();
+watch(listId, (value) => {
+  queryParams.listId = value;
+  ids.value = [];
+  void getList();
+}, {immediate: true});
 
 
 
@@ -481,6 +488,6 @@ getList();
 
 .list-problem-table { border-radius: 14px; overflow: hidden; }
 .order-notice { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--el-color-primary-light-7); border-radius: 10px; color: var(--el-text-color-secondary); background: var(--el-color-primary-light-9); font-size: 12px; }.order-notice .el-icon { color: var(--el-color-primary); }.order-notice .el-button { margin-left: auto; }
-.order-cell { display: inline-flex; align-items: center; gap: 9px; min-width: 76px; min-height: 30px; padding: 2px 7px; border: 1px dashed transparent; border-radius: 8px; transition: border-color .2s, background-color .2s; }.order-cell.is-drag-over { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.drag-handle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; color: var(--el-text-color-secondary); cursor: grab; }.drag-handle:hover { color: var(--el-color-primary); background: var(--el-fill-color-light); }.drag-handle:active { cursor: grabbing; }.drag-handle.is-disabled { cursor: not-allowed; opacity: .45; }.order-number { min-width: 20px; font-variant-numeric: tabular-nums; }
-.dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: rgb(5 150 105 / 12%); color: var(--el-color-success); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.picker-body { min-height: 420px; max-height: 62vh; overflow: auto; }.selection-summary { margin-right: auto; color: var(--el-text-color-secondary); font-size: 12px; }
+.order-cell { display: inline-flex; align-items: center; gap: 9px; min-width: 76px; min-height: 30px; padding: 2px 7px; border: 1px dashed transparent; border-radius: 8px; transition: border-color .2s, background-color .2s; }.order-cell.is-drag-over { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.drag-handle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; color: var(--el-text-color-secondary); background: transparent; cursor: grab; }.drag-handle:hover, .drag-handle:focus-visible { outline: none; color: var(--el-color-primary); background: var(--el-fill-color-light); }.drag-handle:active { cursor: grabbing; }.drag-handle.is-disabled { cursor: not-allowed; opacity: .45; }.order-number { min-width: 20px; font-variant-numeric: tabular-nums; }
+.dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: rgb(5 150 105 / 12%); color: var(--el-color-success); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.picker-body { min-height: 0; max-height: min(62vh, 640px); overflow: auto; }.selection-summary { margin-right: auto; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

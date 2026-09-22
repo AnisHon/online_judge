@@ -29,7 +29,7 @@
 
     <el-dialog v-model="open" :title="title === '添加' ? '新建题单' : '编辑题单'" width="min(620px, 92vw)" append-to-body>
       <div class="dialog-intro"><span class="eyebrow">COLLECTION SETTINGS</span><p>题单可以被竞赛、作业和前台题库重复使用。</p></div>
-      <el-form :model="form" :rules="rules" label-position="top"><el-form-item label="题单名称" prop="listName"><el-input v-model="form.listName" maxlength="80" show-word-limit placeholder="请输入题单名称" /></el-form-item><el-form-item label="题单描述" prop="description"><el-input v-model="form.description" type="textarea" :rows="5" maxlength="450" show-word-limit placeholder="描述题单用途或适用范围" /></el-form-item></el-form>
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top"><el-form-item label="题单名称" prop="listName"><el-input v-model="form.listName" maxlength="80" show-word-limit placeholder="请输入题单名称" /></el-form-item><el-form-item label="题单描述" prop="description"><el-input v-model="form.description" type="textarea" :rows="5" maxlength="450" show-word-limit placeholder="描述题单用途或适用范围" /></el-form-item></el-form>
       <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">保存题单</el-button></template>
     </el-dialog>
   </ProblemModuleShell>
@@ -38,8 +38,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import { Delete, Edit, List, Management, Plus, Refresh, Search } from '@element-plus/icons-vue'
-import { ElMessageBox } from 'element-plus'
-import { type ListForm, type ListView, debouncedAddList, debouncedGetList, debouncedUpdateList, type QueryList, removeList } from '@/api/list'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import { addList, getList as fetchLists, updateList, type ListForm, type ListView, type QueryList, removeList } from '@/api/list'
 import Pagination from '@/components/pageination/Pagination.vue'
 import { useRouter } from 'vue-router'
 import type { IdType } from '@/api/common'
@@ -49,29 +49,43 @@ const router = useRouter()
 const queryParams = reactive<QueryList>({ asc: true, currentPage: 1, pageSize: 20, listId: undefined, listName: undefined })
 const form = reactive<ListForm>({ listId: undefined, listName: '', description: '' })
 const rules = { listName: [{ required: true, message: '请输入题单名称', trigger: 'blur' }] }
+const formRef = ref<FormInstance>()
 const open = ref(false)
 const tableList = reactive<ListView[]>([])
 const total = ref(0)
 const ids = ref<IdType[]>([])
 const single = ref(true)
 const multiple = ref(true)
-const { loading, isLoading, get } = debouncedGetList(queryParams, (data) => { tableList.length = 0; total.value = data.totalRecords; tableList.push(...data.data) })
-const { loading: updateLoading, isLoading: isUpdateLoading, update } = debouncedUpdateList(form, () => finishDialog())
-const { loading: addLoading, isLoading: isAddLoading, add } = debouncedAddList(form, () => finishDialog())
+const isLoading = ref(false)
+const isSubmitting = ref(false)
+const isUpdateLoading = computed(() => isSubmitting.value && dialogState.value === 2)
+const isAddLoading = computed(() => isSubmitting.value && dialogState.value === 1)
 const dialogState = ref(1)
 const title = computed(() => dialogState.value === 1 ? '添加' : '修改')
 
 const resetForm = () => Object.assign(form, { listId: undefined, listName: '', description: '' })
 const resetQuery = () => { queryParams.listName = undefined; queryParams.listId = undefined; queryParams.sortColumn = undefined; getList() }
-const getList = () => { loading(); get() }
-const handleQuery = () => { queryParams.currentPage = 1; getList() }
+const getList = async () => { isLoading.value = true; try { const data = await fetchLists({...queryParams}); tableList.splice(0, tableList.length, ...data.data); total.value = data.totalRecords; ids.value = [] } finally { isLoading.value = false } }
+const handleQuery = () => { queryParams.currentPage = 1; void getList() }
 const handleSelectionChange = (selection: ListView[]) => { ids.value = selection.map((item) => item.listId); single.value = selection.length !== 1; multiple.value = !selection.length }
 const handleAdd = () => { resetForm(); dialogState.value = 1; open.value = true }
 const handleUpdate = (data?: ListView) => { const item = data || tableList.find((x) => x.listId === ids.value[0]); if (!item) return; resetForm(); Object.assign(form, item); dialogState.value = 2; open.value = true }
 const handleDelete = (row?: ListView) => { const target = row ? [row.listId] : ids.value; if (!target.length) return; ElMessageBox.confirm(`确定删除选中的 ${target.length} 个题单吗？`, '删除题单', { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }).then(() => removeList(target).then(getList)).catch(() => {}) }
 const finishDialog = () => { open.value = false; resetForm(); getList() }
-const submitForm = () => { if (dialogState.value === 1) { addLoading(); add() } else { updateLoading(); update() } }
-const cancel = () => { open.value = false; resetForm() }
+const submitForm = async () => {
+  if (!(await formRef.value?.validate().catch(() => false))) return
+  isSubmitting.value = true
+  const payload = {...form}
+  try {
+    if (dialogState.value === 1) await addList(payload)
+    else await updateList(payload)
+    ElMessage.success(dialogState.value === 1 ? '题单已创建' : '题单已更新')
+    finishDialog()
+  } finally {
+    isSubmitting.value = false
+  }
+}
+const cancel = () => { open.value = false; resetForm(); formRef.value?.clearValidate() }
 const handleCommand = (command: string, row: ListView) => { if (command === 'handleProblem') router.push({ name: 'list-problem', params: { id: row.listId } }) }
 
 getList()

@@ -83,13 +83,13 @@ const colorToHex = (value?: string) => {
 }
 const normalizeTagColor = (value?: string) => { form.tagColor = colorToHex(value || form.tagColor) }
 const resetForm = () => Object.assign(form, { tagId: undefined, tagName: '', tagColor: '#6366F1' })
-const getList = async () => { loading.value = true; try { tableList.value = (await getTag()) || [] } finally { loading.value = false } }
+const getList = async () => { loading.value = true; try { tableList.value = (await getTag()) || [] } catch { tableList.value = [] } finally { loading.value = false } }
 const refreshList = async () => { ids.value = []; await getList() }
 const handleSelectionChange = (selection: TagView[]) => { ids.value = selection.map((item) => item.tagId) }
 const handleAdd = () => { resetForm(); dialogState.value = 1; open.value = true }
 const handleUpdate = (data?: TagView) => { const item = data || tableList.value.find((x) => x.tagId === ids.value[0]); if (!item) return; Object.assign(form, item, { tagColor: colorToHex(item.tagColor) }); dialogState.value = 2; open.value = true }
-const submitForm = async () => { if (!(await formRef.value?.validate().catch(() => false))) return; form.tagColor = colorToHex(form.tagColor); submitting.value = true; try { if (dialogState.value === 1) await addTag(form); else await updateTag(form); ElMessage.success('标签已保存'); open.value = false; resetForm(); await refreshList() } finally { submitting.value = false } }
-const handleDelete = async (row?: TagView) => { const target = row ? [row.tagId] : ids.value; if (!target.length) return; await ElMessageBox.confirm(`确定删除选中的 ${target.length} 个标签吗？`, '删除标签', { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }); await removeTag(target); ElMessage.success('标签已删除'); await getList() }
+const submitForm = async () => { if (!(await formRef.value?.validate().catch(() => false))) return; form.tagColor = colorToHex(form.tagColor); submitting.value = true; try { if (dialogState.value === 1) await addTag({...form}); else await updateTag({...form}); ElMessage.success('标签已保存'); open.value = false; resetForm(); await refreshList() } finally { submitting.value = false } }
+const handleDelete = async (row?: TagView) => { const target = row ? [row.tagId] : [...ids.value]; if (!target.length) return; try { await ElMessageBox.confirm(`确定删除选中的 ${target.length} 个标签吗？`, '删除标签', { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }); await removeTag(target); ids.value = []; ElMessage.success('标签已删除'); await getList() } catch (error) { if (error !== 'cancel' && error !== 'close') throw error } }
 const cancel = () => { open.value = false; resetForm() }
 
 onMounted(getList)

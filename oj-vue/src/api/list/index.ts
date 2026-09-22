@@ -13,6 +13,7 @@ interface ListView {
     listId: IdType;
     listName: string;
     description: string;
+    createTime?: string | Date;
 }
 
 interface ListForm {
@@ -77,11 +78,11 @@ const batchUpdateProblemOrder = async (listId: IdType, items: ProblemListOrderIt
 
 const debouncedAddProblemToList = (relations: ProblemListRelation[], success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const add = debounce(() => {
+    const add = () => {
         addProblemToList(relations)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, add};
 }
 
@@ -153,11 +154,11 @@ const addList = async (form: ListForm) => {
 
 const debouncedAddList = (form: ListForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const add = debounce(() => {
+    const add = () => {
         addList(form)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, add};
 }
 
@@ -169,11 +170,11 @@ const updateList = async (form: ListForm) => {
 
 const debouncedUpdateList = (form: ListForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const update = debounce(() => {
+    const update = () => {
         updateList(form)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, update};
 }
 
@@ -213,10 +214,13 @@ export {
     debouncedUpdateList,
     debouncedGetProblem,
     debouncedFetchProblemsNotInList,
+    fetchProblemsNotInList,
     debouncedAddProblemToList,
+    addProblemToList,
     delProblemFromList,
     updateProblemRelation,
     batchUpdateProblemOrder,
     debouncedUserGetProblem,
-    getProblems
+    getProblems,
+    getProblemsAdmin
 }

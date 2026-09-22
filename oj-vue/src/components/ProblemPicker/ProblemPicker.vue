@@ -63,7 +63,7 @@
       <el-table-column label="操作" width="90" fixed="right" align="right">
         <template #default="{ row }"><el-button link type="primary" :icon="Select" @click.stop="selectProblem(row)">选用</el-button></template>
       </el-table-column>
-      <template #empty><el-empty description="没有找到符合条件的题目" :image-size="76" /></template>
+      <template #empty><el-empty :description="errorMessage || '没有找到符合条件的题目'" :image-size="76"><el-button v-if="errorMessage" type="primary" link @click="getList">重试</el-button></el-empty></template>
     </el-table>
 
     <Pagination
@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { Collection, Document, Key, Refresh, Search, Select } from '@element-plus/icons-vue'
 import { dict, getProblems, getProblemsAdmin, ProblemType, type AdminQueryProblem, type ProblemParam, type ProblemView, type TaggedProblemView } from '@/api/problem'
 import type { IdType } from '@/api/common'
@@ -90,10 +90,12 @@ interface ProblemPickerView extends Pick<ProblemView, 'problemId' | 'title' | 's
 const modelValue = defineModel<IdType>()
 const emit = defineEmits<{ (event: 'select', problem: ProblemPickerView): void }>()
 const isAdminPicker = computed(() => hasPerm('problem:problem:list'))
-const query = reactive({ currentPage: 1, pageSize: 10, title: '', problemId: '', type: '' as string | ProblemType })
+const query = reactive({ currentPage: 1, pageSize: 10, title: '', problemId: '', type: undefined as ProblemType | undefined })
 const problems = ref<ProblemPickerView[]>([])
 const total = ref(0)
 const loading = ref(false)
+const errorMessage = ref('')
+let requestVersion = 0
 
 const shortId = (value: IdType) => {
   const text = String(value)
@@ -103,33 +105,43 @@ const shortId = (value: IdType) => {
 const problemTypeText = (type: ProblemType) => dict.problemType.find(item => item.value === type)?.label || '未知类型'
 
 const getList = async () => {
+  const version = ++requestVersion
   loading.value = true
+  errorMessage.value = ''
   try {
     if (isAdminPicker.value) {
-      const params: AdminQueryProblem = { currentPage: query.currentPage, pageSize: query.pageSize, title: query.title || undefined, problemId: query.problemId || undefined, type: query.type as ProblemType || undefined }
+      const params: AdminQueryProblem = { currentPage: query.currentPage, pageSize: query.pageSize, title: query.title || undefined, problemId: query.problemId || undefined, type: query.type }
       const result = await getProblemsAdmin(params)
+      if (version !== requestVersion) return
       problems.value = result.data.map(toPickerView)
       total.value = result.totalRecords
     } else {
-      const params: ProblemParam = { currentPage: query.currentPage, pageSize: query.pageSize, title: query.title || undefined, problemId: query.problemId || null, type: query.type as ProblemType || undefined }
+      const params: ProblemParam = { currentPage: query.currentPage, pageSize: query.pageSize, title: query.title || undefined, problemId: query.problemId || null, type: query.type }
       const result = await getProblems(params)
+      if (version !== requestVersion) return
       problems.value = result.data.map(toPickerView)
       total.value = result.totalRecords
     }
-  } catch {
-    problems.value = []
-    total.value = 0
+  } catch (error) {
+    if (version !== requestVersion) return
+    errorMessage.value = error instanceof Error ? error.message : '题目加载失败，请稍后重试'
   } finally {
-    loading.value = false
+    if (version === requestVersion) loading.value = false
   }
 }
 
 const toPickerView = (problem: ProblemView | TaggedProblemView): ProblemPickerView => ({ problemId: String(problem.problemId), title: problem.title, source: problem.source, type: problem.type })
 const handleQuery = () => { query.currentPage = 1; getList() }
-const resetQuery = () => { query.title = ''; query.problemId = ''; query.type = ''; handleQuery() }
+const resetQuery = () => { query.title = ''; query.problemId = ''; query.type = undefined; handleQuery() }
 const selectProblem = (problem: ProblemPickerView) => { modelValue.value = problem.problemId; emit('select', problem) }
 
-getList()
+watch(isAdminPicker, () => {
+  problems.value = []
+  query.currentPage = 1
+  void getList()
+})
+
+void getList()
 </script>
 
 <style scoped lang="scss">

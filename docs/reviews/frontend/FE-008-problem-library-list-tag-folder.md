@@ -11,7 +11,7 @@
 - 复用组件：`oj-vue/src/components/ProblemPicker/ProblemPicker.vue`、`oj-vue/src/components/ListView/ListView.vue`、`ProblemModuleShell.vue`
 - API/工具：`oj-vue/src/api/problem/index.ts`、`api/problem/label.ts`、`api/list/*`、`api/tag/index.ts`、`api/folder/index.ts`、`utils/simpleCRUD.ts`
 - 本次覆盖：CRUD 正确性、批量操作、请求竞态、表单校验、权限过滤、Long ID/类型契约、拖拽排序、标签/题单/目录选择、空态/错误态、CSS 复用、响应式、暗色模式和可访问性。
-- 本次只做 review，不修改业务代码。
+- 本文件先记录审查结论；后续修复已在同一批次落地并在末尾记录验证结果。
 
 ## 2. 结论摘要
 
@@ -231,15 +231,48 @@
 - 逐行检查了公共题库/题单、后台题目/题单/标签/目录页面、题目/题单选择器、答案/测试点编辑器和相关 API wrapper。
 - 检查了 CRUD 请求 payload、批量删除、题单顺序保存、分数更新、标签关系增删、目录父级选择、动态权限、Long ID、空态/错误态和 debounce 生命周期。
 - 检查了固定高度、表格固定列、弹窗滚动、移动端断点、暗色颜色变量、拖拽和键盘语义。
-- 未修改业务代码，未执行会改变运行环境或数据库的操作。
+- 本批只修改题库/题单/标签/目录相关前端和 API 类型，没有执行数据库、部署或运行环境变更。
 
 ### 当前验证限制
 
 - 本次 review 没有替代真实浏览器回归；上传认证、快速连续操作、路由复用、拖拽中断、跨页选择、慢网络和暗色/移动端布局需要后续浏览器验证。
-- 当前报告阶段尚未执行前端类型检查；后续会单独运行 `pnpm run type-check` 和 `git diff --check`，并确认只新增本报告。
+- 前端类型检查、生产构建、Java 11 下的 problem-service Maven 编译和 `git diff --check` 已在本批完成，具体结果见第 7 节。
 
-## 7. 本次未修改内容
+## 7. 本次修复结果
 
-- 未修改题库、题单、标签、目录页面、选择器、拖拽逻辑、CRUD API 或后端代码。
-- 未提交 Git。
-- 仅新增本 review 报告。
+### 已修复
+
+- FE-008-01、02：题目管理支持真正的批量删除；查询、刷新、删除后清空 selection，修改/删除按钮只由真实选中状态决定。
+- FE-008-03、04：上传注入当前 access token，限制单文件和 500KB，独立维护上传 loading，安全解析非 JSON 错误并在取消/成功/失败时复位。
+- FE-008-05、06：标签按 `tagId` 集合计算增删差异，add/del 使用 `Promise.all` 等待完成后再关闭弹窗。
+- FE-008-07、08：标签和题单补充错误/取消处理；题单保存真正执行表单校验，并提交不可变 payload 快照。
+- FE-008-09、10、11、13：题单行删除和批量删除目标分离；新增题目立即提交调用时的 payload；分数保存失败回滚；路由题单 ID 变化会重新加载并重置上下文。
+- FE-008-14：添加题目选择器使用稳定 `row-key`，用 ID Set 保留跨页选择并在翻页后恢复当前页选中状态。
+- FE-008-15：题型筛选统一使用 `ProblemType` 数字枚举，移除 ProblemPicker 的字符串强制断言。
+- FE-008-16、17：ProblemPicker 依据响应式权限重新选择 admin/public 接口，选择器增加请求版本保护、错误态和重试；ListView 与题单候选题列表也增加错误态。
+- FE-008-18、19、20、21：公共题单切换节点先清空旧内容并显示加载/错误态；目录按用户设置的 `order` 排序；刷新清理 selection；文件节点的题单关联使用动态校验规则。
+- FE-008-22、23：题库相关 mutation wrapper 不再延迟读取外部 reactive 表单；相关 API 类型补齐题单创建时间、可选目录关联字段和 JSON 日期/Long ID 的实际形态。
+- FE-008-12、26 的一部分：题单排序手柄改为可聚焦 button，支持上下方向键，补充 `aria` 和 `focus-visible`；添加题目弹窗去掉固定最小高度，避免空态撑出不必要的滚动区域。
+
+### 仍待后续重构
+
+- FE-008-12 的触摸指针拖拽、插入位置预览和完整 reorder composable。
+- FE-008-24 的后台通用 `ModuleToolbar`、`FilterPanel`、`EntityPickerTable`、`DialogIntro` 与统一设计 token 抽取。
+- FE-008-25 的所有弹窗滚动策略统一；当前只移除了题单添加弹窗的固定最小高度。
+- FE-008-26 的全量颜色 token 收敛；当前只补了排序操作的真实 button、`aria-*` 和 `focus-visible`。
+
+### 代码与文件范围
+
+- 题目管理：`ProblemEdit.vue`、`api/problem/index.ts`、`api/problem/label.ts`。
+- 题单管理：`ListEdit.vue`、`ListProblem.vue`、`list-problem-view/*`、`api/list/index.ts`。
+- 目录/标签：`FolderEdit.vue`、`TagEdit.vue`、`api/folder/index.ts`、`api/tag/index.ts`。
+- 选择器与公共页面：`ProblemPicker.vue`、`ListView.vue`、公共 `List.vue`。
+- 本批未改数据库、后端 Java 或部署配置。
+
+### 验证结果
+
+- `pnpm run type-check`：通过。
+- `pnpm run build-only`：通过；仅保留项目原有动态导入和大 chunk 警告。
+- `JAVA_HOME=/usr/lib/jvm/java-11-temurin-jdk mvn -B -DskipTests -pl problem-service -am compile`：通过。
+- `git diff --check`：通过。
+- 尚未替代真实浏览器回归：触摸拖拽、慢网络竞态、权限切换、上传 401/403 和暗色/移动端视觉仍需手测。

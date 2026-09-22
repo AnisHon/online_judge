@@ -8,7 +8,7 @@ interface TagView {
     tagId: IdType;
     tagName: string;
     tagColor: string;
-    createTime: Date;
+    createTime?: string | Date;
 }
 
 interface TagForm {
@@ -28,11 +28,11 @@ const addTag = async (form: TagForm) => {
 
 const debouncedAddTag = (form: TagForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const add = debounce(() => {
+    const add = () => {
         addTag(form)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, add};
 }
 
@@ -44,11 +44,11 @@ const updateTag = async (form: TagForm) => {
 
 const debouncedUpdateTag = (form: TagForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const update = debounce(() => {
+    const update = () => {
         updateTag(form)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, update};
 }
 
@@ -81,6 +81,4 @@ export {
     updateTag,
     debouncedUpdateTag,
 }
-
-
 

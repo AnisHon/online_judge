@@ -7,7 +7,7 @@
       <right-tool-bar style="margin-left: auto" v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
     </el-row>
     <!--    ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示']-->
-    <el-table v-loading="isLoading" :data="tableList" @selection-change="handleSelectionChange">
+    <el-table ref="tableRef" v-loading="isLoading" :data="tableList" row-key="problemId" :reserve-selection="true" @select="handleSelect" @select-all="handleSelectAll">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" />
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
@@ -38,11 +38,12 @@
         v-model:limit="queryParams.pageSize"
         @pagination="getList"
     />
+    <el-alert v-if="errorMessage" class="picker-error" :title="errorMessage" type="error" show-icon closable @close="errorMessage = ''" />
   </div>
 </template>
 
 <script setup lang="ts">
-import {reactive, ref} from "vue";
+import {nextTick, reactive, ref, watch} from "vue";
 import {
   ProblemAuth,
   type ProblemView,
@@ -50,10 +51,11 @@ import {
 import {useStatuesColumn} from "@/hooks/useColumn";
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
-import {debouncedFetchProblemsNotInList, type ListProblemQuery} from "@/api/list";
+import {fetchProblemsNotInList, type ListProblemQuery} from "@/api/list";
 import ListProblemViewForm from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemViewForm.vue";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
 import Pagination from "@/components/pageination/Pagination.vue";
+import type {TableInstance} from "element-plus";
 import type {IdType} from "@/api/common.ts";
 
 const {listId} = defineProps<{
@@ -79,19 +81,29 @@ const {columns} = useStatuesColumn(
     ['问题ID', '题目', '问题描述', '问题来源', '问题类型' ,'问题权限', '创建时间', '提示'],
     [false, true, false, true, true, true, false, false]
 );
-const {loading, isLoading, get: getProblem} = debouncedFetchProblemsNotInList(queryParams, (data) => {
-  tableList.length = 0;
-  tableList.push(...data.data);
-  total.value = data.totalRecords;
-});
-
-
 const tableList = reactive<ProblemView[]>([]);
+const tableRef = ref<TableInstance>();
+const isLoading = ref(false);
+const errorMessage = ref('');
+let requestVersion = 0;
 
 // 获取列表
-const getList = () => {
-  loading();
-  getProblem();
+const getList = async () => {
+  const version = ++requestVersion;
+  isLoading.value = true;
+  errorMessage.value = '';
+  try {
+    const data = await fetchProblemsNotInList({...queryParams});
+    if (version !== requestVersion) return;
+    tableList.splice(0, tableList.length, ...data.data);
+    total.value = data.totalRecords;
+    syncSelection();
+  } catch (error) {
+    if (version !== requestVersion) return;
+    errorMessage.value = error instanceof Error ? error.message : '题目加载失败，请稍后重试';
+  } finally {
+    if (version === requestVersion) isLoading.value = false;
+  }
 }
 
 // 多选或者单选
@@ -99,13 +111,37 @@ const single = ref(true)
 const multiple = ref(true)
 
 // 选择列的id数组
-const ids = defineModel<IdType[]>()
-// const ids = ref<number[]>([])
+const ids = defineModel<IdType[]>({default: () => []})
 
-const handleSelectionChange = (selection: ProblemView[]) => {
-  ids.value = selection.map(item => item.problemId);
-  single.value = selection.length != 1;
-  multiple.value = !selection.length;
+const selectedIds = () => new Set((ids.value || []).map(id => String(id)));
+
+const syncSelection = () => {
+  const selected = selectedIds();
+  void nextTick(() => tableList.forEach(row => {
+    tableRef.value?.toggleRowSelection(row, selected.has(String(row.problemId)), true);
+  }));
+};
+
+const updateSelectionState = () => {
+  single.value = (ids.value || []).length !== 1;
+  multiple.value = !(ids.value || []).length;
+};
+
+const handleSelect = (_selection: ProblemView[], row: ProblemView) => {
+  const selected = selectedIds();
+  const id = String(row.problemId);
+  if (selected.has(id)) selected.delete(id); else selected.add(id);
+  ids.value = [...selected];
+  updateSelectionState();
+};
+
+const handleSelectAll = (selection: ProblemView[]) => {
+  const selected = selectedIds();
+  const pageIds = tableList.map(row => String(row.problemId));
+  if (selection.length === tableList.length) pageIds.forEach(id => selected.add(id));
+  else pageIds.forEach(id => selected.delete(id));
+  ids.value = [...selected];
+  updateSelectionState();
 }
 
 const getAuthText = (auth: ProblemAuth) => {
@@ -116,20 +152,25 @@ const getAuthCardType = (auth: ProblemAuth) => {
   return auth === ProblemAuth.CONTEST ? "danger" : "success";
 }
 
-// created -> 获取列表
-getList();
+watch(() => ids.value, () => {
+  updateSelectionState();
+  syncSelection();
+}, {deep: true});
+
+void getList();
 
 
 
 </script>
 
 <style scoped>
+.picker-error { margin-top: 12px; }
 
 </style>
 
-<style>
+<style scoped>
 .app-container {
-  .inline-form {
+  :deep(.inline-form) {
     .el-input {
       --el-input-width: 220px;
     }
@@ -138,7 +179,7 @@ getList();
       --el-select-width: 220px;
     }
   }
-  .el-table__row .el-dropdown {
+  :deep(.el-table__row .el-dropdown) {
     height: 23px;
   }
 

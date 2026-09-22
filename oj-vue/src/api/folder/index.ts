@@ -14,10 +14,10 @@ enum FolderType {
 interface FolderView {
     folderId: IdType;
     folderName: string;
-    order: number;
+    order?: number;
     folderType: FolderType;
-    listId: IdType;
-    parentId: IdType;
+    listId?: IdType;
+    parentId?: IdType;
 }
 
 interface FolderForm {
@@ -71,11 +71,11 @@ const addFolder = async (form: FolderForm) => {
 
 const debouncedAddFolder = (form: FolderForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const add = debounce(() => {
+    const add = () => {
         addFolder(form)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, add};
 }
 
@@ -87,11 +87,11 @@ const updateFolder = async (form: FolderForm) => {
 
 const debouncedUpdateFolder = (form: FolderForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
-    const update = debounce(() => {
+    const update = () => {
         updateFolder(form)
             .then(success)
             .finally(finish);
-    }, 1000);
+    }
     return {loading, isLoading, update};
 }
 
@@ -132,6 +132,4 @@ export {
     dict,
     FolderType
 }
-
-
 
