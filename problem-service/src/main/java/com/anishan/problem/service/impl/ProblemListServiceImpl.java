@@ -6,6 +6,7 @@ import com.anishan.api.config.ConstConfig;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ProblemAuth;
+import com.anishan.commons.exception.BusinessException;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListOrderBatchDto;
@@ -126,6 +127,16 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateProblemOrder(ProblemListOrderBatchDto request) {
+        if (request.getExpectedUpdateTime() == null) {
+            throw new BusinessException("题单版本已失效，请刷新后重试");
+        }
+
+        // 锁住题单版本，再校验完整的题目集合，避免两个管理员互相覆盖排序。
+        LocalDateTime currentUpdateTime = problemListMapper.selectUpdateTimeForUpdate(request.getListId());
+        if (currentUpdateTime == null || !currentUpdateTime.equals(request.getExpectedUpdateTime())) {
+            throw new BusinessException("题单已被其他管理员修改，请刷新后重试");
+        }
+
         List<ProblemProblemListRelation> currentRelations = problemProblemListService.list(
                 new LambdaQueryWrapper<ProblemProblemListRelation>()
                         .select(ProblemProblemListRelation::getProblemId)
@@ -154,19 +165,17 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
         }
 
         // 不依赖 MySQL 是否开启 useAffectedRows：部分顺序本来就相同的时候，更新行数可能小于题目总数。
-        return problemProblemListMapper.updateProblemOrderBatch(request.getListId(), request.getItems()) > 0;
+        // 即使排序结果与数据库部分相同，也要推进题单版本；不能依赖 MySQL 的 affected rows。
+        problemProblemListMapper.updateProblemOrderBatch(request.getListId(), request.getItems());
+        if (problemListMapper.touchUpdateTime(request.getListId(), request.getExpectedUpdateTime()) != 1) {
+            throw new BusinessException("题单已被其他管理员修改，请刷新后重试");
+        }
+        return true;
     }
 
     @Override
     public List<ProblemInListVo> getProblems(Long id) {
-        MPJLambdaWrapper<ProblemList> wrapper = new MPJLambdaWrapper<ProblemList>()
-                .selectAll(Problem.class)
-                .select(ProblemProblemListRelation::getProblemOrder, ProblemProblemListRelation::getScore)
-                .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, ProblemList::getListId)
-                .leftJoin(Problem.class, Problem::getProblemId, ProblemProblemListRelation::getProblemId)
-                .eq(ProblemList::getListId, id)
-                .isNotNull(Problem::getProblemId);
-        return problemListMapper.selectJoinList(ProblemInListVo.class, wrapper);
+        return problemListMapper.selectAdminProblems(id);
     }
 
     @Override
@@ -191,4 +200,3 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
         return problemListMapper.selectProblemByListId(userId, id);
     }
 }
-

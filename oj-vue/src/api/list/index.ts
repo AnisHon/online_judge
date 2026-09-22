@@ -50,6 +50,8 @@ interface ProblemInListView extends ProblemView {
     userScore?: number;
     correct?: boolean;
     finish?: boolean;
+    /** 后台题单排序的乐观锁版本，来自 problem_list.update_time。 */
+    listUpdateTime?: string;
 }
 
 
@@ -69,10 +71,10 @@ const updateProblemRelation = async (relation: ProblemListRelation) => {
     await update(relation, "/problem-api/list/updateProblem")
 }
 
-const batchUpdateProblemOrder = async (listId: IdType, items: ProblemListOrderItem[]) => {
-    await put<{ listId: IdType; items: ProblemListOrderItem[] }, boolean>(
+const batchUpdateProblemOrder = async (listId: IdType, expectedUpdateTime: string, items: ProblemListOrderItem[]) => {
+    await put<{ listId: IdType; expectedUpdateTime: string; items: ProblemListOrderItem[] }, boolean>(
         "/problem-api/list/batch-update-order",
-        {listId, items}
+        {listId, expectedUpdateTime, items}
     );
 }
 
@@ -102,9 +104,9 @@ const debouncedFetchProblemsNotInList = (problemParam: ListProblemQuery, success
     return {loading, isLoading, get};
 }
 
-async function getProblemsAdmin(listId: IdType) {
+async function getProblemsAdmin(listId: IdType): Promise<ProblemInListView[]> {
     const {data} =
-        await get<ProblemView[], IdType>("/problem-api/list/getProblems", listId);
+        await get<ProblemInListView[], IdType>("/problem-api/list/getProblems", listId);
     return data;
 }
 

@@ -5,6 +5,7 @@ import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -20,8 +21,14 @@ public interface ProblemListMapper extends MPJBaseMapper<ProblemList> {
 
     List<ProblemInListVo> selectProblemByListId(@Param("userId") Long userId, @Param("listId") Long listId);
 
-}
+    List<ProblemInListVo> selectAdminProblems(@Param("listId") Long listId);
 
+    LocalDateTime selectUpdateTimeForUpdate(@Param("listId") Long listId);
+
+    int touchUpdateTime(@Param("listId") Long listId,
+                        @Param("expectedUpdateTime") LocalDateTime expectedUpdateTime);
+
+}
 
 
 

@@ -9,6 +9,7 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -22,6 +23,10 @@ public class ProblemListOrderBatchDto {
     @ApiModelProperty("题单 ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long listId;
+
+    @NotNull
+    @ApiModelProperty("提交排序时读取到的题单更新时间，用于乐观锁校验")
+    private LocalDateTime expectedUpdateTime;
 
     @Valid
     @NotEmpty

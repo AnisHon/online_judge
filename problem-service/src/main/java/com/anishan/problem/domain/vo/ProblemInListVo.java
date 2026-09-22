@@ -67,4 +67,7 @@ public class ProblemInListVo {
 
     @ApiModelProperty("是否完成")
     private Boolean finish;
+
+    @ApiModelProperty("题单更新时间，仅后台排序接口使用")
+    private LocalDateTime listUpdateTime;
 }

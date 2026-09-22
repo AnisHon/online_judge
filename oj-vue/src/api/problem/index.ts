@@ -140,6 +140,28 @@ interface AdminQueryProblem extends PagedType{
     type?: ProblemType;
 }
 
+const problemTypeByName: Record<string, ProblemType> = {
+    OJ: ProblemType.OJ,
+    FILL: ProblemType.FILL,
+    CHOICE: ProblemType.CHOICE,
+    MULTI_CHOICE: ProblemType.MULTI_CHOICE,
+};
+
+const normalizeProblemType = (type: ProblemType | number | string | undefined): ProblemType | undefined => {
+    if (type === undefined || type === null || type === '') return undefined;
+    if (typeof type === 'string') {
+        const normalized = type.trim().toUpperCase().replace(/[-\s]+/g, '_');
+        if (!normalized) return undefined;
+        const namedValue = problemTypeByName[normalized];
+        if (namedValue !== undefined) return namedValue;
+        type = normalized;
+    }
+    const value = Number(type);
+    return Number.isInteger(value) && value >= ProblemType.OJ && value <= ProblemType.MULTI_CHOICE
+        ? value as ProblemType
+        : undefined;
+};
+
 interface Answer {
     answerId?: IdType;
     answerText?: string;
@@ -198,8 +220,12 @@ export const countProblems = async (): Promise<number> => {
 }
 
 async function getProblemsAdmin(queryProblem: AdminQueryProblem): Promise<PagedResponse<ProblemView>> {
+    const normalizedQuery = {
+        ...queryProblem,
+        type: normalizeProblemType(queryProblem.type),
+    } as AdminQueryProblem;
     const {data} =
-        await getWithParams<PagedResponse<ProblemView>, AdminQueryProblem>("/problem-api/problem/listAll", queryProblem);
+        await getWithParams<PagedResponse<ProblemView>, AdminQueryProblem>("/problem-api/problem/listAll", normalizedQuery);
     return data;
 }
 
@@ -213,7 +239,7 @@ const debouncedGetProblem = (queryData: AdminQueryProblem, success: successCallb
     return {loading, isLoading, get};
 }
 
-async function getAdminDetailProblem(id: IdType | undefined): Promise<ProblemForm> {
+export async function getAdminDetailProblem(id: IdType | undefined): Promise<ProblemForm> {
     const {code, data, message} = await get<ProblemForm, IdType>("/problem-api/problem/detail", id)
     if (code !== 200) {
         ElMessage.warning(message)
@@ -235,7 +261,7 @@ async function removeProblems(ids: IdType | IdType[]) {
     await remove(ids, "/problem-api/problem");
 }
 
-async function addProblems(form: ProblemForm) {
+export async function addProblems(form: ProblemForm) {
     const {data} = await post<ProblemForm, IdType>("/problem-api/problem/addProblem", form);
     return data
 }
@@ -251,7 +277,7 @@ const debouncedAddProblem = (form: ProblemForm, success: successCallback<IdType>
     return {loading, isLoading, add};
 }
 
-async function updateProblems(form: ProblemForm) {
+export async function updateProblems(form: ProblemForm) {
     await update(form, "/problem-api/problem");
 }
 
@@ -268,6 +294,7 @@ const debouncedUpdateProblem = (form: ProblemForm, success: successCallback<void
 async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
     const response = await getWithParams<PagedData, ProblemParam>("/problem-api/problem/taggedList", {
         ...problemParam,
+        type: normalizeProblemType(problemParam.type),
         currentPage: Math.max(1, Number(problemParam.currentPage) || 1),
         pageSize: Math.max(1, Number(problemParam.pageSize) || 20),
     });

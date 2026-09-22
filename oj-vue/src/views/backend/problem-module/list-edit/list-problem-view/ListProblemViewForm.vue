@@ -51,17 +51,34 @@
 
 
 
-    <el-dialog style="padding: 20px" v-model="tagDialogVisible" title="选择ID">
-      <el-space wrap>
-        <el-check-tag
+    <el-dialog class="tag-dialog" v-model="tagDialogVisible" title="选择标签"
+               width="min(680px, calc(100vw - 32px))" append-to-body destroy-on-close>
+      <div class="tag-dialog-toolbar">
+        <span>可以选择多个标签筛选题目</span>
+        <el-button v-if="dialogTagIds.length" link type="primary" @click="dialogTagIds = []">清空选择</el-button>
+      </div>
+      <div v-if="tags.length" class="tag-card-grid" role="list">
+        <button
             v-for="item of tags"
-            :key="item.tagId"
-            :checked="queryForm.tagIds?.includes(item.tagId)"
+            :key="String(item.tagId)"
+            type="button"
+            class="tag-card"
+            :class="{ 'is-selected': isDialogTagSelected(item.tagId) }"
+            :style="{ '--tag-color': item.tagColor || '#64748b' }"
+            role="listitem"
+            :aria-pressed="isDialogTagSelected(item.tagId)"
             @click="handleCheckTag(item.tagId)"
         >
-          {{ item.tagName }}
-        </el-check-tag>
-      </el-space>
+          <span class="tag-card__dot" aria-hidden="true" />
+          <span class="tag-card__name">{{ item.tagName }}</span>
+          <el-icon v-if="isDialogTagSelected(item.tagId)" class="tag-card__check"><Check /></el-icon>
+        </button>
+      </div>
+      <el-empty v-else description="暂无标签" :image-size="64" />
+      <template #footer>
+        <el-button @click="cancelTagSelection">取消</el-button>
+        <el-button type="primary" @click="applyTagSelection">应用筛选</el-button>
+      </template>
 
     </el-dialog>
   </div>
@@ -79,6 +96,7 @@ import {ProblemType} from "@/api/problem"
 import type {ListProblemQuery} from "@/api/list";
 import __ from "lodash";
 import type {IdType} from "@/api/common.ts";
+import {Check} from '@element-plus/icons-vue';
 
 
 
@@ -89,6 +107,7 @@ const queryForm = <ModelRef<ListProblemQuery>>defineModel<ListProblemQuery>()
 const select = ref("1");
 
 const tagDialogVisible = ref(false);
+const dialogTagIds = ref<IdType[]>([]);
 
 const getTag = (id: IdType) => {
   return __.find(tags, x => x.tagId === id);
@@ -120,6 +139,7 @@ const onSelectChange = () => {
 }
 
 const handleChooseTag = () => {
+  dialogTagIds.value = [...(queryForm.value.tagIds || [])];
   tagDialogVisible.value = true;
 }
 
@@ -127,19 +147,27 @@ const onResetHandler = () => {
   queryForm.value.problemId = "";
   queryForm.value.title = "";
   queryForm.value.tagIds = [];
+  dialogTagIds.value = [];
   queryForm.value.type = undefined;
   emit('query');
 }
 
 const handleCheckTag = (id: IdType) => {
-
-  const index = queryForm.value.tagIds?.indexOf(id);
+  const index = dialogTagIds.value.findIndex(item => String(item) === String(id));
   if (index === -1 || index === undefined) {
-    queryForm.value.tagIds?.push(id);
+    dialogTagIds.value.push(id);
   } else {
-    queryForm.value.tagIds?.splice(index, 1);
+    dialogTagIds.value.splice(index, 1);
   }
 }
+
+const isDialogTagSelected = (id: IdType) => dialogTagIds.value.some(item => String(item) === String(id));
+const cancelTagSelection = () => { tagDialogVisible.value = false; };
+const applyTagSelection = () => {
+  queryForm.value.tagIds = [...dialogTagIds.value];
+  tagDialogVisible.value = false;
+  handleQuery();
+};
 
 const handleQuery = () => {
   emit("query");
@@ -153,3 +181,14 @@ onMounted(() => {
 
 
 </script>
+
+<style scoped>
+.tag-dialog-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -4px 0 14px; color: var(--el-text-color-secondary); font-size: 12px; }
+.tag-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; max-height: min(52vh, 460px); overflow-y: auto; padding: 3px; }
+.tag-card { display: flex; min-width: 0; min-height: 48px; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid var(--el-border-color-lighter); border-radius: 11px; color: var(--el-text-color-primary); background: var(--el-bg-color); cursor: pointer; text-align: left; transition: border-color .18s ease, background-color .18s ease, transform .18s ease; }
+.tag-card:hover { border-color: color-mix(in srgb, var(--tag-color) 52%, var(--el-border-color)); background: color-mix(in srgb, var(--tag-color) 7%, var(--el-bg-color)); transform: translateY(-1px); }
+.tag-card.is-selected { border-color: color-mix(in srgb, var(--tag-color) 66%, var(--el-border-color)); background: color-mix(in srgb, var(--tag-color) 12%, var(--el-bg-color)); }
+.tag-card__dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: var(--tag-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tag-color) 14%, transparent); }
+.tag-card__name { min-width: 0; overflow: hidden; flex: 1; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.tag-card__check { flex: 0 0 auto; color: var(--tag-color); }
+</style>

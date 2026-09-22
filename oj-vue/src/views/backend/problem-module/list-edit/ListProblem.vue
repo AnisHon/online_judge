@@ -57,7 +57,7 @@
             size="small"
             :disabled="multiple || isDeleting"
             :loading="isDeleting"
-            @click="handleDelete"
+            @click="handleDeleteSelected"
             v-has="'problem:list:del-problem'"
         >删除题目</el-button>
       </el-col>
@@ -96,8 +96,12 @@
         <template v-slot="scope">
           <div
               class="order-cell"
-              :class="{ 'is-drag-over': dragOverProblemId === String(scope.row.problemId) }"
-              @dragover.prevent="handleDragOver(scope.row)"
+              :class="{
+                'is-drag-over': dragOverProblemId === String(scope.row.problemId),
+                'is-before': dragOverProblemId === String(scope.row.problemId) && dragOverPosition === 'before',
+                'is-after': dragOverProblemId === String(scope.row.problemId) && dragOverPosition === 'after'
+              }"
+              @dragover.prevent="handleDragOver(scope.row, $event)"
               @drop.prevent="handleDrop(scope.row)"
           >
             <button
@@ -114,6 +118,10 @@
                 @keydown.up.prevent="moveRow(scope.$index, -1)"
                 @keydown.down.prevent="moveRow(scope.$index, 1)"
             ><el-icon><Rank /></el-icon></button>
+            <span class="order-actions" aria-label="移动题目">
+              <el-button text circle size="small" :disabled="!isEdit" aria-label="上移" title="上移" @click="moveRow(scope.$index, -1)"><el-icon><ArrowUp /></el-icon></el-button>
+              <el-button text circle size="small" :disabled="!isEdit" aria-label="下移" title="下移" @click="moveRow(scope.$index, 1)"><el-icon><ArrowDown /></el-icon></el-button>
+            </span>
             <span class="order-number">{{ scope.row.problemOrder }}</span>
           </div>
         </template>
@@ -129,7 +137,7 @@
               size="small"
               type="primary"
               icon="delete"
-              @click="handleDelete(scope.row)"
+              @click="handleDeleteRow(scope.row)"
               v-has="'problem:list:del-problem'"
           >删除</el-link>
         </template>
@@ -181,7 +189,7 @@ import {
 } from "@/api/list";
 import ListProblemView from "@/views/backend/problem-module/list-edit/list-problem-view/ListProblemView.vue";
 import type {IdType} from "@/api/common.ts";
-import {InfoFilled, List, Rank} from "@element-plus/icons-vue";
+import {ArrowDown, ArrowUp, InfoFilled, List, Rank} from "@element-plus/icons-vue";
 import ProblemModuleShell from "@/views/backend/problem-module/component/ProblemModuleShell.vue";
 
 const route = useRoute();
@@ -215,9 +223,11 @@ const sortedTableList = computed(() => {
 })
 const total = ref<number>(0);
 const orderSnapshot = new Map<string, number>();
+const orderUpdateVersion = ref<string>();
 const isOrderSaving = ref(false);
 const draggingProblemId = ref<string | null>(null);
 const dragOverProblemId = ref<string | null>(null);
+const dragOverPosition = ref<'before' | 'after'>('after');
 const tableRef = ref<TableInstance>();
 const isLoading = ref(false);
 const isAddLoading = ref(false);
@@ -245,6 +255,7 @@ const getList = async () => {
     tableList.sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0));
     total.value = tableList.length;
     orderSnapshot.clear();
+    orderUpdateVersion.value = data.find(row => row.listUpdateTime)?.listUpdateTime;
     tableList.forEach(row => {
       row.tempOrder = row.problemOrder;
       row.tempScore = row.score;
@@ -276,15 +287,14 @@ const handleSelectionChange = (selection: ProblemInListView[]) => {
 
 
 
-const handleDelete = async (row?: ProblemInListView) => {
-  const targetIds = row ? [row.problemId] : [...ids.value];
+const removeProblemsFromList = async (targetIds: IdType[], title: string) => {
   if (!targetIds.length) {
     ElMessage.warning('请先选择要移除的题目');
     return;
   }
   const relations = targetIds.map(problemId => ({listId: listId.value, problemId}));
   try {
-    await ElMessageBox.confirm(`确定从题单移除选中的 ${targetIds.length} 道题目吗？`, '移除题目', {
+    await ElMessageBox.confirm(`确定从题单移除${title}吗？`, '移除题目', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
@@ -301,10 +311,21 @@ const handleDelete = async (row?: ProblemInListView) => {
   }
 }
 
+const handleDeleteRow = (row: ProblemInListView) => {
+  // 行操作只允许删除当前行，不能复用表格的旧 selection。
+  void removeProblemsFromList([row.problemId], `「${row.title || row.problemId}」`);
+};
+
+const handleDeleteSelected = () => {
+  const selectedIds = [...ids.value];
+  void removeProblemsFromList(selectedIds, `选中的 ${selectedIds.length} 道题目`);
+};
+
 
 const handleAdd = () => {
   open.value = true;
 }
+const scoreRequestSequence = new Map<string, number>();
 const handleScoreUpdate = async (data: ProblemInListView) => {
   if (data.tempScore === undefined) {
     data.tempScore = data.score;
@@ -313,19 +334,24 @@ const handleScoreUpdate = async (data: ProblemInListView) => {
   if (data.tempScore === data.score) {
     return;
   }
-  const previousScore = data.score;
   const problemKey = String(data.problemId);
+  const previousScore = data.score;
+  const nextScore = data.tempScore;
+  const sequence = (scoreRequestSequence.get(problemKey) ?? 0) + 1;
+  scoreRequestSequence.set(problemKey, sequence);
   savingScoreIds.value = new Set(savingScoreIds.value).add(problemKey);
-  data.score = data.tempScore;
+  data.score = nextScore;
   try {
     await updateProblemRelation({
       listId: listId.value,
       problemId: data.problemId,
-      score: data.score
+      score: nextScore
     });
   } catch {
-    data.score = previousScore;
-    data.tempScore = previousScore;
+    if (scoreRequestSequence.get(problemKey) === sequence) {
+      data.score = previousScore;
+      data.tempScore = previousScore;
+    }
     ElMessage.error('分数保存失败，请重试');
   } finally {
     const next = new Set(savingScoreIds.value);
@@ -346,9 +372,13 @@ const handleDragStart = (row: ProblemInListView, event: DragEvent) => {
   }
 }
 
-const handleDragOver = (row: ProblemInListView) => {
+const handleDragOver = (row: ProblemInListView, event: DragEvent) => {
   if (draggingProblemId.value && draggingProblemId.value !== String(row.problemId)) {
     dragOverProblemId.value = String(row.problemId);
+    const target = event.currentTarget as HTMLElement | null;
+    dragOverPosition.value = target && event.clientY > target.getBoundingClientRect().top + target.offsetHeight / 2
+        ? 'after'
+        : 'before';
   }
 }
 
@@ -369,8 +399,13 @@ const handleDrop = (target: ProblemInListView) => {
 
   const reordered = [...current];
   const [moved] = reordered.splice(sourceIndex, 1);
+  // 目标索引必须基于“移除源项后的数组”计算；否则从上向下拖动时，
+  // 放到目标之后会被额外减一次，最终落回目标之前。
   const targetIndexAfterMove = reordered.findIndex(row => String(row.problemId) === String(target.problemId));
-  reordered.splice(targetIndexAfterMove + 1, 0, moved);
+  const insertIndex = dragOverPosition.value === 'after'
+      ? targetIndexAfterMove + 1
+      : targetIndexAfterMove;
+  reordered.splice(Math.max(0, insertIndex), 0, moved);
   reordered.forEach((row, index) => {
     row.problemOrder = index + 1;
     row.tempOrder = index + 1;
@@ -382,6 +417,7 @@ const handleDrop = (target: ProblemInListView) => {
 const handleDragEnd = () => {
   draggingProblemId.value = null;
   dragOverProblemId.value = null;
+  dragOverPosition.value = 'after';
 }
 
 const moveRow = (index: number, direction: -1 | 1) => {
@@ -404,17 +440,21 @@ const saveProblemOrder = async () => {
   }
   isOrderSaving.value = true;
   try {
-    await batchUpdateProblemOrder(listId.value, sortedTableList.value.map((row, index) => ({
+    if (!orderUpdateVersion.value) {
+      await getList();
+      ElMessage.warning('题单版本已失效，请刷新后重试');
+      return;
+    }
+    await batchUpdateProblemOrder(listId.value, orderUpdateVersion.value, sortedTableList.value.map((row, index) => ({
       problemId: row.problemId,
       problemOrder: index + 1
     })));
-    sortedTableList.value.forEach((row, index) => {
-      row.problemOrder = index + 1;
-      row.tempOrder = index + 1;
-      orderSnapshot.set(String(row.problemId), index + 1);
-    });
+    // 服务端会推进题单版本；重新读取，避免本地继续携带旧版本。
+    await getList();
     ElMessage.success('题单顺序已保存');
   } catch {
+    // 冲突或网络失败时以服务端顺序为准，避免把未确认的本地顺序当成已保存状态。
+    await getList().catch(() => undefined);
     ElMessage.error('题单顺序保存失败，请刷新后重试');
   } finally {
     isOrderSaving.value = false;
@@ -506,6 +546,6 @@ watch(listId, (value) => {
 
 .list-problem-table { border-radius: 14px; overflow: hidden; }
 .order-notice { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--el-color-primary-light-7); border-radius: 10px; color: var(--el-text-color-secondary); background: var(--el-color-primary-light-9); font-size: 12px; }.order-notice .el-icon { color: var(--el-color-primary); }.order-notice .el-button { margin-left: auto; }
-.order-cell { display: inline-flex; align-items: center; gap: 9px; min-width: 76px; min-height: 30px; padding: 2px 7px; border: 1px dashed transparent; border-radius: 8px; transition: border-color .2s, background-color .2s; }.order-cell.is-drag-over { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.drag-handle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; color: var(--el-text-color-secondary); background: transparent; cursor: grab; }.drag-handle:hover, .drag-handle:focus-visible { outline: none; color: var(--el-color-primary); background: var(--el-fill-color-light); }.drag-handle:active { cursor: grabbing; }.drag-handle.is-disabled { cursor: not-allowed; opacity: .45; }.order-number { min-width: 20px; font-variant-numeric: tabular-nums; }
+.order-cell { position: relative; display: inline-flex; align-items: center; gap: 5px; min-width: 116px; min-height: 30px; padding: 2px 7px; border: 1px dashed transparent; border-radius: 8px; transition: border-color .2s, background-color .2s, box-shadow .2s; }.order-cell.is-drag-over { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.order-cell.is-before { box-shadow: inset 0 2px var(--el-color-primary); }.order-cell.is-after { box-shadow: inset 0 -2px var(--el-color-primary); }.drag-handle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; color: var(--el-text-color-secondary); background: transparent; cursor: grab; }.drag-handle:hover, .drag-handle:focus-visible { outline: none; color: var(--el-color-primary); background: var(--el-fill-color-light); }.drag-handle:active { cursor: grabbing; }.drag-handle.is-disabled { cursor: not-allowed; opacity: .45; }.order-actions { display: inline-flex; align-items: center; gap: 0; }.order-actions .el-button { width: 22px; height: 22px; margin: 0; padding: 0; }.order-number { min-width: 20px; font-variant-numeric: tabular-nums; }
 .dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: rgb(5 150 105 / 12%); color: var(--el-color-success); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.picker-body { min-height: 0; max-height: min(62vh, 640px); overflow: auto; }.selection-summary { margin-right: auto; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

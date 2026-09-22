@@ -155,17 +155,24 @@
 
     <el-dialog title="管理题目标签" v-model="open" class="tag-dialog" width="min(680px, 92vw)" append-to-body destroy-on-close>
       <div class="dialog-intro"><span class="dialog-icon"><el-icon><CollectionTag /></el-icon></span><div><strong>为题目整理标签</strong><p>标签用于题库筛选和题目归类，当前已选择 {{ currentCards.length }} 个。</p></div></div>
-      <div class="tag-picker">
-        <el-space v-loading="loadingCard" wrap>
-          <el-check-tag
+      <div v-loading="loadingCard" class="tag-picker">
+        <div v-if="allCards.length" class="tag-card-grid">
+          <button
               v-for="item of allCards"
-              :key="item.tagId"
-              :checked="currentCards.some(x => x.tagId === item.tagId)"
-              @change="(bool: boolean) => onChange(bool, item)"
+              :key="String(item.tagId)"
+              type="button"
+              class="tag-card"
+              :class="{ 'is-selected': currentCards.some(x => String(x.tagId) === String(item.tagId)) }"
+              :style="{ '--tag-color': item.tagColor || '#64748b' }"
+              :aria-pressed="currentCards.some(x => String(x.tagId) === String(item.tagId))"
+              @click="onChange(!currentCards.some(x => String(x.tagId) === String(item.tagId)), item)"
           >
-            {{ item.tagName }}
-          </el-check-tag>
-        </el-space>
+            <span class="tag-card__dot" aria-hidden="true" />
+            <span class="tag-card__name">{{ item.tagName }}</span>
+            <el-icon v-if="currentCards.some(x => String(x.tagId) === String(item.tagId))" class="tag-card__check"><Check /></el-icon>
+          </button>
+        </div>
+        <el-empty v-else description="暂无标签" :image-size="64" />
       </div>
       <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" @click="submit" :loading="tagSubmitting">保存标签</el-button></template>
     </el-dialog>
@@ -222,7 +229,7 @@ import {
 } from "@/api/problem/label";
 // 题库页面不再依赖 lodash 处理选择集合，避免对象引用比较导致标签差异判断错误。
 import {useRouter} from "vue-router";
-import {Collection, CollectionTag, UploadFilled} from "@element-plus/icons-vue";
+import {Check, Collection, CollectionTag, UploadFilled} from "@element-plus/icons-vue";
 import ProblemModuleShell from "@/views/backend/problem-module/component/ProblemModuleShell.vue";
 import type {UploadAjaxError} from "element-plus/es/components/upload/src/ajax";
 import type {AjaxResult} from "@/utils/http";
@@ -315,6 +322,10 @@ const onHandleSubmit = () => {
   }
   if (file.size > 500 * 1024) {
     ElMessage.warning('文件不能超过 500KB');
+    return;
+  }
+  if (file.type && file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) {
+    ElMessage.warning('只支持 JSON 文件');
     return;
   }
   uploadSubmitting.value = true;
@@ -515,6 +526,6 @@ void getTag();
 .problem-table { border-radius: 14px; overflow: hidden; }
 :deep(.el-table__header th.el-table__cell) { color: var(--el-text-color-secondary); font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); }
 :deep(.el-table__row td.el-table__cell) { height: 68px; }
-.dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--el-color-primary-light-9); color: var(--el-color-primary); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.tag-picker { min-height: 90px; padding: 12px; border: 1px dashed var(--el-border-color); border-radius: 12px; background: var(--el-bg-color-page); }
+.dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--el-color-primary-light-9); color: var(--el-color-primary); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.tag-picker { min-height: 150px; padding: 12px; border: 1px dashed var(--el-border-color); border-radius: 12px; background: var(--el-bg-color-page); }.tag-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; max-height: min(52vh, 460px); overflow-y: auto; padding: 2px; }.tag-card { display: flex; min-width: 0; min-height: 48px; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid var(--el-border-color-lighter); border-radius: 11px; color: var(--el-text-color-primary); background: var(--el-bg-color); cursor: pointer; text-align: left; transition: border-color .18s ease, background-color .18s ease, transform .18s ease; }.tag-card:hover { border-color: color-mix(in srgb, var(--tag-color) 52%, var(--el-border-color)); background: color-mix(in srgb, var(--tag-color) 7%, var(--el-bg-color)); transform: translateY(-1px); }.tag-card.is-selected { border-color: color-mix(in srgb, var(--tag-color) 66%, var(--el-border-color)); background: color-mix(in srgb, var(--tag-color) 12%, var(--el-bg-color)); }.tag-card__dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: var(--tag-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tag-color) 14%, transparent); }.tag-card__name { min-width: 0; overflow: hidden; flex: 1; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }.tag-card__check { flex: 0 0 auto; color: var(--tag-color); }
 @media (max-width: 760px) { .filter-panel { align-items: stretch; flex-direction: column; }.filter-panel :deep(.el-form-item) { margin-right: 0; } }
 </style>

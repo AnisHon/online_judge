@@ -18,6 +18,7 @@
       </el-table-column>
       <el-table-column label="题目" min-width="260">
         <template #default="{row}">
+          <!-- 题目按原有产品设计在新页面打开，便于保留题库筛选上下文。 -->
           <router-link target="_blank" :to="{name: 'problem', params: {id: row.id}}" class="problem-title">
             <strong>{{ row.title }}</strong>
             <span>{{ row.source || '题库' }}</span>
