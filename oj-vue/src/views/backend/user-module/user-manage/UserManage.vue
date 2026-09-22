@@ -570,6 +570,8 @@ loadRoles()
 }
 
 .filter-panel {
+  min-width: 0;
+  box-sizing: border-box;
   margin-bottom: 18px;
   padding: 14px 16px 4px;
   border: 1px solid var(--el-border-color-lighter);
@@ -579,6 +581,7 @@ loadRoles()
 
 .filter-panel__bar {
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -587,6 +590,7 @@ loadRoles()
 
 .filter-title {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 7px;
   color: var(--el-text-color-primary);
@@ -605,7 +609,10 @@ loadRoles()
 
 .user-filters {
   display: grid;
-  grid-template-columns: repeat(5, minmax(130px, 1fr)) auto;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(126px, max-content);
   align-items: end;
   gap: 0 14px;
 }
@@ -629,6 +636,8 @@ loadRoles()
 
 .filter-actions {
   display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
   align-items: flex-end;
   gap: 7px;
   height: 68px;
@@ -637,6 +646,7 @@ loadRoles()
 
 .filter-actions .el-button {
   margin: 0;
+  white-space: nowrap;
 }
 
 .list-toolbar {
@@ -925,7 +935,7 @@ loadRoles()
 
 @media (max-width: 1050px) {
   .user-filters {
-    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .filter-actions {
     height: auto;

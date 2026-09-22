@@ -11,7 +11,7 @@
       <el-button v-has="'problem:judge:submit:read'" :icon="Refresh" :loading="loading" @click="getList">刷新记录</el-button>
     </template>
 
-    <section class="log-panel">
+    <section v-if="canReadLogs" class="log-panel admin-log-surface">
       <div class="filter-heading">
         <div>
           <span class="panel-eyebrow">SUBMISSION AUDIT</span>
@@ -66,7 +66,9 @@
         <el-table-column label="资源" width="145">
           <template #default="{row}"><span class="resource-text">{{ formatResource(row) }}</span></template>
         </el-table-column>
-        <el-table-column label="提交时间" min-width="175" prop="submitTime" show-overflow-tooltip />
+        <el-table-column label="提交时间" min-width="175" show-overflow-tooltip>
+          <template #default="{ row }">{{ formatAdminDateTime(row.submitTime) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="110" fixed="right" align="right">
           <template #default="{row}"><el-button v-has="'problem:judge:submit:read'" link type="primary" :icon="View" @click="openDetail(row.submitId)">查看详情</el-button></template>
         </el-table-column>
@@ -81,6 +83,7 @@
         @pagination="getList"
       />
     </section>
+    <el-alert v-else type="error" :closable="false" show-icon title="当前账号没有判题提交记录权限" />
 
     <el-drawer v-model="detailVisible" title="提交记录详情" size="min(760px, 94vw)" append-to-body>
       <div v-if="detail" class="detail-drawer">
@@ -126,6 +129,8 @@ import {
   type AdminSubmitLog,
 } from '@/api/judge-log'
 import type {IdType} from '@/api/common'
+import {hasPerm} from '@/utils/authUtil'
+import {formatAdminDateTime} from '@/utils/adminDisplay'
 
 const loading = ref(false)
 const records = ref<AdminSubmitLog[]>([])
@@ -133,6 +138,7 @@ const total = ref(0)
 const detailVisible = ref(false)
 const detail = ref<AdminSubmitLog>()
 const query = reactive<AdminJudgeQuery>({currentPage: 1, pageSize: 20})
+const canReadLogs = computed(() => hasPerm('problem:judge:submit:read'))
 
 const summaryStats = computed(() => [
   {label: '记录总数', value: total.value, tone: 'blue'},
@@ -148,6 +154,7 @@ let listRequestId = 0
 let detailRequestId = 0
 const detailError = ref(false)
 const getList = async () => {
+  if (!canReadLogs.value) return
   const requestId = ++listRequestId
   const querySnapshot = {...query}
   loading.value = true
@@ -156,6 +163,8 @@ const getList = async () => {
     if (requestId !== listRequestId) return
     records.value = data?.data || []
     total.value = data?.totalRecords || 0
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('判题记录加载失败，请稍后重试')
   } finally {
     if (requestId === listRequestId) loading.value = false
   }
@@ -172,6 +181,7 @@ const resetQuery = () => {
 }
 
 const openDetail = async (submitId: IdType) => {
+  if (!canReadLogs.value) return
   const requestId = ++detailRequestId
   detailVisible.value = true
   detail.value = undefined
@@ -192,7 +202,7 @@ onMounted(getList)
 
 <style scoped>
 .log-panel { padding: 22px 24px 12px; border: 1px solid var(--el-border-color-lighter); border-radius: 20px; background: var(--el-bg-color); box-shadow: 0 16px 40px rgb(15 23 42 / 4%); }
-.filter-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }.panel-eyebrow { color: var(--el-color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; }.filter-heading h2 { margin: 7px 0 5px; font-size: 21px; }.filter-heading p { margin: 0; color: var(--el-text-color-secondary); font-size: 13px; }.filter-actions { display: flex; gap: 8px; }
+.filter-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }.panel-eyebrow { color: var(--admin-log-accent); font-size: 11px; font-weight: 800; letter-spacing: .14em; }.filter-heading h2 { margin: 7px 0 5px; font-size: 21px; }.filter-heading p { margin: 0; color: var(--el-text-color-secondary); font-size: 13px; }.filter-actions { display: flex; gap: 8px; }
 .filter-grid { display: grid; grid-template-columns: repeat(6, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; padding: 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 14px; background: var(--el-fill-color-light); }.log-table { border-radius: 14px; overflow: hidden; }.mono, .language { font-family: var(--code-font-family, Consolas, monospace); }.primary-id { color: var(--el-color-primary); }.id-stack { display: flex; min-width: 0; flex-direction: column; gap: 4px; }.id-stack span, .muted, .resource-text { color: var(--el-text-color-secondary); font-size: 12px; }.language { color: var(--el-color-primary); }.status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 12px; white-space: nowrap; }.status-pill i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }.status-pill--success { color: var(--el-color-success); background: var(--el-color-success-light-9); }.status-pill--danger { color: var(--el-color-danger); background: var(--el-color-danger-light-9); }.status-pill--warning { color: var(--el-color-warning); background: var(--el-color-warning-light-9); }.status-pill--info { color: var(--el-text-color-secondary); background: var(--el-fill-color-light); }
 .detail-drawer { display: grid; gap: 16px; }.detail-summary { display: flex; align-items: center; gap: 18px; padding: 15px; border: 1px solid var(--el-border-color-lighter); border-radius: 14px; background: var(--el-fill-color-light); }.detail-summary > div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }.detail-summary > div:nth-child(2) { flex: 1; }.detail-summary span:not(.status-pill), .detail-metrics span { color: var(--el-text-color-secondary); font-size: 11px; }.detail-summary strong { font-size: 13px; }.detail-metrics { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 0 2px; }.detail-metrics b { margin-left: 4px; color: var(--el-text-color-primary); font-weight: 600; }.code-section, .error-section { overflow: hidden; border: 1px solid var(--el-border-color-lighter); border-radius: 14px; }.section-title { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--el-border-color-lighter); background: var(--el-fill-color-light); }.section-title strong { font-size: 13px; }.section-title span { color: var(--el-text-color-secondary); font-size: 11px; }.code-viewer, .error-section pre { margin: 0; padding: 16px; overflow: auto; color: var(--el-text-color-primary); background: var(--el-bg-color-page); font: 12px/1.7 var(--code-font-family, Consolas, monospace); white-space: pre-wrap; word-break: break-word; }.error-section { border-color: color-mix(in srgb, var(--el-color-danger) 30%, var(--el-border-color-lighter)); }.error-section pre { color: var(--el-color-danger); }
 @media (max-width: 980px) { .filter-grid { grid-template-columns: repeat(3, minmax(130px, 1fr)); } } @media (max-width: 620px) { .log-panel { padding: 16px 14px 8px; }.filter-heading { align-items: flex-start; flex-direction: column; }.filter-actions { width: 100%; justify-content: flex-end; }.filter-grid { grid-template-columns: 1fr 1fr; }.detail-summary { align-items: flex-start; flex-direction: column; gap: 10px; } }

@@ -9,11 +9,11 @@
   >
     <template #actions>
       <el-button :icon="ArrowLeft" @click="router.push({ name: 'role-manage' })">返回角色管理</el-button>
-      <el-button :icon="Refresh" :loading="isLoading" @click="getList">刷新成员</el-button>
+      <el-button :icon="Refresh" :loading="isLoading" :disabled="!roleReady" @click="getList">刷新成员</el-button>
       <el-button v-has="'user:role:grant'" type="primary" :disabled="!roleReady" :icon="Plus" @click="handleAdd()">分配成员</el-button>
     </template>
 
-    <section class="member-panel">
+    <section class="member-panel admin-role-surface">
       <div class="role-context">
         <div class="role-context__main">
           <span class="role-context__icon"><el-icon><UserFilled /></el-icon></span>
@@ -25,6 +25,7 @@
         </div>
         <div class="role-context__tip"><el-icon><InfoFilled /></el-icon><span>撤销授权不会删除用户账号</span></div>
       </div>
+      <el-alert v-if="roleLoadError" class="role-load-error" type="error" :closable="false" show-icon :title="roleLoadError" />
 
       <div class="filter-panel" :class="{ 'is-collapsed': !showSearch }">
         <div class="filter-panel__bar">
@@ -87,9 +88,10 @@ import type { TableInstance } from 'element-plus'
 const route = useRoute()
 const router = useRouter()
 const roleId = String(route.params.id || '')
-const roleName = ref(`角色 ${roleId}`)
+const roleName = ref('角色信息加载中')
 const role = ref<RoleView>()
 const roleReady = ref(false)
+const roleLoadError = ref('')
 const queryParams = reactive<QueryRoleUser>({ currentPage: 1, pageSize: 20, roleId, userId: undefined, username: undefined, nikeName: undefined, email: undefined })
 const tableList = reactive<UserView[]>([])
 const total = ref(0)
@@ -107,6 +109,7 @@ const summaryStats = computed(() => [{ label: '角色成员', value: total.value
 const isLoading = ref(false)
 let listRequestId = 0
 const getList = async () => {
+  if (!roleReady.value) return
   const requestId = ++listRequestId
   isLoading.value = true
   try {
@@ -133,21 +136,29 @@ const handleQuery = () => { queryParams.currentPage = 1; getList() }
 const resetQuery = () => { queryParams.currentPage = 1; queryParams.userId = undefined; queryParams.username = undefined; queryParams.nikeName = undefined; queryParams.email = undefined; getList() }
 
 async function loadRole() {
+  roleReady.value = false
+  roleLoadError.value = ''
   try {
     const data = await getRole({ asc: true, currentPage: 1, pageSize: 1, roleId })
     role.value = data.data[0]
     if (role.value?.roleName) roleName.value = role.value.roleName
     roleReady.value = Boolean(role.value)
-    if (!roleReady.value) ElMessage.error('角色不存在或已被删除')
+    if (!roleReady.value) {
+      roleName.value = '无法加载角色'
+      roleLoadError.value = '角色不存在或已被删除，当前页面仅保留返回入口。'
+      ElMessage.error('角色不存在或已被删除')
+    }
   } catch {
     roleReady.value = false
+    roleName.value = '无法加载角色'
+    roleLoadError.value = '角色信息加载失败，请返回角色管理后重试。'
     ElMessage.error('角色信息加载失败，暂时不能管理成员')
   }
 }
 
 const handleRevoke = async (row?: UserView) => {
   if (!roleReady.value) return
-  const ids = row ? [row.userId] : selectedIds.value
+  const ids = row ? [row.userId] : [...selectedIds.value]
   if (!ids.length) { ElMessage.warning('请先选择要撤销的成员'); return }
   const message = row ? `确定撤销用户“${row.nikeName || row.userName}”的角色吗？` : `确定撤销选中的 ${ids.length} 位成员吗？`
   try {
@@ -157,13 +168,17 @@ const handleRevoke = async (row?: UserView) => {
     await revoke(relations.length === 1 ? relations[0] : relations)
     ElMessage.success('角色授权已撤销')
     selectedIds.value = []
-    getList()
+    await getList()
   } catch (error) {
     if (error !== 'cancel' && error !== 'close') ElMessage.error('撤销失败，请稍后重试')
   } finally { actionLoading.value = false }
 }
 
-const handleAdd = () => { grantSelectedIds.splice(0, grantSelectedIds.length); open.value = true }
+const handleAdd = () => {
+  if (!roleReady.value || isGranting.value) return
+  grantSelectedIds.splice(0, grantSelectedIds.length)
+  open.value = true
+}
 const cancel = () => { open.value = false; grantSelectedIds.splice(0, grantSelectedIds.length) }
 const isGranting = ref(false)
 const submit = async () => {
@@ -175,7 +190,7 @@ const submit = async () => {
     await grant(relations)
     ElMessage.success('角色成员已更新')
     cancel()
-    getList()
+    await getList()
   } catch {
     ElMessage.error('角色成员分配失败，请稍后重试')
   } finally {
@@ -185,7 +200,7 @@ const submit = async () => {
 
 const initialize = async () => {
   await loadRole()
-  if (roleReady.value) getList()
+  if (roleReady.value) await getList()
 }
 initialize()
 </script>

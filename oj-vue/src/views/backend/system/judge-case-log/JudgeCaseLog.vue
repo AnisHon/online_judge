@@ -11,7 +11,7 @@
       <el-button v-has="'problem:judge:case:read'" :icon="Refresh" :loading="loading" @click="getList">刷新日志</el-button>
     </template>
 
-    <section class="log-panel">
+    <section v-if="canReadLogs" class="log-panel admin-log-surface">
       <div class="filter-heading">
         <div>
           <span class="panel-eyebrow">CASE DIAGNOSTICS</span>
@@ -52,11 +52,13 @@
         <el-table-column label="资源" width="155">
           <template #default="{row}"><span class="resource-text">{{ row.time ?? '—' }} ms · {{ row.memory ?? '—' }} KB</span></template>
         </el-table-column>
-        <el-table-column label="日志时间" min-width="175" prop="createTime" show-overflow-tooltip />
+        <el-table-column label="日志时间" min-width="175" show-overflow-tooltip>
+          <template #default="{ row }">{{ formatAdminDateTime(row.createTime) }}</template>
+        </el-table-column>
         <el-table-column label="诊断" width="120" fixed="right" align="right">
           <template #default="{row}">
-            <el-button v-if="row.internalError" link type="danger" :icon="WarningFilled" @click="openDetail(row)">查看异常</el-button>
-            <el-button v-else link type="primary" :icon="View" @click="openDetail(row)">查看</el-button>
+            <el-button v-if="row.internalError" v-has="'problem:judge:case:read'" link type="danger" :icon="WarningFilled" @click="openDetail(row)">查看异常</el-button>
+            <el-button v-else v-has="'problem:judge:case:read'" link type="primary" :icon="View" @click="openDetail(row)">查看</el-button>
           </template>
         </el-table-column>
         <template #empty><el-empty description="暂无测试用例日志" /></template>
@@ -70,6 +72,7 @@
         @pagination="getList"
       />
     </section>
+    <el-alert v-else type="error" :closable="false" show-icon title="当前账号没有判题内部日志权限" />
 
     <el-drawer v-model="detailVisible" title="测试用例诊断" size="min(680px, 94vw)" append-to-body>
       <div v-if="detail" class="case-detail">
@@ -98,6 +101,7 @@
 <script setup lang="ts">
 import {computed, onMounted, reactive, ref} from 'vue'
 import {DataAnalysis, Refresh, RefreshRight, Search, View, WarningFilled} from '@element-plus/icons-vue'
+import {ElMessage} from 'element-plus'
 import ContestSubPageShell from '../../teacher/contest-manage/component/ContestSubPageShell.vue'
 import Pagination from '@/components/pageination/Pagination.vue'
 import {
@@ -107,6 +111,8 @@ import {
   type AdminJudgeCaseLog,
   type AdminJudgeQuery,
 } from '@/api/judge-log'
+import {hasPerm} from '@/utils/authUtil'
+import {formatAdminDateTime} from '@/utils/adminDisplay'
 
 const loading = ref(false)
 const records = ref<AdminJudgeCaseLog[]>([])
@@ -114,6 +120,7 @@ const total = ref(0)
 const detailVisible = ref(false)
 const detail = ref<AdminJudgeCaseLog>()
 const query = reactive<AdminJudgeQuery>({currentPage: 1, pageSize: 20})
+const canReadLogs = computed(() => hasPerm('problem:judge:case:read'))
 
 const summaryStats = computed(() => [
   {label: '日志总数', value: total.value, tone: 'amber'},
@@ -124,6 +131,7 @@ const summaryStats = computed(() => [
 
 let listRequestId = 0
 const getList = async () => {
+  if (!canReadLogs.value) return
   const requestId = ++listRequestId
   const querySnapshot = {...query}
   loading.value = true
@@ -132,6 +140,8 @@ const getList = async () => {
     if (requestId !== listRequestId) return
     records.value = data?.data || []
     total.value = data?.totalRecords || 0
+  } catch {
+    if (requestId === listRequestId) ElMessage.error('判题日志加载失败，请稍后重试')
   } finally {
     if (requestId === listRequestId) loading.value = false
   }
@@ -148,6 +158,7 @@ const resetQuery = () => {
 }
 
 const openDetail = (row: AdminJudgeCaseLog) => {
+  if (!canReadLogs.value) return
   detail.value = row
   detailVisible.value = true
 }
@@ -157,7 +168,7 @@ onMounted(getList)
 
 <style scoped>
 .log-panel { padding: 22px 24px 12px; border: 1px solid var(--el-border-color-lighter); border-radius: 20px; background: var(--el-bg-color); box-shadow: 0 16px 40px rgb(15 23 42 / 4%); }
-.filter-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }.panel-eyebrow { color: var(--el-color-warning); font-size: 11px; font-weight: 800; letter-spacing: .14em; }.filter-heading h2 { margin: 7px 0 5px; font-size: 21px; }.filter-heading p { margin: 0; color: var(--el-text-color-secondary); font-size: 13px; }.filter-actions { display: flex; gap: 8px; }
+.filter-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }.panel-eyebrow { color: var(--admin-log-accent); font-size: 11px; font-weight: 800; letter-spacing: .14em; }.filter-heading h2 { margin: 7px 0 5px; font-size: 21px; }.filter-heading p { margin: 0; color: var(--el-text-color-secondary); font-size: 13px; }.filter-actions { display: flex; gap: 8px; }
 .filter-grid { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; padding: 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 14px; background: var(--el-fill-color-light); }.case-index { width: 100%; }.log-table { border-radius: 14px; overflow: hidden; }.mono { font-family: var(--code-font-family, Consolas, monospace); }.primary-id { color: var(--el-color-primary); }.sub-id { display: block; margin-top: 4px; color: var(--el-text-color-secondary); font: 11px var(--code-font-family, Consolas, monospace); }.id-stack { display: flex; min-width: 0; flex-direction: column; gap: 4px; }.id-stack span, .resource-text { color: var(--el-text-color-secondary); font-size: 12px; }.status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 12px; white-space: nowrap; }.status-pill i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }.status-pill--success { color: var(--el-color-success); background: var(--el-color-success-light-9); }.status-pill--danger { color: var(--el-color-danger); background: var(--el-color-danger-light-9); }.status-pill--warning { color: var(--el-color-warning); background: var(--el-color-warning-light-9); }.status-pill--info { color: var(--el-text-color-secondary); background: var(--el-fill-color-light); }
 .case-detail { display: grid; gap: 18px; }.detail-head { display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1px solid var(--el-border-color-lighter); border-radius: 14px; background: var(--el-fill-color-light); }.detail-head div { display: flex; flex-direction: column; gap: 4px; }.detail-head span:first-child { color: var(--el-text-color-secondary); font: 11px var(--code-font-family, Consolas, monospace); }.detail-head strong { font-size: 17px; }.detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 2px; }.detail-grid span { color: var(--el-text-color-secondary); font-size: 12px; }.detail-grid b { display: block; margin-top: 4px; color: var(--el-text-color-primary); font-size: 13px; font-weight: 600; }.error-section { overflow: hidden; border: 1px solid color-mix(in srgb, var(--el-color-danger) 30%, var(--el-border-color-lighter)); border-radius: 14px; }.section-title { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--el-fill-color-light); }.section-title strong { font-size: 13px; }.section-title span { color: var(--el-color-danger); font-size: 11px; }.error-section pre { max-height: 520px; margin: 0; padding: 16px; overflow: auto; color: var(--el-color-danger); background: var(--el-bg-color-page); font: 12px/1.7 var(--code-font-family, Consolas, monospace); white-space: pre-wrap; word-break: break-word; }
 @media (max-width: 900px) { .filter-grid { grid-template-columns: repeat(3, minmax(130px, 1fr)); } } @media (max-width: 620px) { .log-panel { padding: 16px 14px 8px; }.filter-heading { align-items: flex-start; flex-direction: column; }.filter-actions { width: 100%; justify-content: flex-end; }.filter-grid { grid-template-columns: 1fr 1fr; }.detail-grid { grid-template-columns: 1fr; } }

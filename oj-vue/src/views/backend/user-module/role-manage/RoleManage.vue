@@ -9,11 +9,11 @@
   >
     <template #actions>
       <el-button :icon="Refresh" :loading="isLoading" @click="getList">刷新角色</el-button>
-      <el-button v-has="'user:role:list'" :icon="RefreshRight" @click="handleRefresh">刷新缓存</el-button>
+      <el-button v-has="'user:role:list'" :icon="RefreshRight" :loading="cacheRefreshing" :disabled="cacheRefreshing" @click="handleRefresh">刷新缓存</el-button>
       <el-button v-has="'user:role:add'" type="primary" :icon="Plus" @click="handleAdd()">新增角色</el-button>
     </template>
 
-    <section class="role-panel">
+    <section class="role-panel admin-role-surface">
       <div class="panel-heading">
         <div>
           <span class="panel-eyebrow">ACCESS DIRECTORY</span>
@@ -98,12 +98,13 @@
             <el-space :size="4">
               <el-button v-has="'user:role:edit'" link type="primary" :icon="EditPen" @click="handleUpdate(row)">编辑</el-button>
               <el-button v-has="'user:role:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
-              <el-dropdown v-if="canUseMore" trigger="click" @command="(command: string) => handleCommand(command, row)">
+              <el-dropdown v-if="moreActions.length" trigger="click" @command="(command: MoreActionCommand) => handleCommand(command, row)">
                 <el-button link type="info" :icon="MoreFilled">更多</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item v-if="canManageScope" command="handleDataScope" :icon="Lock">资源权限</el-dropdown-item>
-                    <el-dropdown-item v-if="canListUsers" command="handleAuthUser" :icon="User">分配成员</el-dropdown-item>
+                    <el-dropdown-item v-for="item in moreActions" :key="item.command" :command="item.command">
+                      <el-icon><component :is="item.icon" /></el-icon>{{ item.label }}
+                    </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -153,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, type Component } from 'vue'
 import { Delete, EditPen, Filter, Key, Lock, Memo, MoreFilled, Plus, Refresh, RefreshRight, Search, Select, User, UserFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElTree, type FormInstance, type TableInstance } from 'element-plus'
 import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
@@ -180,6 +181,7 @@ const openDataScope = ref(false)
 const dialogState = ref<DialogState>('add')
 const showSearch = ref(true)
 const actionLoading = ref(false)
+const cacheRefreshing = ref(false)
 const submitting = ref(false)
 const tableList = reactive<RoleView[]>([])
 const tableRef = ref<TableInstance>()
@@ -199,7 +201,13 @@ const canGrantMenu = computed(() => hasPerm('user:menu:grant'))
 const canRevokeMenu = computed(() => hasPerm('user:menu:revoke'))
 const canManageScope = computed(() => canReadMenu.value && (canGrantMenu.value || canRevokeMenu.value))
 const canListUsers = computed(() => hasPerm('user:user:list'))
-const canUseMore = computed(() => canManageScope.value || canListUsers.value)
+type MoreActionCommand = 'handleDataScope' | 'handleAuthUser'
+const moreActions = computed<Array<{ command: MoreActionCommand; label: string; icon: Component }>>(() => {
+  const actions: Array<{ command: MoreActionCommand; label: string; icon: Component }> = []
+  if (canManageScope.value) actions.push({ command: 'handleDataScope', label: '资源权限', icon: Lock })
+  if (canListUsers.value) actions.push({ command: 'handleAuthUser', label: '分配成员', icon: User })
+  return actions
+})
 const summaryStats = computed(() => [
   { label: '角色总数', value: total.value, tone: 'blue' },
   { label: '当前页正常', value: tableList.filter(role => role.status === RoleStatus.NORMAL).length, tone: 'green' },
@@ -209,18 +217,20 @@ const summaryStats = computed(() => [
 
 const isLoading = ref(false)
 let listRequestId = 0
-const getList = async () => {
+const getList = async (): Promise<boolean> => {
   const requestId = ++listRequestId
   isLoading.value = true
   try {
     const data = await fetchRoles({...queryParams})
-    if (requestId !== listRequestId) return
+    if (requestId !== listRequestId) return false
     tableList.splice(0, tableList.length, ...data.data)
     total.value = data.totalRecords
     selectedIds.value = []
     tableRef.value?.clearSelection()
+    return true
   } catch {
     if (requestId === listRequestId) ElMessage.error('角色列表加载失败，请稍后重试')
+    return false
   } finally {
     if (requestId === listRequestId) isLoading.value = false
   }
@@ -235,7 +245,20 @@ function formatDate(value: Date | string | undefined) { return value ? new Date(
 const handleSelectionChange = (selection: RoleView[]) => { selectedIds.value = selection.map(role => role.roleId) }
 const handleQuery = () => { queryParams.currentPage = 1; getList() }
 const resetQuery = () => { queryParams.currentPage = 1; queryParams.roleId = undefined; queryParams.roleName = undefined; queryParams.status = undefined; queryParams.remark = undefined; queryParams.sortColumn = undefined; getList() }
-const handleRefresh = async () => { await refreshRoleCache(); getList() }
+const handleRefresh = async () => {
+  if (cacheRefreshing.value) return
+  cacheRefreshing.value = true
+  try {
+    await refreshRoleCache()
+    const listLoaded = await getList()
+    if (listLoaded) ElMessage.success('角色缓存和列表已刷新')
+    else ElMessage.warning('角色缓存已刷新，但角色列表加载失败')
+  } catch {
+    ElMessage.error('角色缓存刷新失败，角色列表未刷新')
+  } finally {
+    cacheRefreshing.value = false
+  }
+}
 
 const resetForm = () => { form.roleId = undefined; form.roleName = ''; form.status = RoleStatus.NORMAL; form.remark = ''; formRef.value?.clearValidate() }
 const handleAdd = () => { resetForm(); dialogState.value = 'add'; open.value = true }
@@ -282,7 +305,7 @@ const handleDelete = async (row?: RoleView) => {
   } finally { actionLoading.value = false }
 }
 
-const handleCommand = (command: string, row: RoleView) => {
+const handleCommand = (command: MoreActionCommand, row: RoleView) => {
   if (command === 'handleDataScope') handleMenu(row)
   if (command === 'handleAuthUser') handleAuthUser(row)
 }

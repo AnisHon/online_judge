@@ -12,7 +12,7 @@
       <el-button v-has="'user:menu:add'" type="primary" :icon="Plus" @click="handleAdd()">新增资源</el-button>
     </template>
 
-    <section v-if="canReadResource" class="auth-panel">
+    <section v-if="canReadResource" class="auth-panel admin-role-surface">
       <div class="panel-heading">
         <div>
           <span class="panel-eyebrow">RESOURCE HIERARCHY</span>

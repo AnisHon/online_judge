@@ -3,7 +3,6 @@ import {del, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, fetch, putRemove, remove, update} from "@/utils/simpleCRUD";
-import {ElNotification} from "element-plus";
 import type {IdType} from "@/api/common.ts";
 
 enum RoleStatus {
@@ -57,13 +56,7 @@ const removeRole = async (id: IdType | IdType[]) => {
 
 
 const refreshRoleCache = async () => {
-    try {
-        await del("/user-api/role/refresh");
-        ElNotification.success("刷新成功");
-    } catch (error) {
-        ElNotification.warning("刷新失败");
-        throw error;
-    }
+    await del("/user-api/role/refresh");
 }
 
 const addRole = async (form: RoleForm) => {
@@ -72,12 +65,13 @@ const addRole = async (form: RoleForm) => {
 
 const debouncedAddRole = (form: RoleForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
+    const payload = {...form}
     const add = debounce(() => {
-        addRole(form)
+        addRole(payload)
             .then(success)
             .finally(finish);
     }, 1000);
-    return {loading, isLoading, add};
+    return {loading, isLoading, add, cancel: () => add.cancel()};
 }
 
 
@@ -88,12 +82,13 @@ const updateRole = async (form: RoleForm) => {
 
 const debouncedUpdateRole = (form: RoleForm, success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
+    const payload = {...form}
     const update = debounce(() => {
-        updateRole(form)
+        updateRole(payload)
             .then(success)
             .finally(finish);
     }, 1000);
-    return {loading, isLoading, update};
+    return {loading, isLoading, update, cancel: () => update.cancel()};
 }
 
 const getRole = async (queryData: QueryRole): Promise<PagedResponse<RoleView>> => {
@@ -102,12 +97,13 @@ const getRole = async (queryData: QueryRole): Promise<PagedResponse<RoleView>> =
 
 const debouncedGetRole = (queryData: QueryRole, success: successCallback<PagedResponse<RoleView>>) => {
     const {loading, isLoading, finish} = useLoading()
+    const query = {...queryData}
     const get = debounce(() => {
-        getRole(queryData)
+        getRole(query)
             .then(success)
             .finally(finish);
     }, 500);
-    return {loading, isLoading, get};
+    return {loading, isLoading, get, cancel: () => get.cancel()};
 }
 
 const revoke = async (form: UserRoleRelation | UserRoleRelation[]) => {
@@ -120,12 +116,13 @@ const grant = async (form: UserRoleRelation[]) => {
 
 const debouncedGrant = (form: UserRoleRelation[], success: successCallback<void>) => {
     const {loading, isLoading, finish} = useLoading()
+    const payload = form.map(relation => ({...relation}))
     const add = debounce(() => {
-        grant(form)
+        grant(payload)
             .then(success)
             .finally(finish);
     }, 1000);
-    return {loading, isLoading, add};
+    return {loading, isLoading, add, cancel: () => add.cancel()};
 }
 
 
@@ -151,5 +148,4 @@ export {
     revoke,
     dict
 }
-
 
