@@ -116,12 +116,13 @@ public class FileController {
     @PostMapping("/avatar")
     public R<String> uploadAvatar(@RequestParam("avatar") MultipartFile avatar) {
         if (avatar.isEmpty()) {
-            return R.success(null);
+            return R.badRequest("头像文件不能为空");
         }
 
         String b = fileService.uploadAvatar(avatar, AuthUtil.getUserId());
-
-        return R.success(b);
+        return StrUtil.isBlank(b)
+                ? R.badRequest("头像格式不支持或上传失败")
+                : R.success(b);
 
 
     }

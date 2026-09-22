@@ -53,7 +53,7 @@ public class SubmitLogVo {
     private Long time;
 
     /**
-     * 内存使用 单位kb
+     * 内存使用，单位 MiB
      */
     private Long memory;
 

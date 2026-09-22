@@ -23,7 +23,7 @@ public class JudgeScore {
     private Long languageId;
     // ms
     private Long runtime;
-    // kb
+    // MiB
     private Long memory;
     private String errorMessage;
 

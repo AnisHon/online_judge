@@ -12,4 +12,10 @@ mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSW
 mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
   < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260920__judge_admin_pages.sql"
 
-echo "OJ judge pipeline and admin pages migrations applied."
+mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
+  < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260921__user_profile.sql"
+
+mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
+  < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260922__backend_access_permission.sql"
+
+echo "OJ judge pipeline, admin pages, user profile and backend access migrations applied."

@@ -46,6 +46,8 @@ docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
   < "$ROOT_DIR/resources/sql/migration/V20260912__judge_pipeline.sql"
 docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
   < "$ROOT_DIR/resources/sql/migration/V20260920__judge_admin_pages.sql"
+docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
+  < "$ROOT_DIR/resources/sql/migration/V20260921__user_profile.sql"
 
 echo '[4/4] 等待 Nacos 并同步开发配置'
 for _ in $(seq 1 60); do

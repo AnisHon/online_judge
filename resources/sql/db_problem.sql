@@ -215,7 +215,7 @@ create index problem_tag_tag_id_idx on problem_tag(tag_id);
 drop table if exists submit_log;
 CREATE TABLE submit_log (
     submit_id   bigint(20)  not null                comment '提交ID',
-    user_id     varchar(32) not null                comment '用户id',
+    user_id     bigint(20)   not null                comment '用户id',
     problem_id  bigint(20)  not null                comment '题目id',
     language    varchar(20) not null                comment '使用语言的id',
     contest_id  bigint(20)  null                    comment '比赛ID',
@@ -408,6 +408,8 @@ create table solution_explanation (
     constraint solution_explanation_problem_id_fk foreign key solution_explanation(problem_id)
         references problem(problem_id) on delete cascade
 ) ENGINE=InnoDB default charset=utf8mb4 comment '文件信息表';
+create index solution_explanation_user_create_idx
+    on solution_explanation(user_id, create_time, solution_id);
 
 -- ----------------------------
 -- 17.题解-内容表

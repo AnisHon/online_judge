@@ -6,6 +6,7 @@ oj:
     ac-problem-award-rate: 0.5
     file-base-url: "E:/cach/temp"
     default-password: change-this-default-password
+    captcha-type: MATH
 
 common:
   config:

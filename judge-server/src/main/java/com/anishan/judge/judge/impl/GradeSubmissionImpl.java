@@ -45,7 +45,7 @@ public class GradeSubmissionImpl implements GradeSubmission {
                 .score(BigDecimal.ZERO)
                 .passed(false)
                 .runtime(runResult.getRunTime() / 1_000_000) // ns -> ms
-                .memory(runResult.getMemory() / (1024 * 1024));  // kib -> mib
+                .memory(runResult.getMemory() / (1024 * 1024));  // sandbox bytes -> MiB
 
         StringBuilder stringBuilder = new StringBuilder();
 

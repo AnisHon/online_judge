@@ -108,6 +108,9 @@ public class ProblemController {
     @ApiOperation("通过ID得到详细题目（用于进入题目）")
     public R<DetailProblem> getProblemById(@PathVariable("id") @NotNull Long id) {
         DetailProblem detailProblem = problemService.getDetailProblem(id);
+        if (detailProblem == null) {
+            return R.error404();
+        }
         return R.success(detailProblem);
     }
 

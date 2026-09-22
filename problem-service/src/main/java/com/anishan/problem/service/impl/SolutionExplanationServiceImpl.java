@@ -79,9 +79,19 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
 
         DetailSolutionVo solution = solutionExplanationMapper.selectJoinOne(DetailSolutionVo.class, wrapper);
 
+        if (solution == null) {
+            return null;
+        }
+
         // 获取 id - nikeName 的 map
         Long userId = solution.getUserId();
-        Map<Long, String> map = userInternalClient.nikeName(List.of(userId)).getData();
+        Map<Long, String> map = Map.of();
+        if (userId != null) {
+            var response = userInternalClient.nikeName(List.of(userId));
+            if (response != null && response.getData() != null) {
+                map = response.getData();
+            }
+        }
 
         map
                 .values()
@@ -113,7 +123,8 @@ public class SolutionExplanationServiceImpl extends ServiceImpl<SolutionExplanat
 
         SolutionExplanationContent content = Db.getById(id, SolutionExplanationContent.class);
 
-        return BeanUtil.copyProperties(solution, DetailSolutionVo.class).setContent(content.getContent());
+        return BeanUtil.copyProperties(solution, DetailSolutionVo.class)
+                .setContent(content == null ? "" : content.getContent());
     }
 
     @Override

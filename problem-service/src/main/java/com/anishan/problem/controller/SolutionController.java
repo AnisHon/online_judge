@@ -60,24 +60,16 @@ public class SolutionController {
     @PostMapping
     @ApiOperation("普通用户发送题解")
     public R<Object> add(@RequestHeader("user-id") Long userId, @Validated @RequestBody DetailSolutionDto detailSolutionDto) {
-        try {
-            boolean b = solutionExplanationService.add(userId, detailSolutionDto);
-            return R.success(b);
-        } catch (Exception e) {
-            return R.badRequest("题目不存在");
-        }
+        boolean b = solutionExplanationService.add(userId, detailSolutionDto);
+        return R.success(b);
     }
 
     @PostMapping("/admin")
     @ApiOperation("管理员发送题解")
     @PreAuthorize("hasAuthority('problem:solution:add')")
     public R<Object> adminAdd(@RequestHeader("user-id") Long userId, @Validated @RequestBody DetailSolutionDto detailSolutionDto) {
-        try {
-            boolean b = solutionExplanationService.adminAdd(userId, detailSolutionDto);
-            return R.success(b);
-        } catch (Exception e) {
-            return R.badRequest("题目不存在");
-        }
+        boolean b = solutionExplanationService.adminAdd(userId, detailSolutionDto);
+        return R.success(b);
     }
 
     @PutMapping

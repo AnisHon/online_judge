@@ -61,6 +61,8 @@ docker exec -i oj-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroo
   < migration/V20260912__judge_pipeline.sql
 docker exec -i oj-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot' \
   < migration/V20260920__judge_admin_pages.sql
+docker exec -i oj-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot' \
+  < migration/V20260921__user_profile.sql
 echo "Database migration applied."
 
 services=(oj-sandbox judge-server problem-service user-service content-service gateway-server oj-vue)
