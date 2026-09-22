@@ -1,6 +1,6 @@
 import type {IdType} from "@/api/common.ts";
 import type {PagedResponse, PagedType} from "@/api/pagedType.ts";
-import {del, getWithParams, resultNotify} from "@/utils/http.ts";
+import {del, getWithParams} from "@/utils/http.ts";
 
 export interface FileInfo {
     fileId: IdType;
@@ -23,7 +23,7 @@ export const listFileInfo = async (page: FileInfoQuery) => {
     return data;
 }
 
-export const removeFileInfo = async (ids: IdType[] | IdType) => {
+export const removeFileInfo = async (ids: IdType[] | IdType): Promise<boolean> => {
     const {data} = await del<boolean>("/content-api/fileInfo", ids);
-    resultNotify(data, "删除成功", "删除失败")
+    return data === true;
 }

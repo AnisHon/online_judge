@@ -59,10 +59,30 @@ public class NoticeController {
 
 
 
+    /**
+     * 前台公开公告列表。这个接口不能绑定后台管理权限，否则未登录用户无法浏览公告。
+     */
     @GetMapping("/list")
-    public R<PagedResult<NoticeDto>> getNoticeList(PagedQuery<Notice> query,
-                                                   @RequestParam(required = false) String keyword,
-                                                   @RequestParam(required = false) Boolean topUp) {
+    public R<PagedResult<NoticeDto>> getPublicNoticeList(PagedQuery<Notice> query,
+                                                         @RequestParam(required = false) String keyword,
+                                                         @RequestParam(required = false) Boolean topUp) {
+        return listNotice(query, keyword, topUp);
+    }
+
+    /**
+     * 后台公告管理列表。管理端与前台读取使用不同入口，避免把公开阅读权限误当成管理权限。
+     */
+    @GetMapping("/admin/list")
+    @PreAuthorize("hasAuthority('content:notice:list')")
+    public R<PagedResult<NoticeDto>> getAdminNoticeList(PagedQuery<Notice> query,
+                                                        @RequestParam(required = false) String keyword,
+                                                        @RequestParam(required = false) Boolean topUp) {
+        return listNotice(query, keyword, topUp);
+    }
+
+    private R<PagedResult<NoticeDto>> listNotice(PagedQuery<Notice> query,
+                                                 String keyword,
+                                                 Boolean topUp) {
         Page<Notice> page = query.page();
         LambdaQueryWrapper<Notice> wrapper = Wrappers.lambdaQuery(Notice.class)
                 .orderByDesc(Notice::getCreateTime);

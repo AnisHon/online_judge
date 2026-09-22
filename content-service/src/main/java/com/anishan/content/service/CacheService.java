@@ -1,11 +1,12 @@
 package com.anishan.content.service;
 
+import com.anishan.content.domain.vo.CacheKeyPage;
 import com.anishan.content.domain.vo.CacheVo;
 
-import java.util.List;
-
 public interface CacheService {
-    List<String> list(String prefix);
+    CacheKeyPage list(String prefix, String cursor, int limit);
 
     CacheVo get(String key);
+
+    boolean remove(String key);
 }

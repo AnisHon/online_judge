@@ -8,7 +8,7 @@
     :stats="summaryStats"
   >
     <template #actions>
-      <el-button :icon="Refresh" :loading="loading" @click="getList">刷新文件</el-button>
+      <el-button v-has="'content:file:list'" :icon="Refresh" :loading="loading" @click="getList">刷新文件</el-button>
       <el-button
         v-has="'content:file:remove'"
         type="danger"
@@ -21,7 +21,7 @@
       </el-button>
     </template>
 
-    <section class="file-panel">
+    <section v-if="canListFiles" class="file-panel">
       <div class="panel-heading">
         <div>
           <span class="panel-eyebrow">ASSET INVENTORY</span>
@@ -78,11 +78,13 @@
           </template>
         </el-table-column>
         <el-table-column label="MD5" min-width="220" prop="fileMd5" show-overflow-tooltip />
-        <el-table-column label="上传时间" min-width="180" prop="uploadTime" show-overflow-tooltip />
+        <el-table-column label="上传时间" min-width="180" show-overflow-tooltip>
+          <template #default="{ row }">{{ formatAdminDateTime(row.uploadTime) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="180" fixed="right" align="right">
           <template #default="{ row }">
             <el-space>
-              <el-button v-has="'content:file:list'" link type="primary" :icon="Download" @click="handleDownload(row)">下载</el-button>
+              <el-button v-has="'content:file:download'" link type="primary" :icon="Download" @click="handleDownload(row)">下载</el-button>
               <el-button
                 v-has="'content:file:remove'"
                 link
@@ -106,6 +108,7 @@
         @pagination="getList"
       />
     </section>
+    <el-alert v-else type="error" :closable="false" show-icon title="当前账号没有文件管理权限" />
   </ContestSubPageShell>
 </template>
 
@@ -119,6 +122,8 @@ import type { IdType } from '@/api/common'
 import { type FileInfo, type FileInfoQuery, listFileInfo, removeFileInfo } from '@/api/file/fileInfo'
 import { bytesToSize } from '@/utils/byte2size'
 import { downloadFile } from '@/api/file'
+import { hasPerm } from '@/utils/authUtil'
+import { formatAdminDateTime } from '@/utils/adminDisplay'
 
 const loading = ref(false)
 const keyword = ref('')
@@ -127,6 +132,7 @@ const selectedIds = ref<IdType[]>([])
 const total = ref(0)
 const tableRef = ref<TableInstance>()
 const queryParams = reactive<FileInfoQuery>({ currentPage: 1, pageSize: 20, keyword: undefined })
+const canListFiles = computed(() => hasPerm('content:file:list'))
 
 const summaryStats = computed(() => [
   { label: '文件总数', value: total.value, tone: 'blue' },
@@ -137,6 +143,7 @@ const summaryStats = computed(() => [
 
 let listRequestId = 0
 const getList = async () => {
+  if (!canListFiles.value) return
   queryParams.keyword = keyword.value.trim() || undefined
   const requestId = ++listRequestId
   const querySnapshot = {...queryParams}
@@ -167,16 +174,24 @@ const handleDownload = (row: FileInfo) => {
 }
 
 const handleDelete = async (row?: FileInfo) => {
-  const ids = row ? [row.fileId] : selectedIds.value
+  const ids = row ? [row.fileId] : [...selectedIds.value]
   if (!ids.length) return
-  await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 个文件吗？删除后无法恢复。`, '删除文件', {
-    confirmButtonText: '确认删除',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-  await removeFileInfo(ids)
-  ElMessage.success('文件已删除')
-  await getList()
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 个文件吗？删除后无法恢复。`, '删除文件', {
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    const removed = await removeFileInfo(ids)
+    if (!removed) {
+      ElMessage.error('文件删除失败')
+      return
+    }
+    ElMessage.success('文件已删除')
+    await getList()
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error('文件删除失败，请稍后重试')
+  }
 }
 
 onMounted(getList)
@@ -188,5 +203,5 @@ onMounted(getList)
 .selection-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 8px 12px; border-radius: 10px; background: var(--el-fill-color-light); color: var(--el-text-color-secondary); font-size: 13px; }.selection-hint { color: var(--el-color-warning); font-size: 12px; }.file-table { border-radius: 14px; overflow: hidden; }.file-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }.file-icon { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 11px; background: color-mix(in srgb, var(--el-color-primary) 10%, var(--el-bg-color)); color: var(--el-color-primary); }.file-cell > div:last-child { display: flex; min-width: 0; flex-direction: column; gap: 4px; }.file-cell strong { overflow: hidden; color: var(--el-text-color-primary); text-overflow: ellipsis; white-space: nowrap; }.file-cell span { overflow: hidden; color: var(--el-text-color-secondary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }.type-pill { display: inline-flex; padding: 4px 9px; border-radius: 999px; background: var(--el-fill-color-light); color: var(--el-text-color-secondary); font-size: 12px; }.reference-count { color: var(--el-text-color-secondary); font-variant-numeric: tabular-nums; }.reference-count.is-used { color: var(--el-color-success); font-weight: 700; }
 :deep(.el-table__header th.el-table__cell) { color: var(--el-text-color-secondary); font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); }:deep(.el-table__row td.el-table__cell) { height: 68px; }
 @media (max-width: 760px) { .panel-heading { flex-direction: column; }.keyword-input { width: 100%; }.selection-bar { align-items: flex-start; flex-direction: column; gap: 5px; } }
-@media (max-width: 480px) { .file-panel { padding: 16px 12px 8px; }.file-table :deep(.el-table__fixed-right) { display: none; } }
+@media (max-width: 480px) { .file-panel { padding: 16px 12px 8px; }.file-table { overflow-x: auto; } }
 </style>

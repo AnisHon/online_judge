@@ -277,7 +277,7 @@ public class FileController {
     }
 
     @GetMapping("/file/download")
-    @PermitAll
+    @PreAuthorize("hasAuthority('content:file:download')")
     public void download(@RequestParam("fileName") String fileName,
                          HttpServletRequest request,
                          HttpServletResponse response) throws Exception {

@@ -235,14 +235,17 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 
 # 缓存管理 menu_id 41
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (410, '查看缓存', 1, 41, '#', 'B', 'content:cache:list', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (412, '删除缓存', 2, 41, '#', 'B', 'content:cache:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (411, '读取缓存值', 2, 41, '#', 'B', 'content:cache:read', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (412, '删除缓存', 3, 41, '#', 'B', 'content:cache:remove', '#');
 
 
 # 文件管理 menu_id 42
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (420, '列出文件', 1, 42, '#', 'B', 'content:file:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (421, '删除文件', 2, 42, '#', 'B', 'content:file:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (422, '下载文件', 3, 42, '#', 'B', 'content:file:download', '#');
 
 # 通知管理 menu_id 43
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (430, '列出公告', 0, 43, '#', 'B', 'content:notice:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (431, '添加公告', 1, 43, '#', 'B', 'content:notice:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (432, '编辑公告', 2, 43, '#', 'B', 'content:notice:edit', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (433, '删除公告', 3, 43, '#', 'B', 'content:notice:remove', '#');
@@ -304,6 +307,7 @@ insert into sys_role_menu(role_id, menu_id)
 delete from sys_role_menu where role_id = 2;
 insert into sys_role_menu(role_id, menu_id)
 values
+    (2, 3),
     (2, 30),
     (2, 31),
     (2, 32),
@@ -321,6 +325,9 @@ values
 # 所有登录用户可查看自己的提交；内部测试用例日志只授予管理员。
 insert ignore into sys_role_menu(role_id, menu_id) values (1, 150), (2, 150), (3, 150), (4, 150), (3, 151), (4, 151);
 insert ignore into sys_role_menu(role_id, menu_id) values (2, 1004), (3, 1004), (4, 1004);
+insert ignore into sys_role_menu(role_id, menu_id) values
+    (1, 422), (2, 422), (3, 410), (3, 411), (3, 412), (3, 422), (3, 430),
+    (4, 410), (4, 411), (4, 412), (4, 422), (4, 430);
 
 # 管理员，没有权限相关操作，权限操作危险，可能会毁坏网站
 delete from sys_role_menu where role_id = 3;

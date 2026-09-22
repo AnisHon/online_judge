@@ -1,6 +1,5 @@
-import {add, remove, update} from "@/utils/simpleCRUD.ts";
 import type {PagedResponse, PagedType} from "@/api/pagedType.ts";
-import {get, getWithParams, service} from "@/utils/http.ts";
+import {del, get, getWithParams, post, put, service} from "@/utils/http.ts";
 import type {IdType} from "@/api/common.ts";
 
 export interface NoticeDto {
@@ -22,8 +21,9 @@ export interface NoticeQuery extends PagedType {
 }
 
 
-export const updateNotice = async (notice: NoticeDto) => {
-    await update(notice, "/content-api/notice");
+export const updateNotice = async (notice: NoticeDto): Promise<boolean> => {
+    const {data} = await put<NoticeDto, boolean>("/content-api/notice", notice);
+    return data === true;
 }
 
 export const listNotice = async (page: NoticeQuery) => {
@@ -31,12 +31,20 @@ export const listNotice = async (page: NoticeQuery) => {
     return data;
 }
 
-export const addNotice = async (notice: NoticeDto) => {
-    await add(notice, "/content-api/notice");
+/** 后台管理列表，与前台公开公告列表分离，权限由后端校验。 */
+export const listAdminNotice = async (page: NoticeQuery) => {
+    const {data} = await getWithParams<PagedResponse<Notice>, NoticeQuery>("/content-api/notice/admin/list", page);
+    return data;
 }
 
-export const removeNotice = async (id: IdType[] | IdType) => {
-    await remove(id, "/content-api/notice");
+export const addNotice = async (notice: NoticeDto): Promise<boolean> => {
+    const {data} = await post<NoticeDto, boolean>("/content-api/notice", notice);
+    return data === true;
+}
+
+export const removeNotice = async (id: IdType[] | IdType): Promise<boolean> => {
+    const {data} = await del<boolean>("/content-api/notice", id);
+    return data === true;
 }
 
 export const getNotice = async (id: IdType) => {

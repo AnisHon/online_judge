@@ -53,7 +53,7 @@
         <article class="cache-card">
           <div class="card-heading">
             <div class="card-icon is-blue"><el-icon><Key /></el-icon></div>
-            <div><strong>缓存键</strong><span>{{ keyList.length }} 个键</span></div>
+            <div><strong>缓存键</strong><span>{{ keyList.length }} 个键{{ keyHasMore ? ' · 还有更多' : '' }}</span></div>
           </div>
           <el-table
             v-loading="keysLoading"
@@ -81,6 +81,9 @@
             </el-table-column>
             <template #empty><el-empty description="请选择缓存类别" /></template>
           </el-table>
+          <div v-if="keyHasMore" class="load-more-row">
+            <el-button text type="primary" :loading="keysLoading" @click="loadMoreKeys">加载更多键</el-button>
+          </div>
         </article>
 
         <article class="cache-card detail-card">
@@ -88,13 +91,13 @@
             <div class="card-icon is-amber"><el-icon><Document /></el-icon></div>
             <div><strong>缓存内容</strong><span>{{ selectedKey ? '只读查看' : '尚未选择缓存键' }}</span></div>
           </div>
-          <div v-if="selectedKey" class="cache-detail">
+          <div v-if="selectedKey && canReadCache" class="cache-detail">
             <div class="detail-item"><span>缓存键</span><strong :title="cacheInfo.key">{{ cacheInfo.key }}</strong></div>
-            <div class="detail-item"><span>过期时间</span><strong>{{ cacheInfo.expireTime || '未设置' }}</strong></div>
+            <div class="detail-item"><span>过期时间</span><strong>{{ formatCacheExpire(cacheInfo.expireTime) }}</strong></div>
             <div class="value-heading"><span>缓存值</span><el-tag size="small" effect="plain">只读</el-tag></div>
             <el-input v-model="cacheInfo.value" class="value-input" type="textarea" readonly :rows="12" />
           </div>
-          <el-empty v-else class="detail-empty" description="点击左侧缓存键查看内容" :image-size="76" />
+          <el-empty v-else class="detail-empty" :description="canReadCache ? '点击左侧缓存键查看内容' : '当前账号没有读取缓存值的权限'" :image-size="76" />
         </article>
       </div>
     </section>
@@ -107,6 +110,8 @@ import { Coin, Delete, Document, FolderOpened, Key, Refresh } from '@element-plu
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ContestSubPageShell from '../../teacher/contest-manage/component/ContestSubPageShell.vue'
 import { type CacheDesc, type CacheInfo, getCacheInfo, getCacheKeys, listCacheDesc, removeCache } from '@/api/cache'
+import { hasPerm } from '@/utils/authUtil'
+import { formatCacheExpire } from '@/utils/adminDisplay'
 
 const loading = ref(false)
 const keysLoading = ref(false)
@@ -115,6 +120,9 @@ const keyList = ref<string[]>([])
 const prefix = ref('')
 const selectedKey = ref('')
 const cacheInfo = ref<CacheInfo>({ key: '', value: '', expireTime: undefined })
+const keyCursor = ref('0')
+const keyHasMore = ref(false)
+const canReadCache = computed(() => hasPerm('content:cache:read'))
 let listRequestId = 0
 let keyRequestId = 0
 let valueRequestId = 0
@@ -143,14 +151,42 @@ const getKeyList = async (prefixValue = prefix.value) => {
   const requestId = ++keyRequestId
   if (!prefixValue) {
     keyList.value = []
+    keyCursor.value = '0'
+    keyHasMore.value = false
+    keysLoading.value = false
     return
   }
+  keyCursor.value = '0'
+  keyHasMore.value = false
+  keyList.value = []
   keysLoading.value = true
   try {
-    const data = (await getCacheKeys(prefixValue)) || []
-    if (requestId === keyRequestId && prefix.value === prefixValue) keyList.value = data
+    const data = await getCacheKeys(prefixValue, '0', 100)
+    if (requestId === keyRequestId && prefix.value === prefixValue) {
+      keyList.value = data?.keys || []
+      keyCursor.value = data?.nextCursor || '0'
+      keyHasMore.value = data?.hasMore === true
+    }
   } catch {
     if (requestId === keyRequestId) ElMessage.error('缓存键加载失败，请稍后重试')
+  } finally {
+    if (requestId === keyRequestId) keysLoading.value = false
+  }
+}
+
+const loadMoreKeys = async () => {
+  if (!prefix.value || !keyHasMore.value || keysLoading.value) return
+  const requestId = keyRequestId
+  keysLoading.value = true
+  try {
+    const data = await getCacheKeys(prefix.value, keyCursor.value, 100)
+    if (requestId === keyRequestId && prefix.value) {
+      keyList.value = [...keyList.value, ...(data?.keys || [])]
+      keyCursor.value = data?.nextCursor || '0'
+      keyHasMore.value = data?.hasMore === true
+    }
+  } catch {
+    if (requestId === keyRequestId) ElMessage.error('更多缓存键加载失败，请稍后重试')
   } finally {
     if (requestId === keyRequestId) keysLoading.value = false
   }
@@ -164,6 +200,7 @@ const handleDescClickRow = async (row: CacheDesc) => {
 }
 
 const handleKeyClickRow = async (row: string) => {
+  if (!canReadCache.value) return
   const requestId = ++valueRequestId
   selectedKey.value = row
   try {
@@ -175,24 +212,32 @@ const handleKeyClickRow = async (row: string) => {
 }
 
 const handleDelete = async (key: string) => {
-  await ElMessageBox.confirm(`确定删除缓存键“${key}”吗？`, '删除缓存', {
-    confirmButtonText: '确认删除',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-  await removeCache(key)
-  if (selectedKey.value === key) {
-    selectedKey.value = ''
-    cacheInfo.value = { key: '', value: '', expireTime: undefined }
+  try {
+    await ElMessageBox.confirm(`确定删除缓存键“${key}”吗？`, '删除缓存', {
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    const removed = await removeCache(key)
+    if (!removed) {
+      ElMessage.error('缓存删除失败')
+      return
+    }
+    if (selectedKey.value === key) {
+      selectedKey.value = ''
+      cacheInfo.value = { key: '', value: '', expireTime: undefined }
+    }
+    await getKeyList(prefix.value)
+    ElMessage.success('缓存已删除')
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error('缓存删除失败，请稍后重试')
   }
-  await getKeyList(prefix.value)
-  ElMessage.success('缓存已删除')
 }
 
 const refreshCurrent = async () => {
   await getCacheList()
   await getKeyList(prefix.value)
-  if (selectedKey.value) await handleKeyClickRow(selectedKey.value)
+  if (selectedKey.value && canReadCache.value) await handleKeyClickRow(selectedKey.value)
 }
 
 onMounted(getCacheList)

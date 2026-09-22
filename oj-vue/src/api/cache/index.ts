@@ -1,5 +1,5 @@
 import type {IdType} from "@/api/common.ts";
-import {del, get, resultNotify} from "@/utils/http.ts";
+import {del, get, getWithParams} from "@/utils/http.ts";
 
 export interface CacheDesc {
     id: IdType;
@@ -10,7 +10,13 @@ export interface CacheDesc {
 export interface CacheInfo {
     key: string;
     value: string;
-    expireTime?: Date;
+    expireTime?: number;
+}
+
+export interface CacheKeyPage {
+    keys: string[];
+    nextCursor: string;
+    hasMore: boolean;
 }
 
 export const listCacheDesc = async () => {
@@ -18,8 +24,11 @@ export const listCacheDesc = async () => {
     return data;
 }
 
-export const getCacheKeys = async (prefix: string) => {
-    const {data} = await get<string[]>("/content-api/cache/list", prefix);
+export const getCacheKeys = async (prefix: string, cursor = '0', limit = 100) => {
+    const {data} = await getWithParams<CacheKeyPage, {cursor: string; limit: number}>(
+        `/content-api/cache/list/${encodeURIComponent(prefix)}`,
+        {cursor, limit},
+    );
     return data;
 }
 
@@ -28,9 +37,8 @@ export const getCacheInfo = async (key: string) => {
     return data;
 }
 
-export const removeCache = async (key: string) => {
+export const removeCache = async (key: string): Promise<boolean> => {
     const {data} = await del<boolean>("/content-api/cache", key);
-    resultNotify(data, "缓存清楚成功", "删除失败");
+    return data === true;
 }
-
 

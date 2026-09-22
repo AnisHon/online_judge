@@ -8,13 +8,13 @@
     :stats="summaryStats"
   >
     <template #actions>
-      <el-button :icon="Refresh" :loading="loading" @click="getList">刷新列表</el-button>
+      <el-button v-has="'content:notice:list'" :icon="Refresh" :loading="loading" @click="getList">刷新列表</el-button>
       <el-button v-has="'content:notice:add'" type="primary" :icon="Plus" @click="handleAdd">
         发布公告
       </el-button>
     </template>
 
-    <section class="notice-panel">
+    <section v-if="canReadNotice" class="notice-panel">
       <div class="panel-heading">
         <div>
           <span class="panel-eyebrow">CONTENT WORKSPACE</span>
@@ -75,8 +75,12 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="发布时间" min-width="190" prop="createTime" show-overflow-tooltip />
-        <el-table-column label="更新于" min-width="190" prop="updateTime" show-overflow-tooltip />
+        <el-table-column label="发布时间" min-width="190" show-overflow-tooltip>
+          <template #default="{ row }">{{ formatAdminDateTime(row.createTime) }}</template>
+        </el-table-column>
+        <el-table-column label="更新于" min-width="190" show-overflow-tooltip>
+          <template #default="{ row }">{{ formatAdminDateTime(row.updateTime) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="220" fixed="right" align="right">
           <template #default="{ row }">
             <el-space>
@@ -117,6 +121,7 @@
         @pagination="getList"
       />
     </section>
+    <el-alert v-else type="error" :closable="false" show-icon title="当前账号没有公告管理权限" />
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="min(1080px, 94vw)" append-to-body>
       <el-form ref="formRef" v-loading="detailLoading" class="notice-form" label-position="top" :model="form" :rules="rules">
@@ -159,7 +164,9 @@ import ContestSubPageShell from '../../teacher/contest-manage/component/ContestS
 import Pagination from '@/components/pageination/Pagination.vue'
 import MarkDownEditor from '@/components/MarkDownEditor/MarkDownEditor.vue'
 import type { IdType } from '@/api/common'
-import { addNotice, getNotice, listNotice, type Notice, type NoticeDto, type NoticeQuery, removeNotice, updateNotice } from '@/api/notice'
+import { addNotice, getNotice, listAdminNotice, type Notice, type NoticeDto, type NoticeQuery, removeNotice, updateNotice } from '@/api/notice'
+import { hasPerm } from '@/utils/authUtil'
+import { formatAdminDateTime } from '@/utils/adminDisplay'
 
 type PriorityFilter = 'all' | 'important' | 'normal'
 type DialogState = 'add' | 'edit'
@@ -179,6 +186,7 @@ const tableRef = ref<TableInstance>()
 const detailLoading = ref(false)
 const queryParams = reactive<NoticeQuery>({ currentPage: 1, pageSize: 20, keyword: undefined, topUp: undefined })
 const form = reactive<NoticeDto>({ noticeId: '', title: '', content: '', topUp: false })
+const canReadNotice = computed(() => hasPerm('content:notice:list'))
 
 const rules: FormRules<NoticeDto> = {
   title: [{ required: true, message: '请输入公告标题', trigger: 'blur' }],
@@ -201,13 +209,14 @@ const resetForm = () => {
 let listRequestId = 0
 let detailRequestId = 0
 const getList = async () => {
+  if (!canReadNotice.value) return
   queryParams.keyword = keyword.value.trim() || undefined
   queryParams.topUp = priorityFilter.value === 'all' ? undefined : priorityFilter.value === 'important'
   const requestId = ++listRequestId
   const querySnapshot = {...queryParams}
   loading.value = true
   try {
-    const data = await listNotice(querySnapshot)
+    const data = await listAdminNotice(querySnapshot)
     if (requestId !== listRequestId) return
     tableList.value = data.data || []
     total.value = data.totalRecords || 0
@@ -258,28 +267,41 @@ const submitForm = async () => {
   if (!valid) return
   submitting.value = true
   try {
-    if (dialogState.value === 'add') await addNotice(form)
-    else await updateNotice(form)
+    const saved = dialogState.value === 'add' ? await addNotice({...form}) : await updateNotice({...form})
+    if (!saved) {
+      ElMessage.error('公告保存失败')
+      return
+    }
     ElMessage.success(dialogState.value === 'add' ? '公告发布成功' : '公告更新成功')
     dialogVisible.value = false
     resetForm()
     await getList()
+  } catch {
+    ElMessage.error('公告保存失败，请稍后重试')
   } finally {
     submitting.value = false
   }
 }
 
 const handleDelete = async (notice?: Notice) => {
-  const ids = notice ? [notice.noticeId] : selectedIds.value
+  const ids = notice ? [notice.noticeId] : [...selectedIds.value]
   if (!ids.length) return
-  await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 条公告吗？`, '删除公告', {
-    confirmButtonText: '确认删除',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-  await removeNotice(ids)
-  ElMessage.success('公告已删除')
-  await getList()
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 条公告吗？`, '删除公告', {
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    const removed = await removeNotice(ids)
+    if (!removed) {
+      ElMessage.error('公告删除失败')
+      return
+    }
+    ElMessage.success('公告已删除')
+    await getList()
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error('公告删除失败，请稍后重试')
+  }
 }
 
 const viewNotice = (id: IdType) => router.push({ name: 'notice', params: { id } })
@@ -313,5 +335,5 @@ onMounted(getList)
 :deep(.el-table__header th.el-table__cell) { color: var(--el-text-color-secondary); font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); }
 :deep(.el-table__row td.el-table__cell) { height: 68px; }
 @media (max-width: 760px) { .panel-heading { flex-direction: column; }.panel-tools { width: 100%; }.keyword-input, .priority-select { flex: 1; width: auto; } }
-@media (max-width: 480px) { .notice-panel { padding: 16px 12px 8px; }.panel-tools { flex-direction: column; }.keyword-input, .priority-select { width: 100%; }.notice-table :deep(.el-table__fixed-right) { display: none; } }
+@media (max-width: 480px) { .notice-panel { padding: 16px 12px 8px; }.panel-tools { flex-direction: column; }.keyword-input, .priority-select { width: 100%; }.notice-table { overflow-x: auto; } }
 </style>

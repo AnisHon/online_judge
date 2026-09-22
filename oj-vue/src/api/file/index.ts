@@ -127,7 +127,7 @@ const addDir = async (file: CloudFileForm): Promise<void> => {
 }
 // 验证是否为blob格式
 export function blobValidate(data: any) {
-    return data.type !== 'application/json'
+    return !String(data?.type || '').toLowerCase().includes('application/json')
 }
 
 export const debouncedAddDir = (callback: Function) => {
@@ -151,14 +151,21 @@ export const addFile = async (md5: string, fileName: string, parentId: string) =
     addResultNotify(data);
 }
 
-const saveBinaryResponse = async (response: {data: Blob}, fileName: string) => {
+const saveBinaryResponse = async (response: {data: Blob; status?: number}, fileName: string) => {
     const isBlob = blobValidate(response.data);
     if (isBlob) {
         saveAs_(response.data, fileName)
         return true;
     }
-    ElNotification.error('文件下载失败，请稍后重试');
-    return false;
+    let message = '文件下载失败，请稍后重试';
+    try {
+        const text = await response.data.text();
+        const result = JSON.parse(text) as {message?: string};
+        if (!import.meta.env.PROD && result.message) message = result.message;
+    } catch (_) {
+        // 错误响应可能不是 JSON，统一使用安全提示。
+    }
+    throw new ApiError(message, response.status || 500);
 };
 
 export const download = async (path: string, fileName: string) => {
