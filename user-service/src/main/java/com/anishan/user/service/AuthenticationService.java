@@ -6,6 +6,7 @@ import com.anishan.user.domain.dto.RegistrationForm;
 import com.anishan.user.domain.vo.*;
 
 import javax.validation.constraints.NotNull;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 public interface AuthenticationService {
@@ -19,12 +20,12 @@ public interface AuthenticationService {
     void cacheUser(LoginUser loginUser);
 
     // login
-    LoginVo login(LoginForm loginForm);
+    LoginVo login(LoginForm loginForm, HttpServletResponse response);
 
     LoginVo refresh(String refreshToken);
 
     // registration
-    LoginVo registration(RegistrationForm registrationForm);
+    LoginVo registration(RegistrationForm registrationForm, HttpServletResponse response);
 
 
     AuthResultVo resetPassword(Long userId, String email, String code, String newPassword);
@@ -47,7 +48,7 @@ public interface AuthenticationService {
     // 解封
     String unban(Long id);
 
-    void logout(Long userId, String token);
+    void logout(String refreshToken, HttpServletResponse response);
 
     List<MenuVo> getAuths(Long userId);
 

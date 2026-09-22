@@ -8,48 +8,63 @@ import com.anishan.user.domain.vo.LoginVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
+import javax.servlet.http.HttpServletResponse;
+import java.util.UUID;
 
 /** 只负责令牌签发、轮换和撤销，避免认证业务同时承担 token 生命周期。 */
 @Service
 @RequiredArgsConstructor
 public class AuthTokenService {
     private final AuthUtil authUtil;
+    private final RefreshCookieService refreshCookieService;
+    private final RefreshSessionService refreshSessionService;
 
-    public LoginVo issue(LoginUser loginUser) {
+    public LoginVo issue(LoginUser loginUser, HttpServletResponse response) {
         Long userId = loginUser.getUser().getUserId();
         authUtil.cacheLoginUser(loginUser);
-        String refreshToken = JwtUtil.createRefreshToken(userId);
-        authUtil.cacheToken(refreshToken, JwtUtil.REFRESH_EXPIRE_DAYS, TimeUnit.DAYS);
-        return issueAccessToken(userId, refreshToken);
+
+        String sessionId = UUID.randomUUID().toString();
+        String tokenId = UUID.randomUUID().toString();
+        String refreshToken = JwtUtil.createRefreshToken(userId, sessionId, tokenId);
+        refreshSessionService.create(sessionId, userId, tokenId);
+        refreshCookieService.write(response, refreshToken);
+
+        return issueAccessToken(userId);
     }
 
     public LoginVo refresh(String refreshToken) {
-        Long userId = JwtUtil.parseRefreshJwt(refreshToken);
-        if (!authUtil.existToken(refreshToken) || !authUtil.isUserExisted(userId)) {
-            throw new IllegalTokenException("刷新令牌已失效");
+        JwtUtil.RefreshClaims claims = JwtUtil.parseRefreshClaims(refreshToken);
+        if (!refreshSessionService.isActive(claims) || !authUtil.isUserExisted(claims.getUserId())) {
+            throw new IllegalTokenException("刷新会话已失效");
         }
-        LoginUser loginUser = authUtil.getLoginUser(userId);
+        LoginUser loginUser = authUtil.getLoginUser(claims.getUserId());
         if (loginUser == null) throw new IllegalTokenException("用户登录状态已失效");
-        // refresh token 保持固定有效期，只轮换短期 access token，避免多标签页并发刷新互相踢下线。
-        return issueAccessToken(userId, refreshToken);
+
+        // 不做 rotation：多个标签页可以安全地并发刷新同一个服务端会话。
+        return issueAccessToken(claims.getUserId());
     }
 
-    private LoginVo issueAccessToken(Long userId, String refreshToken) {
+    public void revoke(String refreshToken, HttpServletResponse response) {
+        try {
+            if (refreshToken != null && !refreshToken.isBlank()) {
+                JwtUtil.RefreshClaims claims = JwtUtil.parseRefreshClaims(refreshToken);
+                refreshSessionService.revoke(claims);
+            }
+        } catch (IllegalTokenException ignored) {
+            // 登出必须幂等；非法或过期 Cookie 也必须被清除。
+        } finally {
+            refreshCookieService.clear(response);
+        }
+    }
+
+    private LoginVo issueAccessToken(Long userId) {
         String accessToken = JwtUtil.createAccessToken(userId);
-        authUtil.cacheToken(accessToken, JwtUtil.ACCESS_EXPIRE_MINUTES, TimeUnit.MINUTES);
 
         LoginVo result = new LoginVo();
         result.setSuccess(true);
         result.setMessage("登录成功");
-        result.setToken(accessToken); // 兼容旧客户端
         result.setAccessToken(accessToken);
-        result.setRefreshToken(refreshToken);
         result.setExpiresIn(JwtUtil.ACCESS_EXPIRE_MINUTES * 60L);
         return result;
-    }
-
-    public void revoke(String token) {
-        if (token != null && !token.isBlank()) authUtil.removeToken(token);
     }
 }

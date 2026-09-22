@@ -15,6 +15,10 @@ import App from '@/App.vue';
 import router from './router';
 import {has, hasAny} from "@/utils/hasAuth";
 import {useSiteConfig} from '@/stores/useSiteConfig';
+import {startAuthStateBridge} from '@/utils/authBridge';
+import {ensureAuthInitialized} from '@/utils/authSession';
+import {useToken} from '@/stores/useToken';
+import {useMenuStore} from '@/stores/useMenuStore';
 
 
 const app = createApp(App)
@@ -34,6 +38,17 @@ app.directive("has", has);
 app.directive('hasAny', hasAny)
 
 const bootstrap = async () => {
+    startAuthStateBridge(() => {
+        const tokenStore = useToken(pinia);
+        const menuStore = useMenuStore(pinia);
+        tokenStore.clearToken();
+        menuStore.clear();
+        if (!router.currentRoute.value.path.startsWith('/auth')) {
+            void router.replace({name: 'login'});
+        }
+    });
+    // Wait for cookie-backed session restore before the first route is mounted.
+    await ensureAuthInitialized();
     await router.isReady()
     app.mount('#app')
     // 配置只存内存；页面先用默认值启动，接口返回后响应式更新，避免配置服务慢时白屏。

@@ -1,6 +1,5 @@
 package com.anishan.gateway.filter;
 
-import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.commons.util.JwtUtil;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -11,9 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.Resource;
-import java.util.List;
-
 @Component
 public class AuthFilter implements GlobalFilter, Ordered {
 
@@ -22,21 +18,19 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
         ServerHttpRequest request = exchange.getRequest();
 
-        // refresh 接口只接收请求体中的 refreshToken，不能把过期 access token 当成网关身份令牌解析。
-        if (request.getURI().getPath().endsWith("/auth/refresh")) {
-            return chain.filter(exchange);
-        }
-
-        // token
-        String token = null;
-        List<String> headers = request.getHeaders().get("token");
-
-        if (!CollectionUtil.isEmpty(headers)) {
-            token = headers.get(0);
-        }
-
         ServerHttpRequest.Builder builder = request.mutate()
                 .headers(h -> h.remove("user-id"));
+
+        String path = request.getURI().getPath();
+        // Refresh/logout are authenticated by the HttpOnly refresh cookie. Do not try
+        // to parse an expired access token before the request reaches user-service.
+        if (path.endsWith("/auth/refresh") || path.endsWith("/auth/logout")) {
+            return chain.filter(exchange.mutate().request(builder.build()).build());
+        }
+
+        // New clients use the standard Authorization header. Keep the legacy custom
+        // header as a temporary compatibility path for non-browser clients.
+        String token = extractAccessToken(request);
 
         if (StrUtil.isEmpty(token)) {
             return chain.filter(exchange.mutate().request(builder.build()).build());
@@ -49,6 +43,14 @@ public class AuthFilter implements GlobalFilter, Ordered {
                 .build();
         // 6.放行
         return chain.filter(ex);
+    }
+
+    private String extractAccessToken(ServerHttpRequest request) {
+        String authorization = request.getHeaders().getFirst("Authorization");
+        if (StrUtil.isNotBlank(authorization) && authorization.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            return authorization.substring(7).trim();
+        }
+        return request.getHeaders().getFirst("token");
     }
 
     @Override

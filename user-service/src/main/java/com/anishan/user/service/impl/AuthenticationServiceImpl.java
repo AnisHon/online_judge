@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -56,8 +57,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public LoginUserVo me() {
 
         LoginUser principal = AuthUtil.getContextUser();
-        LoginUserVo loginUserVo = BeanUtil.copyProperties(principal.getUser(), LoginUserVo.class);
-        loginUserVo.setAuths(principal.getAuths());
+        // 权限菜单可能在登录后被迁移或修改；不能把 Redis 中旧 LoginUser 的权限永久返回给前端。
+        // 重新按当前用户读取角色权限，并回写登录缓存，确保后台入口和动态路由及时生效。
+        LoginUser current = principal;
+        Long userId = principal.getUser() == null ? null : principal.getUser().getUserId();
+        if (userId != null && userId != 0L) {
+            LoginUser refreshed = sysUserService.getLoginUser(userId);
+            if (refreshed != null) {
+                current = refreshed;
+                authUtil.cacheLoginUser(refreshed);
+            }
+        }
+
+        LoginUserVo loginUserVo = BeanUtil.copyProperties(current.getUser(), LoginUserVo.class);
+        loginUserVo.setAuths(current.getAuths());
         return loginUserVo;
     }
     @Override
@@ -95,7 +108,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public LoginVo login(LoginForm loginForm) {
+    public LoginVo login(LoginForm loginForm, HttpServletResponse response) {
         Authentication authenticate;
         try {
             authenticate = doCheckLogin(loginForm);
@@ -110,7 +123,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         LocalDateTime loginTime = LocalDateTime.now();
         sysUserService.recordLogin(loginUser.getUser().getUserId(), loginTime);
         loginUser.getUser().setLastLoginTime(loginTime);
-        return authTokenService.issue(loginUser);
+        return authTokenService.issue(loginUser, response);
     }
 
     @Override
@@ -166,7 +179,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Transactional
     @Override
-    public LoginVo registration(RegistrationForm registrationForm) {
+    public LoginVo registration(RegistrationForm registrationForm, HttpServletResponse response) {
 
         LoginVo loginVo = doCheckRegistration(registrationForm);
         if (!loginVo.isSuccess()) {
@@ -183,10 +196,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         LoginUser loginUser = doBuildLoginUser(sysUser);
 
-        LoginVo issued = authTokenService.issue(loginUser);
-        loginVo.setToken(issued.getToken());
+        LoginVo issued = authTokenService.issue(loginUser, response);
         loginVo.setAccessToken(issued.getAccessToken());
-        loginVo.setRefreshToken(issued.getRefreshToken());
         loginVo.setExpiresIn(issued.getExpiresIn());
 
         return loginVo;
@@ -362,8 +373,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(Long id, String token) {
-        authUtil.removeUser(id, token);
+    public void logout(String refreshToken, HttpServletResponse response) {
+        authTokenService.revoke(refreshToken, response);
     }
 
     private List<MenuVo> useCache(List<Long> roleIds) {

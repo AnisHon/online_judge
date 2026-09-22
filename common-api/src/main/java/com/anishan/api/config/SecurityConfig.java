@@ -41,6 +41,7 @@ public class SecurityConfig {
     private final String[] PERMIT_URI = {
             "/auth/login",
             "/auth/refresh",
+            "/auth/logout",
             "/auth/registration",
             "/auth/forget-pass",
             "/auth/send-email-code",
@@ -79,6 +80,8 @@ public class SecurityConfig {
 
                     conf.antMatchers(PERMIT_URI).permitAll();
                     conf.antMatchers(HttpMethod.GET, "/avatar/**", "/image/**").permitAll();
+                    // 公告是站点公开内容；只放开 GET，新增、修改、删除仍由 NoticeController 的权限注解保护。
+                    conf.antMatchers(HttpMethod.GET, "/notice/**").permitAll();
 
                     if (sharedConfig.isProduct()) {
                         conf.antMatchers(SWAGGER_API_URL).denyAll();

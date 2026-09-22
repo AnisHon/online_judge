@@ -8,8 +8,8 @@ import com.anishan.commons.domain.R;
 import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.AuthenticationService;
+import com.anishan.user.service.RefreshCookieService;
 import com.anishan.user.service.SysUserService;
-import com.anishan.user.util.UserUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -20,6 +20,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.PermitAll;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +36,7 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final SysUserService sysUserService;
     private final AuthUtil authUtil;
+    private final RefreshCookieService refreshCookieService;
 
 
     @PutMapping("/resetToDefault/{id}")
@@ -78,36 +81,45 @@ public class AuthenticationController {
 
     @GetMapping("/logout")
     @ApiOperation("登出")
+    @PermitAll
     @ControllerLog(api = "auth", operation = "logout", desc = "用户退出登录")
-    public R<String> logout(@RequestHeader("token") String token) {
-        Long userId = UserUtil.getUserId();
-        authenticationService.logout(userId, token);
+    public R<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        authenticationService.logout(refreshCookieService.read(request), response);
         return R.success();
     }
 
     @PostMapping("/login")
     @ApiOperation("登陆接口")
     @ControllerLog(api = "auth", operation = "login", desc = "用户登录")
-    public R<LoginVo> login(@RequestBody @Validated LoginForm loginUser) {
-        LoginVo login = authenticationService.login(loginUser);
+    public R<LoginVo> login(@RequestBody @Validated LoginForm loginUser, HttpServletResponse response) {
+        preventAuthenticationResponseCaching(response);
+        LoginVo login = authenticationService.login(loginUser, response);
         return R.success(login);
     }
 
     @PostMapping("/refresh")
     @ApiOperation("使用刷新令牌换取新的访问令牌")
     @PermitAll
-    public R<LoginVo> refresh(@RequestBody java.util.Map<String, String> body) {
-        String refreshToken = body.get("refreshToken");
-        if (refreshToken == null || refreshToken.isBlank()) return R.unauthorized("刷新令牌不能为空");
+    public R<LoginVo> refresh(HttpServletRequest request, HttpServletResponse response) {
+        preventAuthenticationResponseCaching(response);
+        String refreshToken = refreshCookieService.read(request);
+        if (refreshToken == null || refreshToken.isBlank()) return R.unauthorized("登录状态已过期");
         return R.success(authenticationService.refresh(refreshToken));
     }
 
     @PostMapping("/registration")
     @ApiOperation("注册接口")
     @ControllerLog(api = "auth", operation = "registration", desc = "用户注册")
-    public R<LoginVo> registration(@RequestBody @Validated RegistrationForm registrationForm) {
-        LoginVo registration = authenticationService.registration(registrationForm);
+    public R<LoginVo> registration(@RequestBody @Validated RegistrationForm registrationForm,
+                                   HttpServletResponse response) {
+        preventAuthenticationResponseCaching(response);
+        LoginVo registration = authenticationService.registration(registrationForm, response);
         return R.success(registration);
+    }
+
+    private void preventAuthenticationResponseCaching(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        response.setHeader("Pragma", "no-cache");
     }
 
 

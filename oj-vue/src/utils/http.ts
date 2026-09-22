@@ -3,6 +3,7 @@ import {useToken} from "@/stores/useToken";
 import {ElNotification} from "element-plus";
 import router from "@/router"
 import type {PagedResponse} from "@/api/pagedType.ts";
+import {refreshAccessToken, SessionChangedError} from '@/utils/authSession'
 import qs from "qs"
 
 export const baseURL = "/api";
@@ -59,13 +60,6 @@ export const service = axios.create({
     withCredentials: true // 携带cookie
 });
 
-// 刷新令牌必须绕开业务响应拦截器，否则已经解包的 AjaxResult 会被二次解包。
-const refreshService = axios.create({
-    baseURL,
-    timeout: 60000,
-    withCredentials: true
-});
-
 export const binaryService = axios.create({
     baseURL,
     timeout: 60000,
@@ -74,31 +68,11 @@ export const binaryService = axios.create({
 
 binaryService.interceptors.request.use(config => {
     const token = useToken();
-    setHeader(config.headers, 'token', token.token);
+    setAccessTokenHeader(config.headers, token.token);
     const request = config as typeof config & {__sessionVersion?: number};
     request.__sessionVersion = token.getSessionVersion();
     return config;
 });
-
-interface RefreshingRequest {
-    generation: number;
-    refreshToken: string;
-    promise: Promise<string>;
-}
-
-let refreshing: RefreshingRequest | null = null;
-
-class SessionChangedError extends Error {
-    constructor() {
-        super('会话已切换');
-        this.name = 'SessionChangedError';
-    }
-}
-
-interface RefreshTokenResult {
-    accessToken?: string;
-    refreshToken?: string;
-}
 
 const setHeader = (headers: AxiosRequestConfig['headers'] | undefined, name: string, value: string) => {
     if (!headers) return;
@@ -107,6 +81,19 @@ const setHeader = (headers: AxiosRequestConfig['headers'] | undefined, name: str
         return;
     }
     (headers as Record<string, string>)[name] = value;
+};
+
+const setAccessTokenHeader = (headers: AxiosRequestConfig['headers'] | undefined, accessToken: string) => {
+    if (!headers) return;
+    if (!accessToken) {
+        if (typeof (headers as {delete?: unknown}).delete === 'function') {
+            (headers as {delete: (key: string) => void}).delete('Authorization');
+        } else {
+            delete (headers as Record<string, string>).Authorization;
+        }
+        return;
+    }
+    setHeader(headers, 'Authorization', `Bearer ${accessToken}`);
 };
 
 const requestPath = (request: {url?: string; baseURL?: string} | undefined) => {
@@ -121,45 +108,20 @@ const requestPath = (request: {url?: string; baseURL?: string} | undefined) => {
 const isRefreshRequest = (request: {url?: string; baseURL?: string} | undefined) =>
     requestPath(request).endsWith('/user-api/auth/refresh');
 
-const refreshAccessToken = async (generation: number): Promise<string> => {
-    const tokenStore = useToken();
-    const refreshToken = tokenStore.refreshToken;
-    if (!refreshToken || tokenStore.getSessionVersion() !== generation) throw new SessionChangedError();
-    if (refreshing?.generation === generation && refreshing.refreshToken === refreshToken) {
-        return refreshing.promise;
-    }
-
-    const promise = refreshService.post<AjaxResult<RefreshTokenResult>>(
-            '/user-api/auth/refresh',
-            {refreshToken},
-            {headers: {token: ''}}
-        ).then(response => {
-            const result = response.data;
-            const accessToken = result.data?.accessToken;
-            if (result.code !== 200 || !accessToken) throw new Error(result.message || "刷新登录状态失败");
-            // 刷新结果回来时再次校验会话，防止退出/切换账号后旧响应覆盖新账号。
-            if (tokenStore.getSessionVersion() !== generation || tokenStore.refreshToken !== refreshToken) {
-                throw new SessionChangedError();
-            }
-            tokenStore.setTokens(accessToken, result.data.refreshToken || refreshToken);
-            return accessToken;
-        });
-    refreshing = {generation, refreshToken, promise};
-    promise.finally(() => {
-        if (refreshing?.promise === promise) refreshing = null;
-    }).catch(() => undefined);
-    return promise;
-};
-
 const noRefreshPaths = [
-    '/auth/login',
-    '/auth/registration',
-    '/auth/refresh',
-    '/auth/captcha-code',
-    '/auth/send-email-code',
-    '/auth/send-forget-email-code',
-    '/auth/forget-pass'
+    '/user-api/auth/login',
+    '/user-api/auth/registration',
+    '/user-api/auth/refresh',
+    '/user-api/auth/captcha-code',
+    '/user-api/auth/send-email-code',
+    '/user-api/auth/send-forget-email-code',
+    '/user-api/auth/forget-pass'
 ];
+
+const isNoRefreshPath = (request: any) => {
+    const path = requestPath(request);
+    return noRefreshPaths.some(item => path.endsWith(item));
+};
 
 const canRefreshRequest = (request: any) => {
     const tokenStore = useToken();
@@ -169,8 +131,7 @@ const canRefreshRequest = (request: any) => {
         && !request._retry
         && generation === tokenStore.getSessionVersion()
         && !!tokenStore.token
-        && !!tokenStore.refreshToken
-        && !noRefreshPaths.includes(requestPath(request));
+        && !isNoRefreshPath(request);
 };
 
 const retryWithFreshAccessToken = async (request: any, client = service) => {
@@ -180,7 +141,7 @@ const retryWithFreshAccessToken = async (request: any, client = service) => {
     request._retry = true;
     const accessToken = await refreshAccessToken(generation);
     if (generation !== tokenStore.getSessionVersion()) throw new SessionChangedError();
-    setHeader(request.headers, 'token', accessToken);
+    setAccessTokenHeader(request.headers, accessToken);
     return client(request);
 };
 
@@ -210,7 +171,7 @@ service.interceptors.request.use(
     config => {
         const token = useToken();
         if (!isRefreshRequest(config)) {
-            setHeader(config.headers, 'token', token.token);
+            setAccessTokenHeader(config.headers, token.token);
         }
         const request = config as typeof config & {_sessionVersion?: number; __sessionVersion?: number};
         request.__sessionVersion = token.getSessionVersion();

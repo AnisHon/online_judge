@@ -2,7 +2,6 @@ package com.anishan.api.filter;
 
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.util.AuthUtil;
-import com.anishan.commons.config.SharedConfig;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.domain.R;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,20 +26,26 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = request.getHeader("token");
-
         String header = request.getHeader("user-id");
         if (header == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        Long userId = Long.parseLong(header);
-        if (!authUtil.isUserExisted(userId) || !authUtil.existToken(token)) {
+        final Long userId;
+        try {
+            userId = Long.parseLong(header);
+        } catch (NumberFormatException e) {
+            throw new IllegalTokenException("令牌无效");
+        }
+        if (!authUtil.isUserExisted(userId)) {
             throw new IllegalTokenException("令牌过期");
         }
 
         LoginUser loginUser = authUtil.getLoginUser(userId);
+        if (loginUser == null) {
+            throw new IllegalTokenException("登录状态已失效");
+        }
 
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                 new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());

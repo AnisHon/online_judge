@@ -11,6 +11,7 @@ import 'nprogress/nprogress.css'
 import {useToken} from "@/stores/useToken";
 import Home from "@/views/Home.vue";
 import {hasBackendAccess} from "@/utils/authUtil";
+import {ensureAuthInitialized} from "@/utils/authSession";
 
 // index不是home
 // index不是home
@@ -108,6 +109,8 @@ export const constMenu = [
   }
 ]
 
+const publicNotificationRoute = constMenu.find(route => route.name === 'notification')!;
+
 // 固定公共路由
 export const constRoutes =  [
   {
@@ -194,15 +197,28 @@ export const constRoutes =  [
           name: "题解编辑"
         }
       },
+      ...constMenu.filter(route => route.name !== 'notification')
+    ]
+  },
+  {
+    // 公告不依赖登录，也不依赖后台的 content:notice:list 权限。
+    path: '',
+    component: Layout,
+    name: 'public-container',
+    children: [
+      {
+        ...publicNotificationRoute,
+        meta: {...publicNotificationRoute.meta, isLoginAccess: true}
+      },
       {
         path: "notification/notice/:id",
         name: "notice",
         component: () => import('@/views/notification/notice/Notice.vue'),
         meta: {
-          name: "通知"
+          name: "通知",
+          isLoginAccess: true
         },
-      },
-      ...constMenu
+      }
     ]
   },
   {
@@ -253,6 +269,12 @@ router.beforeEach(async (to) => {
 
   const menu = useMenuStore()
   const token = useToken();
+
+  // Access Token is memory-only. Every Tab restores itself from the HttpOnly
+  // refresh cookie before the guard decides whether the route is public.
+  if (token.authStatus === 'unknown' || token.authStatus === 'initializing') {
+    await ensureAuthInitialized();
+  }
 
   if (token.hasToken() && to.path.startsWith('/auth')) {
     return {name: 'home', replace: true};

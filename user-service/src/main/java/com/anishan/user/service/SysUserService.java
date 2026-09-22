@@ -55,6 +55,9 @@ public interface SysUserService extends IService<SysUser> {
 
     List<UserVo> rank(Integer limit);
 
+    /** 按数据库中的最新角色和权限构建登录主体，避免 Redis 快照长期过期。 */
+    LoginUser getLoginUser(Long userId);
+
     LoginUser getRootAccount();
 
     boolean changeInfo(SysUserInfoDto sysUserDto, Long userId);

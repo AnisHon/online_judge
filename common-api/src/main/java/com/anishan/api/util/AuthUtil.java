@@ -12,7 +12,6 @@ import com.anishan.api.domain.entity.SysUser;
 import com.anishan.commons.enumeration.CaptchaCodeType;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.anishan.commons.util.JwtUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +23,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @Component
 @DependsOn("constConfig")
 public class AuthUtil {
@@ -91,12 +88,6 @@ public class AuthUtil {
     @Contract(pure = true)
     private static String getCaptchaCodeKey(String captchaToken) {
         return "user-service:captcha:" + captchaToken;
-    }
-
-    private static final String WHITE_LIST_KEY = "user-service:token:whiteList";
-
-    private static String getWhiteListTokenKey(String token) {
-        return StrUtil.format("{}:{}", WHITE_LIST_KEY, token);
     }
 
     @NotNull
@@ -165,28 +156,6 @@ public class AuthUtil {
         redisTemplate.opsForValue().set(loginKey, user, JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
     }
 
-    public void cacheToken(@NotNull String token) {
-        stringRedisTemplate.opsForValue().set(getWhiteListTokenKey(token), "", JwtUtil.EXPIRE_HOUR, TimeUnit.HOURS);
-
-    }
-
-    public void cacheToken(@NotNull String token, long duration, TimeUnit unit) {
-        stringRedisTemplate.opsForValue().set(getWhiteListTokenKey(token), "", duration, unit);
-    }
-
-    public void removeToken(@NotNull String token) {
-        log.info("删除token: {}", token);
-        stringRedisTemplate.delete(getWhiteListTokenKey(token));
-    }
-
-    public boolean existToken(String token) {
-        if (token == null) {
-            return true;
-        }
-        return stringRedisTemplate.hasKey(getWhiteListTokenKey(token));
-    }
-
-
     public LoginUser getLoginUser(Long userId) {
         String loginKey = getLoginKey(userId);
         Object o = redisTemplate.opsForValue().get(loginKey);
@@ -227,15 +196,6 @@ public class AuthUtil {
         return JwtUtil.createToken(userId);
     }
 
-
-    @Transactional()
-    public void removeUser(Long id, String token) {
-        String loginKey = getLoginKey(id);
-
-        redisTemplate.delete(loginKey);
-        removeToken(token);
-
-    }
 
     public static LoginUser getContextUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

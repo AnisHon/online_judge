@@ -136,6 +136,9 @@ services:
       OJ_JWT_ACCESS_SECRET: ${OJ_JWT_ACCESS_SECRET}
       OJ_JWT_REFRESH_SECRET: ${OJ_JWT_REFRESH_SECRET}
       OJ_DEFAULT_PASSWORD: ${OJ_DEFAULT_PASSWORD}
+      OJ_REFRESH_COOKIE_PATH: /api/user-api/auth
+      OJ_REFRESH_COOKIE_SECURE: "true"
+      OJ_REFRESH_COOKIE_SAME_SITE: Lax
 
   content-service:
     <<: *java-defaults

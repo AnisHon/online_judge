@@ -4,6 +4,8 @@ import {useUserStore} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
 import router from '@/router'
 import {useMenuStore} from "@/stores/useMenuStore";
+import {broadcastAuthState} from '@/utils/authBridge'
+import {refreshAccessToken} from '@/utils/authSession'
 
 export interface LoginForm {
     captchaCode: string;
@@ -29,9 +31,7 @@ export interface ForgetPasswordForm {
 export interface LoginResponse {
     message: string;
     success: boolean;
-    token: string;
-    accessToken?: string;
-    refreshToken?: string;
+    accessToken: string;
     expiresIn?: number;
 }
 
@@ -69,7 +69,7 @@ const errorMessage = (error: unknown, fallback: string) => {
 // 认证页面会结合表单状态显示错误，避免 HTTP 层重复弹出同一条提示。
 const handledByAuthPage = () => {};
 
-const finishLogin = async (token: string, refreshToken?: string) => {
+const finishLogin = async (accessToken: string) => {
     const tokenStore = useToken();
     const userStore = useUserStore();
     const menuStore = useMenuStore();
@@ -77,7 +77,7 @@ const finishLogin = async (token: string, refreshToken?: string) => {
         // 登录前清理上一个会话的权限和用户请求，避免旧账号的菜单短暂泄漏。
         userStore.clear();
         menuStore.clear();
-        tokenStore.startSession(token, refreshToken);
+        tokenStore.startSession(accessToken);
         await userStore.loadUser();
         // 动态路由统一由路由守卫构建，避免登录流程和路由守卫同时请求、互相覆盖。
         await router.replace({name: "home"});
@@ -91,10 +91,10 @@ const finishLogin = async (token: string, refreshToken?: string) => {
 async function login(data: LoginForm) {
     const result = await post<LoginForm, LoginResponse>('/user-api/auth/login', data, handledByAuthPage);
     if (!result.data) throw new Error(result.message || "登录响应缺少数据");
-    const {message, success, token} = result.data;
+    const {message, success, accessToken} = result.data;
 
     if (success) {
-        await finishLogin(result.data.accessToken || token, result.data.refreshToken);
+        await finishLogin(accessToken);
     } else {
         throw new Error(message || "用户名、密码或验证码错误");
     }
@@ -105,9 +105,9 @@ async function login(data: LoginForm) {
 async function signUp(data: SignUpForm) {
     const result = await post<SignUpForm, LoginResponse>('/user-api/auth/registration', data, handledByAuthPage);
     if (!result.data) throw new Error(result.message || "注册响应缺少数据");
-    const {message, success, token} = result.data;
+    const {message, success, accessToken} = result.data;
     if (success) {
-        await finishLogin(result.data.accessToken || token, result.data.refreshToken);
+        await finishLogin(accessToken);
     } else {
         throw new Error(message || "注册失败，请检查填写内容");
     }
@@ -138,15 +138,13 @@ async function logout() {
     } finally {
         useToken().clearToken();
         useMenuStore().clear();
+        broadcastAuthState('LOGOUT');
         await router.replace({name: "login"});
     }
 }
 
-async function refreshLogin(refreshToken: string) {
-    const result = await post<{refreshToken: string}, LoginResponse>('/user-api/auth/refresh', {refreshToken});
-    if (!result.data?.accessToken) throw new Error(result.message || '刷新登录状态失败');
-    useToken().setTokens(result.data.accessToken, result.data.refreshToken);
-    return result.data.accessToken;
+async function refreshLogin() {
+    return refreshAccessToken(useToken().getSessionVersion());
 }
 
 export {

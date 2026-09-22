@@ -12,3 +12,13 @@ oj:
   minio:
     bucket-name: uploads
 
+  auth:
+    refresh-cookie:
+      # Browser-visible path includes the public Gateway prefix. Nacos/production
+      # can override these values without changing code.
+      name: ${OJ_REFRESH_COOKIE_NAME:oj_refresh}
+      path: ${OJ_REFRESH_COOKIE_PATH:/api/user-api/auth}
+      domain: ${OJ_REFRESH_COOKIE_DOMAIN:}
+      secure: ${OJ_REFRESH_COOKIE_SECURE:false}
+      same-site: ${OJ_REFRESH_COOKIE_SAME_SITE:Lax}
+      max-age-seconds: ${OJ_REFRESH_COOKIE_MAX_AGE:604800}
