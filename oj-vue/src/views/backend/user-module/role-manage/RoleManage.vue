@@ -141,13 +141,13 @@
 
     <el-dialog v-model="openDataScope" class="permission-dialog" title="配置资源权限" width="min(680px, 92vw)" append-to-body destroy-on-close>
       <div class="permission-dialog__head">
-        <div><span class="panel-eyebrow">ROLE / ACCESS</span><h3>{{ form.roleName || '当前角色' }}</h3><p>勾选角色可访问的菜单、菜单项和按钮权限。当前采用独立勾选，不会自动替换父子节点。</p></div>
+        <div><span class="panel-eyebrow">ROLE / ACCESS</span><h3>{{ permissionRoleName || '当前角色' }}</h3><p>勾选角色可访问的菜单、菜单项和按钮权限。当前采用独立勾选，不会自动替换父子节点。</p></div>
         <span class="permission-count">已选 {{ checkedPermissionCount }} 项</span>
       </div>
       <div v-loading="loadingRole" class="permission-tree-wrap">
         <el-tree ref="treeRef" :data="menuTree" node-key="id" show-checkbox check-strictly :expand-on-click-node="false" :default-expand-all="false" :props="treeProps" empty-text="暂无资源权限" @check="handlePermissionCheck" />
       </div>
-      <template #footer><el-button :disabled="permissionSaving" @click="cancelMenu">取消</el-button><el-button type="primary" :loading="permissionSaving" :disabled="loadingRole" @click="submitMenu">保存权限</el-button></template>
+      <template #footer><el-button :disabled="permissionSaving" @click="cancelMenu">取消</el-button><el-button type="primary" :loading="permissionSaving" :disabled="loadingRole || !canManageScope" @click="submitMenu">保存权限</el-button></template>
     </el-dialog>
   </ContestSubPageShell>
 </template>
@@ -166,7 +166,7 @@ import { setTreeId } from '@/utils/menu'
 import { useColumn } from '@/hooks/useColumn'
 import type { IdType } from '@/api/common'
 import { useRouter } from 'vue-router'
-import { hasAnyPerm } from '@/utils/authUtil'
+import { hasPerm } from '@/utils/authUtil'
 import type { TreeOptionProps } from 'element-plus/es/components/tree/src/tree.type'
 import type { TreeNodeData } from 'element-plus/lib/components/tree/src/tree.type'
 
@@ -194,8 +194,11 @@ const rules = {
 }
 
 const activeFilterCount = computed(() => [queryParams.roleId, queryParams.roleName, queryParams.status, queryParams.remark].filter(value => value !== undefined && value !== '').length)
-const canManageScope = computed(() => hasAnyPerm(['user:role:grant', 'user:role:revoke']))
-const canListUsers = computed(() => hasAnyPerm('user:user:list'))
+const canReadMenu = computed(() => hasPerm('user:menu:list'))
+const canGrantMenu = computed(() => hasPerm('user:menu:grant'))
+const canRevokeMenu = computed(() => hasPerm('user:menu:revoke'))
+const canManageScope = computed(() => canReadMenu.value && (canGrantMenu.value || canRevokeMenu.value))
+const canListUsers = computed(() => hasPerm('user:user:list'))
 const canUseMore = computed(() => canManageScope.value || canListUsers.value)
 const summaryStats = computed(() => [
   { label: '角色总数', value: total.value, tone: 'blue' },
@@ -288,10 +291,10 @@ const handleAuthUser = (row: RoleView) => { router.push({ name: 'role-auth', par
 const menuTree = reactive<TreedMenu[]>([])
 const treeRef = ref<InstanceType<typeof ElTree>>()
 const loadingRole = ref(false)
+const permissionRoleId = ref<IdType>()
+const permissionRoleName = ref('')
 const originalPermissionIds = ref<IdType[]>([])
 const checkedPermissionIds = ref<IdType[]>([])
-const delArray = ref<MenuRoleRelation[]>([])
-const addArray = ref<MenuRoleRelation[]>([])
 const permissionSaving = ref(false)
 let permissionSession = 0
 
@@ -311,43 +314,70 @@ async function loadMenuTree() {
   setTreeId(data)
   menuTree.splice(0, menuTree.length, ...sortMenuTree(data))
 }
-const handlePermissionCheck = () => { checkedPermissionIds.value = treeRef.value?.getCheckedKeys() as IdType[] || [] }
+const sameId = (left: IdType, right: IdType) => String(left) === String(right)
+
+const restorePermissionSnapshot = async (ids: IdType[], session: number) => {
+  await nextTick()
+  if (session !== permissionSession) return
+  treeRef.value?.setCheckedKeys(ids, false)
+  checkedPermissionIds.value = [...ids]
+}
+
+const handlePermissionCheck = (_data: unknown, state: { checkedKeys: Array<IdType | number | string> }) => {
+  const current = (state.checkedKeys || []).map(String)
+  const removed = originalPermissionIds.value.some(id => !current.some(item => sameId(item, id)))
+  const added = current.some(id => !originalPermissionIds.value.some(item => sameId(item, id)))
+  if ((removed && !canRevokeMenu.value) || (added && !canGrantMenu.value)) {
+    void restorePermissionSnapshot(originalPermissionIds.value, permissionSession)
+    ElMessage.warning(removed && !canRevokeMenu.value ? '当前账号没有撤销权限' : '当前账号没有授予权限')
+    return
+  }
+  checkedPermissionIds.value = [...current]
+}
+
+const loadRolePermissions = async (roleId: IdType, session: number) => {
+  const data = await listRoleMenu(roleId)
+  if (session !== permissionSession) return
+  const ids = data.map(item => item.menuId)
+  originalPermissionIds.value = [...ids]
+  await restorePermissionSnapshot(ids, session)
+}
 
 const handleMenu = async (row: RoleView) => {
+  if (!canManageScope.value) return
   const session = ++permissionSession
-  form.roleId = row.roleId
-  form.roleName = row.roleName
+  permissionRoleId.value = row.roleId
+  permissionRoleName.value = row.roleName
   openDataScope.value = true
   loadingRole.value = true
   checkedPermissionIds.value = []
   try {
     await loadMenuTree()
-    const data = await listRoleMenu(row.roleId)
-    if (session !== permissionSession) return
-    originalPermissionIds.value = data.map(item => item.menuId)
-    await nextTick()
-    treeRef.value?.setCheckedKeys(originalPermissionIds.value, false)
-    checkedPermissionIds.value = [...originalPermissionIds.value]
+    await loadRolePermissions(row.roleId, session)
   } catch { if (session === permissionSession) ElMessage.error('角色权限加载失败，请稍后重试') } finally { if (session === permissionSession) loadingRole.value = false }
 }
 
 const submitMenu = async () => {
-  if (!form.roleId) return
+  const roleId = permissionRoleId.value
+  if (!roleId || !canManageScope.value || loadingRole.value || permissionSaving.value) return
   const current = (treeRef.value?.getCheckedKeys() || []) as IdType[]
-  const removed = originalPermissionIds.value.filter(id => !current.some(item => String(item) === String(id)))
-  const added = current.filter(id => !originalPermissionIds.value.some(item => String(item) === String(id)))
-  delArray.value.splice(0, delArray.value.length, ...removed.map(menuId => ({ roleId: form.roleId!, menuId })))
-  addArray.value.splice(0, addArray.value.length, ...added.map(menuId => ({ roleId: form.roleId!, menuId })))
+  const original = [...originalPermissionIds.value]
+  const removed = original.filter(id => !current.some(item => sameId(item, id)))
+  const added = current.filter(id => !original.some(item => sameId(item, id)))
+  if (removed.length && !canRevokeMenu.value) { ElMessage.warning('当前账号没有撤销权限'); await restorePermissionSnapshot(original, permissionSession); return }
+  if (added.length && !canGrantMenu.value) { ElMessage.warning('当前账号没有授予权限'); await restorePermissionSnapshot(original, permissionSession); return }
   if (!removed.length && !added.length) { ElMessage.info('权限没有变化'); cancelMenu(); return }
-  const roleId = form.roleId
   const requests: Promise<void>[] = []
   if (removed.length) requests.push(revokeMenu(removed.map(menuId => ({ roleId, menuId }))))
   if (added.length) requests.push(grantMenu(added.map(menuId => ({ roleId, menuId }))))
+  const session = permissionSession
   permissionSaving.value = true
   try {
     const results = await Promise.allSettled(requests)
+    if (session !== permissionSession) return
     if (results.some(result => result.status === 'rejected')) {
       ElMessage.error('权限保存未完成，请刷新后确认当前授权状态')
+      await loadRolePermissions(roleId, session)
       return
     }
     ElMessage.success('角色权限已更新')
@@ -356,7 +386,14 @@ const submitMenu = async () => {
     permissionSaving.value = false
   }
 }
-const cancelMenu = () => { permissionSession += 1; openDataScope.value = false; originalPermissionIds.value = []; checkedPermissionIds.value = []; delArray.value.length = 0; addArray.value.length = 0 }
+const cancelMenu = () => {
+  permissionSession += 1
+  openDataScope.value = false
+  permissionRoleId.value = undefined
+  permissionRoleName.value = ''
+  originalPermissionIds.value = []
+  checkedPermissionIds.value = []
+}
 
 getList()
 </script>

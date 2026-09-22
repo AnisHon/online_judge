@@ -1,7 +1,5 @@
-import {get, type successCallback} from "@/utils/http";
+import {get} from "@/utils/http";
 import {add, putRemove} from "@/utils/simpleCRUD";
-import useLoading from "@/hooks/useLoading";
-import {debounce} from "lodash";
 import type {IdType} from "@/api/common.ts";
 
 enum MenuType {
@@ -62,28 +60,8 @@ async function grant(relations: MenuRoleRelation[]): Promise<void> {
     await add(relations, "/user-api/menu/grant");
 }
 
-const debouncedGrant = (relations: MenuRoleRelation[], success: successCallback<void>) => {
-    const {loading, isLoading, finish} = useLoading()
-    const add = debounce(() => {
-        grant(relations)
-            .then(success)
-            .finally(finish);
-    }, 1000);
-    return {loading, isLoading, add};
-}
-
-
 async function revoke(relations: MenuRoleRelation[]): Promise<void> {
     await putRemove(relations, "/user-api/menu/batchRevoke", "/user-api/menu/batchRevoke");
-}
-const debouncedRevoke = (relations: MenuRoleRelation[], success: successCallback<void>) => {
-    const {loading, isLoading, finish} = useLoading();
-    const add = debounce(() => {
-        revoke(relations)
-            .then(success)
-            .finally(finish);
-    }, 1000);
-    return {loading, isLoading, add};
 }
 
 const listRoleMenu = async (id: IdType) => {
@@ -101,7 +79,5 @@ export {
     getAuth,
     grant,
     revoke,
-    debouncedGrant,
-    debouncedRevoke,
     listRoleMenu
 }

@@ -7,6 +7,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.commons.enumeration.MenuType;
 import com.anishan.commons.util.ThrowUtil;
+import com.anishan.commons.exception.BusinessException;
 import com.anishan.user.domain.dto.MenuDto;
 import com.anishan.user.domain.dto.MenuPagedQuery;
 import com.anishan.api.domain.entity.SysRole;
@@ -205,7 +206,14 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
 
     @Override
     public boolean updateMenu(MenuDto menuDto) {
+        SysMenu existing = this.getById(menuDto.getMenuId());
+        ThrowUtil.illegalArgument(existing == null, "菜单不存在");
+        validateMenuRelation(menuDto, existing.getMenuType());
         SysMenu sysMenu = BeanUtil.copyProperties(menuDto, SysMenu.class);
+        sysMenu.setParentId(normalizeParentId(sysMenu.getParentId()));
+        if (sysMenu.getMenuType() == null) {
+            sysMenu.setMenuType(existing.getMenuType());
+        }
         LocalDateTime updateTime = MysqlMappingUtils.getUpdateTime(
                 this,
                 SysMenu::getMenuId,
@@ -217,8 +225,58 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
 
     @Override
     public void addMenu(MenuDto menuDto) {
+        validateMenuRelation(menuDto, menuDto.getMenuType());
         SysMenu sysMenu = BeanUtil.copyProperties(menuDto, SysMenu.class, "menuId");
+        sysMenu.setParentId(normalizeParentId(sysMenu.getParentId()));
         sysMenuMapper.insert(sysMenu);
+    }
+
+    /**
+     * 菜单树是动态路由和角色授权的共同数据源，父级关系必须在服务端阻止循环和非法挂载。
+     */
+    private void validateMenuRelation(MenuDto menuDto, MenuType existingType) {
+        Long menuId = menuDto.getMenuId();
+        MenuType menuType = menuDto.getMenuType() == null ? existingType : menuDto.getMenuType();
+        ThrowUtil.illegalArgument(menuType == null, "菜单类型不能为空");
+        if (!MenuType.BUTTON.equals(menuType)) {
+            ThrowUtil.illegalArgument(menuDto.getRouter() == null || menuDto.getRouter().trim().isEmpty(), "菜单路由不能为空");
+        }
+        if (MenuType.ITEM.equals(menuType)) {
+            ThrowUtil.illegalArgument(menuDto.getComponent() == null || menuDto.getComponent().trim().isEmpty(), "菜单项组件不能为空");
+        }
+        if (!MenuType.MENU_BAR.equals(menuType)) {
+            ThrowUtil.illegalArgument(menuDto.getPerms() == null || menuDto.getPerms().trim().isEmpty(), "权限标识不能为空");
+        }
+
+        Long parentId = normalizeParentId(menuDto.getParentId());
+        if (menuId != null && Objects.equals(menuId, parentId)) {
+            throw new BusinessException("菜单不能挂载到自身");
+        }
+        if (parentId == null) {
+            return;
+        }
+
+        SysMenu parent = this.getById(parentId);
+        ThrowUtil.illegalArgument(parent == null, "父级菜单不存在");
+        ThrowUtil.illegalArgument(MenuType.BUTTON.equals(parent.getMenuType()), "按钮不能作为父级菜单");
+
+        Set<Long> visited = new HashSet<>();
+        Long cursor = parentId;
+        while (cursor != null) {
+            if (!visited.add(cursor)) {
+                throw new BusinessException("菜单父级关系已存在循环");
+            }
+            if (menuId != null && Objects.equals(menuId, cursor)) {
+                throw new BusinessException("不能将菜单挂载到自己的子级");
+            }
+            SysMenu ancestor = this.getById(cursor);
+            ThrowUtil.illegalArgument(ancestor == null, "菜单父级关系不完整");
+            cursor = normalizeParentId(ancestor.getParentId());
+        }
+    }
+
+    private Long normalizeParentId(Long parentId) {
+        return parentId == null || parentId == 0L ? null : parentId;
     }
 
     @Override
@@ -257,7 +315,4 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
         return buildTreeMenu(menuVos);
     }
 }
-
-
-
 

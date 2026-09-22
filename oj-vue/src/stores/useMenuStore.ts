@@ -25,6 +25,14 @@ export const useMenuStore = defineStore('menuStore', () => {
         status.value = 'idle';
     }
 
+    // 权限资源 CRUD 后使当前账号的菜单快照失效，避免动态路由继续使用旧树。
+    const invalidate = () => {
+        sessionVersion++;
+        loadPromise = null;
+        menuTrees.value = undefined;
+        status.value = 'idle';
+    }
+
     const load = async (force = false): Promise<TreedMenu[]> => {
         if (!force && menuTrees.value !== undefined) {
             return menuTrees.value;
@@ -71,6 +79,7 @@ export const useMenuStore = defineStore('menuStore', () => {
     return  {
         isDynamicReady,
         clear,
+        invalidate,
         load,
         getTree,
         setMenu,

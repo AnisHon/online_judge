@@ -74,6 +74,7 @@ public class MenuController {
     }
 
     @GetMapping("/treeMenus")
+    @PreAuthorize("hasAuthority('user:menu:list')")
     @ApiOperation("获取所有菜单，以树状的形式返回")
     public R<List<TreedMenuVo>> menus() {
         return R.success(sysMenuService.getAllTreedMenu());

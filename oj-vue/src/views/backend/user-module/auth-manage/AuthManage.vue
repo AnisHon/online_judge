@@ -8,11 +8,11 @@
       :stats="summaryStats"
   >
     <template #actions>
-      <el-button :icon="Refresh" :loading="isLoading" @click="getList">刷新资源树</el-button>
+      <el-button v-has="'user:menu:list'" :icon="Refresh" :loading="isLoading" @click="getList">刷新资源树</el-button>
       <el-button v-has="'user:menu:add'" type="primary" :icon="Plus" @click="handleAdd()">新增资源</el-button>
     </template>
 
-    <section class="auth-panel">
+    <section v-if="canReadResource" class="auth-panel">
       <div class="panel-heading">
         <div>
           <span class="panel-eyebrow">RESOURCE HIERARCHY</span>
@@ -75,8 +75,8 @@
       </div>
 
       <el-table ref="tableRef" v-loading="isLoading" class="auth-table" :data="filteredTree" row-key="id" :indent="0"
-                :row-style="treeRowStyle" :tree-props="{ children: 'children' }"
-                @selection-change="handleSelectionChange">
+                :tree-props="{ children: 'children' }"
+                @selection-change="handleSelectionChange" @expand-change="handleExpandChange">
         <el-table-column type="selection" width="52" align="center"/>
         <el-table-column v-if="columns[0].visible" class-name="resource-column" label="资源" min-width="320">
           <template #default="{ row }">
@@ -137,6 +137,8 @@
         </template>
       </el-table>
     </section>
+
+    <el-empty v-else description="你没有查看权限资源的权限" :image-size="96" />
 
     <el-dialog v-model="open" class="auth-dialog" :title="dialogState === 'add' ? '新增权限资源' : '编辑权限资源'"
                width="min(760px, 92vw)" append-to-body destroy-on-close>
@@ -218,17 +220,18 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, reactive, ref, watch} from 'vue'
+import {computed, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue'
 import {Delete, EditPen, Expand, Filter, Fold, Key, Lock, Plus, Refresh, Search, Select} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox, type FormInstance, type TableInstance} from 'element-plus'
 import ContestSubPageShell from '@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue'
 import IconPicker from '@/components/IconPicker/IconPicker.vue'
-import RightToolBar from '@/components/right-toolbar/RightToolBar.vue'
 import {addMenu, dict, getAllTreedMenu, type QueryMenu, removeMenu, updateMenu} from '@/api/menu'
-import {MenuType, type MenuForm, type MenuView, type TreedMenu} from '@/api/auth/menu'
+import {MenuType, type MenuForm, type TreedMenu} from '@/api/auth/menu'
 import type {IdType} from '@/api/common'
 import {useColumn} from '@/hooks/useColumn'
 import {setTreeId} from '@/utils/menu'
+import {hasPerm} from '@/utils/authUtil'
+import {useMenuStore} from '@/stores/useMenuStore'
 
 type DialogState = 'add' | 'edit'
 type TreeOption = { id: IdType | string; label: string; children?: TreeOption[] }
@@ -264,13 +267,22 @@ const isLoading = ref(false)
 const actionLoading = ref(false)
 const submitting = ref(false)
 const expandedAll = ref(false)
+const userExpandedIds = ref<Set<string>>(new Set())
+let expandOperationId = 0
+let listRequestId = 0
+const menuStore = useMenuStore()
 const columns = useColumn(['资源', '权限标识', '路由 / 组件', '顺序', '创建时间', '备注']).columns
 
-const rules = {
+const canReadResource = computed(() => hasPerm('user:menu:list'))
+const rules = computed(() => ({
   menuName: [{required: true, message: '资源名称不能为空', trigger: 'blur'}],
   parentId: [{required: true, message: '请选择父级资源或根节点', trigger: 'change'}],
-  orderNum: [{required: true, message: '请输入显示顺序', trigger: 'change'}]
-}
+  menuType: [{required: true, message: '请选择资源类型', trigger: 'change'}],
+  orderNum: [{required: true, message: '请输入显示顺序', trigger: 'change'}],
+  router: form.menuType === MenuType.BUTTON ? [] : [{required: true, message: '请输入路由地址', trigger: 'blur'}],
+  component: form.menuType === MenuType.MENU_ITEM ? [{required: true, message: '请输入组件路径', trigger: 'blur'}] : [],
+  perms: form.menuType === MenuType.MENU ? [] : [{required: true, message: '请输入权限标识', trigger: 'blur'}],
+}))
 
 const allMenus = computed(() => flattenTree(menuTree))
 const activeFilterCount = computed(() => [queryParams.menuId, queryParams.menuName, queryParams.perms, queryParams.menuType].filter(value => value !== undefined && value !== '').length)
@@ -376,31 +388,30 @@ function resolveIcon(name?: string) {
   return name && name !== '#' ? name : undefined
 }
 
-function treeRowStyle({row}: { row: AuthTreeNode }) {
-  return {'--tree-depth': String(row.depth), '--tree-offset': `${row.depth * 24}px`}
-}
-
 function resourceCellStyle(row: AuthTreeNode) {
-  return row.children?.length ? undefined : {paddingLeft: `${row.depth * 24}px`}
+  return {paddingLeft: `${row.depth * 24}px`}
 }
 
 const getList = async () => {
+  if (!canReadResource.value) return
+  const requestId = ++listRequestId
   isLoading.value = true;
   try {
     const data = await getAllTreedMenu();
+    if (requestId !== listRequestId) return
     setTreeId(data);
     menuTree.splice(0, menuTree.length, ...decorateTree(data));
-    await nextTick();
-    expandVisibleRows(expandedAll.value)
+    await nextTick()
+    syncExpandedRows()
   } catch {
-    ElMessage.error('权限资源加载失败，请稍后重试')
+    if (requestId === listRequestId) ElMessage.error('权限资源加载失败，请稍后重试')
   } finally {
-    isLoading.value = false
+    if (requestId === listRequestId) isLoading.value = false
   }
 }
 const handleQuery = () => {
-  expandedAll.value = true;
-  void nextTick(() => expandVisibleRows(true))
+  expandedAll.value = false
+  void nextTick(syncExpandedRows)
 }
 const clearFilters = () => {
   queryParams.menuId = undefined;
@@ -408,25 +419,110 @@ const clearFilters = () => {
   queryParams.perms = undefined;
   queryParams.menuType = undefined;
   expandedAll.value = false
-  void nextTick(() => expandVisibleRows(false))
+  void nextTick(syncExpandedRows)
 }
-const expandVisibleRows = (expanded: boolean) => {
-  void expandRows(filteredTree.value, expanded)
+
+function nodeKey(node: TreedMenu) {
+  return String(node.menu.menuId)
 }
-const expandRows = async (nodes: TreedMenu[], expanded: boolean): Promise<void> => {
-  nodes.forEach(node => tableRef.value?.toggleRowExpansion(node, expanded));
-  const children = nodes.flatMap(node => node.children || []);
-  if (expanded && children.length) {
-    await nextTick();
-    await expandRows(children, true)
-  }
+
+function collectAllIds(nodes: TreedMenu[], result = new Set<string>()) {
+  nodes.forEach(node => {
+    result.add(nodeKey(node))
+    collectAllIds(node.children || [], result)
+  })
+  return result
 }
+
+function collectMatchPathIds(nodes: AuthTreeNode[], result = new Set<string>()): boolean {
+  let hasMatch = false
+  nodes.forEach(node => {
+    const childMatch = collectMatchPathIds(node.children || [], result)
+    if (nodeMatches(node) || childMatch) {
+      result.add(nodeKey(node))
+      hasMatch = true
+    }
+  })
+  return hasMatch
+}
+
+const syncExpandedRows = () => {
+  const operationId = ++expandOperationId
+  const matchPathIds = new Set<string>()
+  if (activeFilterCount.value) collectMatchPathIds(filteredTree.value, matchPathIds)
+  const targetIds = expandedAll.value
+    ? collectAllIds(filteredTree.value)
+    : activeFilterCount.value
+      ? matchPathIds
+      : new Set(userExpandedIds.value)
+  void (async () => {
+    await nextTick()
+    if (operationId !== expandOperationId) return
+    filteredTree.value.forEach(node => tableRef.value?.toggleRowExpansion(node, false))
+    await nextTick()
+    await expandRowsForKeys(filteredTree.value, targetIds, operationId)
+  })()
+}
+
+const expandRowsForKeys = async (nodes: AuthTreeNode[], targetIds: Set<string>, operationId: number): Promise<void> => {
+  if (operationId !== expandOperationId) return
+  const targets = nodes.filter(node => targetIds.has(nodeKey(node)))
+  targets.forEach(node => tableRef.value?.toggleRowExpansion(node, true))
+  if (!targets.length) return
+  await nextTick()
+  await expandRowsForKeys(targets.flatMap(node => node.children || []), targetIds, operationId)
+}
+
+const handleExpandChange = (_row: AuthTreeNode, expandedRows: AuthTreeNode[]) => {
+  if (expandedAll.value || activeFilterCount.value) return
+  userExpandedIds.value = new Set(expandedRows.map(nodeKey))
+}
+
 const toggleExpand = () => {
-  expandedAll.value = !expandedAll.value;
-  expandVisibleRows(expandedAll.value)
+  expandedAll.value = !expandedAll.value
+  if (!expandedAll.value) userExpandedIds.value = new Set()
+  syncExpandedRows()
 }
+
+const buildMenuPayload = (): MenuForm => {
+  const type = form.menuType || MenuType.MENU
+  const payload: MenuForm = {
+    menuId: form.menuId,
+    menuName: form.menuName?.trim(),
+    menuType: type,
+    parentId: form.parentId || '0',
+    orderNum: form.orderNum,
+    remark: form.remark?.trim() || '',
+  }
+  if (type !== MenuType.BUTTON) {
+    payload.icon = form.icon || '#'
+    payload.router = form.router?.trim() || ''
+    payload.component = form.component?.trim() || ''
+  }
+  if (type !== MenuType.MENU) payload.perms = form.perms?.trim() || ''
+  return payload
+}
+
 const handleSelectionChange = (selection: TreedMenu[]) => {
   selectedIds.value = selection.map(item => item.menu.menuId)
+}
+
+const submitForm = async () => {
+  if (!formRef.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+  const payload = buildMenuPayload()
+  submitting.value = true
+  try {
+    if (dialogState.value === 'add') await addMenu(payload)
+    else await updateMenu(payload)
+    ElMessage.success(dialogState.value === 'add' ? '资源已创建' : '资源已更新')
+    finishDialog()
+  } catch {
+    ElMessage.error(dialogState.value === 'add' ? '资源创建失败，请稍后重试' : '资源更新失败，请稍后重试')
+  } finally {
+    submitting.value = false
+  }
 }
 
 const resetForm = () => {
@@ -460,35 +556,11 @@ const handleUpdate = (node?: TreedMenu) => {
   dialogState.value = 'edit';
   open.value = true
 }
-const submitForm = async () => {
-  if (!formRef.value) return;
-  const valid = await formRef.value.validate().catch(() => false);
-  if (!valid) return;
-  if (form.menuType !== MenuType.BUTTON && !form.icon) form.icon = '#';
-  if (form.menuType !== MenuType.MENU && !form.perms?.trim()) {
-    ElMessage.warning('菜单项和按钮必须填写权限标识');
-    return
-  }
-  if (form.menuType !== MenuType.BUTTON && !form.router?.trim()) {
-    ElMessage.warning('菜单栏和菜单项必须填写路由地址');
-    return
-  }
-  submitting.value = true
-  try {
-    if (dialogState.value === 'add') await addMenu({...form})
-    else await updateMenu({...form})
-    ElMessage.success(dialogState.value === 'add' ? '资源已创建' : '资源已更新')
-    finishDialog()
-  } catch {
-    ElMessage.error(dialogState.value === 'add' ? '资源创建失败，请稍后重试' : '资源更新失败，请稍后重试')
-  } finally {
-    submitting.value = false
-  }
-}
 const finishDialog = () => {
   open.value = false;
   resetForm();
-  getList()
+  menuStore.invalidate()
+  void getList()
 }
 const handleDelete = async (node?: TreedMenu) => {
   const ids = node ? [node.menu.menuId] : selectedIds.value;
@@ -502,6 +574,7 @@ const handleDelete = async (node?: TreedMenu) => {
     actionLoading.value = true;
     await removeMenu(node ? ids[0] : ids);
     ElMessage.success('资源已删除');
+    menuStore.invalidate()
     await getList()
   } catch (error) {
     if (error !== 'cancel' && error !== 'close') ElMessage.error('删除失败，请稍后重试')
@@ -524,7 +597,13 @@ watch(() => form.menuType, (type) => {
   }
 })
 
-getList()
+watch(canReadResource, (allowed) => {
+  if (allowed) void getList()
+}, {immediate: true})
+onBeforeUnmount(() => {
+  listRequestId++
+  expandOperationId++
+})
 </script>
 
 <style lang="scss" scoped>
@@ -726,7 +805,7 @@ getList()
   height: 22px;
   flex: 0 0 auto;
   margin-right: 5px;
-  margin-left: var(--tree-offset, 0px);
+  margin-left: 0;
   place-items: center;
   border: 1px solid var(--el-border-color);
   border-radius: 7px;
@@ -975,127 +1054,6 @@ getList()
 
 .icon-form-item {
   margin-top: 1px;
-}
-
-.icon-picker {
-  padding: 10px;
-  border: 1px solid var(--el-border-color);
-  border-radius: 13px;
-  background: var(--el-bg-color-page);
-}
-
-.icon-picker__toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.icon-picker__toolbar .el-input {
-  flex: 1;
-}
-
-.icon-picker__toolbar > span {
-  flex: 0 0 auto;
-  color: var(--el-text-color-secondary);
-  font: 11px var(--code-font-family, monospace);
-}
-
-.icon-grid {
-  display: grid;
-  max-height: 258px;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 8px;
-  overflow-y: auto;
-  padding: 2px;
-}
-
-.icon-tile {
-  display: flex;
-  min-height: 72px;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 5px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 10px;
-  background: var(--el-bg-color);
-  color: var(--el-text-color-secondary);
-  cursor: pointer;
-  flex-direction: column;
-  gap: 6px;
-  transition: border-color .18s ease, background-color .18s ease, color .18s ease, transform .18s ease;
-}
-
-.icon-tile:hover {
-  border-color: rgb(139 92 246 / 48%);
-  color: #8b5cf6;
-  transform: translateY(-1px);
-}
-
-.icon-tile.is-active {
-  border-color: #8b5cf6;
-  background: rgb(139 92 246 / 11%);
-  box-shadow: 0 0 0 2px rgb(139 92 246 / 12%);
-  color: #8b5cf6;
-}
-
-.icon-tile__visual {
-  display: grid;
-  height: 25px;
-  place-items: center;
-  font-size: 20px;
-}
-
-.icon-tile__name {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 10px;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.icon-empty {
-  grid-column: 1 / -1;
-  padding: 28px 0;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  text-align: center;
-}
-
-.icon-preview {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: -2px 0 14px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--el-bg-color-page);
-}
-
-.icon-preview__box {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  border-radius: 8px;
-  background: rgb(139 92 246 / 12%);
-  color: #8b5cf6;
-  font-size: 16px;
-}
-
-.icon-preview strong, .icon-preview small {
-  display: block;
-}
-
-.icon-preview strong {
-  font: 12px var(--code-font-family, monospace);
-}
-
-.icon-preview small {
-  margin-top: 3px;
-  color: var(--el-text-color-secondary);
-  font-size: 10px;
 }
 
 @keyframes pulse {
