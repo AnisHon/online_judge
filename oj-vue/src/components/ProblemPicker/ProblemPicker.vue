@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { Collection, Document, Key, Refresh, Search, Select } from '@element-plus/icons-vue'
 import { dict, getProblems, getProblemsAdmin, ProblemType, type AdminQueryProblem, type ProblemParam, type ProblemView, type TaggedProblemView } from '@/api/problem'
 import type { IdType } from '@/api/common'
@@ -89,7 +89,7 @@ interface ProblemPickerView extends Pick<ProblemView, 'problemId' | 'title' | 's
 
 const modelValue = defineModel<IdType>()
 const emit = defineEmits<{ (event: 'select', problem: ProblemPickerView): void }>()
-const isAdminPicker = hasPerm('problem:problem:list')
+const isAdminPicker = computed(() => hasPerm('problem:problem:list'))
 const query = reactive({ currentPage: 1, pageSize: 10, title: '', problemId: '', type: '' as string | ProblemType })
 const problems = ref<ProblemPickerView[]>([])
 const total = ref(0)
@@ -105,7 +105,7 @@ const problemTypeText = (type: ProblemType) => dict.problemType.find(item => ite
 const getList = async () => {
   loading.value = true
   try {
-    if (isAdminPicker) {
+    if (isAdminPicker.value) {
       const params: AdminQueryProblem = { currentPage: query.currentPage, pageSize: query.pageSize, title: query.title || undefined, problemId: query.problemId || undefined, type: query.type as ProblemType || undefined }
       const result = await getProblemsAdmin(params)
       problems.value = result.data.map(toPickerView)

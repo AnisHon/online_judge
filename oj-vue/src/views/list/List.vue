@@ -56,6 +56,7 @@ import {problemTypeToString} from "@/utils/problem";
 import {CircleCheck, Collection, Document, List, Reading} from "@element-plus/icons-vue";
 import {isNullObj} from "@/utils/valueutil.ts";
 import {ElNotification} from "element-plus";
+import type {IdType} from "@/api/common.ts";
 
 const router = useRouter();
 const defaultProps = {
@@ -75,7 +76,7 @@ const isFile = (type: string) => {
   return type === FolderType.FILE;
 }
 
-const handleClickProblem = (id: number) => {
+const handleClickProblem = (id: IdType) => {
   const routeUrl = router.resolve({
     name: "problem",
     params: {id: id}

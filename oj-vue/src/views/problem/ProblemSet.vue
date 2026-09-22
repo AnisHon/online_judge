@@ -11,27 +11,24 @@
         @load-finish="handleLoadFinish"
       />
     </section>
-    <footer class="footer">
-
-          <el-input-number
-              style="position:absolute; left: 0;"
-              v-model="pageNav.pageSize"
-              :min="20"
-              :step="10"
-              :max="100"
-              controls-position="right"
-              size="small"
-              @change="handleTotalPageChange"
-          />
-
-
-          <el-pagination
-              style="position:absolute; left: 50%; transform: translateX(-50%);"
-              layout="prev, pager, next"
-              :page-count="pageNav.pageCount"
-              @current-change="handlePageChange"
-          />
-
+    <footer class="footer" v-if="pageNav.totalRecords">
+      <span class="page-summary">每页</span>
+      <el-input-number
+          v-model="pageNav.pageSize"
+          :min="20"
+          :step="10"
+          :max="100"
+          controls-position="right"
+          size="small"
+          @change="handleTotalPageChange"
+      />
+      <span class="page-summary">条</span>
+      <el-pagination
+          v-model:current-page="pageNav.currentPage"
+          layout="prev, pager, next"
+          :page-count="pageNav.pageCount"
+          @current-change="handlePageChange"
+      />
     </footer>
   </main>
 </template>
@@ -67,7 +64,8 @@ const handleTotalPageChange = () => {
 }
 
 
-const doQuery = (value: {id: string, tagIds: IdType[], title: string, type: ProblemType}) => {
+const doQuery = (value: {id: string, tagIds: IdType[], title: string, type?: ProblemType}) => {
+  pageNav.currentPage = 1;
   currentPage.problemId = value.id;
   currentPage.tagIds = value.tagIds.slice();
   currentPage.title = value.title
@@ -91,14 +89,18 @@ const handleLoadFinish = (currentPage: number, pageSize: number, totalRecords: n
 
 <style scoped>
 .footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
   margin: 20px 0;
-  position: relative;
-  height: 48px;
 }
+.page-summary { color: var(--el-text-color-secondary); font-size: 13px; }
 .problem-set {
   margin: auto;
   padding-bottom: 24px;
 }
 .problem-header { display: flex; justify-content: space-between; align-items: center; min-height: 132px; margin-bottom: 18px; padding: 24px 32px; overflow: hidden; border: 1px solid var(--el-border-color-light); border-radius: 18px; background: linear-gradient(135deg, var(--el-color-primary-light-9), var(--el-bg-color)); color: var(--el-text-color-primary); }.eyebrow { margin: 0 0 7px; color: var(--el-color-primary); font-size: 11px; font-weight: 800; letter-spacing: .18em; }.problem-header h1 { margin: 0; font-size: 30px; letter-spacing: -.04em; }.problem-header p:last-child { margin: 9px 0 0; color: var(--el-text-color-secondary); }.problem-header__mark { margin-right: 8%; color: var(--el-color-primary-light-5); font: 900 88px/1 var(--code-font-family, monospace); transform: rotate(-12deg); opacity: .42; }.problem-toolbar, .problem-results { padding: 18px 22px; border: 1px solid var(--el-border-color-light); border-radius: 16px; background: var(--el-bg-color); }.problem-results { margin-top: 14px; }.result-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: var(--el-text-color-primary); }.result-heading span { color: var(--el-text-color-secondary); font-size: 13px; }
-@media (max-width: 600px) { .problem-set { padding: 8px 12px 24px; }.problem-header { min-height: 108px; padding: 20px; }.problem-header h1 { font-size: 25px; }.problem-header p:last-child { font-size: 13px; }.problem-header__mark { display: none; }.problem-toolbar, .problem-results { padding: 14px; }.result-heading { margin-bottom: 8px; } }
+@media (max-width: 600px) { .problem-set { padding: 8px 12px 24px; }.problem-header { min-height: 108px; padding: 20px; }.problem-header h1 { font-size: 25px; }.problem-header p:last-child { font-size: 13px; }.problem-header__mark { display: none; }.problem-toolbar, .problem-results { padding: 14px; }.result-heading { margin-bottom: 8px; }.footer { flex-wrap: wrap; justify-content: flex-start; }.footer :deep(.el-pagination) { width: 100%; justify-content: center; } }
 </style>

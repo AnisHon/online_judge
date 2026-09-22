@@ -5,17 +5,17 @@ import {debounce} from "lodash";
 import type {IdType} from "@/api/common.ts";
 
 
-const contestProblems = async (listId: IdType) => {
+const getContestProblems = async (listId: IdType) => {
     const {data} = await get<ProblemInListView[], IdType>("/problem-api/contest/problems", listId);
     return data;
 }
 
-const debouncedGetProblems = (success: successCallback<ProblemInListView[]>) => {
+const debouncedGetProblems = (success: successCallback<ProblemInListView[]>, failure?: (error: unknown) => void) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce((x) => {
-        contestProblems(x)
+        getContestProblems(x)
             .then(success)
-            .catch(() => success([]))
+            .catch(error => failure?.(error))
             .finally(finish);
     }, 500);
     return {loading, isLoading, get};
@@ -23,5 +23,6 @@ const debouncedGetProblems = (success: successCallback<ProblemInListView[]>) => 
 
 
 export {
+    getContestProblems,
     debouncedGetProblems,
 }

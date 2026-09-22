@@ -46,11 +46,8 @@ const debouncedAddTagProblem = (param: ProblemTagRelation | ProblemTagRelation[]
 }
 
 async function getAllTags(): Promise<TagView[]> {
-    const { code, data, message} = await get<TagView[]>("/problem-api/tag/getAll")
-    if (code !== 200) {
-        ElMessage.warning(message)
-    }
-    return data;
+    const {data} = await get<TagView[]>("/problem-api/tag/getAll")
+    return Array.isArray(data) ? data : [];
 }
 
 export {

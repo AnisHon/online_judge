@@ -1,6 +1,7 @@
 import {get, getWithParams} from '@/utils/http'
 import type {IdType} from '@/api/common'
 import type {PagedResponse, PagedType} from '@/api/pagedType'
+import {getJudgeStatusMeta, normalizeJudgeStatus} from '@/utils/problem/judgeStatus'
 
 export interface AdminJudgeQuery extends PagedType {
   submitId?: string
@@ -74,27 +75,24 @@ export const getAdminCaseLogsBySubmit = async (submitId: IdType) => {
   return data
 }
 
-export const judgeStatusOptions = [
-  {label: '排队中', value: 'QUEUE', tone: 'info'},
-  {label: '编译中', value: 'COMPILING', tone: 'info'},
-  {label: '运行中', value: 'RUNNING', tone: 'warning'},
-  {label: '通过', value: 'ACCEPT', tone: 'success'},
-  {label: '答案错误', value: 'WRONG_ANSWER', tone: 'danger'},
-  {label: '运行错误', value: 'RUNTIME_ERROR', tone: 'warning'},
-  {label: '超时', value: 'TIME_LIMIT_EXCEEDED', tone: 'warning'},
-  {label: '内存超限', value: 'MEMORY_LIMIT_EXCEEDED', tone: 'warning'},
-  {label: '编译错误', value: 'COMPILE_ERROR', tone: 'danger'},
-  {label: '判题异常', value: 'JUDGE_ERROR', tone: 'danger'},
+const judgeStatusValues = [
+  'QUEUE', 'COMPILING', 'RUNNING', 'ACCEPT', 'WRONG_ANSWER',
+  'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED', 'MEMORY_LIMIT_EXCEEDED', 'COMPILE_ERROR', 'JUDGE_ERROR',
 ] as const
 
-const statusMap = new Map(judgeStatusOptions.map(item => [item.value, item]))
+export const judgeStatusOptions = judgeStatusValues.map(value => ({
+  label: getJudgeStatusMeta(value).label,
+  value,
+  tone: getJudgeStatusMeta(value).tone,
+}))
 
 export const judgeStatusMeta = (status?: string | null) => {
   if (!status) return {label: '未知', value: '', tone: 'info'}
-  const normalized = status.toUpperCase()
-  return statusMap.get(normalized as typeof judgeStatusOptions[number]['value']) || {
+  const normalized = normalizeJudgeStatus(status)
+  const item = judgeStatusOptions.find(option => normalizeJudgeStatus(option.value) === normalized)
+  return item || {
     label: status,
-    value: normalized,
+    value: normalized || status,
     tone: 'info',
   }
 }

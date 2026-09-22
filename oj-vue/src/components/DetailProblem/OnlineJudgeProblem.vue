@@ -12,14 +12,14 @@
           <h3>输入数据</h3>
           <el-scrollbar class="box" max-height="240">
             <p class="example" v-text="problem.inputExample"></p>
-            <copy-link class="link" type="info" @copy="copy(problem.inputExample)">复制</copy-link>
+            <copy-link class="link" :value="problem.inputExample">复制</copy-link>
           </el-scrollbar>
         </el-col>
         <el-col :span="12" class="example_wrapper">
           <h3>输出数据</h3>
           <el-scrollbar class="box" max-height="120">
             <p class="example" v-text="problem.outputExample"></p>
-            <copy-link class="link" type="info" @copy="copy(problem.outputExample)">复制</copy-link>
+            <copy-link class="link" :value="problem.outputExample">复制</copy-link>
 
           </el-scrollbar>
         </el-col>
@@ -36,10 +36,6 @@ import type {OjProblemView} from "@/api/problem";
 import CopyLink from "@/components/DetailProblem/component/CopyLink.vue";
 
 const {problem} = defineProps<{problem: OjProblemView}>()
-
-const copy = (text: string) => {
-  navigator.clipboard.writeText(text)
-}
 
 </script>
 <style lang="scss" scoped>

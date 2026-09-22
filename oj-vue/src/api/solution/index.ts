@@ -1,8 +1,6 @@
 import type {PagedResponse, SortedPagedType} from "@/api/pagedType.ts";
-import {type finallyCallback, get, post, put, query, resultNotify, type successCallback} from "@/utils/http.ts";
+import {ApiError, get, post, put, query} from "@/utils/http.ts";
 import {remove} from "@/utils/simpleCRUD.ts";
-import {ElNotification} from "element-plus";
-import __ from "lodash";
 import type {IdType} from "@/api/common.ts";
 
 export interface Solution {
@@ -35,12 +33,18 @@ export interface QuerySolution extends SortedPagedType {
 }
 
 export const getSolution = async (id: IdType): Promise<Solution> => {
-    const {data} = await get<Solution>("/problem-api/solution", id);
+    const {data} = await get<Solution | null>("/problem-api/solution", id);
+    if (!data) {
+        throw new ApiError("题解不存在或无权访问", 404);
+    }
     return data;
 }
 
 export const getSolutionAdmin = async (id: IdType): Promise<Solution> => {
-    const {data} = await get<Solution>("/problem-api/solution/admin", id);
+    const {data} = await get<Solution | null>("/problem-api/solution/admin", id);
+    if (!data) {
+        throw new ApiError("题解不存在", 404);
+    }
     return data;
 }
 
@@ -54,72 +58,33 @@ export const listSolutionAdmin = async (param: QuerySolution): Promise<PagedResp
     return data;
 }
 
-export const debouncedAddSolution = (success: successCallback<boolean>, final: finallyCallback) => {
-    return __.debounce((form: SolutionForm) => {
-        addSolution(form)
-            .then(success)
-            .finally(final)
-    }, 1000);
+type SolutionMutation = 'add' | 'edit'
+
+const mutateSolution = async (
+    form: SolutionForm,
+    mutation: SolutionMutation,
+    admin = false
+): Promise<boolean> => {
+    const url = `/problem-api/solution${admin ? '/admin' : ''}`;
+    const response = mutation === 'add'
+        ? await post<SolutionForm, boolean>(url, {...form})
+        : await put<SolutionForm, boolean>(url, {...form});
+
+    if (response.data !== true) {
+        throw new ApiError(mutation === 'add' ? '题解发布失败' : '题解保存失败', 400);
+    }
+    return true;
 }
 
-const addSolution = async (form: SolutionForm) => {
-    const {data} = await post<SolutionForm, boolean>("/problem-api/solution", form);
-    resultNotify(data, "发送了一个题解", "题解发送失败")
-    return data;
-}
+/** 题解提交由页面显式管理 loading/错误/请求锁，API 层不再隐藏 debounce 定时器。 */
+export const addSolution = (form: SolutionForm, admin = false): Promise<boolean> =>
+    mutateSolution(form, 'add', admin);
 
-export const debouncedAddSolutionAdmin = (success: successCallback<boolean>, final: finallyCallback) => {
-    return __.debounce((form: SolutionForm) => {
-        addSolutionAdmin(form)
-            .then(success)
-            .finally(final)
-    }, 1000);
-}
+export const editSolution = (form: SolutionForm, admin = false): Promise<boolean> =>
+    mutateSolution(form, 'edit', admin);
 
-const addSolutionAdmin = async (form: SolutionForm) => {
-    const {data} = await post<SolutionForm, boolean>("/problem-api/solution/admin", form);
-    resultNotify(data, "发送了一个题解", "题解发送失败")
-    return data;
-}
-
-export const debouncedEditSolution = (success: successCallback<boolean>, final: finallyCallback) => {
-    return __.debounce((form: SolutionForm) => {
-        editSolution(form)
-            .then(success)
-            .finally(final)
-    }, 1000);
-}
-
-const editSolution = async (form: SolutionForm) => {
-    const {data} = await put<SolutionForm, boolean>("/problem-api/solution", form);
-    resultNotify(data, "编辑了一个题解", "题解编辑失败")
-    return data;
-}
-
-export const debouncedEditSolutionAdmin = (success: successCallback<boolean>, final: finallyCallback) => {
-    return __.debounce((form: SolutionForm) => {
-        editSolutionAdmin(form)
-            .then(success)
-            .finally(final)
-    }, 1000);
-}
-
-const editSolutionAdmin = async (form: SolutionForm) => {
-    const {data} = await put<SolutionForm, boolean>("/problem-api/solution/admin", form);
-    resultNotify(data, "编辑了一个题解", "题解编辑失败")
-    return data;
-}
-
-export const debouncedDeleteSolution = (final: finallyCallback) => {
-    return __.debounce((id: IdType | IdType[]) => {
-        deleteSolution(id)
-            .finally(final)
-    }, 1000);
-}
-
-const deleteSolution = async (ids: IdType[] | IdType) => {
+export const deleteSolution = async (ids: IdType[] | IdType): Promise<void> => {
     await remove(ids, "/problem-api/solution");
-
 }
 
 export const deleteSolutionAdmin = async (ids: IdType[] | IdType) => {

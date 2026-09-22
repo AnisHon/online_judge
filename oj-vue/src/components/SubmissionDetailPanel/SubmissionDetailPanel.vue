@@ -61,9 +61,9 @@
             <div class="section-heading">
               <div>
                 <span class="section-heading__kicker">OUTPUT</span>
-                <h3>{{ log.status === OJResult.COMPILE_ERROR ? '编译器输出' : '运行输出' }}</h3>
+                <h3>{{ normalizedStatus === 'CE' ? '编译器输出' : '运行输出' }}</h3>
               </div>
-              <el-tag size="small" :type="log.status === OJResult.COMPILE_ERROR ? 'warning' : 'danger'" effect="plain">
+              <el-tag size="small" :type="normalizedStatus === 'CE' ? 'warning' : 'danger'" effect="plain">
                 {{ statusMeta.code }}
               </el-tag>
             </div>
@@ -82,6 +82,12 @@
             <div v-if="casesLoading" class="cases-loading">
               <el-skeleton :rows="3" animated />
             </div>
+            <el-alert v-else-if="casesError" type="warning" :closable="false" show-icon>
+              <template #title>
+                <span>{{ casesError }}</span>
+                <el-button link type="primary" size="small" @click="loadCases">重试</el-button>
+              </template>
+            </el-alert>
             <div v-else-if="caseResults.length" class="case-grid">
               <article v-for="(item, index) in caseResults" :key="item.caseIndex ?? index" class="case-card"
                        :class="`case-card--${caseTone(item.status)}`">
@@ -127,9 +133,10 @@
 import {computed, ref, watch} from 'vue';
 import {Close, CopyDocument, DocumentChecked, CircleCheck, WarningFilled} from '@element-plus/icons-vue';
 import {ElMessage} from 'element-plus';
-import {getSubmissionCases, OJResult, type LogSubmit, type SubmitCaseResult} from '@/api/problem/judge';
+import {getSubmissionCases, type LogSubmit, type SubmitCaseResult} from '@/api/problem/judge';
 import JudgeStatusBadge from '@/components/JudgeStatusBadge/JudgeStatusBadge.vue';
-import {getJudgeStatusMeta, isPendingJudgeStatus} from '@/utils/problem/judgeStatus';
+import {getJudgeStatusMeta, isPendingJudgeStatus, normalizeJudgeStatus} from '@/utils/problem/judgeStatus';
+import {formatJudgeDate, formatJudgeMemory, formatJudgeTime} from '@/utils/problem/judgeDisplay';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -145,53 +152,63 @@ const visible = computed({
 });
 const caseResults = ref<SubmitCaseResult[]>([]);
 const casesLoading = ref(false);
+const casesError = ref('');
+let casesRequestSequence = 0;
 const statusMeta = computed(() => getJudgeStatusMeta(props.log?.status));
+const normalizedStatus = computed(() => normalizeJudgeStatus(props.log?.status));
 const isPending = computed(() => isPendingJudgeStatus(props.log?.status));
 const resultIcon = computed(() => statusMeta.value.tone === 'success' ? CircleCheck : WarningFilled);
 
 const resultTitle = computed(() => {
-  if (props.log?.status === OJResult.ACCEPT) return '全部测试点通过';
-  if (props.log?.status === OJResult.WRONG_ANSWER) return '有测试点未通过';
-  if (props.log?.status === OJResult.COMPILE_ERROR) return '编译没有通过';
+  if (normalizedStatus.value === 'AC') return '全部测试点通过';
+  if (normalizedStatus.value === 'WA') return '有测试点未通过';
+  if (normalizedStatus.value === 'CE') return '编译没有通过';
+  if (normalizedStatus.value === 'JUDGE_ERROR') return '判题服务未完成';
   if (isPending.value) return '正在处理这次提交';
   return statusMeta.value.label;
 });
 
 const resultDescription = computed(() => {
-  if (props.log?.status === OJResult.ACCEPT) return '这份代码已经通过了当前题目的全部测试。';
-  if (props.log?.status === OJResult.WRONG_ANSWER) {
+  if (normalizedStatus.value === 'AC') return '这份代码已经通过了当前题目的全部测试。';
+  if (normalizedStatus.value === 'WA') {
     const total = props.log?.totalCount ?? (caseResults.value.length || '-');
     return `请检查标记为答案错误的测试点，共通过 ${props.log?.passCount ?? 0} / ${total} 个。`;
   }
-  if (props.log?.status === OJResult.COMPILE_ERROR) return '下面展示编译器返回的具体信息，便于定位语法或环境问题。';
-  if (props.log?.status === OJResult.JUDGE_ERROR) return '判题服务暂时无法完成这次提交，请稍后重试。';
+  if (normalizedStatus.value === 'CE') return '下面展示编译器返回的具体信息，便于定位语法或环境问题。';
+  if (normalizedStatus.value === 'JUDGE_ERROR') return '判题服务暂时无法完成这次提交，请稍后重试。';
   if (isPending.value) return '提交正在处理中，状态会自动更新。';
   return '可以在下方查看这次提交的代码和结果。';
 });
 
 const passCountText = computed(() => {
   if (props.log?.totalCount != null) return `${props.log.passCount ?? 0} / ${props.log.totalCount}`;
-  return caseResults.value.length ? `${caseResults.value.filter(item => item.status === OJResult.ACCEPT).length} / ${caseResults.value.length}` : '-';
+  return caseResults.value.length ? `${caseResults.value.filter(item => normalizeJudgeStatus(item.status) === 'AC').length} / ${caseResults.value.length}` : '-';
 });
 const showErrorOutput = computed(() =>
-  !!props.log?.stderr && [OJResult.COMPILE_ERROR, OJResult.RUNTIME_ERROR].includes(props.log.status)
+  !!props.log?.stderr && ['CE', 'RE', 'TLE', 'MLE', 'JUDGE_ERROR'].includes(normalizedStatus.value)
 );
 
-const formatDate = (value?: string) => value ? new Date(value).toLocaleString('zh-CN') : '刚刚';
-const formatTime = (value?: number) => value == null ? '-' : `${value} ms`;
-const formatMemory = (value?: number) => value == null ? '-' : `${value > 1024 ? (value / 1024).toFixed(1) : value} ${value > 1024 ? 'MiB' : 'KiB'}`;
+const formatDate = formatJudgeDate;
+const formatTime = formatJudgeTime;
+const formatMemory = formatJudgeMemory;
 const caseTone = (status?: string) => getJudgeStatusMeta(status).tone;
 
 const loadCases = async () => {
+  const sequence = ++casesRequestSequence;
   caseResults.value = [];
+  casesError.value = '';
+  casesLoading.value = false;
   if (!props.log?.submitId || isPending.value) return;
   casesLoading.value = true;
   try {
-    caseResults.value = await getSubmissionCases(props.log.submitId);
-  } catch {
-    // 请求层已经提示网络错误，面板保持可用并展示提交级结果。
+    const result = await getSubmissionCases(props.log.submitId);
+    if (sequence === casesRequestSequence) caseResults.value = result;
+  } catch (error) {
+    if (sequence === casesRequestSequence) {
+      casesError.value = error instanceof Error ? error.message : '测试点结果暂时无法获取';
+    }
   } finally {
-    casesLoading.value = false;
+    if (sequence === casesRequestSequence) casesLoading.value = false;
   }
 };
 
@@ -218,7 +235,9 @@ watch(() => [props.modelValue, props.log?.submitId, props.log?.status], ([opened
 .submission-detail__eyebrow, .section-heading__kicker { color: var(--el-color-primary); font-size: 10px; font-weight: 800; letter-spacing: .14em; }
 .submission-detail__title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 7px; }
 .submission-detail__title-row h2 { margin: 0; font-size: 24px; line-height: 1.2; }
-.submission-detail__heading p { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 11px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }
+.submission-detail__heading { min-width: 0; flex: 1; }
+.submission-detail__heading p { display: flex; min-width: 0; flex-wrap: wrap; gap: 8px 16px; margin: 11px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }
+.submission-detail__heading p span { max-width: min(42vw, 360px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .submission-detail__heading p span + span { position: relative; }
 .submission-detail__heading p span + span::before { position: absolute; top: 50%; left: -9px; width: 3px; height: 3px; border-radius: 50%; background: var(--el-text-color-placeholder); content: ''; transform: translateY(-50%); }
 .submission-detail__close { color: var(--el-text-color-secondary); }
@@ -242,7 +261,7 @@ watch(() => [props.modelValue, props.log?.submitId, props.log?.status], ([opened
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 11px; }
 .section-heading h3 { margin: 4px 0 0; font-size: 16px; }
 .section-count { color: var(--el-text-color-secondary); font-size: 12px; }
-.error-output, .source-code { overflow: auto; margin: 0; border: 1px solid var(--el-border-color-lighter); border-radius: 14px; background: var(--el-fill-color-lighter); color: var(--el-text-color-primary); font: 13px/1.7 var(--code-font-family, 'JetBrains Mono', Consolas, monospace); white-space: pre; }
+.error-output, .source-code { max-width: 100%; overflow: auto; margin: 0; border: 1px solid var(--el-border-color-lighter); border-radius: 14px; background: var(--el-fill-color-lighter); color: var(--el-text-color-primary); font: 13px/1.7 var(--code-font-family, 'JetBrains Mono', Consolas, monospace); white-space: pre; }
 .error-output { padding: 16px; border-color: color-mix(in srgb, var(--el-color-warning) 30%, var(--el-border-color-lighter)); color: var(--el-text-color-primary); }
 .source-code { max-height: 480px; padding: 18px; tab-size: 4; }
 .case-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -263,6 +282,8 @@ watch(() => [props.modelValue, props.log?.submitId, props.log?.status], ([opened
 
 @media (max-width: 640px) {
   .submission-detail__header, .submission-detail__body { padding-right: 18px; padding-left: 18px; }
+  .submission-detail__header { gap: 10px; }
+  .submission-detail__heading p span { max-width: 62vw; }
   .submission-detail__title-row h2 { font-size: 21px; }
   .metric-grid, .case-grid { grid-template-columns: 1fr; }
 }

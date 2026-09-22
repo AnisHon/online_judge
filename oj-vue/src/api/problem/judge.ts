@@ -3,12 +3,13 @@ import {
     type failCallback,
     get,
     getWithParams,
-    post,
-    type successCallback
+    post
 } from "@/utils/http";
 import {debounce} from "lodash";
 import type {IdType} from "@/api/common.ts";
 import {ElMessage} from "element-plus";
+import {isPendingJudgeStatus, normalizeJudgeStatus} from "@/utils/problem/judgeStatus";
+import {service} from "@/utils/http";
 
 enum OJResult {
     QUEUE = "QUEUE",
@@ -49,7 +50,7 @@ interface JudgeForm {
 interface JudgeResponse {
     answers?: Answer[],
     correct: boolean;
-    judgeResult: OJResult;
+    judgeResult: string;
     submitId?: IdType;
     errorMessage: string;
     totalScore: string;
@@ -72,7 +73,7 @@ export interface LogSubmit {
     userId: IdType;
     problemId: IdType;
     language: string;
-    status: OJResult;
+    status: string;
     time?: number;
     memory?: number;
     submitTime?: string;
@@ -85,7 +86,7 @@ export interface LogSubmit {
 
 export interface SubmitCaseResult {
     caseIndex?: number;
-    status: OJResult;
+    status: string;
     score?: number | string;
     time?: number;
     memory?: number;
@@ -101,7 +102,7 @@ interface TestForm {
 interface TestResult {
     userId?: IdType
     uuid: string
-    judgeResult: OJResult,
+    judgeResult: string,
     stderr?: string,
     stdout?: string,
 }
@@ -121,19 +122,12 @@ async function testStatus(uuid: string) {
 
 async function getSubmissionCases(id: IdType): Promise<SubmitCaseResult[]> {
     const {data} = await get<SubmitCaseResult[]>(`/problem-api/log/submissions/${encodeURIComponent(String(id))}/cases`);
-    return data || [];
+    if (!Array.isArray(data)) throw new Error("测试点结果暂不可用");
+    return data;
 }
 
-async function fetchLog(id: IdType, success: successCallback<LogSubmit>) {
-    const {data} = await get<LogSubmit, IdType>("/problem-api/log/submissions", id);
-    success(data);
-    const intervalId = setInterval(async () => {
-        const {data} = await get<LogSubmit, IdType>("/problem-api/log/submissions", id);
-        success(data);
-        if (data.status !== OJResult.COMPILING && data.status !== OJResult.QUEUE && data.status !== OJResult.RUNNING) {
-            clearInterval(intervalId);
-        }
-    }, 1000);
+async function fetchLog(id: IdType, onUpdate: (log: LogSubmit) => void): Promise<() => void> {
+    return pollSubmission(id, onUpdate);
 }
 
 /**
@@ -142,28 +136,58 @@ async function fetchLog(id: IdType, success: successCallback<LogSubmit>) {
 async function pollSubmission(
     id: IdType,
     onUpdate: (log: LogSubmit) => void,
-    interval = 1000
+    interval = 1000,
+    options: {maxDuration?: number; maxFailures?: number} = {},
 ): Promise<() => void> {
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let failures = 0;
+    const startedAt = Date.now();
+    const controller = new AbortController();
+    const maxDuration = options.maxDuration ?? 90_000;
+    const maxFailures = options.maxFailures ?? 8;
     const stop = () => {
         stopped = true;
         if (timer) clearTimeout(timer);
+        controller.abort();
     };
+    const reportTimeout = () => onUpdate({
+        submitId: id,
+        userId: '',
+        problemId: '',
+        language: '',
+        status: OJResult.JUDGE_ERROR,
+        stderr: undefined,
+    });
     const poll = async () => {
         if (stopped) return;
         try {
-            const {data} = await get<LogSubmit, IdType>("/problem-api/log/submissions", id);
+            const result = await service.get<LogSubmit, AjaxResult<LogSubmit>>(`/problem-api/log/submissions/${encodeURIComponent(String(id))}`, {signal: controller.signal});
+            if (stopped) return;
+            const data = (result as unknown as AjaxResult<LogSubmit>).data;
+            failures = 0;
             if (data) {
-                onUpdate(data);
-                if (![OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING].includes(data.status)) {
+                const normalized = {...data, status: normalizeJudgeStatus(data.status) || data.status};
+                onUpdate(normalized);
+                if (!isPendingJudgeStatus(normalized.status)) {
                     stop();
                     return;
                 }
             }
+            if (Date.now() - startedAt >= maxDuration) {
+                reportTimeout();
+                stop();
+                return;
+            }
             if (!stopped) timer = setTimeout(poll, interval);
-        } catch {
-            // 网络瞬断时保留轮询，避免用户必须重新提交；错误提示由 HTTP 层统一处理。
+        } catch (error) {
+            if (stopped || (error instanceof DOMException && error.name === 'AbortError')) return;
+            failures++;
+            if (failures >= maxFailures || Date.now() - startedAt >= maxDuration) {
+                reportTimeout();
+                stop();
+                return;
+            }
             if (!stopped) timer = setTimeout(poll, Math.min(interval * 2, 5000));
         }
     };
@@ -175,27 +199,51 @@ async function pollSubmission(
 async function pollTestResult(
     uuid: string,
     onUpdate: (result: TestResult) => void,
-    interval = 1000
+    interval = 1000,
+    options: {maxDuration?: number; maxFailures?: number} = {},
 ): Promise<() => void> {
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let failures = 0;
+    const startedAt = Date.now();
+    const controller = new AbortController();
+    const maxDuration = options.maxDuration ?? 45_000;
+    const maxFailures = options.maxFailures ?? 8;
     const stop = () => {
         stopped = true;
         if (timer) clearTimeout(timer);
+        controller.abort();
     };
+    const reportTimeout = () => onUpdate({uuid, judgeResult: OJResult.JUDGE_ERROR, stderr: '测试结果暂时无法获取'});
     const poll = async () => {
         if (stopped) return;
         try {
-            const data = await testStatus(uuid);
+            const result = await service.get<TestResult | null, AjaxResult<TestResult | null>>('/problem-api/judge/test-status', {params: {uuid}, signal: controller.signal});
+            if (stopped) return;
+            const data = (result as unknown as AjaxResult<TestResult | null>).data;
             if (data && data.uuid === uuid) {
-                onUpdate(data);
-                if (data.judgeResult && ![OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING].includes(data.judgeResult)) {
+                const normalized = {...data, judgeResult: normalizeJudgeStatus(data.judgeResult) || data.judgeResult};
+                failures = 0;
+                onUpdate(normalized);
+                if (!isPendingJudgeStatus(normalized.judgeResult)) {
                     stop();
                     return;
                 }
             }
+            if (Date.now() - startedAt >= maxDuration) {
+                reportTimeout();
+                stop();
+                return;
+            }
             if (!stopped) timer = setTimeout(poll, interval);
-        } catch {
+        } catch (error) {
+            if (stopped || (error instanceof DOMException && error.name === 'AbortError')) return;
+            failures++;
+            if (failures >= maxFailures || Date.now() - startedAt >= maxDuration) {
+                reportTimeout();
+                stop();
+                return;
+            }
             if (!stopped) timer = setTimeout(poll, Math.min(interval * 2, 5000));
         }
     };
@@ -205,7 +253,11 @@ async function pollTestResult(
 
 async function getUserAnswer(req: UserAnswerRequest): Promise<UserAnswer> {
     const {data} = await getWithParams<UserAnswer, UserAnswerRequest>("/problem-api/record", req);
-    return data;
+    return {
+        answers: Array.isArray(data?.answers) ? data.answers.filter(item => item && Number.isFinite(Number(item.index))) : [],
+        code: typeof data?.code === 'string' ? data.code : '',
+        languageId: data?.languageId || '1',
+    };
 }
 
 async function saveUserAnswer(judgeForm: JudgeForm): Promise<boolean> {

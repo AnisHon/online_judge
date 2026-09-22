@@ -1,29 +1,27 @@
 <script setup lang="ts">
-import {ref} from "vue";
-import __ from "lodash";
+import {onBeforeUnmount, ref} from 'vue';
 
-const text = ref("复制")
+const props = defineProps<{value: string}>();
+const text = ref('复制');
+let restoreTimer: ReturnType<typeof setTimeout> | undefined;
 
-const emit = defineEmits<{(e: "copy"): void}>();
-
-const restore = __.debounce(() => {
-  text.value = "复制";
-}, 2000);
-const handleClick = () => {
-  text.value = "复制成功";
-  restore();
-  emit("copy");
-}
-
-
+const handleClick = async () => {
+  try {
+    await navigator.clipboard.writeText(props.value || '');
+    text.value = '已复制';
+  } catch {
+    text.value = '复制失败';
+  }
+  if (restoreTimer) clearTimeout(restoreTimer);
+  restoreTimer = setTimeout(() => { text.value = '复制'; }, 1800);
+};
+onBeforeUnmount(() => { if (restoreTimer) clearTimeout(restoreTimer); });
 </script>
 
 <template>
-
-  <el-link style="user-select: none" type="info" @click.stop="handleClick" v-text="text"></el-link>
-
+  <el-link class="copy-link" type="info" @click.stop="handleClick">{{ text }}</el-link>
 </template>
 
 <style scoped>
-
+.copy-link { user-select: none; }
 </style>

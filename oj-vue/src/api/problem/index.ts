@@ -1,4 +1,4 @@
-import {get, getWithParams, post, type successCallback} from "@/utils/http"
+import {ApiError, get, getWithParams, post, type successCallback} from "@/utils/http"
 import {type TagView} from "./label"
 import {ElMessage} from "element-plus";
 import type {PagedResponse, PagedType} from "@/api/pagedType";
@@ -80,7 +80,7 @@ export interface TaggedProblemView {
     createTime: Date;
     description: string;
     hint: string;
-    problemId: 0;
+    problemId: IdType;
     source: string;
     title: string;
     type: ProblemType;
@@ -264,32 +264,59 @@ const debouncedUpdateProblem = (form: ProblemForm, success: successCallback<void
 }
 
 async function getProblems(problemParam: ProblemParam): Promise<PagedData> {
-    const param: ProblemParam = {currentPage: 0, pageSize: 0}
-    Object.assign(param, problemParam);
-
-
-    try {
-        const {data: { data, currentPage, pageSize, totalRecords}}
-            = await getWithParams<PagedData, ProblemParam>("/problem-api/problem/taggedList", problemParam);
-        return {data, currentPage, pageSize, totalRecords};
-    } catch (msg) {
-        return Promise.reject(msg);
+    const response = await getWithParams<PagedData, ProblemParam>("/problem-api/problem/taggedList", {
+        ...problemParam,
+        currentPage: Math.max(1, Number(problemParam.currentPage) || 1),
+        pageSize: Math.max(1, Number(problemParam.pageSize) || 20),
+    });
+    const data = response.data;
+    if (!data || typeof data !== 'object') {
+        throw new ApiError('题目列表数据异常，请稍后重试', 502);
     }
+    return {
+        data: Array.isArray(data.data) ? data.data : [],
+        currentPage: Number(data.currentPage) || problemParam.currentPage,
+        pageSize: Number(data.pageSize) || problemParam.pageSize,
+        totalRecords: Math.max(0, Number(data.totalRecords) || 0),
+    };
 
 }
 
 export async function getDetailProblem(id: IdType): Promise<ProblemDetailView> {
-    const {code, data, message} = await get("/problem-api/problem", id)
+    const {code, data, message} = await get<ProblemDetailView, IdType>("/problem-api/problem", id)
     if (code !== 200) {
-        ElMessage.warning(message)
-        return Promise.reject(message)
+        throw new ApiError(message || '题目不存在或无权访问', code);
     }
-    return <ProblemDetailView>data
+    if (!data || typeof data !== 'object' || !data.problemVo) {
+        throw new ApiError('题目不存在或无权访问', 404);
+    }
+    return normalizeProblemDetail(data as ProblemDetailView);
+}
+
+export function normalizeProblemDetail(value: Partial<ProblemDetailView>): ProblemDetailView {
+    const problemVo = value.problemVo!;
+    return {
+        problemVo: {
+            ...problemVo,
+            title: problemVo.title || '未命名题目',
+            description: problemVo.description || '',
+            source: problemVo.source || '',
+        },
+        tagVo: Array.isArray(value.tagVo) ? value.tagVo : [],
+        choices: Array.isArray(value.choices) ? value.choices.filter(Boolean) : [],
+        ojProblemVo: value.ojProblemVo ? {
+            ...value.ojProblemVo,
+            input: value.ojProblemVo.input || '',
+            output: value.ojProblemVo.output || '',
+            inputExample: value.ojProblemVo.inputExample || '',
+            outputExample: value.ojProblemVo.outputExample || '',
+        } : undefined,
+    };
 }
 
 const recentSubmit = async (problemId: IdType) => {
     const {data} = await get<LogSubmit[], IdType>("/problem-api/log/recentSubmit", problemId);
-    return data
+    return Array.isArray(data) ? data : []
 }
 
 const recentProblem = async (): Promise<ProblemView[]> => {

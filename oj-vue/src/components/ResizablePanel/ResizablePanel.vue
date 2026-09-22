@@ -14,13 +14,18 @@
       role="separator"
       :aria-label="direction === 'vertical' ? '调整上下区域大小' : '调整侧栏宽度'"
       :aria-orientation="direction"
+      :aria-valuemin="minSize"
+      :aria-valuemax="maxSize"
+      :aria-valuenow="Math.round(size)"
+      tabindex="0"
       @pointerdown.prevent="startDragging"
+      @keydown="handleKeydown"
     >
       <span />
     </div>
 
     <section class="resizable-panel__main">
-      <button v-if="collapsed" class="resizable-panel__restore" type="button" title="显示题目导航" @click="restore">
+      <button v-if="collapsed" class="resizable-panel__restore" type="button" title="显示题目导航" aria-label="显示题目导航" @click="restore">
         <el-icon><ArrowRight /></el-icon>
       </button>
       <slot />
@@ -29,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { ArrowRight } from '@element-plus/icons-vue'
 
 const props = withDefaults(defineProps<{
@@ -56,6 +61,7 @@ const emit = defineEmits<{
 const rootRef = ref<HTMLElement>()
 const dragging = ref(false)
 const size = ref(clamp(props.size))
+let cleanupDragging: (() => void) | undefined
 
 function clamp(value: number) {
   return Math.min(Math.max(value, props.minSize), props.maxSize)
@@ -65,6 +71,7 @@ watch(() => props.size, value => { size.value = clamp(value) })
 
 function startDragging(event: PointerEvent) {
   if (props.collapsed || !rootRef.value) return
+  cleanupDragging?.()
   dragging.value = true
   const handle = event.currentTarget as HTMLElement
   handle.setPointerCapture?.(event.pointerId)
@@ -85,18 +92,43 @@ function startDragging(event: PointerEvent) {
   }
   const stop = () => {
     dragging.value = false
-    handle.removeEventListener('pointermove', move)
-    handle.removeEventListener('pointerup', stop)
-    handle.removeEventListener('pointercancel', stop)
+    window.removeEventListener('pointermove', move)
+    window.removeEventListener('pointerup', stop)
+    window.removeEventListener('pointercancel', stop)
+    handle.removeEventListener('lostpointercapture', stop)
+    cleanupDragging = undefined
   }
-  handle.addEventListener('pointermove', move)
-  handle.addEventListener('pointerup', stop)
-  handle.addEventListener('pointercancel', stop)
+  cleanupDragging = stop
+  window.addEventListener('pointermove', move)
+  window.addEventListener('pointerup', stop)
+  window.addEventListener('pointercancel', stop)
+  handle.addEventListener('lostpointercapture', stop, {once: true})
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  const step = event.shiftKey ? 5 : 2
+  let delta = 0
+  if (props.direction === 'vertical') {
+    if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') delta = -step
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') delta = step
+  } else {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') delta = -step
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') delta = step
+  }
+  if (event.key === 'Home') delta = props.minSize - size.value
+  if (event.key === 'End') delta = props.maxSize - size.value
+  if (!delta) return
+  event.preventDefault()
+  const next = clamp(size.value + delta)
+  size.value = next
+  emit('update:size', next)
 }
 
 function restore() {
   emit('update:collapsed', false)
 }
+
+onBeforeUnmount(() => cleanupDragging?.())
 </script>
 
 <style scoped>

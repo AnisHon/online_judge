@@ -110,12 +110,12 @@
             <p class="panel-kicker">OPERATIONS</p>
             <h2>运维工具</h2>
           </div>
-          <el-tooltip content="复制当前域名下的 SSH 端口转发命令" placement="top">
+          <el-tooltip content="复制通过 oj-server 访问内网管理端口的 SSH 转发命令" placement="top">
             <el-icon class="panel-help"><QuestionFilled /></el-icon>
           </el-tooltip>
         </div>
         <div class="tool-list">
-          <button v-for="tool in copyButtons" :key="tool.buttonText" class="tool-row" type="button" @click="handleCopy(tool.port)">
+          <button v-for="tool in copyButtons" :key="tool.label" class="tool-row" type="button" @click="handleCopy(tool.port)">
             <span class="tool-row__icon"><el-icon><component :is="tool.icon" /></el-icon></span>
             <span><strong>{{ tool.label }}</strong><small>{{ tool.port.join(' · ') }} 端口</small></span>
             <el-icon class="tool-row__copy"><DocumentCopy /></el-icon>
@@ -181,10 +181,12 @@ const quickActions = [
 ];
 
 const copyButtons = [
-  {label: "全部基础设施", buttonText: "复制全部 SSH 链接", port: [8848, 15672, 3306, 6379, 9090], icon: markRaw(Monitor)},
-  {label: "Nacos 配置中心", buttonText: "复制 Nacos 链接", port: [8848], icon: markRaw(Setting)},
-  {label: "RabbitMQ 控制台", buttonText: "复制 RabbitMQ 链接", port: [15672], icon: markRaw(DataAnalysis)},
-  {label: "MySQL / Redis", buttonText: "复制数据库链接", port: [3306, 6379], icon: markRaw(Collection)}
+  {label: "全部基础设施", port: [8848, 15672, 3306, 6379, 9090], icon: markRaw(Monitor)},
+  {label: "Nacos 配置中心", port: [8848], icon: markRaw(Setting)},
+  {label: "RabbitMQ 控制台", port: [15672], icon: markRaw(DataAnalysis)},
+  {label: "MySQL 数据库", port: [3306], icon: markRaw(Collection)},
+  {label: "Redis 数据库", port: [6379], icon: markRaw(Collection)},
+  {label: "MinIO 控制台", port: [9090], icon: markRaw(Monitor)}
 ];
 
 const goToRoute = (name: string) => {
@@ -192,8 +194,13 @@ const goToRoute = (name: string) => {
 };
 
 const handleCopy = (ports: number[]) => {
-  const host = window.location.hostname;
-  const content = ["ssh", ...ports.map(port => `-L ${port}:${host}:${port}`), `root@${host}`].join(" ");
+  // 端口监听在服务器本机，远端 SSH 使用本地配置中的 oj-server 别名。
+  // 不能使用当前网页域名：那会让 SSH 尝试连接公网域名，而不是服务器 SSH 主机。
+  const content = [
+    "ssh",
+    ...ports.map(port => `-L ${port}:127.0.0.1:${port}`),
+    "root@oj-server"
+  ].join(" ");
   copyTextToClipboard(content).then(() => {
     ElNotification({type: "success", message: "SSH 命令已复制", duration: 1400});
   }).catch(() => {

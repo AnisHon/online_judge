@@ -1,52 +1,43 @@
-
-
 <template>
-<div>
-  <problem-radio
-      v-for="choice in choices"
-      :key="choice.order"
-      :option="<string>choice.order"
-      :content="choice.content"
-      @click="handleClick"
+  <div class="radio-group" :role="props.isMulti ? 'group' : 'radiogroup'">
+    <problem-radio
+      v-for="choice in sortedChoices"
+      :key="String(choice.order)"
+      :option="String(choice.order)"
+      :content="choice.content || ''"
       :answers="answers"
-  />
-</div>
+      :is-multi="props.isMulti"
+      @select="handleSelect"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
+import type {ChoiceProblemView} from '@/api/problem';
+import ProblemRadio from '@/components/ProblemRadio/ProblemRadio.vue';
+import type {Answer} from '@/api/problem/judge';
+import {computed} from 'vue';
+import {letterToNumber} from '@/utils/stringUtils';
 
-import type {ChoiceProblemView} from "@/api/problem";
-import ProblemRadio from "@/components/ProblemRadio/ProblemRadio.vue";
-import type {Answer} from "@/api/problem/judge";
-import __ from "lodash";
+const props = withDefaults(defineProps<{isMulti?: boolean; choices?: ChoiceProblemView[]}>(), {
+  isMulti: false,
+  choices: () => [],
+});
+const answers = defineModel<Answer[]>({required: true});
+const sortedChoices = computed(() => [...props.choices].sort((a, b) => letterToNumber(String(a.order || '')) - letterToNumber(String(b.order || ''))));
 
-const {isMulti = false, choices = []} = defineProps<{
-  isMulti?: boolean,
-  choices?: ChoiceProblemView[]
-}>();
-
-const answers = defineModel<Answer[]>({required: true})
-
-const handleClick = (index: number, b: boolean) => {
-  // 单选题
-  if (!isMulti) {
-    answers.value!.length = 0;
-    answers.value!.push({index: index, answer: ''});
+const handleSelect = (index: number, selected: boolean) => {
+  const current = answers.value || [];
+  if (props.isMulti) {
+    answers.value = selected
+      ? current.filter(answer => answer.index !== index)
+      : [...current, {index, answer: ''}].sort((a, b) => a.index - b.index);
   } else {
-    // 多选题
-
-    if (b) {
-      // 选中就删掉
-      __.remove(<Answer[]>answers.value, x => x.index === index)
-    } else {
-      // 没选中就加入
-      answers.value!.push({index: index, answer: ''});
-    }
+    answers.value = [{index, answer: ''}];
   }
-}
-
-
+};
 </script>
-<style scoped>
 
+<style scoped>
+.radio-group { display: grid; gap: 9px; }
 </style>

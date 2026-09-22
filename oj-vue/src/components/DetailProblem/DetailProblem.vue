@@ -9,12 +9,14 @@
       :form="judgeForm"
       :logs="submitLogs"
       :active-submission="activeSubmission"
-      :loading="isLoading"
+      :submit-loading="isSubmitLoading"
+      :test-loading="testLoading"
       :fullscreen="isFullScreen"
       :test-console-open="testConsoleOpen"
       :stdin="stdin"
       :stdout="stdout"
       :test-result="testResult"
+      :test-error="testError"
       @update:form="updateJudgeForm"
       @update:stdin="stdin = $event"
       @submit="onHandleSubmit"
@@ -25,6 +27,9 @@
       @view-code="openSubmissionDetail"
   />
   <div v-else v-loading="problemIsLoading" class="detail-problem-root" :class="{ 'detail-problem-root--contest': contestId }">
+    <el-result v-if="problemError" icon="error" title="题目加载失败" :sub-title="problemError">
+      <template #extra><el-button type="primary" @click="loadProblem">重新加载</el-button></template>
+    </el-result>
     <el-row v-if="problem !== undefined" class="detail-problem-row" justify="center" :gutter="20">
 
       <el-col style="padding: 0" class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
@@ -76,12 +81,12 @@
               </template>
               <div class="content">
                 <h2>题目描述</h2>
-                <p class="description">
-                  <markdown-preview :text="description" />
-                </p>
+                <div class="description">
+                  <markdown-preview variant="compact" :text="description" />
+                </div>
 
                 <div class="detail-problem">
-                  <online-judge-problem :problem="ojProblem" v-if="isOjProblem"/>
+                  <online-judge-problem :problem="ojProblem" v-if="isOjProblem && ojProblem"/>
                   <fill-blank-problem
                       :model-value="judgeForm"
                       @update:model-value="updateJudgeForm"
@@ -105,7 +110,7 @@
 
                 <div v-if="!isOjProblem">
                   <div class="submit">
-                    <el-button type="success" :disabled="isShowResult || isSubmitDisabled" @click="onHandleSubmit" :loading="isLoading">提交</el-button>
+                    <el-button type="success" :disabled="isShowResult || isSubmitDisabled" @click="onHandleSubmit" :loading="isSubmitLoading">提交</el-button>
                   </div>
                 </div>
 
@@ -113,7 +118,7 @@
                 <div class="hint" v-if="hint">
                   <h2>提示</h2>
                   <div>
-                    <markdown-preview :text="hint" />
+                    <markdown-preview variant="compact" :text="hint" />
                   </div>
                 </div>
 
@@ -196,7 +201,8 @@
               @on-ready="onEditorReady"
               @open-log="openLog"
               @test="submitTest"
-              :loading="isLoading"
+              :submit-loading="isSubmitLoading"
+              :test-loading="testLoading"
           />
         </div>
         <el-row ref="testInputRowRef" class="test-input-panel" :gutter="20" style="max-height: 80px">
@@ -247,18 +253,17 @@
 
 <script setup lang="ts">
 import {
-  debouncedGetDetailProblem,
+  getDetailProblem,
   type OjProblemView,
   type ProblemDetailView,
   ProblemType,
   recentSubmit,
 } from "@/api/problem";
-import {computed, onMounted, onUnmounted, reactive, type Ref, ref, watch} from "vue";
+import {computed, onBeforeUnmount, onMounted, onUnmounted, reactive, type Ref, ref, watch} from "vue";
 import EnhancedCodeEditor from '@/components/EnhancedCodeEdior/index.vue'
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import {
-  type Answer,
   judge,
   getUserAnswer,
   type JudgeForm,
@@ -279,12 +284,12 @@ import ProblemResult from "@/components/ProblemResult/ProblemResult.vue";
 import JudgeStatusBadge from "@/components/JudgeStatusBadge/JudgeStatusBadge.vue";
 import SubmissionDetailPanel from "@/components/SubmissionDetailPanel/SubmissionDetailPanel.vue";
 import __ from "lodash";
-import {letterToNumber} from "@/utils/stringUtils";
 import {ElMessage, ElNotification} from "element-plus";
 import {ChatLineSquare, Document, Notebook} from "@element-plus/icons-vue";
 import Solutions from "@/views/solutions/component/SolutionsComponent/SolutionsComponent.vue";
 import type {QuerySolution} from "@/api/solution";
 import type {IdType} from "@/api/common.ts";
+import {isPendingJudgeStatus, isTerminalJudgeStatus} from "@/utils/problem/judgeStatus";
 
 const errorTitle = ref("");
 
@@ -299,6 +304,7 @@ const currentTab = ref("detail")
 
 // 题目对象
 const problem = ref<ProblemDetailView>();
+const problemError = ref('');
 
 // 代码编辑器是否全屏
 const isFullScreen = ref(false)
@@ -307,7 +313,7 @@ const isFullScreen = ref(false)
 const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 
 // 传入题目组件
-const {problemId, contestId, disableSubmit = false} = defineProps<{problemId: IdType, contestId?: IdType, disableSubmit?: boolean}>()
+const {problemId, contestId, disableSubmit = false, showResult} = defineProps<{problemId: IdType, contestId?: IdType, disableSubmit?: boolean, showResult?: boolean}>()
 
 const emit = defineEmits<{
   (event: 'submitted'): void;
@@ -325,7 +331,11 @@ const updateSolutionParam = (value: QuerySolution) => {
   Object.assign(solutionParam, value)
 }
 
-const {loading, finish, isLoading} = useLoading()
+const {loading: startSubmitLoading, finish: finishSubmitLoading, isLoading: isSubmitLoading} = useLoading()
+const testLoading = ref(false);
+const testError = ref('');
+const testBusy = ref(false);
+let testRunSequence = 0;
 
 // 各种信息的计算属性
 const problemType = computed(() => problem.value?.problemVo.type)
@@ -343,7 +353,7 @@ const isOjProblem = computed(() => problemType.value === ProblemType.OJ)
 // 后端 Redis 还有 12 秒硬 TTL，这里的计时器使用同样的兜底时间。
 const ojSubmitLocked = ref(false);
 let ojSubmitUnlockTimer: ReturnType<typeof setTimeout> | undefined;
-const isSubmitDisabled = computed(() => disableSubmit || (isOjProblem.value && ojSubmitLocked.value));
+const isSubmitDisabled = computed(() => disableSubmit || (isOjProblem.value && (ojSubmitLocked.value || isPendingJudgeStatus(activeSubmission.value?.status))));
 
 const unlockOjSubmit = () => {
   ojSubmitLocked.value = false;
@@ -358,7 +368,7 @@ const lockOjSubmit = () => {
   ojSubmitLocked.value = true;
   if (ojSubmitUnlockTimer) clearTimeout(ojSubmitUnlockTimer);
   // 网络异常、轮询中断或服务重启时，前端也不能把按钮锁死。
-  ojSubmitUnlockTimer = setTimeout(unlockOjSubmit, 12_000);
+  ojSubmitUnlockTimer = setTimeout(unlockOjSubmit, 90_000);
   return true;
 };
 
@@ -366,7 +376,7 @@ const isFillProblem = computed(() => problemType.value === ProblemType.FILL)
 
 const hint = computed(() => problem.value?.problemVo?.hint)
 
-const ojProblem = computed(():OjProblemView => <OjProblemView>problem!.value!.ojProblemVo);
+const ojProblem = computed((): OjProblemView | undefined => problem.value?.ojProblemVo);
 
 const isShowCodeEditor = computed((): boolean => {
   if (problem.value === undefined) {
@@ -377,21 +387,21 @@ const isShowCodeEditor = computed((): boolean => {
 });
 
 const difficulty = computed(() => {
-  const array = ['不确定', '简单', '中等', '困难']
+  const array = ['未分类', '简单', '中等', '困难']
   if (problem.value === undefined || problem.value.ojProblemVo === undefined) {
     return "未知";
   }
-  return array[problem.value.ojProblemVo.difficulty]
+  return array[problem.value.ojProblemVo.difficulty] || '未分类'
 });
 
 // mb
-const memoryLimit = computed(() => Math.ceil(ojProblem.value.memoryLimit / 1024));
+const memoryLimit = computed(() => ojProblem.value ? Math.ceil(ojProblem.value.memoryLimit / 1024) : '-');
 
 // ms
-const timeLimit = computed(() => ojProblem.value.timeLimit);
+const timeLimit = computed(() => ojProblem.value?.timeLimit ?? '-');
 
 // mb
-const stackLimit = computed(() => ojProblem.value.stackLimit)
+const stackLimit = computed(() => ojProblem.value?.stackLimit ?? '-')
 
 // 问题类型，但是转换成字符串
 const stringProblemType = computed(() => problemTypeToString(<ProblemType>problemType.value));
@@ -403,14 +413,7 @@ const description = computed(() => problem.value?.problemVo.description || "")
 const judgeResult = ref<JudgeResponse>();
 
 // 是否显示判题结果
-const isShowResult = computed(() => {
-  if (contestId) {
-    return false;
-  } else {
-    return !!judgeResult.value;
-  }
-
-})
+const isShowResult = computed(() => (showResult ?? !contestId) && !!judgeResult.value)
 
 // 全屏大小 / 非全屏大小
 const codeSpan = computed(() => {
@@ -483,8 +486,7 @@ const toggleTestConsole = () => {
 // 显示答案（非 OJ 题仍复用原有即时判题逻辑）
 const showAnswers = ref(false);
 
-const pendingJudgeStates = [OJResult.QUEUE, OJResult.COMPILING, OJResult.RUNNING];
-const isTerminalJudgeState = (status?: OJResult) => !!status && !pendingJudgeStates.includes(status);
+const isTerminalJudgeState = (status?: string) => isTerminalJudgeStatus(status);
 
 const upsertSubmitLog = (log: LogSubmit): LogSubmit => {
   const index = submitLogs.findIndex(item => String(item.submitId) === String(log.submitId));
@@ -515,7 +517,7 @@ const startSubmissionPolling = async (submitId: IdType) => {
       submissionPolls.delete(key);
       unlockOjSubmit();
       openSubmissionDetail(current);
-      finish();
+      finishSubmitLoading();
       emit('submitted');
     }
   }, 1000);
@@ -524,31 +526,43 @@ const startSubmissionPolling = async (submitId: IdType) => {
 
 // 发送 OJ 测试：提交后只轮询这次 uuid 对应的结果。
 const submitTest = () => {
+  if (testBusy.value || !judgeForm.languageId) return;
   testConsoleOpen.value = true;
   void handleTestSubmit();
 };
 
 const handleTestSubmit = async () => {
+  if (testBusy.value) return;
+  const sequence = ++testRunSequence;
+  testBusy.value = true;
   const uuid = requestUuid();
   stdout.value = "";
   errMsg.value = undefined;
+  testError.value = '';
   testResult.value = {uuid, judgeResult: OJResult.QUEUE};
   testPollStop?.();
-  loading();
+  testLoading.value = true;
+  const payload = {code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value, uuid};
 
   try {
-    await sendTest({code: judgeForm.code, languageId: judgeForm.languageId, stdin: stdin.value, uuid});
+    await sendTest(payload);
+    if (sequence !== testRunSequence) return;
     testPollStop = await pollTestResult(uuid, result => {
+      if (sequence !== testRunSequence) return;
       testResult.value = result;
       errMsg.value = result.stderr;
       stdout.value = result.stdout || "";
       if (isTerminalJudgeState(result.judgeResult)) {
-        finish();
+        testLoading.value = false;
+        testBusy.value = false;
         testPollStop = undefined;
       }
     }, 1000);
-  } catch {
-    finish();
+  } catch (error) {
+    if (sequence !== testRunSequence) return;
+    testError.value = error instanceof Error ? error.message : '测试运行失败，请稍后重试';
+    testLoading.value = false;
+    testBusy.value = false;
   }
 };
 
@@ -559,7 +573,7 @@ const submitOj = async () => {
     if (!data?.submitId) {
       ElNotification.error({title: "提交失败", message: "服务没有返回提交编号"});
       unlockOjSubmit();
-      finish();
+      finishSubmitLoading();
       return;
     }
     activeSubmissionId.value = data.submitId;
@@ -575,19 +589,20 @@ const submitOj = async () => {
     upsertSubmitLog(queuedLog);
     await startSubmissionPolling(data.submitId);
     // 提交请求已进入判题队列，按钮保持禁用，直到结果完成或 12 秒前端兜底计时结束。
-    finish();
+    finishSubmitLoading();
   } catch {
     unlockOjSubmit();
-    finish();
+    finishSubmitLoading();
   }
 };
 
 // OJ 提交由前端即时锁定，后端 Redis 锁负责跨标签页、跨实例的最终兜底。
 const onHandleSubmit = async () => {
+  if (isSubmitDisabled.value || isSubmitLoading.value || !problem.value) return;
   if (problemType.value === ProblemType.OJ && !lockOjSubmit()) return;
   stdout.value = "";
   errMsg.value = undefined;
-  loading();
+  startSubmitLoading();
   if (problemType.value === ProblemType.OJ) {
     await submitOj();
     return;
@@ -602,7 +617,7 @@ const onHandleSubmit = async () => {
   } catch {
     // HTTP 层已经统一展示错误消息。
   } finally {
-    finish();
+    finishSubmitLoading();
   }
 };
 
@@ -623,6 +638,8 @@ const getHeight = () => {
 }
 
 const reset = () => {
+  problem.value = undefined;
+  problemError.value = '';
   judgeForm.answers = [];
   judgeForm.code = "";
   judgeForm.problemId = problemId;
@@ -630,92 +647,66 @@ const reset = () => {
   judgeForm.languageId = '1';
 
   submitLogs.length = 0;
+  activeSubmission.value = undefined;
+  activeSubmissionId.value = undefined;
+  judgeResult.value = undefined;
+  showAnswers.value = false;
 
   isFullScreen.value = false;
 }
 
 const initBlanks = () => {
-
-  // 有内容就不动
-  if (judgeForm.answers.length > 0) {
-    return;
-  }
-
-  // 没内容再添加
-  const choices = problem.value?.choices || [];
-  for (let choice of choices) {
-    judgeForm.answers.push(reactive({
-      index: <number>choice!.blankIndex,
-      answer: ""
-    }))
-  }
+  const choices = [...(problem.value?.choices || [])]
+    .filter(choice => choice.blankIndex != null)
+    .sort((a, b) => Number(a.blankIndex) - Number(b.blankIndex));
+  const existing = new Map(judgeForm.answers.map(answer => [Number(answer.index), answer.answer || '']));
+  judgeForm.answers = choices.map(choice => ({
+    index: Number(choice.blankIndex),
+    answer: existing.get(Number(choice.blankIndex)) || '',
+  }));
 }
 
-const {loading: loadingProblem, isLoading: problemIsLoading, get} =
-    debouncedGetDetailProblem(async data => {
-      problem.value = data;
+const problemIsLoading = ref(false);
+let loadSequence = 0;
 
-
-      // 回写答案
-      await getAnswer();
-
-
-      // 初始化填空题
-      if (problem.value?.problemVo.type === ProblemType.FILL) {
-        initBlanks();
-      }
-
-      // 判断是否修改过
-      __.assign(judgeFormCopy, JSON.parse(JSON.stringify(judgeForm)));
-
-
-      judgeForm.answers?.forEach(x => {
-
-        if (problem.value?.problemVo.type === ProblemType.FILL) {
-          if (problem.value.choices?.length !== judgeForm.answers.length) {
-            judgeForm.answers.length = <number>problem.value.choices?.length;
-          }
-        } else {
-          const find = problem.value?.choices?.find(item => letterToNumber(<string>item.order) === x.index);
-          if (!find) {
-            judgeForm.answers = [];
-            return;
-          }
-        }
-
-      })
-    })
-
-const getLogs = async () => {
-  const logs = await recentSubmit(problemId)
+const getLogs = async (id: IdType, sequence = loadSequence) => {
+  const logs = await recentSubmit(id)
+  if (sequence !== loadSequence) return;
   submitLogs.length = 0;
   submitLogs.push(...logs);
 }
 
-const getProblem = async () => {
-  loadingProblem()
-
-  // 取题目
-  get(problemId)
-
+const loadProblem = async () => {
+  const sequence = ++loadSequence;
+  problemIsLoading.value = true;
+  reset();
+  const id = problemId;
   try {
-    await getLogs();
-  } catch {
-    // 提交记录是题目页的辅助信息，加载失败不应阻断题目正文。
-    submitLogs.length = 0;
+    const detail = await getDetailProblem(id);
+    if (sequence !== loadSequence) return;
+    problem.value = detail;
+    if (detail.problemVo.type === ProblemType.FILL) initBlanks();
+    await Promise.allSettled([getAnswer(id, sequence), getLogs(id, sequence)]);
+    if (sequence !== loadSequence) return;
+    if (detail.problemVo.type === ProblemType.FILL) initBlanks();
+    __.assign(judgeFormCopy, JSON.parse(JSON.stringify(judgeForm)));
+  } catch (error) {
+    if (sequence !== loadSequence) return;
+    problemError.value = error instanceof Error ? error.message : '题目加载失败，请稍后重试';
+  } finally {
+    if (sequence === loadSequence) problemIsLoading.value = false;
   }
-
 }
 
 // 答案回写
-const getAnswer = async () => {
-  const answer = await getUserAnswer({contestId: contestId, problemId: problemId})
+const getAnswer = async (id: IdType = problemId, sequence = loadSequence) => {
+  const answer = await getUserAnswer({contestId: contestId, problemId: id})
   // answer是null表示还没有写
 
   if (!answer) return;
+  if (sequence !== loadSequence) return;
   judgeForm.code = <string>answer.code;
-  answer.answers?.sort((a, b) => a.index - b.index);
-  judgeForm.answers = <Answer[]>answer.answers;
+  judgeForm.answers = [...(answer.answers || [])].sort((a, b) => a.index - b.index);
   judgeForm.languageId = !!answer.languageId ? answer.languageId : '1';
 }
 
@@ -730,31 +721,32 @@ const saveAnswer = async () => {
 }
 
 // created
-getProblem();
+loadProblem();
 
 watch(() => problemId, async () => {
-  if (!__.isEqual(judgeForm, judgeFormCopy) && !disableSubmit) {
+  if (!__.isEqual(judgeForm, judgeFormCopy) && !disableSubmit && problem.value) {
     await saveAnswer()
   }
-  reset();
-  await getProblem();
+  await loadProblem();
 })
 
 
 
 defineExpose<{isProblemLoading: Ref<boolean>}>({isProblemLoading: problemIsLoading})
 
-onMounted(() => {
-  const debounceFunc = __.debounce(getHeight, 100);
-  window.onresize = () => {
-    debounceFunc()
-  }
-
-
-})
+const debouncedGetHeight = __.debounce(getHeight, 100);
+const handleResize = () => debouncedGetHeight();
+onMounted(() => window.addEventListener('resize', handleResize));
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+  debouncedGetHeight.cancel();
+});
 
 onUnmounted(() => {
-  window.onreset = null;
+  loadSequence++;
+  testRunSequence++;
+  testLoading.value = false;
+  testBusy.value = false;
   unlockOjSubmit();
   submissionPolls.forEach(stop => stop());
   testPollStop?.();

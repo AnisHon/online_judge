@@ -1,22 +1,20 @@
 <template>
   <main class="activity-page">
     <header class="activity-header" :class="`activity-header--${kind.toLowerCase()}`">
-      <div><p class="eyebrow">{{ kind === 'CONTEST' ? 'CHALLENGE ARENA' : 'LEARNING SPACE' }}</p>
-        <h1>{{ pageTitle }}</h1>
-        <p>{{
-            kind === 'CONTEST' ? '在限定时间内解决问题，和大家一起检验你的能力。' : '按计划完成练习，把知识点一步步变成真正的能力。'
-          }}</p></div>
+      <div><p class="eyebrow">{{ activityMeta.eyebrow }}</p>
+        <h1>{{ activityMeta.title }}</h1>
+        <p>{{ activityMeta.description }}</p></div>
       <div class="activity-header__mark">
         <el-icon>
-          <component :is="kind === 'CONTEST' ? Trophy : Collection"/>
+          <component :is="activityMeta.icon"/>
         </el-icon>
       </div>
     </header>
-    <section class="activity-list" v-loading="isLoading || isJoinedLoading">
+    <section class="activity-list" v-loading="isLoading || actionLoadingIds.size > 0">
       <el-card v-for="item in list" :key="item.contestId" class="activity-card" shadow="hover">
         <div class="activity-card__icon">
           <el-icon>
-            <component :is="kind === 'CONTEST' ? Trophy : Collection"/>
+            <component :is="activityMeta.icon"/>
           </el-icon>
         </div>
         <div class="activity-card__main">
@@ -31,19 +29,28 @@
         </div>
         <div class="activity-card__action">
           <el-tag :type="authTagType(item.auth)">{{ authText(item.auth) }}</el-tag>
-          <el-button class="enter-button" :type="buttonType(item)" :disabled="isNotStart(item.startTime)"
+          <el-button class="enter-button" :type="buttonType(item)"
+                     :disabled="!isTimeValid(item) || isNotStarted(item.startTime)"
+                     :loading="isActivityLoading(item.contestId)"
                      @click="joinActivity(item)">{{ buttonText(item) }}
           </el-button>
         </div>
       </el-card>
-      <el-empty v-if="list.length === 0" :description="`还没有任何${kind === 'CONTEST' ? '比赛' : '作业'}`"/>
+      <el-alert v-if="error" class="activity-error" type="error" :closable="false" show-icon>
+        <template #title>
+          <span>{{ error }}</span>
+          <el-button link type="primary" @click="getList">重试</el-button>
+        </template>
+      </el-alert>
+      <el-empty v-if="!isLoading && !error && list.length === 0" :description="`还没有任何${activityMeta.title}`"/>
     </section>
     <div class="activity-pagination">
       <pagination v-show="total > 0" :total="total" :background="false" v-model:page="page.currentPage"
                   v-model:limit="page.pageSize" @pagination="getList"/>
     </div>
-    <el-dialog v-model="passwordDialog" title="进入私有活动" width="min(520px, 92vw)">
-      <el-form :model="form">
+    <el-dialog v-model="passwordDialog" :title="`进入私有${activityMeta.title}`" width="min(520px, 92vw)"
+               @closed="resetPasswordDialog">
+      <el-form :model="form" @submit.prevent="submit">
         <el-form-item label="密码">
           <el-input v-model="form.password" type="password" placeholder="请输入活动密码" autocomplete="off"
                     maxlength="32" show-password/>
@@ -51,7 +58,8 @@
       </el-form>
       <template #footer>
         <el-button @click="passwordDialog = false">取消</el-button>
-        <el-button type="primary" @click="submit">确认进入</el-button>
+        <el-button type="primary" :loading="isPasswordSubmitting" :disabled="isPasswordSubmitting"
+                   @click="submit">确认进入</el-button>
       </template>
     </el-dialog>
   </main>

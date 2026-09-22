@@ -2,12 +2,11 @@ import {addResultNotify, baseURL, get, getWithParams, post, put, resultNotify, s
 import {ElNotification} from "element-plus";
 import __ from "lodash";
 import {remove} from "@/utils/simpleCRUD.ts";
-import {useUserStore} from "@/stores/useUserStore.ts";
-import {computed} from "vue";
 import type {IdType} from "@/api/common.ts";
 import axios from "axios";
 import {useToken} from "@/stores/useToken.ts";
 import { saveAs } from 'file-saver'
+import {ApiError} from "@/utils/http.ts";
 
 export interface CloudFile {
     cloudFileId: string;
@@ -97,25 +96,24 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
     return data;
 }
 
-export const myAvatarPath = computed(() => {
-    const userStore = useUserStore();
-    const userId = userStore?.user?.userId || ""
-    return userId ? getAvatarPath(userId, userStore.avatarVersions[String(userId)] ?? 0) : "";
-})
-
-export const getAvatarPath = (userId: IdType, version?: number) => {
-    const suffix = version === undefined ? '' : `?v=${version}`;
+export const getAvatarPath = (userId: IdType, version?: number, retry = 0) => {
+    const suffix = version === undefined && retry === 0
+        ? ''
+        : `?v=${version ?? 0}${retry > 0 ? `&r=${retry}` : ''}`;
     return `/api/avatar/${userId}${suffix}`;
 }
 
 export const uploadAvatar = async (file: File): Promise<string> => {
     const form = new FormData();
     form.append("avatar", file);
-    const {data} = await service<string>({
+    const {data} = await service<string | null>({
         url: "/avatar",
         method: "POST",
         data: form
     });
+    if (typeof data !== 'string' || !data.trim()) {
+        throw new ApiError('头像上传失败，图片格式不支持或存储服务不可用', 502);
+    }
     return data;
 }
 

@@ -1,7 +1,7 @@
 import {
     type PagedResponse, type PagedType,
 } from "@/api/pagedType";
-import {get, getWithParams, post, resultNotify, type successCallback} from "@/utils/http";
+import {get, getWithParams, post, type successCallback} from "@/utils/http";
 import {debounce} from "lodash";
 import useLoading from "@/hooks/useLoading";
 import {add, remove, update} from "@/utils/simpleCRUD";
@@ -81,7 +81,7 @@ const dict = {
     ]
 }
 
-const join = async (req: JoinContestRequest) => {
+const joinContest = async (req: JoinContestRequest) => {
     const {data} = await post<JoinContestRequest, JoinContestResponse>("/problem-api/contest/join", req);
     return data;
 }
@@ -89,14 +89,14 @@ const join = async (req: JoinContestRequest) => {
 const debouncedJoin = (req: JoinContestRequest, success: successCallback<JoinContestResponse>) => {
     const {loading, isLoading, finish} = useLoading()
     const post = debounce(() => {
-        join(req)
+        joinContest(req)
             .then(success)
             .finally(finish);
     }, 500);
     return {loading, isLoading, post};
 }
 
-const isJoined = async (contestId: IdType) => {
+const isContestJoined = async (contestId: IdType) => {
     const {data} = await get<boolean>("/problem-api/contest/isJoined", contestId);
     return data;
 }
@@ -110,7 +110,7 @@ const fetchContestById = async (contestId: IdType) => {
 const debouncedIsJoined = (success: successCallback<boolean>) => {
     const {loading, isLoading, finish} = useLoading()
     const get = debounce((x) => {
-        isJoined(x)
+        isContestJoined(x)
             .then(success)
             .finally(finish);
     }, 500);
@@ -198,7 +198,7 @@ export const getContestStatus = async (contestId: IdType) => {
 
 export const handInPaper = async (contestId: IdType) => {
     const {data} = await post<void, boolean>(`/problem-api/contest/submit/${contestId}`, undefined);
-    resultNotify(data, "交卷成功", "交卷失败");
+    return data;
 }
 
 export type {
@@ -218,10 +218,11 @@ export {
     debouncedGetContestAdmin,
     debouncedIsJoined,
     debouncedJoin,
+    joinContest,
+    isContestJoined,
     fetchContestById,
     getScore,
     dict,
     ContestAuth
 }
-
 

@@ -16,7 +16,7 @@
       <el-menu :default-active="activeIndex" class="mobile-nav" router @select="mobileMenuOpen = false">
         <recursive-menu-item v-for="item of constMenu" :key="item.path" :route="item" />
       </el-menu>
-      <div class="mobile-account"><account-menu/></div>
+      <div class="mobile-account"><account-menu @command="closeMobileMenu" @close="closeMobileMenu"/></div>
     </el-drawer>
   </div>
 </template>
@@ -33,6 +33,7 @@ import {Menu} from "@element-plus/icons-vue";
 const route = useRoute();
 const mobileMenuOpen = ref(false);
 const activeIndex = computed(() => route.fullPath);
+const closeMobileMenu = () => { mobileMenuOpen.value = false; };
 </script>
 
 <style scoped>

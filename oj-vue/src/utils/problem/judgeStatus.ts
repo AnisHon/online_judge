@@ -6,6 +6,8 @@ export interface JudgeStatusMeta {
   tone: JudgeStatusTone;
 }
 
+export type CanonicalJudgeStatus = 'QUEUE' | 'COMPILING' | 'RUNNING' | 'AC' | 'RE' | 'WA' | 'TLE' | 'MLE' | 'CE' | 'JUDGE_ERROR';
+
 const STATUS_META: Record<string, JudgeStatusMeta> = {
   QUEUE: {label: '排队中', code: 'WAIT', tone: 'pending'},
   COMPILING: {label: '编译中', code: 'BUILD', tone: 'primary'},
@@ -45,14 +47,22 @@ const STATUS_ALIASES: Record<string, string> = {
   JUDGEERROR: 'JUDGE_ERROR',
 };
 
+export function normalizeJudgeStatus(status?: string): CanonicalJudgeStatus | '' {
+  const raw = String(status || '').trim().toUpperCase();
+  return (STATUS_ALIASES[raw] || raw) as CanonicalJudgeStatus | '';
+}
+
 export function getJudgeStatusMeta(status?: string): JudgeStatusMeta {
   const raw = String(status || '').trim();
-  const key = STATUS_ALIASES[raw.toUpperCase()] || raw.toUpperCase();
+  const key = normalizeJudgeStatus(raw);
   return STATUS_META[key] || {label: raw || '未知状态', code: raw || 'UNKNOWN', tone: 'danger'};
 }
 
 export function isPendingJudgeStatus(status?: string) {
-  const raw = String(status || '').trim().toUpperCase();
-  const key = STATUS_ALIASES[raw] || raw;
+  const key = normalizeJudgeStatus(status);
   return key === 'QUEUE' || key === 'COMPILING' || key === 'RUNNING';
+}
+
+export function isTerminalJudgeStatus(status?: string) {
+  return !!normalizeJudgeStatus(status) && !isPendingJudgeStatus(status);
 }

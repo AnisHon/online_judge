@@ -12,7 +12,11 @@
           </template>
           <div class="language-menu">
             <div class="language-menu__heading"><strong>选择编程语言</strong><span>{{ languages.length }} 种可用</span></div>
-            <div v-if="languages.length" class="language-grid" role="listbox" aria-label="编程语言列表">
+            <div v-if="languageError" class="language-state" role="alert">
+              <span>{{ languageError }}</span>
+              <el-button link type="primary" @click="initLanguages(true)">重试</el-button>
+            </div>
+            <div v-else-if="languages.length" class="language-grid" role="listbox" aria-label="编程语言列表">
               <button
                   v-for="item in languages"
                   :key="String(item.languageId)"
@@ -28,23 +32,23 @@
                 <el-icon v-if="sameLanguage(item.languageId, codeForm.languageId)" class="language-card__check"><Check /></el-icon>
               </button>
             </div>
-            <el-empty v-else :image-size="42" description="暂无可用语言" />
+            <el-empty v-else :image-size="42" description="正在加载语言列表" />
           </div>
         </el-popover>
       </div>
       <div class="editor-toolbar__actions">
-        <el-button class="action-button action-button--test" text :disabled="disableSubmit" @click="emit('test')" :loading="loading">
+        <el-button class="action-button action-button--test" text aria-label="运行自定义测试" :disabled="disableSubmit || !canSubmit" @click="emit('test')" :loading="testBusy">
           <el-icon><VideoPlay /></el-icon><span>运行测试</span>
         </el-button>
-        <el-button class="action-button action-button--submit" type="primary" :disabled="disableSubmit" @click="emit('submit')" :loading="loading">
+        <el-button class="action-button action-button--submit" type="primary" aria-label="提交代码" :disabled="disableSubmit || !canSubmit" @click="emit('submit')" :loading="submitBusy">
           <el-icon><Promotion /></el-icon><span>提交代码</span>
         </el-button>
-        <el-button class="action-button action-button--log" text @click="emit('open-log')">
+        <el-button class="action-button action-button--log" text aria-label="查看提交记录" @click="emit('open-log')">
           <el-icon><List /></el-icon><span>记录</span>
         </el-button>
       </div>
     </div>
-    <code-editor v-model="codeForm.code" :language="currLang" :theme="theme" :height="codeEditHeight" ref="codeEditorRef" />
+    <code-editor v-model="codeForm.code" :language="currLang" :height="codeEditHeight" ref="codeEditorRef" />
 
 
   </div>
@@ -66,18 +70,26 @@ const toolbarRef = ref<HTMLElement>();
 
 const codeForm = defineModel<JudgeForm>({required: true})
 
-const theme = ref("eclipse");
-
 const languages = ref<LanguageView[]>([]);
 const languagePickerOpen = ref(false);
 
-const {heightProp, loading, disableSubmit = false} = defineProps<{heightProp: number, loading: boolean, disableSubmit?: boolean}>()
+const {heightProp, submitLoading, testLoading, loading = false, disableSubmit = false} = defineProps<{
+  heightProp: number,
+  submitLoading?: boolean,
+  testLoading?: boolean,
+  /** 兼容后台答题详情等旧调用方，新的工作台使用 submitLoading/testLoading。 */
+  loading?: boolean,
+  disableSubmit?: boolean
+}>()
+
+const submitBusy = computed(() => submitLoading ?? loading);
+const testBusy = computed(() => testLoading ?? false);
 
 const emit = defineEmits<{
   (e: 'open-log'): void,
   (e: 'submit'): void;
   (e: 'test'): void;
-  (e: 'fullScreen'): void;
+  (e: 'full-screen'): void;
   (e: 'onReady'): void;
 }>()
 
@@ -89,6 +101,8 @@ const codeEditHeight = computed(() => {
 const sameLanguage = (left: unknown, right: unknown) => String(left) === String(right);
 const selectedLanguage = computed(() => languages.value.find(item => sameLanguage(item.languageId, codeForm.value.languageId)));
 const currLang = computed(() => selectedLanguage.value?.languageName || "");
+const languageError = ref('');
+const canSubmit = computed(() => languages.value.length > 0 && !!selectedLanguage.value && !languageError.value);
 const languageBadgeFor = (name?: string) => {
   const value = (name || "?").toLowerCase();
   if (value.includes("python")) return "Py";
@@ -104,11 +118,14 @@ const selectLanguage = (languageId: LanguageView["languageId"]) => {
   languagePickerOpen.value = false;
 };
 
-const initLanguages = () => {
-  languageStore.getLanguages()
-      .then((languageArray) => {
-        languages.value = [...languageArray].sort((a, b) => a.seq - b.seq);
-      })
+const initLanguages = async (force = false) => {
+  languageError.value = '';
+  try {
+    const languageArray = await languageStore.getLanguages(force);
+    languages.value = [...languageArray].sort((a, b) => a.seq - b.seq);
+  } catch (error) {
+    languageError.value = error instanceof Error ? error.message : '编程语言加载失败';
+  }
 }
 
 onMounted(() => {
@@ -116,7 +133,7 @@ onMounted(() => {
 })
 
 // created
-initLanguages();
+void initLanguages();
 
 
 
@@ -136,7 +153,8 @@ initLanguages();
 .language-trigger__copy small { color: var(--el-text-color-secondary); font-size: 9px; }
 .language-trigger__copy strong { overflow: hidden; max-width: 112px; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .language-trigger__arrow { margin-left: auto; color: var(--el-text-color-placeholder); font-size: 12px; }
-.language-menu { color: var(--el-text-color-primary); }
+.language-menu { max-width: calc(100vw - 24px); color: var(--el-text-color-primary); }
+.language-state { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 8px; color: var(--el-text-color-secondary); font-size: 12px; }
 .language-menu__heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }.language-menu__heading strong { font-size: 13px; }.language-menu__heading span { color: var(--el-text-color-secondary); font-size: 11px; }
 .language-grid { display: grid; max-height: 310px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; overflow-y: auto; padding: 2px; }
 .language-card { display: flex; min-width: 0; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--el-border-color-lighter); border-radius: 10px; background: var(--el-bg-color); color: var(--el-text-color-primary); cursor: pointer; text-align: left; transition: border-color .18s ease, background-color .18s ease; }.language-card:hover, .language-card--active { border-color: var(--el-color-primary-light-5); background: var(--el-color-primary-light-9); }

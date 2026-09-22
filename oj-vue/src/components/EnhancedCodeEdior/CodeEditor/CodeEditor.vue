@@ -10,7 +10,7 @@
   />
 </template>
 <script lang="ts" setup>
-import {ref, reactive, computed, watch} from "vue";
+import {ref, reactive, computed, watch, onBeforeUnmount} from "vue";
 import { type Editor, type EditorConfiguration } from "codemirror";
 import Codemirror from "codemirror-editor-vue3";
 
@@ -18,9 +18,6 @@ import 'codemirror/lib/codemirror.css';
 
 
 // mode
-import "codemirror/mode/python/python.js"
-import "codemirror/mode/clike/clike.js"
-
 // theme
 
 // import "codemirror/theme/dracula.css"
@@ -38,10 +35,7 @@ import 'codemirror/mode/go/go.js';
 
 // 引入代码自动提示插件
 import 'codemirror/addon/hint/show-hint.css';
-import 'codemirror/addon/hint/sql-hint';
 import 'codemirror/addon/hint/show-hint';
-import 'codemirror/addon/hint/javascript-hint'
-import 'codemirror/addon/hint/xml-hint'
 import 'codemirror/addon/hint/anyword-hint'
 
 import 'codemirror/addon/edit/matchbrackets'
@@ -56,29 +50,22 @@ const code = defineModel<string>({required: true})
 
 
 const {language, height} = defineProps<{
-  language: string | 'Java' | 'C' | 'C++' | 'Python2' | 'Python3' | 'Golang',
+  language: string,
   height: number,
 }>()
 
-const modeMap = {
-  'Java' :'text/x-java',
-  'C': "text/x-csrc",
-  'C With O2': "text/x-csrc",
-  'C++': 'text/x-c++src',
-  'Python2': 'text/x-python',
-  'Python3': 'text/x-python',
-  'Golang': 'text/x-go',
-}
+const resolveMode = (value: string) => {
+  const name = value.toLowerCase().replace(/[\s_-]+/g, '');
+  if (name.includes('c++') || name.includes('cpp')) return 'text/x-c++src';
+  if (name === 'c' || name.startsWith('cwith')) return 'text/x-csrc';
+  if (name.includes('java') || name.includes('kotlin')) return 'text/x-java';
+  if (name.includes('python')) return 'text/x-python';
+  if (name.includes('go')) return 'text/x-go';
+  if (name.includes('javascript') || name === 'js' || name.includes('typescript') || name === 'ts') return 'text/javascript';
+  return 'text/plain';
+};
 
-const mode = computed((): string => {
-  // @ts-ignore
-  if (language.includes("C++")) {
-    return modeMap["C++"];
-  }
-
-  //@ts-ignore
-  return modeMap[language];
-})
+const mode = computed((): string => resolveMode(language || ''));
 
 const theme = computed(() => {
   return isDark.value ? "material-darker" : "eclipse";
@@ -102,31 +89,22 @@ const cmOptions: EditorConfiguration = reactive({
   autoCloseBrackets: true,
   autoCloseTags: true,
   matchBrackets: true,
-  extraKeys: { // 触发按键
-    'Ctrl': 'autocomplete'
-  },
-  hintOptions: { // 自定义提示选项
-    completeSingle: false, // 当匹配只有一项的时候是否自动补全
-    tables: {
-      users: ['name', 'score', 'birthDate'],
-      countries: ['name', 'population', 'size'],
-      score: ['zooao']
-    }
-  }
+  extraKeys: {'Ctrl-Space': 'autocomplete', 'Cmd-Space': 'autocomplete'},
+  hintOptions: {completeSingle: false}
 });
 
 
 const cminstance = ref<Editor | null>(null);
+let hintTimer: ReturnType<typeof setTimeout> | undefined;
 const onReady = (cm: Editor) => {
   cminstance.value = cm;
-  cm.on('keypress', () => {
-    //编译器内容更改事件
-    cm.showHint();
-  })
+  cm.on('inputRead', (_instance, change) => {
+    if (!change.origin || !change.origin.startsWith('+')) return;
+    if (hintTimer) clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => cm.showHint({completeSingle: false}), 180);
+  });
 };
 
-
-console.log(mode.value)
 watch(mode, () => {
   cminstance.value?.setOption('mode', mode.value);
 
@@ -136,6 +114,11 @@ watch(theme, () => {
   cminstance.value?.setOption('theme', theme.value);
   cminstance.value?.refresh()
 })
+
+onBeforeUnmount(() => {
+  if (hintTimer) clearTimeout(hintTimer);
+  cminstance.value?.closeHint?.();
+});
 
 
 

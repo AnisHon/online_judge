@@ -30,15 +30,15 @@
             <article class="statement-content">
               <section>
                 <h2>题目描述</h2>
-                <markdown-preview :text="problem.problemVo.description || ''"/>
+                <markdown-preview variant="compact" :text="problem.problemVo.description || ''"/>
               </section>
               <section v-if="problem.ojProblemVo?.input">
                 <h2>输入格式</h2>
-                <markdown-preview :text="problem.ojProblemVo.input"/>
+                <markdown-preview variant="compact" :text="problem.ojProblemVo.input"/>
               </section>
               <section v-if="problem.ojProblemVo?.output">
                 <h2>输出格式</h2>
-                <markdown-preview :text="problem.ojProblemVo.output"/>
+                <markdown-preview variant="compact" :text="problem.ojProblemVo.output"/>
               </section>
               <div v-if="problem.ojProblemVo?.inputExample || problem.ojProblemVo?.outputExample" class="example-grid">
                 <div v-if="problem.ojProblemVo?.inputExample">
@@ -52,7 +52,7 @@
               </div>
               <section v-if="problem.problemVo.hint">
                 <h2>提示</h2>
-                <markdown-preview :text="problem.problemVo.hint"/>
+                <markdown-preview variant="compact" :text="problem.problemVo.hint"/>
               </section>
             </article>
           </el-scrollbar>
@@ -111,19 +111,19 @@
           <span class="code-pane__eyebrow">{{ fullscreen ? 'FOCUS MODE' : 'CODE WORKSPACE' }}</span>
         </div>
         <div class="code-pane__actions">
-          <el-button text @click="$emit('toggle-test')">
+          <el-button text :aria-label="testConsoleOpen ? '收起自定义测试' : '打开自定义测试'" @click="$emit('toggle-test')">
             <el-icon>
               <Monitor/>
             </el-icon>
             {{ testConsoleOpen ? '收起测试' : '打开测试' }}
           </el-button>
-          <el-button text @click="openSubmissions">
+          <el-button text aria-label="查看提交记录" @click="openSubmissions">
             <el-icon>
               <TrendCharts/>
             </el-icon>
             记录
           </el-button>
-          <el-button text @click="$emit('full-screen')">
+          <el-button text :aria-label="fullscreen ? '退出全屏' : '全屏专注'" @click="$emit('full-screen')">
             <el-icon>
               <FullScreen/>
             </el-icon>
@@ -136,8 +136,12 @@
         <Transition name="judge-toast">
           <div v-if="activeSubmission && statusVisible" class="judge-toast"
                :class="[`judge-toast--${statusTone(activeSubmission.status)}`, { 'judge-toast--interactive': !isPending(activeSubmission.status) }]"
-               role="status"
-               @click="!isPending(activeSubmission.status) && $emit('view-code', activeSubmission)">
+               :role="isPending(activeSubmission.status) ? 'status' : 'button'"
+               :tabindex="isPending(activeSubmission.status) ? -1 : 0"
+               :aria-label="`查看提交 ${activeSubmission.submitId} 的详情`"
+               @click="!isPending(activeSubmission.status) && $emit('view-code', activeSubmission)"
+               @keydown.enter.prevent="!isPending(activeSubmission.status) && $emit('view-code', activeSubmission)"
+               @keydown.space.prevent="!isPending(activeSubmission.status) && $emit('view-code', activeSubmission)">
             <span class="status-orb"><el-icon v-if="isPending(activeSubmission.status)"><Loading/></el-icon><el-icon
                 v-else><CircleCheck/></el-icon></span>
             <div class="judge-toast__copy">
@@ -163,7 +167,8 @@
                 @update:model-value="$emit('update:form', $event)"
                 :height-prop="editorHeight"
                 :disable-submit="disableSubmit"
-                :loading="loading"
+                :submit-loading="submitLoading"
+                :test-loading="testLoading"
                 @submit="$emit('submit')"
                 @test="$emit('test')"
                 @full-screen="$emit('full-screen')"
@@ -182,7 +187,7 @@
             <strong>自定义测试</strong><span>使用当前代码运行一组输入</span></div>
           <div class="test-console__tools">
             <judge-status-badge v-if="testResult" :status="testResult.judgeResult" />
-            <el-button text circle @click="$emit('toggle-test')">
+            <el-button text circle aria-label="收起自定义测试" @click="$emit('toggle-test')">
               <el-icon>
                 <ArrowDown/>
               </el-icon>
@@ -197,10 +202,10 @@
           </div>
           <div class="test-console__field">
             <label>程序输出</label>
-            <pre v-if="stdout || testResult?.stderr" class="test-console__output">{{
-                stdout || testResult?.stderr
-              }}</pre>
-            <div v-else class="test-console__placeholder">运行结果会显示在这里</div>
+            <div v-if="testError" class="test-console__error" role="alert">{{ testError }}</div>
+            <pre v-if="stdout" class="test-console__output">{{ stdout }}</pre>
+            <pre v-if="testResult?.stderr" class="test-console__error-output">{{ testResult.stderr }}</pre>
+            <div v-if="!stdout && !testResult?.stderr && !testError" class="test-console__placeholder">运行结果会显示在这里</div>
           </div>
         </div>
         </section>
@@ -223,7 +228,7 @@ import {
 } from "@element-plus/icons-vue";
 import type {IdType} from "@/api/common.ts";
 import type {ProblemDetailView} from "@/api/problem";
-import {Difficulty} from "@/api/problem";
+import {Difficulty, ProblemType} from "@/api/problem";
 import type {JudgeForm, LogSubmit, TestResult} from "@/api/problem/judge";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
 import Solutions from "@/views/solutions/component/SolutionsComponent/SolutionsComponent.vue";
@@ -232,6 +237,7 @@ import type {QuerySolution} from "@/api/solution";
 import EnhancedCodeEditor from "@/components/EnhancedCodeEdior/index.vue";
 import ResizablePanel from "@/components/ResizablePanel/ResizablePanel.vue";
 import {getJudgeStatusMeta, isPendingJudgeStatus} from "@/utils/problem/judgeStatus";
+import {formatJudgeDate, formatJudgeMemory} from "@/utils/problem/judgeDisplay";
 
 const props = defineProps<{
   problem: ProblemDetailView;
@@ -241,12 +247,14 @@ const props = defineProps<{
   form: JudgeForm;
   logs: LogSubmit[];
   activeSubmission?: LogSubmit;
-  loading: boolean;
+  submitLoading: boolean;
+  testLoading: boolean;
   fullscreen: boolean;
   testConsoleOpen: boolean;
   stdin: string;
   stdout: string;
   testResult?: TestResult;
+  testError?: string;
 }>();
 
 const emit = defineEmits<{
@@ -283,7 +291,7 @@ const openSubmissions = () => {
   emit('open-log');
 };
 
-const isOjProblem = computed(() => props.problem.problemVo.type === 1);
+const isOjProblem = computed(() => props.problem.problemVo.type === ProblemType.OJ);
 const difficulty = computed(() => {
   const value = props.problem.ojProblemVo?.difficulty;
   return value == null ? '' : ({
@@ -313,13 +321,8 @@ const progress = computed(() => {
 
 const isPending = (status?: string) => isPendingJudgeStatus(status);
 const statusTone = (status?: string) => getJudgeStatusMeta(status).tone;
-const formatDate = (value?: string) => value ? new Date(value).toLocaleString('zh-CN', {
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit'
-}) : '刚刚';
-const formatMemory = (value?: number) => value == null ? '-' : `${value > 1024 ? (value / 1024).toFixed(1) : value} ${value > 1024 ? 'MiB' : 'KiB'}`;
+const formatDate = formatJudgeDate;
+const formatMemory = formatJudgeMemory;
 
 const showSubmissionToast = () => {
   if (statusDismissTimer) clearTimeout(statusDismissTimer);
@@ -386,7 +389,8 @@ onUnmounted(() => {
   right: 0;
   bottom: 0;
   left: 0;
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   width: auto;
   height: auto;
   box-sizing: border-box;
@@ -401,6 +405,7 @@ onUnmounted(() => {
 }
 
 .oj-problem-pane, .oj-code-pane {
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--oj-border);
@@ -409,7 +414,8 @@ onUnmounted(() => {
   box-shadow: 0 12px 36px color-mix(in srgb, var(--el-color-primary) 6%, transparent);
 }
 
-.oj-code-pane { position: relative; }
+.oj-code-pane { position: relative; height: 100%; }
+.oj-workbench > * { min-width: 0; }
 
 .oj-problem-pane {
   display: flex;
@@ -671,6 +677,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 14px;
   min-height: 34px;
   padding: 0 7px 10px;
@@ -687,7 +694,16 @@ onUnmounted(() => {
 
 .code-pane__actions {
   display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
   gap: 2px;
+}
+
+.code-pane__actions .el-button {
+  min-width: 88px;
+  min-height: 32px;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .editor-host {
@@ -753,6 +769,7 @@ onUnmounted(() => {
 .judge-toast__metrics { display: flex; flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-end; gap: 9px; color: var(--el-text-color-secondary); font-size: 10px; }
 .judge-toast .el-progress { position: absolute; right: 0; bottom: 0; left: 0; }
 .judge-toast--interactive { cursor: pointer; }
+.judge-toast--interactive:focus-visible { outline: 2px solid var(--status-color); outline-offset: 3px; }
 .judge-toast--interactive:hover { box-shadow: 0 12px 32px rgb(15 23 42 / 20%); }
 .judge-toast-enter-active, .judge-toast-leave-active { transition: opacity .22s ease, transform .22s ease; }
 .judge-toast-enter-from, .judge-toast-leave-to { opacity: 0; transform: translate(-50%, -18px); }
@@ -810,6 +827,7 @@ onUnmounted(() => {
   display: grid;
   height: calc(100% - 42px);
   min-height: 0;
+  min-width: 0;
   box-sizing: border-box;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -852,6 +870,28 @@ onUnmounted(() => {
   overflow: auto;
 }
 
+.test-console__error {
+  margin-bottom: 8px;
+  color: var(--el-color-danger);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.test-console__error-output {
+  min-height: 82px;
+  flex: 1;
+  box-sizing: border-box;
+  overflow: auto;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--el-color-danger) 35%, var(--oj-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--el-color-danger) 5%, var(--el-bg-color));
+  color: var(--el-color-danger);
+  font: 12px/1.6 var(--code-font-family, 'JetBrains Mono', Consolas, monospace);
+  white-space: pre-wrap;
+}
+
 .test-console__placeholder {
   display: grid;
   place-items: center;
@@ -891,7 +931,7 @@ onUnmounted(() => {
   .oj-code-pane {
     /* 单列时工作台本身允许页面滚动，但代码区必须拥有独立的有限高度。
        否则内部 vertical ResizablePanel 的 72% 高度会和 auto 高度父级互相反馈。 */
-    height: clamp(420px, calc(100vh - var(--menu-height) - 24px), 820px);
+    height: clamp(420px, calc(100dvh - var(--menu-height) - 24px), 820px);
     min-height: 0;
     max-height: 820px;
   }
@@ -917,5 +957,14 @@ onUnmounted(() => {
   }
 
   .judge-toast { max-width: calc(100vw - 20px); }
+}
+
+@media (max-width: 520px) {
+  .oj-workbench--fullscreen { padding: 8px; }
+  .oj-code-pane { padding: 9px; border-radius: 15px; }
+  .code-pane__topline { align-items: stretch; gap: 7px; }
+  .code-pane__actions { width: 100%; }
+  .code-pane__actions .el-button { flex: 1 1 0; min-width: 0; padding-inline: 5px; }
+  .code-pane__actions .el-button span { display: none; }
 }
 </style>
