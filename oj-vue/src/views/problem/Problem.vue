@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="problem-page">
     <detail-problem :problem-id="problemId" :contest-id="undefined"/>
   </div>
 </template>
@@ -19,5 +19,17 @@ const problemId = computed(() => {
 
 
 <style scoped>
+.problem-page {
+  width: 100%;
+  height: var(--in-main-content-height);
+  min-height: 0;
+  overflow: hidden;
+}
 
+.problem-page :deep(.detail-problem-root),
+.problem-page :deep(.oj-workbench) {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+}
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="menu-shell">
     <div class="desktop-nav">
-      <el-menu :default-active="activeIndex" class="main-nav" mode="horizontal" router>
+      <el-menu :default-active="activeIndex" class="main-nav" mode="horizontal" :ellipsis="false" router>
         <el-menu-item class="brand-item" index="/index">
           <span class="brand-logo-wrap"><el-image class="brand-logo" src="/code_logo.png" alt="延拓Code" /></span>
         </el-menu-item>
@@ -41,7 +41,7 @@ const closeMobileMenu = () => { mobileMenuOpen.value = false; };
 <style scoped>
 .menu-shell { width: 100%; height: 100%; border-bottom: 1px solid var(--el-border-color-lighter); background: color-mix(in srgb, var(--el-bg-color) 92%, transparent); }
 .desktop-nav { position: relative; height: 100%; }
-.main-nav { width: 100%; height: 100%; padding: 0 max(18px, calc((100vw - var(--page-max-width)) / 2)); padding-right: max(230px, calc((100vw - var(--page-max-width)) / 2 + 230px)); border-bottom: 0; background: transparent; }
+.main-nav { width: 100%; height: 100%; min-width: 0; overflow: visible; padding: 0 max(18px, calc((100vw - var(--page-max-width)) / 2)); padding-right: max(230px, calc((100vw - var(--page-max-width)) / 2 + 230px)); border-bottom: 0; background: transparent; }
 .main-nav :deep(.el-menu-item), .main-nav :deep(.el-sub-menu__title) { height: 100%; padding: 0 16px; border-bottom: 2px solid transparent; color: var(--el-text-color-regular); font-size: 14px; }
 .main-nav :deep(.el-menu-item:hover), .main-nav :deep(.el-sub-menu__title:hover) { color: var(--el-color-primary); background: var(--el-fill-color-lighter); }
 .main-nav :deep(.el-menu-item.is-active) { border-bottom-color: var(--el-color-primary); color: var(--el-color-primary); background: transparent; }

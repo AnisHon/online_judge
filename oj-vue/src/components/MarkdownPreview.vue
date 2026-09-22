@@ -1,5 +1,8 @@
 <template>
-  <div class="reading-preview-shell" :class="`reading-preview-shell--${props.variant}`">
+  <div
+    class="reading-preview-shell markdown-render-scope"
+    :class="[`reading-preview-shell--${props.variant}`, { 'markdown-render-scope--dark': isDark }]"
+  >
     <MdPreview
         :id="previewId"
         :modelValue="props.text || ''"
@@ -53,14 +56,66 @@ const codeTheme = computed(() => config.readonly.codeTheme || 'atom')
 
 .reading-preview-shell :deep(.md-editor-preview-wrapper),
 .reading-preview-shell :deep(.md-editor-preview) {
-  background: transparent !important;
+  background: transparent;
 }
 
 .reading-preview-shell :deep(.md-editor-preview) {
-  max-width: none;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   color: var(--el-text-color-primary);
-  overflow-wrap: break-word;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.reading-preview-shell :deep(.md-editor-preview code) {
+  font-family: "OJCodeFont", "JetBrains Mono", "Cascadia Code", Consolas,
+    "Liberation Mono", "DejaVu Sans Mono", monospace;
+  font-variant-ligatures: none;
+}
+
+/*
+ * md-editor-v3 的代码块不是普通的 pre：它由 .md-editor-code、代码头和
+ * pre code 三层组成。只给最内层代码内容设置横向滚动，避免阅读容器的
+ * 断词规则把代码折断，也避免给外层 pre 叠加第二个边框/滚动条。
+ */
+.reading-preview-shell :deep(.md-editor-preview .md-editor-code) {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.reading-preview-shell :deep(.md-editor-preview .md-editor-code pre) {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.reading-preview-shell :deep(.md-editor-preview .md-editor-code pre code) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overflow-wrap: normal;
+  white-space: pre;
+  word-break: normal;
+}
+
+.reading-preview-shell :deep(.md-editor-preview .md-editor-mermaid) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.reading-preview-shell :deep(.md-editor-preview .md-editor-mermaid svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+.reading-preview-shell :deep(.md-editor-preview .md-editor-katex-block) {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .reading-preview-shell :deep(.md-editor-preview p),
@@ -73,13 +128,6 @@ const codeTheme = computed(() => config.readonly.codeTheme || 'atom')
 .reading-preview-shell :deep(.md-editor-preview h2),
 .reading-preview-shell :deep(.md-editor-preview h3) {
   color: var(--el-text-color-primary);
-}
-
-.reading-preview-shell :deep(.md-editor-preview pre) {
-  max-width: 100%;
-  overflow: auto;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 12px;
 }
 
 .reading-preview-shell :deep(.md-editor-preview img) {
@@ -128,10 +176,4 @@ const codeTheme = computed(() => config.readonly.codeTheme || 'atom')
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .reading-preview-shell :deep(*) {
-    scroll-behavior: auto;
-    transition-duration: 0.01ms !important;
-  }
-}
 </style>

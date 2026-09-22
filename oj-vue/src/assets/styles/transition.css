@@ -25,13 +25,13 @@
 
 
 /* fade-transform 后台页面动效 */
-.fade-transform--move,
-.fade-transform-leave-active,
-.fade-transform-enter-active {
-    transition: all .5s;
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+    transition: opacity .28s ease, transform .28s ease;
 }
 
-.fade-transform-enter {
+/* Vue 3 使用 enter-from；旧的 enter 类名在 Vue 3 中不会触发初始状态。 */
+.fade-transform-enter-from {
     opacity: 0;
     transform: translateX(-30px);
 }
@@ -40,5 +40,4 @@
     opacity: 0;
     transform: translateX(30px);
 }
-
 

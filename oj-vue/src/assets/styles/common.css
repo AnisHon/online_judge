@@ -10,10 +10,7 @@ body {
 /* 代码区域必须使用真正的等宽字体，避免被全局中文字体覆盖。 */
 .CodeMirror,
 .CodeMirror pre,
-.CodeMirror textarea,
-.md-editor-preview pre,
-.md-editor-preview pre code,
-.md-editor-preview code {
+.CodeMirror textarea {
     font-family: "OJCodeFont", "JetBrains Mono", "Cascadia Code", Consolas,
     "Liberation Mono", "DejaVu Sans Mono", monospace !important;
     font-variant-ligatures: none;
@@ -51,6 +48,83 @@ a {
     --backend-header-height: calc(var(--header-bar-height) + var(--tab-height));
     --backend-content-height: calc(100vh - var(--backend-header-height));
     --backend-content-no-padding-height: calc(100vh - var(--backend-header-height) - 40px);
+
+    /* 页面标题、后台头部和浮动球都不应形成弹层遮挡层；Element Plus 弹层统一置于其上。 */
+    --oj-overlay-z-index: 3000;
+    --el-index-popper: 3000;
+}
+
+.el-popper.backend-menu-popper,
+.el-popper.account-menu-popper,
+.el-popper.resource-icon-picker-popper {
+    z-index: var(--oj-overlay-z-index) !important;
+}
+
+.backend-menu-popper .el-menu--popup {
+    min-width: 216px;
+    border: 1px solid color-mix(in srgb, var(--el-border-color) 70%, transparent);
+    border-radius: 10px;
+    box-shadow: 0 14px 36px rgb(15 23 42 / 24%);
+}
+
+/* 后台角色、成员、资源页共享同一组可换肤 token，避免页面各自维护紫色常量。 */
+.admin-role-surface {
+    --admin-role-accent: var(--el-color-primary);
+    --admin-role-accent-soft: var(--el-color-primary-light-9);
+    --admin-role-accent-border: var(--el-color-primary-light-5);
+}
+
+.admin-role-surface .panel-eyebrow,
+.admin-role-surface .filter-title .el-icon,
+.admin-role-surface .selection-status.has-selection,
+.admin-role-surface .selection-status.has-selection .el-icon,
+.admin-role-surface .role-context__tip .el-icon,
+.admin-role-surface .section-title > span,
+.admin-role-surface .permission-count,
+.admin-role-surface .resource-icon--violet,
+.admin-role-surface .type-pill--violet {
+    color: var(--admin-role-accent) !important;
+}
+
+.admin-role-surface .role-context__icon,
+.admin-role-surface .dialog-intro__icon,
+.admin-role-surface .permission-count,
+.admin-role-surface .resource-icon--violet,
+.admin-role-surface .type-pill--violet {
+    background: var(--admin-role-accent-soft) !important;
+}
+
+.admin-role-surface .resource-icon--violet,
+.admin-role-surface .type-pill--violet {
+    border-color: var(--admin-role-accent-border) !important;
+}
+
+/* 判题日志页共用的诊断色 token，避免两个日志视图继续各自维护主题色。 */
+.admin-log-surface {
+    --admin-log-accent: var(--el-color-primary);
+    --admin-log-danger: var(--el-color-danger);
+}
+
+/* md-editor-v3 默认把代码块标题栏放在 z-index: 10000，会越过抽屉和浮动球。 */
+.markdown-render-scope .md-editor-preview .md-editor-code .md-editor-code-head {
+    z-index: 1;
+}
+
+/* Mermaid 的深色主题仍可能保留深色 SVG 文本；统一使用站点暗色文字 token。 */
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] {
+    color: var(--el-text-color-primary);
+    color-scheme: dark;
+}
+
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg text,
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg tspan,
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg .nodeLabel,
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg .edgeLabel,
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg .cluster-label,
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg foreignObject,
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg foreignObject div {
+    color: var(--el-text-color-primary);
+    fill: var(--el-text-color-primary);
 }
 
 
@@ -97,8 +171,3 @@ a {
     user-select: none; /* 标准语法 */
     /*cursor: default;*/
 }
-
-
-
-
-

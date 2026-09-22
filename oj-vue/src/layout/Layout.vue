@@ -7,11 +7,11 @@
       <el-scrollbar class="content-scroll" height="var(--content-height)">
         <el-main ref="elMainRef" id="main-box" class="main-content">
             <div class="main-content__inner">
-              <router-view v-slot="{Component}">
+              <router-view v-slot="{Component, route}">
 
                 <transition name="el-zoom-in-top" mode="out-in">
                   <keep-alive include="Home,ProblemSet,Contest,List,Homework,Solution">
-                    <component :is="Component" />
+                    <component :is="Component" :key="route.fullPath" />
                   </keep-alive>
 
                 </transition>
@@ -50,8 +50,8 @@ provide('elMain', {elMainRef: elMainRef});
   height: var(--menu-height);
   display: flex;
   position: relative;
-  /* Element Plus 的 Drawer/Dialog 会使用更高的弹层层级；页面导航只需保持在内容之上。 */
-  z-index: 10;
+  /* 不创建高层级 stacking context，避免遮住 teleport 到 body 的菜单、抽屉和对话框。 */
+  z-index: 0;
 }
 .content-scroll { width: 100%; }
 .main-content { box-sizing: border-box; min-height: var(--content-height); padding: var(--main-padding); }

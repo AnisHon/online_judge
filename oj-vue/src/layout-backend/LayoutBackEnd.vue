@@ -14,10 +14,10 @@
         <el-main ref="elMainRef" id="main-box" class="main">
 
           <router-view>
-            <template v-slot="{Component}">
+            <template v-slot="{Component, route}">
               <transition name="fade-transform" mode="out-in">
                 <keep-alive :max="10" :include="includeRoutes" :exclude="excludeRoutes">
-                  <component :is="Component" />
+                  <component :is="Component" :key="route.fullPath" />
                 </keep-alive>
               </transition>
             </template>
@@ -47,7 +47,8 @@ const router = useRouter();
 
 const tabStore = useTabStore();
 
-const collapse = ref(true);
+// 展开是后台的默认状态；只有用户主动点击折叠按钮时才进入图标模式。
+const collapse = ref(false);
 
 const includeRoutes = computed(() => {
   return tabStore.tabs.map(tab => tab.component).filter(tab => tab);
@@ -78,7 +79,12 @@ provide('elMain', {elMainRef: elMainRef});
 
 .app-container { height: 100%; overflow: hidden; background: var(--el-bg-color-page); }
 .backend-container, .backend-body { height: 100%; min-width: 0; }
-.backend-aside { overflow: hidden; background: var(--vertical-menu-color); transition: width .25s ease; }
+.backend-aside {
+  overflow: hidden;
+  background: var(--vertical-menu-color);
+  transition: width .28s cubic-bezier(.4, 0, .2, 1);
+  will-change: width;
+}
 
 .header {
   padding: 0;
@@ -87,8 +93,8 @@ provide('elMain', {elMainRef: elMainRef});
   flex: 0 0 var(--backend-header-height);
   height: var(--backend-header-height);
   position: relative;
-  /* 不抢占 Element Plus Drawer/Dialog 的全局弹层层级。 */
-  z-index: 10;
+  /* 不创建高层级 stacking context，避免遮住 teleport 到 body 的菜单、抽屉和对话框。 */
+  z-index: 0;
   overflow: visible;
 }
 

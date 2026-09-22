@@ -203,7 +203,8 @@ onBeforeUnmount(() => cleanupDragging?.())
 }
 
 .activity-resizable-panel.is-collapsed .activity-resizable-panel__main {
-  padding-left: 40px;
+  /* 恢复按钮是绝对定位控件，不参与布局；隐藏后主区域必须完整占满宽度。 */
+  padding-left: 0;
 }
 
 .activity-resizable-panel__restore {
@@ -212,8 +213,8 @@ onBeforeUnmount(() => cleanupDragging?.())
   top: 50%;
   left: 8px;
   display: grid;
-  width: 30px;
-  height: 38px;
+  width: 28px;
+  height: 34px;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--el-border-color-light) 72%, transparent);
   border-radius: 9px;

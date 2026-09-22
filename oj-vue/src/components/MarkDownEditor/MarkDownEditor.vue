@@ -1,5 +1,8 @@
 <template>
-  <div class="markdown-editor-shell" :class="`markdown-editor-shell--${props.mode}`">
+  <div
+    class="markdown-editor-shell markdown-render-scope"
+    :class="[`markdown-editor-shell--${props.mode}`, { 'markdown-render-scope--dark': isDark }]"
+  >
     <MdEditor
         v-model="text"
         :style="editorStyle"
@@ -113,10 +116,9 @@ const onUploadImg = async (files: File[], callback: UploadImgCallBack) => {
   min-height: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .markdown-editor-shell :deep(*) {
-    scroll-behavior: auto;
-    transition-duration: 0.01ms !important;
-  }
+.markdown-editor-shell :deep(.md-editor-preview code) {
+  font-family: "OJCodeFont", "JetBrains Mono", "Cascadia Code", Consolas,
+    "Liberation Mono", "DejaVu Sans Mono", monospace;
+  font-variant-ligatures: none;
 }
 </style>

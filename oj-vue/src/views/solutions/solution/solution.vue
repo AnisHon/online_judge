@@ -24,7 +24,7 @@
       </div>
       <div v-else-if="solution">
 
-          <div class="author">
+          <router-link class="author" :to="{name: 'profile', params: {id: String(solution.userId)}}">
             <div class="author-avatar">
               <avatar :user-id="solution.userId" shape="circle"/>
 <!--              <el-avatar class="portrait" :src="getAvatarPath(solution.userId)"/>-->
@@ -43,7 +43,7 @@
 
             </div>
 
-          </div>
+          </router-link>
 
           <div class="footer">
             <el-space>
@@ -175,7 +175,7 @@ loadSolution();
   margin: auto;
   padding-bottom: 30px;
 }
-.solution-article { margin-top: 18px; padding: 28px 34px 34px; border: 1px solid var(--el-border-color-light); border-radius: 18px; background: var(--el-bg-color); }.solution-state { display: flex; min-height: 220px; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }.solution-state :deep(.el-empty) { padding: 0; }.author { display: flex; align-items: center; gap: 12px; }.author-avatar { flex: 0 0 auto; }.author-info { flex: 1; }.footer { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--el-border-color-lighter); }.solution-content { margin-top: 8px;}.solution-content :deep(.md-editor-preview) { background: transparent; color: var(--el-text-color-primary); }
+.solution-article { margin-top: 18px; padding: 28px 34px 34px; border: 1px solid var(--el-border-color-light); border-radius: 18px; background: var(--el-bg-color); }.solution-state { display: flex; min-height: 220px; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }.solution-state :deep(.el-empty) { padding: 0; }.author { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }.author:hover .author-info :deep(.el-text) { color: var(--el-color-primary); }.author-avatar { flex: 0 0 auto; }.author-info { flex: 1; }.footer { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--el-border-color-lighter); }.solution-content { margin-top: 8px;}.solution-content :deep(.md-editor-preview) { background: transparent; color: var(--el-text-color-primary); }
 @media (max-width: 600px) { .solution-article { margin-top: 12px; padding: 20px 16px 24px; }.solution-article :deep(.el-page-header__content) { max-width: 170px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }.solution-article :deep(.el-page-header__extra) { display: flex; gap: 6px; }.solution-article :deep(.el-page-header__extra .el-button) { padding: 7px 9px; }.solution-article :deep(.el-page-header__extra .el-button) { font-size: 0; }.solution-article :deep(.el-page-header__extra .el-button .el-icon) { margin: 0; font-size: 16px; } }
 
 </style>

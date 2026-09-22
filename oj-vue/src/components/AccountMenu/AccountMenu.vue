@@ -1,5 +1,6 @@
 <template>
-  <el-dropdown class="account-menu" size="large" @command="handleCommand" @visible-change="menuOpen = $event">
+  <el-dropdown class="account-menu" size="large" popper-class="account-menu-popper"
+               @command="handleCommand" @visible-change="menuOpen = $event">
     <button
       class="account-trigger"
       type="button"
@@ -12,10 +13,11 @@
     </button>
     <template #dropdown>
       <el-dropdown-menu>
-        <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-        <el-dropdown-item v-if="hasAccessToBackend" command="backend">进入后台</el-dropdown-item>
+        <el-dropdown-item v-if="!userStore.user" command="login">登录</el-dropdown-item>
+        <el-dropdown-item v-else command="profile">个人中心</el-dropdown-item>
+        <el-dropdown-item v-if="userStore.user && hasAccessToBackend" command="backend">进入后台</el-dropdown-item>
         <el-dropdown-item v-if="returnToUserPage" command="frontend">返回前台</el-dropdown-item>
-        <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+        <el-dropdown-item v-if="userStore.user" command="logout" divided>退出登录</el-dropdown-item>
       </el-dropdown-menu>
     </template>
   </el-dropdown>
@@ -53,6 +55,8 @@ const handleCommand = async (key: string) => {
   try {
     if (key === 'logout') {
       await logout();
+    } else if (key === 'login') {
+      await router.push({name: 'login'});
     } else if (key === 'profile') {
       await goToProfile();
     } else if (key === 'backend') {
@@ -81,12 +85,13 @@ const returnToUserPage = computed(() => {
 
 
 <style scoped>
-.account-menu { height: 100%; }
-.account-trigger { display: inline-flex; height: 38px; align-items: center; gap: 3px; padding: 2px 3px 2px 2px; border: 1px solid transparent; border-radius: 999px; color: var(--el-text-color-secondary); background: transparent; cursor: pointer; font: inherit; transition: border-color .18s ease, background-color .18s ease, color .18s ease, transform .18s ease; }
+.account-menu { display: flex; height: 100%; align-items: center; }
+.account-trigger { box-sizing: border-box; display: flex; height: 38px; align-items: center; justify-content: center; gap: 3px; padding: 2px 3px 2px 2px; border: 1px solid transparent; border-radius: 999px; color: var(--el-text-color-secondary); background: transparent; cursor: pointer; font: inherit; line-height: 0; transition: border-color .18s ease, background-color .18s ease, color .18s ease, transform .18s ease; }
 .account-trigger:hover, .account-trigger:focus-visible { border-color: var(--el-border-color); background: var(--el-fill-color-light); color: var(--el-color-primary); outline: none; }
 .account-trigger:active { transform: scale(.98); }
-.account-avatar { cursor: pointer; transition: transform .18s ease, filter .18s ease; }
-.account-trigger:hover .account-avatar { transform: scale(1.05); filter: saturate(1.08); }
+.account-avatar { display: flex; align-items: center; justify-content: center; cursor: pointer; line-height: 0; transition: filter .18s ease; }
+.account-avatar :deep(.avatar__image), .account-avatar :deep(.el-avatar) { display: flex; align-items: center; justify-content: center; }
+.account-trigger:hover .account-avatar { filter: saturate(1.08); }
 .account-trigger__chevron { margin-right: 3px; font-size: 12px; }
 @media (prefers-reduced-motion: reduce) {
   .account-trigger, .account-avatar { transition: none; }
