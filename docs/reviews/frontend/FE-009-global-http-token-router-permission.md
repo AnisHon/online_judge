@@ -10,7 +10,7 @@
 - 权限：`oj-vue/src/utils/authUtil.ts`、`oj-vue/src/utils/hasAuth/index.ts`、权限指令使用方
 - 菜单与后台布局：`RecursiveMenuItem.vue`、`Menu.vue`、`BackendMenu.vue`、`SubFormItem.vue`、`LayoutBackEnd.vue`、`HeaderBar.vue`、`CustomTab.vue`、`CustomBreadCrumb.vue`
 - 本次覆盖：会话代际与刷新并发、登出竞态、错误隔离、请求统一性、动态路由权限、菜单刷新、权限指令响应性、KeepAlive/tab 参数、全局 CSS 泄漏、弹层/菜单层级和响应式溢出。
-- 本次只做 review，不修改业务代码。
+- 本次按报告执行全局基础设施修复；未修改 FE-007 竞赛/作业页面的既有未提交改动。
 
 ## 2. 结论摘要
 
@@ -238,20 +238,41 @@
 
 ## 7. 测试与验证
 
-### 本次检查
+### 本次检查与验证
 
 - 逐行检查了 HTTP 拦截器、双 key 刷新、登录/注册/登出、用户/菜单/站点/语言 Store、动态路由构建和 reset、路由守卫、权限工具与 directive。
 - 检查了前台/后台递归菜单、后台布局、header、tab、面包屑和相关 CSS 的作用域、overflow、z-index、响应式行为。
 - 额外检查了文件/测试点的原始 Axios 调用，确认它们没有完整复用统一 HTTP 层。
-- 未修改业务代码，未执行数据库、Docker、部署或其它外部状态变更。
+- 已执行 `pnpm type-check`，通过。
+- 已执行 `pnpm build-only`，通过；仅保留 Vite 关于静态/动态重复引用和大 chunk 的既有提示。
+- 未执行数据库、Docker、部署或其它外部状态变更。
 
 ### 当前验证限制
 
-- 本次 review 以静态代码检查为主，尚未替代真实浏览器回归；refresh 竞态、跨账号响应、Element Plus directive warning、菜单弹层层级和窄屏 tab 溢出需要后续浏览器验证。
-- 已在 `oj-vue` 执行 `pnpm run type-check`，命令通过；同时执行了 `git diff --check`，未发现空白错误。尚未执行完整生产打包验证；后续如进入修复阶段，建议运行 `pnpm run build-only`，再按上面的会话/权限/布局矩阵回归。
+- 本次修复以静态检查和生产打包为主，仍需要真实浏览器回归 refresh 竞态、跨账号请求、Element Plus directive warning、菜单弹层层级和窄屏 tab 行为。
+- 已执行 `pnpm type-check`、`pnpm build-only`，均通过；同时应在提交前执行 `git diff --check`。
 
-## 8. 本次未修改内容
+## 8. 本次修复结果
 
-- 未修改 HTTP、Token、Store、动态路由、权限工具、菜单组件或任何业务页面。
-- 未提交 Git。
-- 仅新增本 review 报告。
+### 已处理
+
+- `FE-009-01/02`：Token Store 增加内存 session generation；refresh single-flight 绑定 generation 和 refresh token，旧 refresh/旧 401 请求不能覆盖或清理新会话。
+- `FE-009-04/06`：401/403 导航增加会话校验和去重；登出已有本地优先、无条件清理并跳转逻辑；路由错误时补齐 NProgress 收尾。
+- `FE-009-05`：生产环境对 5xx、网络错误统一显示安全文案，开发环境保留业务错误提示，避免把后端异常原文直接暴露给用户。
+- `FE-009-07/08/09`：新增带 token 的 `binaryService`；文件、测试点下载、分片上传不再绕过鉴权；refresh 路径改为规范化 pathname 判断，路径参数统一编码。
+- `FE-009-10`：应用先挂载再异步加载站点配置，配置服务慢或离线不会阻塞登录页启动。
+- `FE-009-11/12/17`：用户旧请求不再向调用方返回跨会话数据；菜单 Store 和后台菜单使用快照/计算读取，避免可变数组污染。
+- `FE-009-13/14/15`：动态路由过滤按钮节点，校验组件路径，处理重复路由名，使用最终可用子路由生成 redirect，并避免 children 累加。
+- `FE-009-18/20/23/24/25/26`：权限指令更新时读取最新绑定；后台菜单 CSS 收敛到组件作用域；前台操作区移出 `el-menu`；参数化后台页使用独立 tab identity；面包屑改为按当前 params/query 解析链接。
+- `FE-009-19`：用户 ID 比较统一字符串化，兼容后端 Long 的 string/number 表现。
+
+### 仍需后续处理
+
+- `FE-009-03`：当前双 key 仍按既有契约保存于 `sessionStorage`，已经做到登录/刷新/退出的原子替换和浏览器会话级别；若后端后续支持 HttpOnly refresh cookie，建议再迁移以进一步降低 XSS 暴露面。
+- `FE-009-16`：前端后台入口已使用明确的 `system:backend:access` 权限，但该权限字符串在数据库/角色中的迁移属于后端部署范围，本次没有擅自改线上数据。
+- `FE-009-21/22/27`：Element Plus 组件上的历史 `v-has` 用法、旧递归组件清理和通用 resource composable 仍需要单独批次处理，避免一次性改动大量业务页面。
+
+## 9. 本次未修改内容
+
+- 未修改 FE-007 范围内已有的竞赛/作业页面、活动面板和 API 未提交改动。
+- 未执行数据库、Docker、服务器部署或生产环境状态变更。

@@ -1,4 +1,4 @@
-import axios, {isAxiosError} from 'axios';
+import axios, {isAxiosError, type AxiosRequestConfig} from 'axios';
 import {useToken} from "@/stores/useToken";
 import {ElNotification} from "element-plus";
 import router from "@/router"
@@ -33,20 +33,24 @@ type ResultPromise<T> = Promise<AjaxResult<T>>;
 
 
 let isRedirectingToLogin = false;
+let isRedirectingToForbidden = false;
 
-const error401 = () => {
+const error401 = (requestGeneration?: number) => {
+    const token = useToken();
+    // 旧请求不能清除新账号的会话，也不能把新账号带回登录页。
+    if (requestGeneration !== undefined && requestGeneration !== token.getSessionVersion()) return;
     if (isRedirectingToLogin) return;
     isRedirectingToLogin = true;
-    const token = useToken();
     token.clearToken();
     ElNotification.warning("令牌过期，请重新登录");
     router.replace({name: 'login'}).finally(() => { isRedirectingToLogin = false });
 };
 
 const error403 = () => {
-    const token = useToken();
+    if (isRedirectingToForbidden || router.currentRoute.value.name === '403') return;
+    isRedirectingToForbidden = true;
     ElNotification.error("拒绝访问");
-    router.replace({name: '403'});
+    router.replace({name: '403'}).finally(() => { isRedirectingToForbidden = false });
 };
 
 export const service = axios.create({
@@ -62,19 +66,70 @@ const refreshService = axios.create({
     withCredentials: true
 });
 
-let refreshing: Promise<string> | null = null;
+export const binaryService = axios.create({
+    baseURL,
+    timeout: 60000,
+    withCredentials: true
+});
+
+binaryService.interceptors.request.use(config => {
+    const token = useToken();
+    setHeader(config.headers, 'token', token.token);
+    const request = config as typeof config & {__sessionVersion?: number};
+    request.__sessionVersion = token.getSessionVersion();
+    return config;
+});
+
+interface RefreshingRequest {
+    generation: number;
+    refreshToken: string;
+    promise: Promise<string>;
+}
+
+let refreshing: RefreshingRequest | null = null;
+
+class SessionChangedError extends Error {
+    constructor() {
+        super('会话已切换');
+        this.name = 'SessionChangedError';
+    }
+}
 
 interface RefreshTokenResult {
     accessToken?: string;
     refreshToken?: string;
 }
 
-const refreshAccessToken = async (): Promise<string> => {
+const setHeader = (headers: AxiosRequestConfig['headers'] | undefined, name: string, value: string) => {
+    if (!headers) return;
+    if (typeof (headers as {set?: unknown}).set === 'function') {
+        (headers as {set: (key: string, value: string) => void}).set(name, value);
+        return;
+    }
+    (headers as Record<string, string>)[name] = value;
+};
+
+const requestPath = (request: {url?: string; baseURL?: string} | undefined) => {
+    if (!request?.url) return '';
+    try {
+        return new URL(request.url, request.baseURL || window.location.origin).pathname;
+    } catch (_) {
+        return request.url.split('?')[0];
+    }
+};
+
+const isRefreshRequest = (request: {url?: string; baseURL?: string} | undefined) =>
+    requestPath(request).endsWith('/user-api/auth/refresh');
+
+const refreshAccessToken = async (generation: number): Promise<string> => {
     const tokenStore = useToken();
-    if (!tokenStore.refreshToken) throw new Error("刷新令牌不存在");
-    if (!refreshing) {
-        const refreshToken = tokenStore.refreshToken;
-        refreshing = refreshService.post<AjaxResult<RefreshTokenResult>>(
+    const refreshToken = tokenStore.refreshToken;
+    if (!refreshToken || tokenStore.getSessionVersion() !== generation) throw new SessionChangedError();
+    if (refreshing?.generation === generation && refreshing.refreshToken === refreshToken) {
+        return refreshing.promise;
+    }
+
+    const promise = refreshService.post<AjaxResult<RefreshTokenResult>>(
             '/user-api/auth/refresh',
             {refreshToken},
             {headers: {token: ''}}
@@ -82,11 +137,18 @@ const refreshAccessToken = async (): Promise<string> => {
             const result = response.data;
             const accessToken = result.data?.accessToken;
             if (result.code !== 200 || !accessToken) throw new Error(result.message || "刷新登录状态失败");
-            tokenStore.setTokens(accessToken, result.data.refreshToken);
+            // 刷新结果回来时再次校验会话，防止退出/切换账号后旧响应覆盖新账号。
+            if (tokenStore.getSessionVersion() !== generation || tokenStore.refreshToken !== refreshToken) {
+                throw new SessionChangedError();
+            }
+            tokenStore.setTokens(accessToken, result.data.refreshToken || refreshToken);
             return accessToken;
-        }).finally(() => { refreshing = null; });
-    }
-    return refreshing;
+        });
+    refreshing = {generation, refreshToken, promise};
+    promise.finally(() => {
+        if (refreshing?.promise === promise) refreshing = null;
+    }).catch(() => undefined);
+    return promise;
 };
 
 const noRefreshPaths = [
@@ -101,28 +163,57 @@ const noRefreshPaths = [
 
 const canRefreshRequest = (request: any) => {
     const tokenStore = useToken();
+    const generation = request?.__sessionVersion;
     return !!request
         && !request._skipAuthRefresh
         && !request._retry
+        && generation === tokenStore.getSessionVersion()
         && !!tokenStore.token
         && !!tokenStore.refreshToken
-        && !noRefreshPaths.some(path => request.url?.includes(path));
+        && !noRefreshPaths.includes(requestPath(request));
 };
 
-const retryWithFreshAccessToken = async (request: any) => {
+const retryWithFreshAccessToken = async (request: any, client = service) => {
+    const tokenStore = useToken();
+    const generation = request.__sessionVersion as number;
+    if (generation !== tokenStore.getSessionVersion()) throw new SessionChangedError();
     request._retry = true;
-    const accessToken = await refreshAccessToken();
-    request.headers.set('token', accessToken);
-    return service(request);
+    const accessToken = await refreshAccessToken(generation);
+    if (generation !== tokenStore.getSessionVersion()) throw new SessionChangedError();
+    setHeader(request.headers, 'token', accessToken);
+    return client(request);
 };
+
+// 二进制响应不能走业务 AjaxResult 解包，但认证失败仍必须复用同一套会话恢复策略。
+binaryService.interceptors.response.use(
+    response => response,
+    error => {
+        const request = isAxiosError(error) ? error.config as any : undefined;
+        const status = isAxiosError(error) ? error.response?.status : undefined;
+        if (status === 401 && canRefreshRequest(request)) {
+            return retryWithFreshAccessToken(request, binaryService).catch(refreshError => {
+                if (!(refreshError instanceof SessionChangedError)) error401(request.__sessionVersion);
+                return Promise.reject(new ApiError('登录状态已过期，请重新登录', 401));
+            });
+        }
+        if (status === 401) {
+            if (useToken().hasToken()) error401(request?.__sessionVersion);
+        } else if (status === 403) {
+            error403();
+        }
+        return Promise.reject(new ApiError(safeErrorMessage(undefined, status || 0), status || 0));
+    }
+);
 
 // 请求拦截器
 service.interceptors.request.use(
     config => {
-        if (!config.url?.endsWith('/auth/refresh')) {
-            const token = useToken();
-            config.headers.set('token', token.token)
+        const token = useToken();
+        if (!isRefreshRequest(config)) {
+            setHeader(config.headers, 'token', token.token);
         }
+        const request = config as typeof config & {_sessionVersion?: number; __sessionVersion?: number};
+        request.__sessionVersion = token.getSessionVersion();
         return config;
     },
     error => {
@@ -139,13 +230,13 @@ service.interceptors.response.use(
         }
         const request = response.config as any;
         if ((result?.code === 401 || response.status === 401) && canRefreshRequest(request)) {
-            return retryWithFreshAccessToken(request).catch(() => {
-                error401();
+            return retryWithFreshAccessToken(request).catch(error => {
+                if (!(error instanceof SessionChangedError)) error401(request.__sessionVersion);
                 return Promise.reject(new ApiError(result?.message || "登录已过期", 401));
             });
         }
         if (result?.code === 401 || response.status === 401) {
-            if (useToken().hasToken()) error401();
+            if (useToken().hasToken()) error401(request.__sessionVersion);
             return Promise.reject(new ApiError(result?.message || "登录已过期", 401));
         }
         if (result?.code === 403 || response.status === 403) {
@@ -153,26 +244,26 @@ service.interceptors.response.use(
             return Promise.reject(new ApiError(result?.message || "拒绝访问", 403));
         }
         if (result.code !== 200) {
-            return Promise.reject(new ApiError(result.message || `请求失败（${result.code}）`, result.code));
+            return Promise.reject(new ApiError(safeErrorMessage(result.message || `请求失败（${result.code}）`, result.code), result.code));
         }
         return result as any;
     },
     error => {
         const request = isAxiosError(error) ? error.config as any : undefined;
         if (isAxiosError(error) && error.response?.status === 401 && canRefreshRequest(request)) {
-            return retryWithFreshAccessToken(request).catch(() => {
-                error401();
+            return retryWithFreshAccessToken(request).catch(refreshError => {
+                if (!(refreshError instanceof SessionChangedError)) error401(request.__sessionVersion);
                 return Promise.reject(new ApiError("登录已过期", 401));
             });
         }
         const status = isAxiosError(error) ? error.response?.status : undefined;
         if (status === 401) {
-            if (useToken().hasToken()) error401();
+            if (useToken().hasToken()) error401(request?.__sessionVersion);
         } else if (status === 403) {
             error403();
         }
         const result = isAxiosError(error) ? error.response?.data as Partial<AjaxResult<unknown>> | undefined : undefined;
-        return Promise.reject(new ApiError(result?.message || error.message || "网络请求失败", status || 0));
+        return Promise.reject(new ApiError(safeErrorMessage(result?.message || error.message, status || 0), status || 0));
     }
 );
 
@@ -218,17 +309,23 @@ export const query = <R, T>(url: string, params: T): ResultPromise<PagedResponse
 };
 
 const getWithArray = <R>(url: string, params: string[]): ResultPromise<R> => {
-
-    let param = "";
-    if (params && params.length > 0) {
-        param = params.join(",");
-    }
+    const param = (params || []).map(value => encodeURIComponent(String(value))).join(",");
     return withFailHandler(<ResultPromise<R>>service.get<string, AjaxResult<R>>(url + "/" + param));
 }
 
+const safeErrorMessage = (message: unknown, status: number) => {
+    const raw = typeof message === 'string' ? message.trim() : '';
+    if (status === 401) return '登录状态已过期，请重新登录';
+    if (status === 403) return '当前账号没有执行此操作的权限';
+    if (!raw) return status === 0 ? '网络连接失败，请检查网络后重试' : '请求失败，请稍后重试';
+    // 开发环境保留后端业务提示；生产环境隔离 5xx/网关异常，避免把堆栈直接展示给用户。
+    if (import.meta.env.PROD && status >= 500) return '服务暂时不可用，请稍后重试';
+    return raw;
+};
+
 const defaultFail = (msg: string, code: number) => {
     if (code === 401 || code === 403) return;
-    ElNotification.error({title: "请求失败", message: msg || "服务暂时不可用，请稍后重试"});
+    ElNotification.error({title: "请求失败", message: safeErrorMessage(msg, code)});
 }
 
 const post = <T, R>(url: string, data: T, failCallback = defaultFail): ResultPromise<R> => {
@@ -245,14 +342,17 @@ const put = <T, R>(url: string, data: T, failCallback = defaultFail): ResultProm
 
 const pathPut = <R, T = any>(url: string, params: T | undefined = undefined): ResultPromise<R> => {
     if (params) {
-        url = url + '/' + params.toString();
+        url = url + '/' + encodeURIComponent(params.toString());
     }
     return withFailHandler(service.put<T, AjaxResult<R>>(url));
 };
 
 const del = <R, T = any>(url: string, params: T | T[] | undefined = undefined): ResultPromise<R> => {
     if (params) {
-        url = url + '/' + params.toString();
+        const value = Array.isArray(params)
+            ? params.map(item => encodeURIComponent(String(item))).join(',')
+            : encodeURIComponent(params.toString());
+        url = url + '/' + value;
     }
     return withFailHandler(service.delete<T, AjaxResult<R>>(url));
 };

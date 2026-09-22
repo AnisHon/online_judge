@@ -14,7 +14,7 @@ export const useMenuStore = defineStore('menuStore', () => {
     let sessionVersion = 0;
 
     const isDynamicReady = () => {
-        return !__.isUndefined(menu.value);
+        return status.value === 'ready' && !__.isUndefined(menu.value);
     }
 
     const clear = () => {
@@ -29,7 +29,7 @@ export const useMenuStore = defineStore('menuStore', () => {
         if (!force && menuTrees.value !== undefined) {
             return menuTrees.value;
         }
-        if (loadPromise) {
+        if (loadPromise && !force) {
             return loadPromise;
         }
 
@@ -60,11 +60,12 @@ export const useMenuStore = defineStore('menuStore', () => {
     };
 
     const setMenu = (raw: RouteRecordRaw[]) => {
-        menu.value = raw;
+        // 路由构建器会继续复用自己的临时数组，菜单组件不能持有那个可变引用。
+        menu.value = raw.slice();
     }
 
     const getMenu = (): RouteRecordRaw[] => {
-        return menu.value || [];
+        return menu.value ? menu.value.slice() : [];
     }
 
     return  {

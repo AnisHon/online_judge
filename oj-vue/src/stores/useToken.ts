@@ -1,37 +1,44 @@
 import {defineStore} from 'pinia';
 import {useUserStore} from '@/stores/useUserStore';
-import __ from 'lodash';
-
-
-
 export const useToken = defineStore('token', {
     state: () => {
         return {
             token: "",
-            refreshToken: ""
+            refreshToken: "",
+            // 只存在当前页面内，不持久化。HTTP 层用它隔离旧请求和新会话。
+            sessionVersion: 0
         }
     },
     actions: {
         async setToken(token_: string) {
             const user = useUserStore();
-            this.setTokens(token_, '');
+            this.startSession(token_, '');
 
             await user.loadUser();
         },
 
         setTokens(accessToken: string, refreshToken = '') {
-            this.token = accessToken;
             // 每次登录/刷新都原子替换双 key，不能残留上一账号的 refresh token。
-            this.refreshToken = refreshToken;
+            this.token = accessToken || '';
+            this.refreshToken = refreshToken || '';
+        },
+
+        startSession(accessToken: string, refreshToken = '') {
+            this.sessionVersion++;
+            this.setTokens(accessToken, refreshToken);
+        },
+
+        getSessionVersion() {
+            return this.sessionVersion;
         },
 
         hasToken() {
-            return !__.isEmpty(this.token);
+            return this.token.trim().length > 0;
         },
 
         clearToken(){
-            this.token = ''
-            this.refreshToken = ''
+            this.sessionVersion++;
+            this.setTokens('', '');
             useUserStore().clear()
         }
     },

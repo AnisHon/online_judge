@@ -1,12 +1,14 @@
 <template>
   <div class="menu-shell">
-    <el-menu :default-active="activeIndex" class="main-nav" mode="horizontal" router>
-      <el-menu-item class="brand-item" index="/index">
-        <span class="brand-logo-wrap"><el-image class="brand-logo" src="/code_logo.png" alt="延拓Code" /></span>
-      </el-menu-item>
-      <recursive-menu-item v-for="item of constMenu" :key="item.path" :route="item" />
+    <div class="desktop-nav">
+      <el-menu :default-active="activeIndex" class="main-nav" mode="horizontal" router>
+        <el-menu-item class="brand-item" index="/index">
+          <span class="brand-logo-wrap"><el-image class="brand-logo" src="/code_logo.png" alt="延拓Code" /></span>
+        </el-menu-item>
+        <recursive-menu-item v-for="item of constMenu" :key="item.path" :route="item" />
+      </el-menu>
       <div class="nav-actions"><theme-trigger/><account-menu/></div>
-    </el-menu>
+    </div>
 
     <div class="mobile-bar">
       <span class="brand-logo-wrap"><el-image class="brand-logo" src="/code_logo.png" alt="延拓Code" /></span>
@@ -38,7 +40,8 @@ const closeMobileMenu = () => { mobileMenuOpen.value = false; };
 
 <style scoped>
 .menu-shell { width: 100%; height: 100%; border-bottom: 1px solid var(--el-border-color-lighter); background: color-mix(in srgb, var(--el-bg-color) 92%, transparent); }
-.main-nav { position: relative; width: 100%; height: 100%; padding: 0 max(18px, calc((100vw - var(--page-max-width)) / 2)); border-bottom: 0; background: transparent; }
+.desktop-nav { position: relative; height: 100%; }
+.main-nav { width: 100%; height: 100%; padding: 0 max(18px, calc((100vw - var(--page-max-width)) / 2)); padding-right: max(230px, calc((100vw - var(--page-max-width)) / 2 + 230px)); border-bottom: 0; background: transparent; }
 .main-nav :deep(.el-menu-item), .main-nav :deep(.el-sub-menu__title) { height: 100%; padding: 0 16px; border-bottom: 2px solid transparent; color: var(--el-text-color-regular); font-size: 14px; }
 .main-nav :deep(.el-menu-item:hover), .main-nav :deep(.el-sub-menu__title:hover) { color: var(--el-color-primary); background: var(--el-fill-color-lighter); }
 .main-nav :deep(.el-menu-item.is-active) { border-bottom-color: var(--el-color-primary); color: var(--el-color-primary); background: transparent; }
@@ -52,7 +55,7 @@ const closeMobileMenu = () => { mobileMenuOpen.value = false; };
 .mobile-nav :deep(.el-menu-item), .mobile-nav :deep(.el-sub-menu__title) { height: 48px; border-radius: 10px; }
 .mobile-account { margin-top: 28px; padding: 20px 8px 0; border-top: 1px solid var(--el-border-color-lighter); }
 @media (max-width: 900px) {
-  .main-nav { display: none; }
+  .desktop-nav { display: none; }
   .mobile-bar { display: flex; align-items: center; justify-content: space-between; height: 100%; padding: 0 18px; }
   .mobile-bar .brand-logo-wrap { width: 150px; height: 42px; }
   .mobile-bar .brand-logo { width: 160px; transform: translate(-5px, -21px); }

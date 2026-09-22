@@ -1,10 +1,8 @@
-import {addResultNotify, baseURL, get, getWithParams, post, put, resultNotify, service} from "@/utils/http.ts";
+import {addResultNotify, baseURL, binaryService, get, getWithParams, post, put, resultNotify, service} from "@/utils/http.ts";
 import {ElNotification} from "element-plus";
 import __ from "lodash";
 import {remove} from "@/utils/simpleCRUD.ts";
 import type {IdType} from "@/api/common.ts";
-import axios from "axios";
-import {useToken} from "@/stores/useToken.ts";
 import { saveAs } from 'file-saver'
 import {ApiError} from "@/utils/http.ts";
 
@@ -149,35 +147,46 @@ export const deleteFile = (id: IdType) => {
 }
 
 export const addFile = async (md5: string, fileName: string, parentId: string) => {
-    const {data} = await service.post<boolean>(`/content-api/file/cloud/${md5}/${fileName}/${parentId}`);
+    const {data} = await service.post<boolean>(`/content-api/file/cloud/${encodeURIComponent(md5)}/${encodeURIComponent(fileName)}/${encodeURIComponent(parentId)}`);
     addResultNotify(data);
 }
 
-export const download = (path: string, fileName: string) => {
+const saveBinaryResponse = async (response: {data: Blob}, fileName: string) => {
+    const isBlob = blobValidate(response.data);
+    if (isBlob) {
+        saveAs_(response.data, fileName)
+        return true;
+    }
+    ElNotification.error('文件下载失败，请稍后重试');
+    return false;
+};
 
-    axios.get('/file', {
-        baseURL: baseURL,
+export const download = async (path: string, fileName: string) => {
+    try {
+        await binaryService.get('/file', {
         params: {
             path: path
         },
-        headers: {
-            token: useToken().token
-        },
         responseType: 'blob'
-    }).then((res) => {
-        console.log(res)
-        const isBlob = blobValidate(res.data);
-        if (isBlob) {
-            const blob = new Blob([res.data])
-            saveAs_(blob, fileName)
-        } else {
-            ElNotification.error(res.data.message)
-        }
-    })
+        }).then((res) => saveBinaryResponse(res, fileName));
+    } catch (_) {
+        ElNotification.error('文件下载失败，请稍后重试');
+    }
 }
 
-export const preview = (path: string) => {
-    window.open(`${baseURL}/file?path=${path}`);
+export const preview = async (path: string) => {
+    try {
+        const response = await binaryService.get('/file', {params: {path}, responseType: 'blob'});
+        if (!blobValidate(response.data)) {
+            ElNotification.error('文件预览失败，请稍后重试');
+            return;
+        }
+        const url = URL.createObjectURL(response.data);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (_) {
+        ElNotification.error('文件预览失败，请稍后重试');
+    }
 }
 
 export const saveAs_ = (text: any, name: string, opts?: any) => {
@@ -197,9 +206,9 @@ export const getProgress = async (md5: string) => {
 export const upload = async (md5: string, partNumber: number, blob: Blob) => {
     const form = new FormData();
     form.append("file", blob);
-    return axios({
+    return binaryService({
         method: 'POST',
-        url: baseURL + `/file/${md5}/${partNumber}`,
+        url: `/file/${encodeURIComponent(md5)}/${encodeURIComponent(String(partNumber))}`,
         data: form
     })
 }
@@ -209,10 +218,9 @@ export const mergeFile = (md5: string) => {
 }
 
 export function downloadFile(url: string, filename: string) {
-    const link = document.createElement('a');
-    link.href = `${baseURL}/file/download?fileName=${encodeURIComponent(url)}`;
-    link.download = filename || 'file'; // 设置下载文件的默认名称
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    void binaryService.get('/file/download', {
+        params: {fileName: url},
+        responseType: 'blob'
+    }).then(response => saveBinaryResponse(response, filename || 'file'))
+        .catch(() => ElNotification.error('文件下载失败，请稍后重试'));
 }

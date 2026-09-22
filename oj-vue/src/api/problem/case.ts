@@ -1,8 +1,6 @@
-import {addResultNotify, baseURL, del, get, getFormData, removeResultNotify, service} from "@/utils/http.ts";
+import {addResultNotify, binaryService, del, get, getFormData, removeResultNotify, service} from "@/utils/http.ts";
 import type {OjCase} from "@/api/problem/index.ts";
 import type {IdType} from "@/api/common.ts";
-import axios from "axios";
-import {useToken} from "@/stores/useToken.ts";
 import {ElNotification} from "element-plus";
 import {blobValidate} from "@/api/file";
 import {saveAs} from "file-saver";
@@ -38,24 +36,17 @@ export const removeCase = async (caseId: IdType | IdType[]) => {
 }
 
 export const downloadCase = async (path: string) => {
-    axios.get('/problem-api/problem/download', {
-        baseURL: baseURL,
-        params: {
-            path: path
-        },
-        headers: {
-            token: useToken().token
-        },
-        responseType: 'blob'
-    }).then((res) => {
-        console.log(res)
-        const isBlob = blobValidate(res.data);
-        if (isBlob) {
-            const blob = new Blob([res.data])
-            saveAs(blob, path)
+    try {
+        const response = await binaryService.get('/problem-api/problem/download', {
+            params: {path},
+            responseType: 'blob'
+        });
+        if (blobValidate(response.data)) {
+            saveAs(response.data, path)
         } else {
-            ElNotification.error(res.data.message)
+            ElNotification.error('测试用例下载失败，请稍后重试');
         }
-    })
+    } catch (_) {
+        ElNotification.error('测试用例下载失败，请稍后重试');
+    }
 }
-

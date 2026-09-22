@@ -1,10 +1,10 @@
 import {type TreedMenu} from "@/api/auth/menu";
-import {type RouteRecordRaw} from "vue-router";
+import {RouterView, type RouteRecordRaw} from "vue-router";
 import router from "@/router/index.ts";
 import {useMenuStore} from "@/stores/useMenuStore.ts";
-import __ from "lodash";
 import {hasAnyPerm, hasPerm} from "@/utils/authUtil.ts";
 import {useUserStore} from "@/stores/useUserStore.ts";
+import {MenuType} from "@/api/auth/menu.ts";
 
 // 动态路由
 export const dynamicRoute: RouteRecordRaw = {
@@ -179,37 +179,59 @@ let routeGeneration = 0;
 // import对象用于加载路由
 const modules = import.meta.glob('../views/**/*.vue')
 
-// 构建RouterRaw对象
-const buildRouteRaw = (treedMenu: TreedMenu, path: string): RouteRecordRaw => {
+const normalizeSegment = (value: string | undefined) => String(value || '').replace(/^\/+|\/+$/g, '');
+
+const createRouteName = (routerPath: string, menuId: unknown, usedNames: Set<string>) => {
+    const base = normalizeSegment(routerPath).replace(/[^a-zA-Z0-9_-]+/g, '-') || `menu-${String(menuId || 'unknown')}`;
+    let name = base;
+    if (usedNames.has(name)) name = `${base}-${String(menuId || usedNames.size)}`;
+    let suffix = 2;
+    while (usedNames.has(name)) name = `${base}-${String(menuId || 'unknown')}-${suffix++}`;
+    usedNames.add(name);
+    return name;
+};
+
+// 构建 RouterRecordRaw。只有菜单/菜单项进入路由，按钮权限仍由 v-has 控制。
+const buildRouteRaw = (
+    treedMenu: TreedMenu,
+    path: string,
+    children: RouteRecordRaw[],
+    usedNames: Set<string>,
+): RouteRecordRaw | null => {
     const menu = treedMenu.menu;
+    const componentPath = menu.component ? `../views/${menu.component}.vue` : '';
+    const component = componentPath ? modules[componentPath] : undefined;
+    if (menu.component && !component) {
+        console.warn(`[router] 忽略不存在的动态组件: ${componentPath}`);
+        return null;
+    }
+    if (!menu.component && children.length === 0) return null;
+    const routeName = createRouteName(menu.router, menu.menuId, usedNames);
     const routerRecordRaw: RouteRecordRaw = {
-        path: menu.router,
-        name: menu.router,
-        component: modules[`../views/${menu.component}.vue`],
+        path: normalizeSegment(menu.router),
+        name: routeName,
+        component: component || RouterView,
+        children,
         meta: {
             name: menu.menuName,
             icon: menu.icon,
             path: path,
-
+            menuType: menu.menuType,
+            permission: menu.perms,
         }
     }
-    if (!!treedMenu.children && treedMenu.children.length > 0) {
-        // @ts-ignore
-        routerRecordRaw.redirect = treedMenu.children[0].menu.router;
+    if (children.length > 0) {
+        routerRecordRaw.redirect = children[0].path;
     }
-    if (!menu.component) {
-        // @ts-ignore
-        routerRecordRaw.component = undefined;
-    } else {
+    if (menu.component) {
         const pattens = menu.component.split("/");
         routerRecordRaw.meta!.component = pattens[pattens.length - 1];
     }
-    // console.log(menu.component, modules[`../views/${menu.component}.vue`],)
     return routerRecordRaw;
 }
 
 
-const recursiveBuildRoutes = (treedMenus: TreedMenu[], parent: string): RouteRecordRaw[] => {
+const recursiveBuildRoutes = (treedMenus: TreedMenu[], parent: string, usedNames: Set<string>): RouteRecordRaw[] => {
     if (!treedMenus || treedMenus.length === 0) {
         return [];
     }
@@ -220,30 +242,27 @@ const recursiveBuildRoutes = (treedMenus: TreedMenu[], parent: string): RouteRec
     const routers: RouteRecordRaw[] = []
 
     for (const treedMenu of treedMenus) {
-
-        const currentPath = `${parent}/${treedMenu.menu.router}`
-
-        // 将当前树节点构建成 RouterRecordRaw
-        const routerRaw = buildRouteRaw(treedMenu, currentPath);
-
-        // 递归得到子路由
-        routerRaw.children = recursiveBuildRoutes(treedMenu.children, currentPath);
-
-        // 存入
-        routers.push(routerRaw);
+        const menu = treedMenu.menu;
+        if (!menu || menu.menuType === MenuType.BUTTON) continue;
+        const segment = normalizeSegment(menu.router);
+        if (!segment) continue;
+        const currentPath = `${parent}/${segment}`;
+        const children = recursiveBuildRoutes(treedMenu.children || [], currentPath, usedNames);
+        const routerRaw = buildRouteRaw(treedMenu, currentPath, children, usedNames);
+        if (routerRaw) routers.push(routerRaw);
     }
 
     return routers;
 }
 
 // 过滤一下上面那几个固定的动态路由
-export const filterDynamic = async () => {
+export const filterDynamic = async (): Promise<RouteRecordRaw[]> => {
     const userStore = useUserStore();
     await userStore.loadUser();
-    dynamicRoute.children = __.filter(fixedDynamicChildren, (data) => {
-        // @ts-ignore
-        return hasPerm(data.meta.has) && hasAnyPerm(data.meta.hasAny);
-    })
+    return fixedDynamicChildren.filter((data) => {
+        const meta = data.meta as {has?: string | string[]; hasAny?: string | string[] } | undefined;
+        return hasPerm(meta?.has) && hasAnyPerm(meta?.hasAny);
+    });
 }
 
 export const resetDynamicRoutes = () => {
@@ -270,7 +289,7 @@ export const loadDynamicRoutes = async () => {
 
     const generation = routeGeneration;
     const request = (async () => {
-        await filterDynamic();
+        const permittedFixedChildren = await filterDynamic();
         const treedMenus = await menuStore.getTree();
         if (generation !== routeGeneration) return;
 
@@ -279,8 +298,10 @@ export const loadDynamicRoutes = async () => {
             router.removeRoute('backend');
         }
         menuTree.splice(0, menuTree.length, ...staticMenuTree);
-        menuTree.push(...recursiveBuildRoutes(treedMenus, "/backend"));
-        dynamicRoute.children.push(...menuTree);
+        const usedNames = new Set<string>(['backend', ...permittedFixedChildren.map(route => String(route.name))]);
+        const dynamicChildren = recursiveBuildRoutes(treedMenus, "/backend", usedNames);
+        menuTree.push(...dynamicChildren);
+        dynamicRoute.children = [...permittedFixedChildren, ...menuTree];
         router.addRoute(dynamicRoute);
         menuStore.setMenu(menuTree);
     })();

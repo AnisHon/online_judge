@@ -77,7 +77,7 @@ const finishLogin = async (token: string, refreshToken?: string) => {
         // 登录前清理上一个会话的权限和用户请求，避免旧账号的菜单短暂泄漏。
         userStore.clear();
         menuStore.clear();
-        tokenStore.setTokens(token, refreshToken);
+        tokenStore.startSession(token, refreshToken);
         await userStore.loadUser();
         // 动态路由统一由路由守卫构建，避免登录流程和路由守卫同时请求、互相覆盖。
         await router.replace({name: "home"});

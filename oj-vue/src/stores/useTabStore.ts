@@ -50,8 +50,8 @@ export const useTabStore = defineStore("tabStore", () => {
 
     }
 
-    const open = (name: string, title: string, url: string) => {
-        const matchedRoute = router.getRoutes().find(route => route.name === name);
+    const open = (name: string, title: string, url: string, routeName = name) => {
+        const matchedRoute = router.getRoutes().find(route => route.name === routeName);
         const index = indexOf(name);
         if (index === -1) {
             tabs.value.push({

@@ -26,15 +26,14 @@ export const useUserStore = defineStore('user', () => {
         if (!force && user.value) {
             return user.value;
         }
-        if (loadPromise) {
+        if (loadPromise && !force) {
             return loadPromise;
         }
 
         const version = sessionVersion;
         const request = getMe().then((data) => {
-            if (version === sessionVersion) {
-                user.value = data;
-            }
+            if (version !== sessionVersion) throw new Error('会话已切换');
+            user.value = data;
             return data;
         });
         loadPromise = request;
@@ -49,6 +48,7 @@ export const useUserStore = defineStore('user', () => {
         sessionVersion++;
         loadPromise = null;
         user.value = null
+        avatarVersions.value = {}
     }
 
     const refreshAvatar = (userId?: IdType) => {
@@ -61,7 +61,8 @@ export const useUserStore = defineStore('user', () => {
         if (user.value === null) {
             await loadUser();
         }
-        return <LoginUser>user.value;
+        if (!user.value) throw new Error('用户信息暂不可用');
+        return user.value;
     }
 
     const getAuths = (): string[] => {

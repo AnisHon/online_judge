@@ -279,6 +279,7 @@ router.beforeEach(async (to) => {
       } catch (error) {
         if (typeof error === 'object' && error !== null && 'code' in error && error.code === 401) {
           token.clearToken();
+          menu.clear();
           return {name: 'login', replace: true};
         }
         return false;
@@ -298,6 +299,13 @@ router.afterEach((to) => {
 
   document.title = <string>to.meta?.name || "OJ平台"
 
+  try {
+    NProgress.done();
+  } catch (ignore) {}
+});
+
+// 守卫抛错或异步组件加载失败时不会触发 afterEach，必须单独结束进度条。
+router.onError(() => {
   try {
     NProgress.done();
   } catch (ignore) {}

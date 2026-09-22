@@ -34,11 +34,10 @@ app.directive("has", has);
 app.directive('hasAny', hasAny)
 
 const bootstrap = async () => {
-    // 配置在应用挂载前加载一次，登录/注册页直接读取内存状态。
-    // load() 内部保留默认值，即使配置服务暂时不可用也不会阻塞页面启动。
-    await useSiteConfig(pinia).load()
     await router.isReady()
     app.mount('#app')
+    // 配置只存内存；页面先用默认值启动，接口返回后响应式更新，避免配置服务慢时白屏。
+    void useSiteConfig(pinia).load()
 }
 
 void bootstrap()

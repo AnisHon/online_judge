@@ -33,7 +33,11 @@ const router = useRouter();
 
 const syncRouteToTab = () => {
   if (!route.fullPath.startsWith("/backend") || !route.name) return;
-  tabStore.open(String(route.name), String(route.meta?.name || ""), route.fullPath);
+  const routeName = String(route.name);
+  // 同一个路由名可能承载不同的 :id/:contestId，详情页必须各自保留标签。
+  const hasParams = route.matched.some(record => record.path.includes(':'));
+  const tabIdentity = hasParams ? `${routeName}:${route.fullPath}` : routeName;
+  tabStore.open(tabIdentity, String(route.meta?.name || ""), route.fullPath, routeName);
 };
 
 const handleTabRemove = async (targetName: string) => {

@@ -32,7 +32,7 @@ const menuStore = useMenuStore();
 
 const route = useRoute();
 
-const routes = menuStore.getMenu();
+const routes = computed(() => menuStore.getMenu());
 
 const currentIndex = computed(() => {
   return route.fullPath;
@@ -52,24 +52,24 @@ const {collapse = false} = defineProps<{collapse?: boolean}>()
 
 </style>
 
-<style lang="scss">
+<style scoped lang="scss">
 
-.menu {
+.backend-scrollbar :deep(.menu) {
   border: none;
   width: 100%;
 }
 
-.el-menu>.el-menu-item:hover,
-.el-menu .el-sub-menu__title:hover {
+.backend-scrollbar :deep(.menu > .el-menu-item:hover),
+.backend-scrollbar :deep(.menu .el-sub-menu__title:hover) {
   background-color: var(--vertical-menu-hover-color);
 }
 
 
-.el-menu .el-sub-menu .el-menu-item {
+.backend-scrollbar :deep(.menu .el-sub-menu .el-menu-item) {
   background-color: var(--vertical-menu-submenu-color);
 }
 
-.el-menu .el-sub-menu .el-menu-item:hover {
+.backend-scrollbar :deep(.menu .el-sub-menu .el-menu-item:hover) {
   background-color: var(--vertical-menu-submenu-hover-color);
 }
 

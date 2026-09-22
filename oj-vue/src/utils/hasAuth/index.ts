@@ -4,6 +4,8 @@ import {useUserStore} from "@/stores/useUserStore";
 type PermissionValue = string | string[] | undefined;
 type PermissionElement = HTMLElement & {
     __permissionStop?: () => void;
+    __permissionUpdate?: () => void;
+    __permissionValue?: PermissionValue;
 };
 
 const normalize = (value: PermissionValue): string[] => {
@@ -22,6 +24,7 @@ const hasAnyPermission = (permissions: string[], required: PermissionValue): boo
 };
 
 const applyVisibility = (element: PermissionElement, allowed: boolean) => {
+    if (!(element instanceof HTMLElement)) return;
     element.hidden = !allowed;
     if (allowed) {
         element.removeAttribute('aria-hidden');
@@ -36,7 +39,8 @@ const mountPermission = (
     matcher: (permissions: string[], required: PermissionValue) => boolean,
 ) => {
     const userStore = useUserStore();
-    const update = () => applyVisibility(element, matcher(userStore.getAuths(), binding.value));
+    element.__permissionValue = binding.value;
+    const update = () => applyVisibility(element, matcher(userStore.getAuths(), element.__permissionValue));
 
     // 权限异步加载完成后自动恢复按钮，不能再通过 removeChild 永久删除节点。
     update();
@@ -46,11 +50,14 @@ const mountPermission = (
         update,
         {flush: 'sync'},
     );
+    element.__permissionUpdate = update;
 };
 
 const unmountPermission = (element: PermissionElement) => {
     element.__permissionStop?.();
     delete element.__permissionStop;
+    delete element.__permissionUpdate;
+    delete element.__permissionValue;
 };
 
 const has = {
@@ -58,7 +65,8 @@ const has = {
         mountPermission(element, binding, hasAll);
     },
     updated(element: PermissionElement, binding: DirectiveBinding<PermissionValue>) {
-        applyVisibility(element, hasAll(useUserStore().getAuths(), binding.value));
+        element.__permissionValue = binding.value;
+        element.__permissionUpdate?.();
     },
     unmounted(element: PermissionElement) {
         unmountPermission(element);
@@ -70,7 +78,8 @@ const hasAny = {
         mountPermission(element, binding, hasAnyPermission);
     },
     updated(element: PermissionElement, binding: DirectiveBinding<PermissionValue>) {
-        applyVisibility(element, hasAnyPermission(useUserStore().getAuths(), binding.value));
+        element.__permissionValue = binding.value;
+        element.__permissionUpdate?.();
     },
     unmounted(element: PermissionElement) {
         unmountPermission(element);

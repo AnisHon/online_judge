@@ -37,9 +37,9 @@ export const hasAnyPerm = (perm: string | string[] | undefined): boolean => {
 export const isUserIdEqual = (id: IdType | undefined): boolean => {
     const userStore = useUserStore();
 
-    if (id === null || !userStore.user?.userId) {
+    if (id === undefined || id === null || userStore.user?.userId === undefined || userStore.user?.userId === null) {
         return false;
     }
 
-    return userStore.user.userId === id;
+    return String(userStore.user.userId) === String(id);
 }

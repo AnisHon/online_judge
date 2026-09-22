@@ -4,10 +4,14 @@
       <div :key="route.fullPath" class="breadcrumb-track">
       <span v-for="(item, index) in breadcrumbs" :key="item.key" class="breadcrumb-node">
         <span v-if="index > 0" class="breadcrumb-separator" aria-hidden="true">/</span>
-        <router-link class="breadcrumb-item" :class="{current: index === breadcrumbs.length - 1}" :to="item.path">
+        <router-link v-if="index !== breadcrumbs.length - 1" class="breadcrumb-item" :to="item.path">
           <el-icon v-if="index === 0"><House /></el-icon>
           <span>{{ item.title }}</span>
         </router-link>
+        <span v-else class="breadcrumb-item current">
+          <el-icon v-if="index === 0"><House /></el-icon>
+          <span>{{ item.title }}</span>
+        </span>
       </span>
       </div>
     </transition>
@@ -16,18 +20,29 @@
 
 <script setup lang="ts">
 import {computed} from "vue";
-import {useRoute} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import {House} from "@element-plus/icons-vue";
 
 const route = useRoute();
+const router = useRouter();
 
 const breadcrumbs = computed(() => route.matched
     .filter(item => !!item.meta?.name && item.name !== 'backend')
-    .map((item, index) => ({
-      key: `${String(item.name)}-${item.path}-${index}`,
+    .map((item, index) => {
+      let path = item.path || '/backend';
+      if (item.name) {
+        try {
+          path = router.resolve({name: item.name, params: route.params, query: route.query}).fullPath;
+        } catch (_) {
+          // 某些历史菜单只有 path，没有可解析的命名路由，保留原始路径。
+        }
+      }
+      return {
+      key: `${String(item.name)}-${item.path}-${index}-${route.fullPath}`,
       title: String(item.meta?.name),
-      path: item.path || '/backend'
-    })));
+      path
+    };
+    }));
 </script>
 
 <style scoped>
