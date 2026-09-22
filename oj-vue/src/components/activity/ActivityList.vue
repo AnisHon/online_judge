@@ -66,69 +66,170 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
+import {computed, onMounted, onUnmounted, reactive, ref} from "vue";
 import {Calendar, Clock, Collection, Trophy} from "@element-plus/icons-vue";
 import Pagination from "@/components/pageination/Pagination.vue";
 import {
   ContestAuth,
   type ContestView,
-  debouncedGetContest,
-  debouncedIsJoined,
-  debouncedJoin,
+  getContest,
+  isContestJoined,
+  joinContest,
   type JoinContestRequest,
   type PageContest
 } from "@/api/contest";
-import {authTagType, authText, differ, isContestOver, isNotStart} from "@/utils/contest";
-import {formatDate} from "@/utils/contest";
+import {authTagType, authText, differ, formatDate, getActivityTimeState, isContestOver, isNotStart} from "@/utils/contest";
 import {ElNotification} from "element-plus";
 import {useRouter} from "vue-router";
 import type {IdType} from "@/api/common.ts";
+import dayjs from "dayjs";
 
 type ActivityKind = "CONTEST" | "HOMEWORK";
 const {kind} = defineProps<{ kind: ActivityKind }>();
 const router = useRouter();
-const pageTitle = computed(() => kind === "CONTEST" ? "比赛" : "作业");
-const list = reactive<ContestView[]>([]);
+const activityMeta = computed(() => ACTIVITY_META[kind]);
+const list = ref<ContestView[]>([]);
 const total = ref(0);
 const passwordDialog = ref(false);
 const currentActivity = ref<ContestView>();
 const page = reactive<PageContest>({pageSize: 10, currentPage: 1, type: kind});
 const form = reactive<JoinContestRequest>({contestId: "", password: undefined});
+const error = ref('');
+const isLoading = ref(false);
+const isPasswordSubmitting = ref(false);
+const actionLoadingIds = ref(new Set<string>());
+const now = ref(dayjs());
+let clockTimer: ReturnType<typeof setInterval> | undefined;
+let listRequestSequence = 0;
+
+const ACTIVITY_META: Record<ActivityKind, {title: string; eyebrow: string; description: string; icon: typeof Trophy}> = {
+  CONTEST: {
+    title: '比赛',
+    eyebrow: 'CHALLENGE ARENA',
+    description: '在限定时间内解决问题，和大家一起检验你的能力。',
+    icon: Trophy,
+  },
+  HOMEWORK: {
+    title: '作业',
+    eyebrow: 'LEARNING SPACE',
+    description: '按计划完成练习，把知识点一步步变成真正的能力。',
+    icon: Collection,
+  },
+};
+
 const enter = (id: IdType) => router.push({name: "contest-problems", params: {id}});
-const {isLoading, loading, get} = debouncedGetContest(page, data => {
-  total.value = data.totalRecords;
-  list.splice(0, list.length, ...data.data);
-});
-const {post: join} = debouncedJoin(form, data => {
+
+const setActivityLoading = (id: IdType, loading: boolean) => {
+  const next = new Set(actionLoadingIds.value);
+  const key = String(id);
+  if (loading) next.add(key); else next.delete(key);
+  actionLoadingIds.value = next;
+};
+const isActivityLoading = (id: IdType) => actionLoadingIds.value.has(String(id));
+const isNotStarted = (start: string | undefined) => isNotStart(start, now.value);
+const isActivityOver = (end: string | undefined) => isContestOver(end, now.value);
+const isTimeValid = (item: ContestView) => getActivityTimeState(item.startTime, item.endTime, now.value).valid;
+
+const getList = async () => {
+  const sequence = ++listRequestSequence;
+  isLoading.value = true;
+  error.value = '';
+  try {
+    const data = await getContest({...page, type: kind});
+    if (sequence !== listRequestSequence) return;
+    total.value = data.totalRecords;
+    list.value = data.data;
+  } catch (reason) {
+    if (sequence === listRequestSequence) {
+      error.value = reason instanceof Error ? reason.message : '活动列表加载失败，请稍后重试';
+    }
+  } finally {
+    if (sequence === listRequestSequence) isLoading.value = false;
+  }
+};
+
+const joinActivity = async (activity: ContestView) => {
+  if (isActivityLoading(activity.contestId) || !isTimeValid(activity) || isNotStarted(activity.startTime)) return;
+  setActivityLoading(activity.contestId, true);
+  try {
+    const joined = await isContestJoined(activity.contestId);
+    if (isActivityOver(activity.endTime) && !joined) {
+      ElNotification.warning(`您未参加该${activityMeta.value.title}`);
+      return;
+    }
+    if (joined) {
+      enter(activity.contestId);
+      return;
+    }
+    if (activity.auth === ContestAuth.PRIVATE) {
+      currentActivity.value = {...activity};
+      form.contestId = activity.contestId;
+      form.password = undefined;
+      passwordDialog.value = true;
+      return;
+    }
+    if (activity.auth === ContestAuth.WHITE_LIST) {
+      ElNotification.warning('当前活动仅限白名单用户');
+      return;
+    }
+    await completeJoin(activity);
+  } catch (reason) {
+    ElNotification.error(reason instanceof Error ? reason.message : '进入活动失败，请稍后重试');
+  } finally {
+    setActivityLoading(activity.contestId, false);
+  }
+};
+
+const completeJoin = async (activity: ContestView) => {
+  const data = await joinContest({contestId: activity.contestId, password: form.password});
+  if (!data.success) {
+    ElNotification.error(data.message || '加入活动失败');
+    return;
+  }
   passwordDialog.value = false;
-  if (data.success) {
-    ElNotification.success(`${pageTitle.value}加入成功`);
-    enter(currentActivity.value!.contestId);
-  } else ElNotification.error(data.message);
-});
-const {isLoading: isJoinedLoading, loading: joinedLoading, get: joinedGet} = debouncedIsJoined(success => {
-  const activity = currentActivity.value!;
-  if (isContestOver(activity.endTime) && !success) return ElNotification.warning(`您未参加该${kind === 'CONTEST' ? '比赛' : '作业'}`);
-  if (success) return enter(activity.contestId);
-  if (activity.auth === ContestAuth.PUBLIC) join();
-  else if (activity.auth === ContestAuth.PRIVATE) passwordDialog.value = true;
-  else ElNotification.warning("当前活动仅限白名单用户");
-});
-const joinActivity = (activity: ContestView) => {
-  currentActivity.value = activity;
-  form.contestId = activity.contestId;
+  ElNotification.success(`${activityMeta.value.title}加入成功`);
+  enter(activity.contestId);
+};
+
+const resetPasswordDialog = () => {
+  if (isPasswordSubmitting.value) return;
+  currentActivity.value = undefined;
+  form.contestId = '';
   form.password = undefined;
-  joinedLoading();
-  joinedGet(activity.contestId);
 };
-const submit = () => join();
-const buttonText = (item: ContestView) => isContestOver(item.endTime) ? "查看活动" : isNotStart(item.startTime) ? "未开始" : "进入活动";
-const buttonType = (item: ContestView) => isContestOver(item.endTime) ? "info" : isNotStart(item.startTime) ? "warning" : "primary";
-const getList = () => {
-  loading();
-  get();
+
+const submit = async () => {
+  const activity = currentActivity.value;
+  if (!activity || isPasswordSubmitting.value) return;
+  isPasswordSubmitting.value = true;
+  setActivityLoading(activity.contestId, true);
+  try {
+    await completeJoin(activity);
+  } catch (reason) {
+    ElNotification.error(reason instanceof Error ? reason.message : '加入活动失败，请检查密码后重试');
+  } finally {
+    isPasswordSubmitting.value = false;
+    setActivityLoading(activity.contestId, false);
+  }
 };
-getList();
+
+const buttonText = (item: ContestView) => {
+  const state = getActivityTimeState(item.startTime, item.endTime, now.value);
+  return !state.valid ? '时间异常' : state.over ? '查看活动' : state.notStarted ? '未开始' : '进入活动';
+};
+const buttonType = (item: ContestView) => {
+  const state = getActivityTimeState(item.startTime, item.endTime, now.value);
+  return !state.valid ? 'danger' : state.over ? 'info' : state.notStarted ? 'warning' : 'primary';
+};
+
+onMounted(() => {
+  clockTimer = setInterval(() => { now.value = dayjs(); }, 30_000);
+  void getList();
+});
+onUnmounted(() => {
+  if (clockTimer) clearInterval(clockTimer);
+  listRequestSequence++;
+});
 </script>
 
 <style scoped>
@@ -197,6 +298,17 @@ getList();
   gap: 12px;
   min-height: 220px;
   padding-inline: clamp(2px, 1vw, 10px);
+}
+
+.activity-error {
+  margin: 4px 0;
+}
+
+.activity-error :deep(.el-alert__title) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .activity-card {
@@ -274,6 +386,7 @@ getList();
 
 .activity-card__action {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 12px;
 }
@@ -311,7 +424,8 @@ getList();
   }
 
   .activity-card :deep(.el-card__body) {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
     padding: 17px 18px;
     gap: 12px;
   }
@@ -323,12 +437,30 @@ getList();
   }
 
   .activity-card__action {
+    grid-column: 1 / -1;
     width: 100%;
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 
   .activity-card__meta {
+    min-width: 0;
     gap: 8px;
+  }
+
+  .activity-card__title,
+  .activity-card__title h2 {
+    min-width: 0;
+  }
+
+  .activity-card__title h2 {
+    flex: 1;
+  }
+
+  .activity-card__action .el-tag {
+    max-width: 52%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .enter-button {

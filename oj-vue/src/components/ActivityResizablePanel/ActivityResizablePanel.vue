@@ -16,7 +16,13 @@
       role="separator"
       aria-label="调整题目导航宽度"
       aria-orientation="vertical"
+      :aria-valuemin="minSize"
+      :aria-valuemax="maxSize"
+      :aria-valuenow="Math.round(panelSize)"
+      :aria-expanded="!collapsed"
+      tabindex="0"
       @pointerdown.prevent="startDragging"
+      @keydown="handleKeydown"
     >
       <span />
     </div>
@@ -27,6 +33,8 @@
         class="activity-resizable-panel__restore"
         type="button"
         title="显示题目导航"
+        aria-label="显示题目导航"
+        aria-expanded="true"
         @click="restore"
       >
         <el-icon><ArrowRight /></el-icon>
@@ -37,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue'
+import {onBeforeUnmount, ref, watch} from 'vue'
 import {ArrowRight} from '@element-plus/icons-vue'
 
 const props = withDefaults(defineProps<{
@@ -61,6 +69,7 @@ const rootRef = ref<HTMLElement>()
 const handleRef = ref<HTMLElement>()
 const dragging = ref(false)
 const panelSize = ref(clamp(props.size))
+let cleanupDragging: (() => void) | undefined
 
 function clamp(value: number) {
   return Math.min(Math.max(value, props.minSize), props.maxSize)
@@ -72,6 +81,7 @@ watch(() => props.size, value => {
 
 function startDragging(event: PointerEvent) {
   if (props.collapsed || !rootRef.value || !handleRef.value) return
+  cleanupDragging?.()
 
   const bounds = rootRef.value.getBoundingClientRect()
   if (bounds.width <= 0) return
@@ -89,19 +99,39 @@ function startDragging(event: PointerEvent) {
 
   const stop = () => {
     dragging.value = false
-    handleRef.value?.removeEventListener('pointermove', move)
-    handleRef.value?.removeEventListener('pointerup', stop)
-    handleRef.value?.removeEventListener('pointercancel', stop)
+    window.removeEventListener('pointermove', move)
+    window.removeEventListener('pointerup', stop)
+    window.removeEventListener('pointercancel', stop)
+    handleRef.value?.removeEventListener('lostpointercapture', stop)
+    cleanupDragging = undefined
   }
 
-  handleRef.value.addEventListener('pointermove', move)
-  handleRef.value.addEventListener('pointerup', stop)
-  handleRef.value.addEventListener('pointercancel', stop)
+  cleanupDragging = stop
+  window.addEventListener('pointermove', move)
+  window.addEventListener('pointerup', stop)
+  window.addEventListener('pointercancel', stop)
+  handleRef.value.addEventListener('lostpointercapture', stop, {once: true})
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  const step = event.shiftKey ? 5 : 2
+  let delta = 0
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') delta = -step
+  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') delta = step
+  if (event.key === 'Home') delta = props.minSize - panelSize.value
+  if (event.key === 'End') delta = props.maxSize - panelSize.value
+  if (!delta) return
+  event.preventDefault()
+  const next = clamp(panelSize.value + delta)
+  panelSize.value = next
+  emit('update:size', next)
 }
 
 function restore() {
   emit('update:collapsed', false)
 }
+
+onBeforeUnmount(() => cleanupDragging?.())
 </script>
 
 <style scoped>
@@ -211,6 +241,56 @@ function restore() {
 
   .activity-resizable-panel__handle span {
     width: 3px;
+  }
+}
+
+@media (max-width: 760px) {
+  .activity-resizable-panel {
+    position: relative;
+    display: block;
+  }
+
+  .activity-resizable-panel__sidebar {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(88vw, 360px);
+    max-width: 100%;
+    height: 100%;
+    flex: none;
+    box-shadow: 12px 0 30px rgb(15 23 42 / 14%);
+    transform: translateX(0);
+    transition: transform .22s ease;
+  }
+
+  .activity-resizable-panel.is-collapsed .activity-resizable-panel__sidebar {
+    width: min(88vw, 360px);
+    flex-basis: auto;
+    transform: translateX(-105%);
+  }
+
+  .activity-resizable-panel__handle {
+    display: none;
+  }
+
+  .activity-resizable-panel__main,
+  .activity-resizable-panel.is-collapsed .activity-resizable-panel__main {
+    width: 100%;
+    height: 100%;
+    padding-left: 0;
+  }
+
+  .activity-resizable-panel__restore {
+    top: 12px;
+    left: 12px;
+    transform: none;
+  }
+
+  .activity-resizable-panel__restore:hover,
+  .activity-resizable-panel__restore:focus-visible {
+    transform: translateX(2px);
   }
 }
 </style>

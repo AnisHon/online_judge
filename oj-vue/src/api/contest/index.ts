@@ -154,7 +154,7 @@ const debouncedUpdateContest = (form: ContestForm, success: successCallback<void
     return {loading, isLoading, update};
 }
 
-const getContest = async (page: PagedType): Promise<PagedResponse<ContestView>> => {
+const getContest = async (page: PageContest): Promise<PagedResponse<ContestView>> => {
     const { data } = await getWithParams<PagedResponse<ContestView>, typeof page>("/problem-api/contest/page", page);
     return data;
 }
@@ -225,4 +225,3 @@ export {
     dict,
     ContestAuth
 }
-

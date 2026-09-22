@@ -7,8 +7,8 @@
           <div class="sidebar-scroll">
             <section class="activity-summary">
               <div class="summary-actions">
-                <el-button class="back-button" text :icon="ArrowLeft" @click="router.back()">返回活动列表</el-button>
-                <el-button class="hide-button" text :icon="DArrowLeft" title="隐藏题目导航"
+                <el-button class="back-button" text :icon="ArrowLeft" aria-label="返回活动列表" @click="router.back()">返回活动列表</el-button>
+                <el-button class="hide-button" text :icon="DArrowLeft" title="隐藏题目导航" aria-label="隐藏题目导航"
                            @click="sidebarCollapsed = true">隐藏题目
                 </el-button>
               </div>
@@ -22,7 +22,7 @@
                     activityStatus.label
                   }}</span></div>
               <p class="summary-hint">{{
-                  isAnswering ? '可以继续作答，答案会在提交时记录。' : '当前活动不再接受新的提交。'
+                  statusError ? statusError : isAnswering ? '可以继续作答，答案会在提交时记录。' : '当前活动不再接受新的提交。'
                 }}</p>
               <div class="summary-metrics">
                 <div><strong>{{ score }}</strong><small>当前得分</small></div>
@@ -40,25 +40,32 @@
               <div v-loading="isLoading" class="problem-list">
                 <button v-for="(item, index) in sortedProblemList" :key="item.problemId" class="problem-card"
                         :class="{ 'is-active': String(currentRow?.problemId) === String(item.problemId), 'is-completed': item.finish === true, 'is-correct': item.correct === true, 'is-wrong': item.finish === true && item.correct === false }"
-                        type="button" @click="selectProblem(item)">
+                        type="button"
+                        :aria-current="String(currentRow?.problemId) === String(item.problemId) ? 'page' : undefined"
+                        :aria-label="`${item.title || '未命名题目'}，${item.finish ? (item.correct ? '已通过' : '已完成但未通过') : '未完成'}`"
+                        @click="selectProblem(item)">
                   <span class="problem-card__number">{{ String(index + 1).padStart(2, '0') }}</span>
                   <span class="problem-card__content"><strong :title="item.title">{{
                       item.title || '未命名题目'
                     }}</strong><small>ID {{ shortId(item.problemId) }} · {{ item.score ?? 0 }} 分</small></span>
                   <span v-if="item.finish" class="problem-card__state"><el-icon v-if="item.correct"><CircleCheck/></el-icon><el-icon
-                      v-else><CircleClose/></el-icon></span>
+                      v-else><CircleClose/></el-icon><span class="sr-only">{{ item.correct ? '已通过' : '已完成但未通过' }}</span></span>
                   <el-icon v-else class="problem-card__arrow">
                     <ArrowRight/>
                   </el-icon>
                 </button>
-                <el-empty v-if="!isLoading && !problemList.length" :image-size="64" description="暂无题目"/>
+                <el-alert v-if="problemError" type="error" :closable="false" show-icon>
+                  <template #title><span>{{ problemError }}</span><el-button link type="primary" @click="refreshProblemState">重试</el-button></template>
+                </el-alert>
+                <el-empty v-if="!isLoading && !problemError && !problemList.length" :image-size="64" description="暂无题目"/>
               </div>
             </section>
           </div>
 
           <footer class="submit-panel">
             <div><small>作答进度</small><strong>{{ completedCount }} / {{ problemList.length }}</strong></div>
-            <el-button v-if="isAnswering" type="warning" plain :icon="Finished" @click="handleHandIn">提交试卷
+            <el-button v-if="isAnswering" type="warning" plain :icon="Finished" :loading="isHandingIn"
+                       :disabled="!canHandIn" @click="handleHandIn">提交试卷
             </el-button>
             <el-tag v-else type="info" effect="plain">不可提交</el-tag>
           </footer>
@@ -72,7 +79,7 @@
             <strong :title="currentRow.title">{{ currentRow.title }}</strong>
             <small>ID {{ shortId(currentRow.problemId) }}</small>
           </div>
-          <el-button text :icon="House" @click="currentRow = undefined">活动概览</el-button>
+          <el-button text :icon="House" aria-label="返回活动概览" @click="currentRow = undefined">活动概览</el-button>
         </div>
         <div v-if="currentRow" class="problem-detail-shell">
           <detail-problem :key="String(currentRow.problemId)" :problem-id="currentRow.problemId" :contest-id="contestId"
@@ -116,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from 'vue'
+import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {
   ArrowLeft,
@@ -132,12 +139,13 @@ import {
 } from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import type {ProblemInListView} from '@/api/list'
-import {debouncedGetProblems} from '@/api/list/problem'
+import {getContestProblems} from '@/api/list/problem'
 import DetailProblem from '@/components/DetailProblem/DetailProblem.vue'
 import MarkdownPreview from '@/components/MarkdownPreview.vue'
 import ActivityResizablePanel from '@/components/ActivityResizablePanel/ActivityResizablePanel.vue'
 import {ContestType, type ContestView, fetchContestById, getContestStatus, handInPaper} from '@/api/contest'
-import {authTagType, authText, formatDate, isContestOver, isNotStart} from '@/utils/contest'
+import {authTagType, authText, formatDate, getActivityTimeState} from '@/utils/contest'
+import dayjs from 'dayjs'
 
 const route = useRoute()
 const router = useRouter()
@@ -147,74 +155,146 @@ const problemList = reactive<ProblemInListView[]>([])
 const currentRow = ref<ProblemInListView>()
 const sidebarSize = ref(25)
 const sidebarCollapsed = ref(false)
-const isAnswering = ref(false)
+const isAnswering = ref<boolean>()
 const isLoadingContest = ref(true)
-
-const {isLoading, loading, get} = debouncedGetProblems(data => {
-  problemList.splice(0, problemList.length, ...data)
-})
+const isLoading = ref(false)
+const problemError = ref('')
+const contestError = ref('')
+const statusError = ref('')
+const isHandingIn = ref(false)
+const now = ref(dayjs())
+let clockTimer: ReturnType<typeof setInterval> | undefined
+let loadSequence = 0
 const sortedProblemList = computed(() => [...problemList].sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0)))
 const score = computed(() => problemList.reduce((total, problem) => total + (problem.userScore || 0), 0))
 const completedCount = computed(() => problemList.filter(problem => problem.finish === true).length)
 const progressPercent = computed(() => problemList.length ? Math.round(completedCount.value / problemList.length * 100) : 0)
 const currentIndex = computed(() => sortedProblemList.value.findIndex(item => String(item.problemId) === String(currentRow.value?.problemId)))
+const activityTime = computed(() => getActivityTimeState(contest.value?.startTime, contest.value?.endTime, now.value))
 const activityStatus = computed(() => {
   if (!contest.value) return {label: '加载中', tone: 'pending'}
-  if (isNotStart(contest.value.startTime)) return {label: '未开始', tone: 'pending'}
-  if (isContestOver(contest.value.endTime)) return {label: '已结束', tone: 'ended'}
-  if (!isAnswering.value) return {label: '已提交', tone: 'ended'}
+  if (contestError.value) return {label: '信息异常', tone: 'ended'}
+  if (!activityTime.value.valid) return {label: '时间异常', tone: 'ended'}
+  if (activityTime.value.notStarted) return {label: '未开始', tone: 'pending'}
+  if (activityTime.value.over) return {label: '已结束', tone: 'ended'}
+  if (statusError.value) return {label: '状态未知', tone: 'pending'}
+  if (isAnswering.value === false) return {label: '已提交', tone: 'ended'}
   return {label: '进行中', tone: 'running'}
 })
+const canHandIn = computed(() => Boolean(isAnswering.value && contest.value && activityTime.value.valid && !activityTime.value.over && !isLoadingContest.value && !isLoading.value && !problemError.value && problemList.length))
 
 const shortId = (value: unknown) => {
   const text = String(value);
   return text.length > 16 ? `${text.slice(0, 7)}…${text.slice(-5)}` : text
 }
 const formatOptionalDate = (value?: string) => value ? formatDate(value) : '待定'
-const loadPage = async () => {
-  isLoadingContest.value = true
-  loading()
-  get(contestId.value)
+const loadProblems = async (id: string, sequence = loadSequence) => {
+  isLoading.value = true
+  problemError.value = ''
   try {
-    const [contestData, status] = await Promise.all([fetchContestById(contestId.value), getContestStatus(contestId.value)])
-    contest.value = contestData
-    isAnswering.value = status
-  } catch {
-    contest.value = undefined
+    const data = await getContestProblems(id)
+    if (sequence !== loadSequence || id !== contestId.value) return
+    problemList.splice(0, problemList.length, ...(data || []))
+  } catch (reason) {
+    if (sequence !== loadSequence || id !== contestId.value) return
+    problemError.value = reason instanceof Error ? reason.message : '题目列表加载失败，请重试'
   } finally {
-    isLoadingContest.value = false
+    if (sequence === loadSequence && id === contestId.value) isLoading.value = false
+  }
+}
+
+const loadPage = async (id = contestId.value) => {
+  const sequence = ++loadSequence
+  isLoadingContest.value = true
+  contest.value = undefined
+  contestError.value = ''
+  statusError.value = ''
+  problemError.value = ''
+  problemList.splice(0, problemList.length)
+  currentRow.value = undefined
+  sidebarCollapsed.value = false
+  isAnswering.value = undefined
+  void loadProblems(id, sequence)
+
+  try {
+    const contestData = await fetchContestById(id)
+    if (sequence !== loadSequence || id !== contestId.value) return
+    contest.value = contestData
+  } catch (reason) {
+    if (sequence === loadSequence && id === contestId.value) {
+      contestError.value = reason instanceof Error ? reason.message : '活动信息加载失败，请刷新重试'
+    }
+  } finally {
+    if (sequence === loadSequence && id === contestId.value) isLoadingContest.value = false
+  }
+
+  try {
+    const status = await getContestStatus(id)
+    if (sequence === loadSequence && id === contestId.value) {
+      isAnswering.value = status
+      statusError.value = ''
+    }
+  } catch (reason) {
+    if (sequence === loadSequence && id === contestId.value) {
+      statusError.value = reason instanceof Error ? reason.message : '活动答题状态暂时无法确认'
+    }
   }
 }
 const selectProblem = (row: ProblemInListView) => {
   currentRow.value = row;
   sidebarCollapsed.value = false
 }
-const refreshProblemState = () => {
-  get(contestId.value)
+const refreshProblemState = async () => {
+  await loadProblems(contestId.value, loadSequence)
 }
 const refreshActivityState = async () => {
-  refreshProblemState()
+  await refreshProblemState()
   try {
     isAnswering.value = await getContestStatus(contestId.value)
+    statusError.value = ''
   } catch {
-    // 交卷已经成功时，状态接口瞬时失败不覆盖当前页面状态。
+    statusError.value = '交卷已发送，但活动状态暂时无法确认，请刷新重试'
   }
 }
-const handleHandIn = () => {
-  ElMessageBox.confirm('提交试卷后将不能继续作答，确认提交吗？', '提交试卷', {
-    cancelButtonText: '继续作答',
-    confirmButtonText: '确认提交',
-    type: 'warning'
-  })
-      .then(async () => {
-        await handInPaper(contestId.value);
-        await refreshActivityState()
-        isAnswering.value = false;
-        currentRow.value = undefined
-      })
-      .catch(() => ElMessage.info('已取消提交'))
+const handleHandIn = async () => {
+  if (isHandingIn.value || !canHandIn.value) return
+  try {
+    await ElMessageBox.confirm('提交试卷后将不能继续作答，确认提交吗？', '提交试卷', {
+      cancelButtonText: '继续作答',
+      confirmButtonText: '确认提交',
+      type: 'warning'
+    })
+  } catch (reason) {
+    if (reason === 'cancel' || reason === 'close') ElMessage.info('已取消提交')
+    return
+  }
+
+  isHandingIn.value = true
+  try {
+    const submitted = await handInPaper(contestId.value)
+    if (!submitted) {
+      ElMessage.error('交卷失败，请稍后重试')
+      return
+    }
+    isAnswering.value = false
+    currentRow.value = undefined
+    ElMessage.success('交卷成功')
+    await refreshActivityState()
+  } catch (reason) {
+    ElMessage.error(reason instanceof Error ? reason.message : '交卷失败，请稍后重试')
+  } finally {
+    isHandingIn.value = false
+  }
 }
-void loadPage()
+
+watch(contestId, id => { void loadPage(id) }, {immediate: true})
+onMounted(() => {
+  clockTimer = setInterval(() => { now.value = dayjs() }, 30_000)
+})
+onUnmounted(() => {
+  if (clockTimer) clearInterval(clockTimer)
+  loadSequence++
+})
 </script>
 
 <style scoped>
@@ -343,11 +423,6 @@ void loadPage()
   font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.summary-heading h3 {
-  margin: 0;
-  font-size: 15px;
 }
 
 .status-badge {
@@ -549,53 +624,6 @@ void loadPage()
   font: 700 13px var(--code-font-family, monospace);
 }
 
-.summary-actions, .activity-identity {
-  display: flex;
-  align-items: center;
-}
-
-.summary-actions {
-  justify-content: space-between;
-  gap: 4px;
-  margin: -4px -5px 12px;
-}
-
-.back-button, .hide-button {
-  flex: 0 0 auto;
-  padding: 4px 5px;
-  font-size: 11px;
-}
-
-.activity-identity {
-  min-width: 0;
-  gap: 9px;
-  margin-bottom: 16px;
-}
-
-.activity-identity > div {
-  min-width: 0;
-}
-
-.activity-identity p {
-  margin: 0 0 2px;
-  color: var(--el-text-color-secondary);
-  font-size: 10px;
-}
-
-.activity-identity h2 {
-  max-width: 100%;
-  margin: 0;
-  overflow: hidden;
-  font-size: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.summary-heading h3 {
-  margin: 0;
-  font-size: 15px;
-}
-
 .problem-stage {
   position: relative;
   display: flex;
@@ -621,10 +649,15 @@ void loadPage()
 
 .stage-heading {
   display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
   gap: 8px;
 }
 
 .stage-heading strong {
+  min-width: 0;
+  flex: 1 1 auto;
   max-width: min(50vw, 680px);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -641,6 +674,11 @@ void loadPage()
   flex: 0 0 auto;
   color: var(--el-color-primary);
   font: 700 10px var(--code-font-family, monospace);
+}
+
+.problem-stage__bar > .el-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .problem-detail-shell {
@@ -661,6 +699,17 @@ void loadPage()
   height: 100%;
   min-height: 0;
   max-height: 100%;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .activity-overview {
@@ -795,7 +844,7 @@ void loadPage()
 
 @media (max-width: 760px) {
   .contest-workspace {
-    height: calc(100vh - var(--menu-height) - 24px);
+    height: calc(100dvh - var(--menu-height) - 24px);
   }
 
   .problem-stage__bar {
@@ -804,6 +853,10 @@ void loadPage()
 
   .stage-heading small {
     display: none;
+  }
+
+  .stage-heading strong {
+    max-width: none;
   }
 
   .activity-overview {
