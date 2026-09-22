@@ -1,4 +1,4 @@
 oj:
   minio:
-    access-key: change-this-object-storage-access-key
-    secret-key: change-this-object-storage-password
+    access-key: ${oj.minio.access-key:${OJ_MINIO_ACCESS_KEY:}}
+    secret-key: ${oj.minio.secret-key:${OJ_MINIO_SECRET_KEY:}}

@@ -3,6 +3,5 @@
 !Dockerfile.dev
 !default.conf
 !default.dev.conf
-!yantuocode.cn_nginx.tar.gz
 !dist/
 !dist/**

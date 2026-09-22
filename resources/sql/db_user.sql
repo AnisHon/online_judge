@@ -31,7 +31,7 @@ create table sys_user (
 ) engine=innodb auto_increment=100
     comment '用户表' auto_increment = 100;
 create unique index unique_user_email on sys_user(email);
-# 默认密码：www.github.com
+# 种子用户密码为预生成的 BCrypt 值；生产环境初始化后应立即修改。
 insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (1, 'teacher', null, '测试教师', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
 insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (2, 'student', null, '测试学生', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');
 insert into sys_user(sys_user.user_id, user_name, email, nike_name, password) values (3, 'admin', null, '测试管理员', '$2a$10$cu.mwqY2JT1pGcIQM.h0R.GVi.yx8P4KC3UANgP7ypxsFaGxUR17m');

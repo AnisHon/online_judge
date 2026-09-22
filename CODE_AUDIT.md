@@ -33,7 +33,7 @@
 ### A-03 JWT 签名密钥硬编码且强度不足
 
 - 模块：公共库、用户服务、网关
-- 证据：[`JwtUtil.java`](commons/src/main/java/com/anishan/commons/util/JwtUtil.java:20) 使用固定的 `"legacy-secret-redacted"` 作为所有环境的 HMAC 密钥。
+- 证据：历史版本的 [`JwtUtil.java`](commons/src/main/java/com/anishan/commons/util/JwtUtil.java:20) 曾使用固定短字符串作为所有环境的 HMAC 密钥。
 - 影响：源码、镜像或日志泄露后可伪造任意用户的 7 天有效 token；无法无停机轮换密钥。
 - 建议：从密钥管理服务/部署环境注入至少 256 bit 的随机密钥；支持 `kid` 与双密钥轮换；同时校验 issuer、audience、算法白名单并缩短访问 token 有效期。
 
@@ -131,7 +131,7 @@
 | --- | --- |
 | 前端 `oj-vue` | `/api` 代理已在本轮之前修复为可配置目标；`http.ts` 仍包含较多 `any`、空 `defaultFail` 与类型强转，错误处理可预测性不足。Token 持久化在浏览器存储中，需接受 XSS 风险或改为更安全的会话方案。 |
 | 网关 | `AuthFilter` 对异常 token 的处理依赖全局异常链；建议明确返回 401，并移除外部 `user-id`/`token` 的多值请求头后重建。 |
-| 用户服务 | 默认密码配置为 `change-this-default-password`（`resources/config/user-service.yaml`），应仅作为 dev seed，生产强制通过 secret 覆盖；退出登录会按用户 ID 删除登录缓存，当前模型意味着同用户多端会话会被全部踢出，需确认是否符合业务。 |
+| 用户服务 | 默认密码曾直接写入配置（`resources/config/user-service.yaml`），应仅作为 dev seed，生产强制通过 secret 覆盖；退出登录会按用户 ID 删除登录缓存，当前模型意味着同用户多端会话会被全部踢出，需确认是否符合业务。 |
 | 题目服务 | `JudgeResultListener` 明确标注“未完成，未使用”；`SolutionController` 自注释“数据权限没做好”，应在开放题解编辑/删除前补对象级权限检查。OJ 测试用例的数据库和对象存储操作没有跨资源补偿，失败时会残留孤儿对象或数据库记录。 |
 | 判题服务 | 除 A-04/A-07/A-08/A-09 外，判题任务的幂等键、重复消费处理、提交状态机和运行指标不足；建议把这些作为单独的可靠性改造。 |
 | 内容服务 | 文件对象、用户云盘、头像、题目测试用例共用的访问模型需要拆分；文件响应异常被吞掉（[`FileController.java`](content-service/src/main/java/com/anishan/content/controller/FileController.java:73)），不利于排障和告警。 |

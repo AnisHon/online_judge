@@ -74,11 +74,16 @@ services:
       JUDGE_URL: oj-sandbox:5050
       NACOS_URL: oj-nacos:8848
       MINIO_URL: http://oj-minio:9000
+      OJ_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      OJ_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       DB_HOST: oj-mysql
+      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD}
       REDIS_HOST: oj-redis
       MQ_HOST: oj-mq
       MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
       MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      OJ_MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      OJ_MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
       MQ_V_HOST: /judge
       MQ_CONCURRENCY: "2"
       MQ_MAX_CONCURRENCY: "4"
@@ -97,11 +102,16 @@ services:
       OJ_PRODUCT: "true"
       NACOS_URL: oj-nacos:8848
       MINIO_URL: http://oj-minio:9000
+      OJ_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      OJ_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       DB_HOST: oj-mysql
+      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD}
       REDIS_HOST: oj-redis
       MQ_HOST: oj-mq
       MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
       MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      OJ_MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      OJ_MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
       MQ_V_HOST: /judge
 
   user-service:
@@ -117,11 +127,15 @@ services:
       OJ_PRODUCT: "true"
       NACOS_URL: oj-nacos:8848
       MINIO_URL: http://oj-minio:9000
+      OJ_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      OJ_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       DB_HOST: oj-mysql
+      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD}
       REDIS_HOST: oj-redis
       OJ_JWT_SECRET: ${OJ_JWT_SECRET}
       OJ_JWT_ACCESS_SECRET: ${OJ_JWT_ACCESS_SECRET}
       OJ_JWT_REFRESH_SECRET: ${OJ_JWT_REFRESH_SECRET}
+      OJ_DEFAULT_PASSWORD: ${OJ_DEFAULT_PASSWORD}
 
   content-service:
     <<: *java-defaults
@@ -136,11 +150,16 @@ services:
       OJ_PRODUCT: "true"
       NACOS_URL: oj-nacos:8848
       MINIO_URL: http://oj-minio:9000
+      OJ_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      OJ_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       DB_HOST: oj-mysql
+      OJ_DB_PW: ${MYSQL_ROOT_PASSWORD}
       REDIS_HOST: oj-redis
       MQ_HOST: oj-mq
       MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
       MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      OJ_MQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      OJ_MQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
       MQ_V_HOST: /judge
 
   gateway-server:

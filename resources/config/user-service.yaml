@@ -4,8 +4,8 @@ oj:
     default-role-id: 1
     check-max-award: 50
     ac-problem-award-rate: 0.5
-    file-base-url: "E:/cach/temp"
-    default-password: change-this-default-password
+    file-base-url: ${OJ_FILE_BASE_URL:/tmp/oj_files}
+    default-password: ${OJ_DEFAULT_PASSWORD:}
     captcha-type: MATH
 
 common:

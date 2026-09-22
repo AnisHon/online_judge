@@ -2,8 +2,8 @@ spring:
   rabbitmq:
     host: ${oj.mq.host:localhost}
     port: 5672
-    username: ${oj.mq.username:admin}
-    password: change-this-db-password
+    username: ${oj.mq.username:${OJ_MQ_USERNAME:}}
+    password: ${oj.mq.password:${OJ_MQ_PASSWORD:}}
     #这个配置是保证提供者确保消息推送到交换机中，不管成不成功，都会回调
     publisher-confirm-type: correlated
     #保证交换机能把消息推送到队列中

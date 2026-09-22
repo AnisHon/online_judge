@@ -50,6 +50,7 @@ values = {
     "OJ_JWT_SECRET": existing.get("OJ_JWT_SECRET") or secrets.token_urlsafe(48),
     "OJ_JWT_ACCESS_SECRET": existing.get("OJ_JWT_ACCESS_SECRET") or secrets.token_urlsafe(48),
     "OJ_JWT_REFRESH_SECRET": existing.get("OJ_JWT_REFRESH_SECRET") or secrets.token_urlsafe(48),
+    "OJ_DEFAULT_PASSWORD": existing.get("OJ_DEFAULT_PASSWORD") or secrets.token_urlsafe(18),
 }
 target.write_text(
     "\n".join(f"{key}={dotenv_value(value)}" for key, value in values.items()) + "\n",

@@ -34,9 +34,18 @@ build/
 
 **/logs/
 logs/
+*.log
 **/node_modules/**
 .pnpm-store/
 /resources/sql/temp
 .env
 .env.dev
 .env.local-dev
+.env.*.local
+
+# Private deployment material. Keep only the checked-in example files.
+*.pem
+*.key
+*.p12
+*.jks
+user-service/src/main/resources/config/mail.setting

@@ -32,7 +32,9 @@ vi .env.dev
 ./scripts/start-dev-infra.sh
 ```
 
-开发 Compose 使用项目既有的本机默认连接参数（MySQL `root/change-this-db-password`、RabbitMQ `admin/admin`），因此可直接使用原有 IDEA 启动配置启动各 Java 服务，无需额外的端口或凭据覆盖。
+开发 Compose 的账号和密码全部来自未提交的 `.env.dev`；复制 `.env.dev.example` 后请替换为本机自己的随机凭据，再启动基础设施。IDEA 启动配置通过 `scripts/run-local-service.sh` 使用同一份环境变量，不在代码仓库内保存凭据。
+
+线上部署同样只读取未提交的 `.env`。`OJ_DEFAULT_PASSWORD` 仅用于初始化用户时的默认密码，必须在生产环境改为随机值并在首次登录后轮换。
 
 也可在不同终端分别前台启动后端（需要本机 Maven 3.9+）和前端：
 

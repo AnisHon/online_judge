@@ -1,0 +1,7 @@
+# Copy this file to mail.setting outside Git and fill in your SMTP provider values.
+# Hutool MailUtil reads mail.setting from the classpath at runtime.
+host = smtp.example.com
+port = 587
+from = no-reply@example.com
+user = no-reply@example.com
+pass = replace-with-an-smtp-app-password

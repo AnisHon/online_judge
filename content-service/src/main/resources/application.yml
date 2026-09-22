@@ -15,9 +15,8 @@ oj:
     resource: com.anishan.content
 
   minio:
-    url: http://localhost:9000
-    access-key: change-this-object-storage-access-key
-    secret-key: change-this-object-storage-password
+    url: ${OJ_MINIO_URL:http://localhost:9000}
+    access-key: ${OJ_MINIO_ACCESS_KEY:}
+    secret-key: ${OJ_MINIO_SECRET_KEY:}
     bucket-name: uploads
-
 
