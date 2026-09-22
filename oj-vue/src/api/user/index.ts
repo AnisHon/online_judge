@@ -47,6 +47,7 @@ interface UserForm {
     userId?: IdType;
     userName?: string;
     nikeName?: string;
+    signature?: string;
 }
 
 interface QueryUser extends SortedPagedType{
@@ -198,6 +199,12 @@ const changeSelf = async (form: UserForm) => {
     await update(form, "/user-api/user/change-myself");
     const userStore = useUserStore();
     await userStore.loadUser()
+}
+
+/** 保存个人中心中的公开资料，并立即刷新当前会话的用户快照。 */
+export const saveMyProfile = async (form: UserForm) => {
+    await update(form, "/user-api/user/change-myself");
+    await useUserStore().loadUser(true);
 }
 
 const change = __.debounce(changeSelf, 1000);

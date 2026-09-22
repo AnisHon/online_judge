@@ -5,6 +5,7 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.*;
+import com.anishan.user.domain.vo.UserProfileVo;
 import com.anishan.api.domain.entity.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.anishan.api.client.user.domain.vo.UserVo;
@@ -57,6 +58,10 @@ public interface SysUserService extends IService<SysUser> {
     LoginUser getRootAccount();
 
     boolean changeInfo(SysUserInfoDto sysUserDto, Long userId);
+
+    UserProfileVo getPublicProfile(Long userId);
+
+    void recordLogin(Long userId, java.time.LocalDateTime loginTime);
 
     UserPoint getPoint(Long userId);
 

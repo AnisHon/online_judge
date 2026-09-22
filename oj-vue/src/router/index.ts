@@ -10,6 +10,7 @@ import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import {useToken} from "@/stores/useToken";
 import Home from "@/views/Home.vue";
+import {hasBackendAccess} from "@/utils/authUtil";
 
 // index不是home
 // index不是home
@@ -162,11 +163,11 @@ export const constRoutes =  [
         }
       },
       {
-        path: "setting",
-        name: "setting",
-        component: () => import('@/views/setting/Setting.vue'),
+        path: "profile/:id",
+        name: "profile",
+        component: () => import('@/views/profile/Profile.vue'),
         meta: {
-          name: "设置"
+          name: "个人主页"
         }
       },
       {
@@ -284,7 +285,7 @@ router.beforeEach(async (to) => {
       }
     }
     if (!isMatched) return {name: '404', replace: true};
-    if (to.path.startsWith('/backend') && !menu.hasBackendAccess()) {
+    if (to.path.startsWith('/backend') && !hasBackendAccess()) {
       return {name: '403', replace: true};
     }
     if (!needLogin && !isLoginAccess) return {name: '403', replace: true};

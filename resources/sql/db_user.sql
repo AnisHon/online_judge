@@ -16,10 +16,12 @@ create table sys_user (
     user_name   varchar(32)            not null                 comment '用户名，唯一',
     email       varchar(255)           null                     comment '邮箱',
     nike_name   varchar(32)            not null                 comment '昵称,不唯一',
+    signature   varchar(160)           null                     comment '公开个性签名',
     password    varchar(255)           not null                 comment '用户密码-加密',
     status      boolean  default 0     not null                 comment '状态(1封禁, 0正常)',
     points      Decimal(8, 2) default 0 not null                comment '用户积分',
     create_time datetime default now() not null                 comment '创建时间',
+    last_login_time datetime           null                     comment '最近一次成功登录时间',
     update_time datetime default now() not null                 comment '最新更新时间用于乐观锁',
     del_flag    boolean  default 0     not null                 comment '删除标记(1删除, 0没删除)',
     remark      varchar(500) default null                       comment '备注',
@@ -250,6 +252,7 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1001, '添加文件', 0, null, '#', 'B', 'content:file:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1002, '删除文件', 1, null, '#', 'B', 'content:file:remove', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1003, '更改文件名', 2, null, '#', 'B', 'content:file:edit', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1004, '进入后台', 4, null, '#', 'B', 'system:backend:access', '#');
 
 # 信息展示
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1100, '信息查看', 1, null, '#', 'B', 'content:info', '#');
@@ -317,6 +320,7 @@ values
 
 # 所有登录用户可查看自己的提交；内部测试用例日志只授予管理员。
 insert ignore into sys_role_menu(role_id, menu_id) values (1, 150), (2, 150), (3, 150), (4, 150), (3, 151), (4, 151);
+insert ignore into sys_role_menu(role_id, menu_id) values (2, 1004), (3, 1004), (4, 1004);
 
 # 管理员，没有权限相关操作，权限操作危险，可能会毁坏网站
 delete from sys_role_menu where role_id = 3;
@@ -327,6 +331,7 @@ insert into sys_role_menu(role_id, menu_id)
         where
             menu_id not in (select menu_id from sys_role_menu where role_id = 2)
     );
+insert ignore into sys_role_menu(role_id, menu_id) values (3, 1004);
 
 
 

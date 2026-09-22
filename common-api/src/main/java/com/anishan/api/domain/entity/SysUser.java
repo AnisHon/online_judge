@@ -44,6 +44,11 @@ public class SysUser implements Serializable {
     private String nikeName;
 
     /**
+     * 公开展示的个性签名。
+     */
+    private String signature;
+
+    /**
      * 用户密码-加密
      */
     private String password;
@@ -65,6 +70,14 @@ public class SysUser implements Serializable {
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime createTime;
+
+    /**
+     * 最近一次成功登录时间。
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime lastLoginTime;
 
     /**
      * 最新更新时间用于乐观锁

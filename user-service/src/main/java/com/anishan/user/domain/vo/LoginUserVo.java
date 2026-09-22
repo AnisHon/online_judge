@@ -27,11 +27,17 @@ public class LoginUserVo {
     @ApiModelProperty("昵称")
     private String nikeName;
 
+    @ApiModelProperty("个性签名")
+    private String signature;
+
     @ApiModelProperty("状态(1封禁, 0正常)")
     private UserState status;
 
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;
+
+    @ApiModelProperty("最近一次登录时间")
+    private LocalDateTime lastLoginTime;
 
     @ApiModelProperty("备注")
     private String remark;

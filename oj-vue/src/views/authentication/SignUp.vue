@@ -21,7 +21,6 @@
     <el-form-item prop="username">
       <el-input
           v-model="signUpForm.username"
-          @keyup.enter="submitSignUp(formRef)"
           type="text"
           autocomplete="off"
           placeholder="请输入用户名"
@@ -32,7 +31,6 @@
     <el-form-item prop="nikeName">
       <el-input
           v-model="signUpForm.nikeName"
-          @keyup.enter="submitSignUp(formRef)"
           type="text"
           autocomplete="off"
           placeholder="请输入昵称"
@@ -42,7 +40,6 @@
     <el-form-item prop="email">
       <el-input
           v-model="signUpForm.email"
-          @keyup.enter="submitSignUp(formRef)"
           type="text"
           autocomplete="off"
           placeholder="请输入邮箱"
@@ -52,7 +49,6 @@
     <el-form-item prop="password">
       <el-input
           v-model="signUpForm.password"
-          @keyup.enter="submitSignUp(formRef)"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
@@ -63,7 +59,6 @@
     <el-form-item prop="repeatPassword">
       <el-input
           v-model="signUpForm.repeatPassword"
-          @keyup.enter="submitSignUp(formRef)"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
@@ -76,7 +71,6 @@
         <el-form-item prop="captchaCode">
           <el-input
               v-model="signUpForm.captchaCode"
-              @keyup.enter="submitSignUp(formRef)"
               type="text"
               autocomplete="off"
               placeholder="请输入验证码"
@@ -89,10 +83,20 @@
       <el-col :span="10" style="position: relative;">
         <el-image
             :src="imgData"
+            :alt="captchaError || '点击刷新验证码'"
             style="width: 100px; position: absolute;
               right: 0"
-            @click="refreshCaptchaCode"
+            @click="void refreshCaptchaCode()"
         />
+        <span
+            v-if="captchaError"
+            class="captcha-error"
+            role="button"
+            tabindex="0"
+            aria-live="polite"
+            @click="void refreshCaptchaCode()"
+            @keydown.enter="void refreshCaptchaCode()"
+        >{{ captchaError }}</span>
       </el-col>
 
 
@@ -102,7 +106,6 @@
       <el-col :span="14" >
         <el-form-item prop="emailCode">
           <el-input
-              @keyup.enter="submitSignUp(formRef)"
               v-model="signUpForm.emailCode"
               type="text"
               autocomplete="off"
@@ -115,12 +118,13 @@
 
       <el-col :span="10" style="position: relative;">
         <el-button
-            @click="sendEmailCode()"
-            style="position: absolute; right: 0;"
-            :loading="isLoading"
-            :disabled="isLoading"
-        >
-          获取邮箱验证码
+            native-type="button"
+            @click="void sendEmailCode()"
+            class="code-button"
+            :loading="emailSending"
+            :disabled="emailSending || emailCooldown > 0"
+          >
+            {{ emailCodeLabel }}
         </el-button>
       </el-col>
 
@@ -130,7 +134,7 @@
     <el-form-item class="submit-item">
       <el-button
           type="primary"
-          @click="submitSignUp(formRef)"
+          native-type="submit"
           class="submit-button"
           :loading="isLoading"
           :disabled="isLoading"
@@ -144,11 +148,13 @@
 <script lang="ts" setup>
 import {onMounted, reactive, ref} from 'vue'
 import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
-import getCaptcha from '@/api/auth/captchaCode.ts'
 import {sendEmailCodePromise} from '@/api/auth/emailCode.ts'
 import {signUp, checkAvailableUsername, checkAvailableEmail} from "@/api/auth/authentication.ts"
 import IconEmail from "@/assets/icons/IconEmail.vue";
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
+import {useCaptchaCode} from '@/composables/auth/useCaptchaCode'
+import {useEmailCodeCooldown} from '@/composables/auth/useEmailCodeCooldown'
+import {authErrorMessage} from '@/utils/authError'
 
 
 const emailRe = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
@@ -166,9 +172,6 @@ const signUpForm = reactive({
   emailCode: ""
 })
 
-const imgData = ref("")
-
-
 const validatePassword = (rule: any, value: string, callback: any) => {
   if (value === '') {
     callback(new Error('请输入密码'))
@@ -181,27 +184,26 @@ const validatePassword = (rule: any, value: string, callback: any) => {
   }
 }
 
+let usernameValidationId = 0
 const validateUsername = (rule: any, value: string, callback: any) => {
   const pattern = /^[a-zA-Z0-9_-]{3,15}$/;
   if (!pattern.test(value)) {
     callback(new Error("只能由数字、字母_、-组成，长度3-15"))
   } else {
+    const validationId = ++usernameValidationId
     checkAvailableUsername(value)
         .then((data) => {
+          if (validationId !== usernameValidationId) return callback()
           if (data) {
             callback()
           } else {
             callback(new Error("用户名不可用请重试"))
           }
         })
-  }
-}
-
-const validateNotEmpty = (rule: any, value: string, callback: any) => {
-  if (value === '') {
-    callback(new Error("不能为空"))
-  } else {
-    callback()
+        .catch(() => {
+          if (validationId === usernameValidationId) callback(new Error("用户名可用性校验失败，请稍后重试"))
+          else callback()
+        })
   }
 }
 
@@ -213,18 +215,25 @@ const repeatPassword = (rule: any, value: string, callback: any) => {
   }
 }
 
+let emailValidationId = 0
 const validateEmail = (rule: any, value: string, callback: any) => {
   if (!emailRe.test(value)) {
     callback(new Error("无效邮箱"))
 
   } else {
+    const validationId = ++emailValidationId
     checkAvailableEmail(value)
         .then((data) => {
+          if (validationId !== emailValidationId) return callback()
           if (data) {
             callback()
           } else {
             callback(new Error("邮箱不可用请重试"))
           }
+        })
+        .catch(() => {
+          if (validationId === emailValidationId) callback(new Error("邮箱可用性校验失败，请稍后重试"))
+          else callback()
         })
   }
 }
@@ -234,71 +243,63 @@ const rules = reactive<FormRules<typeof signUpForm>>({
   password: [{ validator: validatePassword, trigger: 'blur' }],
   nikeName: [{required: true, message: "昵称不能为空", trigger: 'blur'}],
   email: [{ validator: validateEmail, trigger: 'blur' }],
-  // captchaCode: [{ validator: validateNotEmpty, trigger: 'blur' }],
+  captchaCode: [{ required: true, message: "图形验证码不能为空", trigger: 'blur' }],
   repeatPassword: [{validator: repeatPassword, trigger: 'blur' }],
   emailCode: [{ required: true, message: "邮箱验证码不能为空", trigger: 'blur' }]
 })
 
-const doSignUp = () => {
-  signUp({
-    userName: signUpForm.username,
-    password: signUpForm.password,
-    nikeName: signUpForm.nikeName,
-    email: signUpForm.email,
-    code: signUpForm.emailCode,
-  })
-      .then(()  => {
-        ElNotification.success("欢迎登录")
-      })
-      .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : typeof error === "string" ? error : "注册失败，请稍后重试"
-        ElNotification.error(message)
-        refreshCaptchaCode()
-      })
-      .finally(() => {
-        isLoading.value = false
-      })
-}
+const {image: imgData, error: captchaError, refresh: refreshCaptchaCode} = useCaptchaCode(signUpForm)
+const {sending: emailSending, remaining: emailCooldown, label: emailCodeLabel, run: runEmailCode} = useEmailCodeCooldown()
 
-const submitSignUp = (formEl: FormInstance | undefined) => {
+const submitSignUp = async (formEl: FormInstance | undefined = formRef.value) => {
   if (!formEl) return
-  formEl.validate((valid) => {
-    if (valid) {
-      isLoading.value = true
-      doSignUp()
-    } else {
+  if (isLoading.value) return
+  isLoading.value = true
+  try {
+    const valid = await formEl.validate().catch(() => false)
+    if (!valid) {
       ElNotification.warning("请确认表单")
+      return
     }
-  })
+    await signUp({
+      userName: signUpForm.username,
+      password: signUpForm.password,
+      nikeName: signUpForm.nikeName,
+      email: signUpForm.email,
+      code: signUpForm.emailCode,
+    })
+    ElNotification.success("注册成功，欢迎加入")
+  } catch (error: unknown) {
+    ElNotification.error(authErrorMessage(error, "注册失败，请稍后重试"))
+    void refreshCaptchaCode()
+  } finally {
+    isLoading.value = false
+  }
 }
 
-const sendEmailCode = () => {
+const sendEmailCode = async () => {
+  if (emailSending.value || emailCooldown.value > 0) return
   if (signUpForm.captchaCode === '') {
     ElNotification.error("请输入验证码")
   } else if (!emailRe.test(signUpForm.email)) {
     ElNotification.error("邮箱无效")
   } else {
-    sendEmailCodePromise({
-      captchaCode: signUpForm.captchaCode,
-      email: signUpForm.email,
-      captchaToken: signUpForm.token,
-    }).then(() => {
-      ElNotification.success("发送成功")
-    }).catch((message) => {
-      refreshCaptchaCode()
-      ElNotification.warning(message)
-    })
+    try {
+      const sent = await runEmailCode(() => sendEmailCodePromise({
+        captchaCode: signUpForm.captchaCode,
+        email: signUpForm.email,
+        captchaToken: signUpForm.token,
+      }))
+      if (sent) ElNotification.success("发送成功，请查收邮件")
+    } catch (error: unknown) {
+      void refreshCaptchaCode()
+      ElNotification.warning(authErrorMessage(error, "验证码发送失败"))
+    }
   }
 }
 
-const refreshCaptchaCode = async () => {
-  const {image, token} = await getCaptcha()
-  imgData.value = image
-  signUpForm.token = token
-}
-
 onMounted(() => {
-  refreshCaptchaCode()
+  void refreshCaptchaCode()
 })
 
 </script>

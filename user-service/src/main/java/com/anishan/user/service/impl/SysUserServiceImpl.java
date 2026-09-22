@@ -19,6 +19,7 @@ import com.anishan.commons.util.MysqlMappingUtils;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.user.config.UserConfig;
 import com.anishan.user.domain.dto.*;
+import com.anishan.user.domain.vo.UserProfileVo;
 import com.anishan.user.domain.entity.SysMenu;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.user.mapper.SysUserMapper;
@@ -307,6 +308,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         SysUser sysUser = new SysUser();
         sysUser.setUserId(userId);
         sysUser.setNikeName(sysUserDto.getNikeName());
+        sysUser.setSignature(StrUtil.isBlank(sysUserDto.getSignature()) ? "" : sysUserDto.getSignature());
 
         boolean b = this.updateById(sysUser);
 
@@ -314,6 +316,30 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
             refreshUser(userId);
         }
         return b;
+    }
+
+    @Override
+    public UserProfileVo getPublicProfile(Long userId) {
+        SysUser user = this.getById(userId);
+        if (user == null) {
+            return null;
+        }
+        UserProfileVo profile = new UserProfileVo();
+        profile.setUserId(user.getUserId());
+        profile.setUserName(user.getUserName());
+        profile.setNikeName(user.getNikeName());
+        profile.setSignature(user.getSignature());
+        profile.setPoints(user.getPoints());
+        profile.setCreateTime(user.getCreateTime());
+        profile.setLastLoginTime(user.getLastLoginTime());
+        return profile;
+    }
+
+    @Override
+    public void recordLogin(Long userId, LocalDateTime loginTime) {
+        this.update(new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<SysUser>()
+                .eq(SysUser::getUserId, userId)
+                .set(SysUser::getLastLoginTime, loginTime));
     }
 
 
@@ -377,4 +403,3 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
 
 }
-

@@ -1,6 +1,6 @@
 <template>
   <section class="avatar-cutter" aria-label="头像裁剪">
-    <input ref="inputRef" class="avatar-cutter__input" type="file" accept="image/gif,image/jpeg,image/png" @change="handleFileChange" />
+    <input ref="inputRef" class="avatar-cutter__input" type="file" accept="image/*" @change="handleFileChange" />
 
     <template v-if="imageUrl">
       <div ref="stageRef" class="avatar-cutter__stage">
@@ -16,16 +16,21 @@
           @pointermove="movePan"
           @pointerup="endPan"
           @pointercancel="endPan"
+          @error="handleImageError"
         />
         <div class="avatar-cutter__frame" aria-hidden="true" />
-        <div v-if="!ready" class="avatar-cutter__loading">正在准备图片…</div>
+        <div v-if="!ready && !imageLoadFailed" class="avatar-cutter__loading">正在准备图片…</div>
+        <div v-else-if="imageLoadFailed" class="avatar-cutter__load-error">
+          <span>图片无法读取，请重新选择。</span>
+          <button class="avatar-cutter__button avatar-cutter__button--ghost" type="button" :disabled="uploading" @click="chooseAnother">重新选择</button>
+        </div>
       </div>
 
       <div v-if="ready" class="avatar-cutter__toolbar">
         <span class="avatar-cutter__zoom-label">缩放</span>
         <input v-model.number="zoom" class="avatar-cutter__range" type="range" min="1" max="3" step="0.01" aria-label="图片缩放" @input="handleZoom" />
         <span class="avatar-cutter__zoom-value">{{ Math.round(zoom * 100) }}%</span>
-        <button class="avatar-cutter__icon-button" type="button" title="居中图片" @click="centerImage">
+        <button class="avatar-cutter__icon-button" type="button" title="居中图片" :disabled="uploading" @click="centerImage">
           <el-icon><RefreshLeft /></el-icon>
         </button>
       </div>
@@ -34,11 +39,11 @@
       <p v-if="errorMessage" class="avatar-cutter__error">{{ errorMessage }}</p>
 
       <div class="avatar-cutter__actions">
-        <button class="avatar-cutter__button avatar-cutter__button--ghost" type="button" @click="chooseAnother">重新选择</button>
+        <button class="avatar-cutter__button avatar-cutter__button--ghost" type="button" :disabled="uploading" @click="chooseAnother">重新选择</button>
         <div class="avatar-cutter__actions-right">
-          <button class="avatar-cutter__button avatar-cutter__button--ghost" type="button" @click="cancel">取消</button>
-          <button class="avatar-cutter__button avatar-cutter__button--primary" type="button" :disabled="!ready || isCropping" @click="confirmCrop">
-            {{ isCropping ? '处理中…' : '使用此头像' }}
+          <button class="avatar-cutter__button avatar-cutter__button--ghost" type="button" :disabled="uploading" @click="cancel">取消</button>
+          <button class="avatar-cutter__button avatar-cutter__button--primary" type="button" :disabled="!ready || isCropping || uploading" @click="confirmCrop">
+            {{ uploading ? '上传中…' : isCropping ? '处理中…' : '使用此头像' }}
           </button>
         </div>
       </div>
@@ -47,8 +52,8 @@
     <div v-else class="avatar-cutter__empty">
       <div class="avatar-cutter__empty-icon"><el-icon><Picture /></el-icon></div>
       <strong>上传一张头像</strong>
-      <span>支持 JPG、PNG、GIF，建议使用清晰的正方形图片</span>
-      <button class="avatar-cutter__button avatar-cutter__button--primary" type="button" @click="openFilePicker">选择本地图片</button>
+      <span>支持常见图片格式，建议使用清晰的正方形图片</span>
+      <button class="avatar-cutter__button avatar-cutter__button--primary" type="button" :disabled="uploading" @click="openFilePicker">选择本地图片</button>
       <p v-if="errorMessage" class="avatar-cutter__error">{{ errorMessage }}</p>
     </div>
   </section>
@@ -63,6 +68,8 @@ const emit = defineEmits<{
   (event: 'cancel'): void
 }>()
 
+const props = withDefaults(defineProps<{uploading?: boolean}>(), {uploading: false})
+
 const CROP_OUTPUT_SIZE = 512
 const inputRef = ref<HTMLInputElement>()
 const imageRef = ref<HTMLImageElement>()
@@ -70,6 +77,7 @@ const stageRef = ref<HTMLElement>()
 const imageUrl = ref('')
 const fileName = ref('')
 const errorMessage = ref('')
+const imageLoadFailed = ref(false)
 const ready = ref(false)
 const isCropping = ref(false)
 const cropSize = ref(320)
@@ -104,6 +112,7 @@ const resetCropState = () => {
   imageUrl.value = ''
   fileName.value = ''
   errorMessage.value = ''
+  imageLoadFailed.value = false
   ready.value = false
   naturalWidth.value = 0
   naturalHeight.value = 0
@@ -121,8 +130,9 @@ const handleFileChange = (event: Event) => {
   const file = input.files?.[0]
   if (!file) return
 
-  if (!['image/gif', 'image/jpeg', 'image/png'].includes(file.type)) {
-    errorMessage.value = '请选择 JPG、PNG 或 GIF 图片。'
+  const acceptedTypes = new Set(['image/avif', 'image/bmp', 'image/gif', 'image/jpeg', 'image/png', 'image/webp'])
+  if (file.type && !acceptedTypes.has(file.type.toLowerCase())) {
+    errorMessage.value = '请选择常见的图片格式（JPG、PNG、GIF、WEBP 等）。'
     input.value = ''
     return
   }
@@ -136,6 +146,7 @@ const handleFileChange = (event: Event) => {
   imageUrl.value = URL.createObjectURL(file)
   fileName.value = file.name
   errorMessage.value = ''
+  imageLoadFailed.value = false
   ready.value = false
   isCropping.value = false
   naturalWidth.value = 0
@@ -162,13 +173,22 @@ const centerImage = () => {
 
 const handleImageLoad = () => {
   const image = imageRef.value
-  if (!image?.naturalWidth || !image.naturalHeight) return
+  if (!image?.naturalWidth || !image.naturalHeight || image.naturalWidth < 32 || image.naturalHeight < 32) {
+    handleImageError()
+    return
+  }
   naturalWidth.value = image.naturalWidth
   naturalHeight.value = image.naturalHeight
   baseScale.value = Math.max(cropSize.value / image.naturalWidth, cropSize.value / image.naturalHeight)
   zoom.value = 1
   centerImage()
   ready.value = true
+}
+
+const handleImageError = () => {
+  ready.value = false
+  imageLoadFailed.value = true
+  errorMessage.value = '图片无法读取，请重新选择。'
 }
 
 const handleStageResize = () => {
@@ -261,6 +281,7 @@ const chooseAnother = () => {
 }
 
 const cancel = () => {
+  if (props.uploading) return
   resetCropState()
   emit('cancel')
 }
@@ -309,10 +330,12 @@ onUnmounted(() => {
 .avatar-cutter__frame { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 70%), inset 0 0 0 999px rgb(0 0 0 / 12%); }
 .avatar-cutter__frame::after { position: absolute; inset: 10px; border: 1px solid rgb(255 255 255 / 35%); border-radius: 10px; content: ''; }
 .avatar-cutter__loading { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; background: rgb(0 0 0 / 35%); font-size: 12px; }
+.avatar-cutter__load-error { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 20px; color: #fff; background: rgb(0 0 0 / 58%); flex-direction: column; font-size: 12px; text-align: center; }
 .avatar-cutter__toolbar { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
 .avatar-cutter__zoom-label, .avatar-cutter__zoom-value { color: var(--cutter-muted); font-size: 12px; white-space: nowrap; }
 .avatar-cutter__range { min-width: 0; flex: 1; accent-color: var(--cutter-primary); }
 .avatar-cutter__icon-button { display: inline-grid; width: 30px; height: 30px; padding: 0; place-items: center; border: 1px solid var(--cutter-border); border-radius: 8px; color: var(--cutter-muted); background: var(--cutter-surface); cursor: pointer; }
+.avatar-cutter__icon-button:disabled { cursor: not-allowed; opacity: .55; }
 .avatar-cutter__icon-button:hover { color: var(--cutter-primary); border-color: var(--cutter-primary); }
 .avatar-cutter__filename { overflow: hidden; margin: 9px 0 0; color: var(--cutter-muted); font-size: 11px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .avatar-cutter__error { margin: 8px 0 0; color: var(--el-color-danger, #f56c6c); font-size: 12px; text-align: center; }
@@ -324,6 +347,10 @@ onUnmounted(() => {
 .avatar-cutter__button--ghost:hover { color: var(--cutter-primary); border-color: var(--cutter-primary); }
 .avatar-cutter__button--primary { color: #fff; background: var(--cutter-primary); box-shadow: 0 5px 12px color-mix(in srgb, var(--cutter-primary) 22%, transparent); }
 .avatar-cutter__button--primary:hover:not(:disabled) { filter: brightness(1.05); }
+.avatar-cutter__button:focus-visible, .avatar-cutter__icon-button:focus-visible { outline: 2px solid color-mix(in srgb, var(--cutter-primary) 65%, transparent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .avatar-cutter__button { transition: none; }
+}
 @media (max-width: 420px) {
   .avatar-cutter__actions { align-items: stretch; flex-direction: column; }
   .avatar-cutter__actions-right { justify-content: flex-end; }

@@ -11,6 +11,7 @@ import com.anishan.user.domain.dto.PagedUserRoleQuery;
 import com.anishan.user.domain.dto.SysUserDto;
 import com.anishan.user.domain.dto.SysUserInfoDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
+import com.anishan.user.domain.vo.UserProfileVo;
 import com.anishan.user.service.SysUserService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.Api;
@@ -84,6 +85,14 @@ public class UserController {
     public R<UserVo> getUserById(@PathVariable("id") @NotNull(message = "id不能为Null") Long id) {
         UserVo user = sysUserService.getUserById(id);
         return R.success(user);
+    }
+
+    @GetMapping("/profile/{id}")
+    @PermitAll
+    @ApiOperation("获取个人主页公开资料")
+    public R<UserProfileVo> getPublicProfile(@PathVariable("id") @NotNull(message = "id不能为Null") Long id) {
+        UserProfileVo profile = sysUserService.getPublicProfile(id);
+        return profile == null ? R.error404() : R.success(profile);
     }
 
     @GetMapping("/getByRole")

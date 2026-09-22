@@ -1,6 +1,11 @@
 import {useUserStore} from "@/stores/useUserStore.ts";
 import type {IdType} from "@/api/common.ts";
 
+export const BACKEND_ACCESS_PERMISSION = 'system:backend:access';
+
+export const hasBackendAccess = (auths: readonly string[] = useUserStore().getAuths()): boolean =>
+    auths.includes(BACKEND_ACCESS_PERMISSION);
+
 export const hasPerm = (perm: string | string[] | undefined): boolean => {
     if (!perm) {
         return true;

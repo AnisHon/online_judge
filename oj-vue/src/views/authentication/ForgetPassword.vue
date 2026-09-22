@@ -63,9 +63,19 @@
       <el-col :span="10" style="position: relative;">
         <el-image
             :src="imgData"
-              class="captcha-image"
-            @click="refreshCaptchaCode"
+            :alt="captchaError || '点击刷新验证码'"
+            class="captcha-image"
+            @click="void refreshCaptchaCode()"
         />
+        <span
+            v-if="captchaError"
+            class="captcha-error"
+            role="button"
+            tabindex="0"
+            aria-live="polite"
+            @click="void refreshCaptchaCode()"
+            @keydown.enter="void refreshCaptchaCode()"
+        >{{ captchaError }}</span>
       </el-col>
 
 
@@ -87,12 +97,13 @@
 
       <el-col :span="10" style="position: relative;">
         <el-button
-            @click="sendEmailCode()"
+            native-type="button"
+            @click="void sendEmailCode()"
             class="code-button"
-            :loading="isLoading"
-            :disabled="isLoading"
+            :loading="emailSending"
+            :disabled="emailSending || emailCooldown > 0"
         >
-          获取邮箱验证码
+          {{ emailCodeLabel }}
         </el-button>
       </el-col>
 
@@ -102,7 +113,7 @@
     <el-form-item class="submit-item">
       <el-button
           type="primary"
-          @click="submitResetPassword(formRef)"
+          native-type="submit"
           class="submit-button"
           :loading="isLoading"
           :disabled="isLoading"
@@ -116,27 +127,24 @@
 <script lang="ts" setup>
 import {reactive, ref} from 'vue'
 import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
-import getCaptcha from '@/api/auth/captchaCode.ts'
 import {forgetPassword} from "@/api/auth/authentication.ts"
 import {sendForgetEmailCode} from "@/api/auth/emailCode.ts";
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
 import router from "@/router";
+import {useCaptchaCode} from '@/composables/auth/useCaptchaCode'
+import {useEmailCodeCooldown} from '@/composables/auth/useEmailCodeCooldown'
+import {authErrorMessage} from '@/utils/authError'
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
 const forgetPasswordForm = reactive({
   username: "",
-  nikeName: "",
-  email: "",
   password: "",
   repeatPassword: "",
   captchaCode: "",
   token: "",
   emailCode: ""
 })
-
-// 验证码图片，base64编码内容
-const imgData = ref("")
 
 // 可替换成正则
 const validatePassword = (rule: any, value: string, callback: any) => {
@@ -151,16 +159,6 @@ const validatePassword = (rule: any, value: string, callback: any) => {
   }
 }
 
-// 可直接使用required
-const validateNotEmpty = (rule: any, value: string, callback: any) => {
-  if (value === '') {
-    callback(new Error("不能为空"))
-  } else {
-    callback()
-  }
-}
-
-
 const repeatPassword = (rule: any, value: string, callback: any) => {
   if (value !== forgetPasswordForm.password) {
     callback(new Error("两次密码不一致"))
@@ -173,68 +171,60 @@ const rules = reactive<FormRules<typeof forgetPasswordForm>>({
   username: [{ required: true, message: "用户名不能为空", trigger: 'blur' }],
   password: [{ validator: validatePassword, trigger: 'blur' }],
   repeatPassword: [{validator: repeatPassword, trigger: 'blur' }],
+  captchaCode: [{ required: true, message: "图形验证码不能为空", trigger: 'blur' }],
   emailCode: [{ required: true, message: "邮箱验证码不能为空", trigger: 'blur' }]
 })
 
-// 发送重置密码
-const doResetPassword = () => {
-  forgetPassword({
-    username: forgetPasswordForm.username,
-    password: forgetPasswordForm.password,
-    code: forgetPasswordForm.emailCode,
-  })
-      .then(()  => {
-        ElNotification.success("重设成功")
-        router.push({name: "login"})
-      })
-      .catch((error: unknown) => {
-        ElNotification.error(error instanceof Error ? error.message : typeof error === "string" ? error : "重设密码失败")
-        refreshCaptchaCode();
-      })
-      .finally(() => {
-        isLoading.value = false;
-      })
-}
+const {image: imgData, error: captchaError, refresh: refreshCaptchaCode} = useCaptchaCode(forgetPasswordForm)
+const {sending: emailSending, remaining: emailCooldown, label: emailCodeLabel, run: runEmailCode} = useEmailCodeCooldown()
 
-// 发送重置密码（表单验证）
-const submitResetPassword = (formEl: FormInstance | undefined) => {
+const submitResetPassword = async (formEl: FormInstance | undefined = formRef.value) => {
   if (!formEl) return
-  formEl.validate((valid) => {
-    if (valid) {
-      isLoading.value = true;
-      doResetPassword();
-    } else {
+  if (isLoading.value) return
+  isLoading.value = true
+  try {
+    const valid = await formEl.validate().catch(() => false)
+    if (!valid) {
       ElNotification.warning("请确认表单")
+      return
     }
-  })
-}
-
-// 发送邮箱验证码
-const sendEmailCode = () => {
-  if (forgetPasswordForm.captchaCode === '') {
-    ElNotification.error("请输入验证码")
-  } else {
-    sendForgetEmailCode({
-      captchaCode: forgetPasswordForm.captchaCode,
+    await forgetPassword({
       username: forgetPasswordForm.username,
-      captchaToken: forgetPasswordForm.token,
-    }).then(() => {
-      ElNotification.success("发送成功")
-      }).catch((error: unknown) => {
-      refreshCaptchaCode();
-      ElNotification.warning(error instanceof Error ? error.message : typeof error === "string" ? error : "验证码发送失败");
+      password: forgetPasswordForm.password,
+      code: forgetPasswordForm.emailCode,
     })
+    ElNotification.success("重设成功")
+    await router.push({name: "login"})
+  } catch (error: unknown) {
+    ElNotification.error(authErrorMessage(error, "重设密码失败"))
+    void refreshCaptchaCode()
+  } finally {
+    isLoading.value = false
   }
 }
 
-// 刷新验证码
-const refreshCaptchaCode = async () => {
-  const {image, token} = await getCaptcha()
-  imgData.value = image;
-  forgetPasswordForm.token = token;
+// 发送邮箱验证码
+const sendEmailCode = async () => {
+  if (emailSending.value || emailCooldown.value > 0) return
+  if (forgetPasswordForm.captchaCode === '') {
+    ElNotification.error("请输入验证码")
+  } else if (forgetPasswordForm.username === '') {
+    ElNotification.error("请输入用户名或邮箱")
+  } else {
+    try {
+      const sent = await runEmailCode(() => sendForgetEmailCode({
+        captchaCode: forgetPasswordForm.captchaCode,
+        username: forgetPasswordForm.username,
+        captchaToken: forgetPasswordForm.token,
+      }))
+      if (sent) ElNotification.success("发送成功，请查收邮件")
+    } catch (error: unknown) {
+      void refreshCaptchaCode()
+      ElNotification.warning(authErrorMessage(error, "验证码发送失败"))
+    }
+  }
 }
 
-// created
-refreshCaptchaCode();
+void refreshCaptchaCode()
 
 </script>

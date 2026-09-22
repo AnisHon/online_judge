@@ -21,7 +21,6 @@
     <el-form-item prop="username">
       <el-input
           v-model="loginForm.username"
-          @keyup.enter="submitLogin(formRef)"
           type="text"
           autocomplete="off"
           placeholder="请输入用户名或邮箱"
@@ -31,7 +30,6 @@
     <el-form-item prop="password">
       <el-input
           v-model="loginForm.password"
-          @keyup.enter="submitLogin(formRef)"
           type="password"
           autocomplete="off"
           placeholder="请输入密码"
@@ -44,7 +42,6 @@
         <el-form-item prop="captchaCode">
           <el-input
               v-model="loginForm.captchaCode"
-              @keyup.enter="submitLogin(formRef)"
               type="text"
               autocomplete="off"
               placeholder="请输入验证码"
@@ -57,11 +54,22 @@
       <el-col :span="10" style="position: relative;">
         <el-image
             :src="imgData"
+            :loading="captchaLoading"
+            :alt="captchaError || '点击刷新验证码'"
             class="captcha-image"
             style="width: 100px; position: absolute;
               right: 0"
-            @click="refreshCaptchaCode"
+            @click="void refreshCaptchaCode()"
         />
+        <span
+            v-if="captchaError"
+            class="captcha-error"
+            role="button"
+            tabindex="0"
+            aria-live="polite"
+            @click="void refreshCaptchaCode()"
+            @keydown.enter="void refreshCaptchaCode()"
+        >{{ captchaError }}</span>
       </el-col>
 
 
@@ -70,7 +78,7 @@
     <el-form-item class="submit-item">
       <el-button
           type="primary"
-          @click="submitLogin(formRef)"
+          native-type="submit"
           class="submit-button"
           :loading="isLoading"
           :disabled="isLoading"
@@ -84,10 +92,11 @@
 <script lang="ts" setup>
 import {onMounted, reactive, ref} from 'vue'
 import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
-import getCaptcha from '@/api/auth/captchaCode.ts'
 import {login} from "@/api/auth/authentication.ts"
 import {type LoginForm} from "@/api/auth/authentication.ts"
 import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
+import {useCaptchaCode} from '@/composables/auth/useCaptchaCode'
+import {authErrorMessage} from '@/utils/authError'
 
 const formRef = ref<FormInstance>()
 const isLoading = ref(false)
@@ -97,9 +106,6 @@ const loginForm = reactive<LoginForm>({
   captchaCode: "",
   token: "",
 })
-
-const imgData = ref("")
-
 
 const validatePassword = (rule: any, value: string, callback: any) => {
   if (value === '') {
@@ -113,55 +119,36 @@ const validatePassword = (rule: any, value: string, callback: any) => {
   }
 }
 
-const validateNotEmpty = (rule: any, value: string, callback: any) => {
-  if (value === '') {
-    callback(new Error("不能为空"))
-  } else {
-    callback()
-  }
-}
-
 const rules = reactive<FormRules<typeof loginForm>>({
   username: [{ required: true, message: "用户名不能为空", trigger: 'blur' }],
   password: [{ validator: validatePassword, trigger: 'blur' }],
   captchaCode: [{ required: true, message: "验证码不能为空", trigger: 'blur' }]
 })
 
-const doLogin = () => {
-  login(loginForm)
-      .then(()  => {
-        ElNotification.success("欢迎登录")
-      })
-      .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : typeof error === "string" ? error : "登录失败，请稍后重试"
-        ElNotification.error(message)
-        refreshCaptchaCode()
-      })
-      .finally(() => {
-        isLoading.value = false
-      })
-}
+const {image: imgData, loading: captchaLoading, error: captchaError, refresh: refreshCaptchaCode} = useCaptchaCode(loginForm)
 
-const submitLogin = (formEl: FormInstance | undefined) => {
+const submitLogin = async (formEl: FormInstance | undefined = formRef.value) => {
   if (!formEl) return
-  formEl.validate((valid) => {
-    if (valid) {
-      isLoading.value = true
-      doLogin()
-    } else {
+  if (isLoading.value) return
+  isLoading.value = true
+  try {
+    const valid = await formEl.validate().catch(() => false)
+    if (!valid) {
       ElNotification.warning("请确认表单")
+      return
     }
-  })
-}
-
-const refreshCaptchaCode = async () => {
-  const {image, token} = await getCaptcha()
-  imgData.value = image
-  loginForm.token = token
+    await login(loginForm)
+    ElNotification.success("欢迎登录")
+  } catch (error: unknown) {
+    ElNotification.error(authErrorMessage(error, "登录失败，请稍后重试"))
+    void refreshCaptchaCode()
+  } finally {
+    isLoading.value = false
+  }
 }
 
 onMounted(() => {
-  refreshCaptchaCode()
+  void refreshCaptchaCode()
 })
 
 </script>

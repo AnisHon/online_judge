@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -106,6 +107,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
+        LocalDateTime loginTime = LocalDateTime.now();
+        sysUserService.recordLogin(loginUser.getUser().getUserId(), loginTime);
+        loginUser.getUser().setLastLoginTime(loginTime);
         return authTokenService.issue(loginUser);
     }
 
@@ -175,6 +179,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         sysUser.setNikeName(registrationForm.getNikeName());
         sysUser.setPassword(passwordEncoder.encode(registrationForm.getPassword()));
         sysUser.setEmail(registrationForm.getEmail());
+        sysUser.setLastLoginTime(LocalDateTime.now());
 
         LoginUser loginUser = doBuildLoginUser(sysUser);
 

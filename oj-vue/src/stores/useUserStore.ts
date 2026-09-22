@@ -8,8 +8,10 @@ export interface LoginUser {
     userId: IdType;
     userName: string;
     nikeName: string;
+    signature?: string;
     email: string;
     createTime: string;
+    lastLoginTime?: string;
     auths: string[];
 }
 

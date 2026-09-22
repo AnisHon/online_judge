@@ -1,4 +1,4 @@
-import {get} from "@/utils/http";
+import {ApiError, get} from "@/utils/http";
 
 
 interface CaptchaCode {
@@ -7,7 +7,9 @@ interface CaptchaCode {
 }
 
 export default async function () {
-
-    const {data: {image, token}} = await get<CaptchaCode>("/user-api/auth/captcha-code")
-    return {image, token}
+    const {data} = await get<CaptchaCode | null>("/user-api/auth/captcha-code")
+    if (!data?.image || !data.token) {
+        throw new ApiError("验证码服务暂不可用，请稍后重试", 502)
+    }
+    return {image: data.image, token: data.token}
 }

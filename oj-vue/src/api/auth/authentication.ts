@@ -114,31 +114,32 @@ async function signUp(data: SignUpForm) {
 }
 
 async function forgetPassword(data: ForgetPasswordForm) {
-    const {data: {success, message}} = await post<ForgetPasswordForm, ForgetPasswordResponse>('/user-api/auth/forget-pass', data, handledByAuthPage);
-    if (success) {
-        return  message
-    } else {
-        throw message;
-    }
+    const result = await post<ForgetPasswordForm, ForgetPasswordResponse | null>('/user-api/auth/forget-pass', data, handledByAuthPage);
+    if (!result.data) throw new Error(result.message || "重置密码响应缺少数据")
+    if (result.data.success) return result.data.message
+    throw new Error(result.data.message || "重置密码失败")
 }
 
 
 
 async function resetPassword(data: {code: string, password: string}) {
     const param = {code: data.code, password: data.password};
-    const {data: r} =
-        await put<typeof param, Boolean>('/user-api/auth/reset-pass', param, handledByAuthPage);
-    return r;
+    const result = await put<typeof param, ForgetPasswordResponse | null>('/user-api/auth/reset-pass', param, handledByAuthPage);
+    if (!result.data) throw new Error(result.message || '密码更新响应缺少数据');
+    if (!result.data.success) throw new Error(result.data.message || '密码更新失败');
+    return result.data.message;
 }
 
 async function logout() {
     try {
         await get("/user-api/auth/logout");
+    } catch {
+        // 本地退出不能依赖服务端登出接口可用。
     } finally {
         useToken().clearToken();
         useMenuStore().clear();
+        await router.replace({name: "login"});
     }
-    router.replace({name: "login"});
 }
 
 async function refreshLogin(refreshToken: string) {

@@ -4,9 +4,12 @@ import {ref} from "vue";
 import __ from "lodash";
 import type {RouteRecordRaw} from "vue-router";
 
+export type MenuLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
+
 export const useMenuStore = defineStore('menuStore', () => {
     const menuTrees = ref<TreedMenu[]>();
     const menu = ref<RouteRecordRaw[]>()
+    const status = ref<MenuLoadStatus>('idle');
     let loadPromise: Promise<TreedMenu[]> | null = null;
     let sessionVersion = 0;
 
@@ -19,6 +22,7 @@ export const useMenuStore = defineStore('menuStore', () => {
         loadPromise = null;
         menuTrees.value = undefined;
         menu.value = undefined;
+        status.value = 'idle';
     }
 
     const load = async (force = false): Promise<TreedMenu[]> => {
@@ -30,12 +34,17 @@ export const useMenuStore = defineStore('menuStore', () => {
         }
 
         const version = sessionVersion;
+        status.value = 'loading';
         const request = getTreedMenu().then((data) => {
             const trees = data || [];
             if (version === sessionVersion) {
                 menuTrees.value = trees;
+                status.value = 'ready';
             }
             return trees;
+        }).catch(error => {
+            if (version === sessionVersion) status.value = 'error';
+            throw error;
         });
         loadPromise = request;
         request.then(
@@ -58,11 +67,6 @@ export const useMenuStore = defineStore('menuStore', () => {
         return menu.value || [];
     }
 
-    const hasBackendAccess = (): boolean => {
-        // 只有按钮权限（例如查看本人提交）不能作为进入后台的依据。
-        return (menuTrees.value?.length || 0) > 0;
-    }
-
     return  {
         isDynamicReady,
         clear,
@@ -70,7 +74,7 @@ export const useMenuStore = defineStore('menuStore', () => {
         getTree,
         setMenu,
         getMenu,
-        hasBackendAccess
+        getStatus: () => status.value
     }
 
 }, {persist: false})

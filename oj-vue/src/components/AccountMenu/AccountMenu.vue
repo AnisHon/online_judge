@@ -1,12 +1,18 @@
 <template>
-  <el-dropdown class="account-menu" size="large" popper-class="account-menu-popper" @command="handleCommand">
-          <span class="account-trigger" title="打开账号菜单">
-              <avatar class="account-avatar" @click.stop="goToSetting"/>
-              <el-icon class="account-trigger__chevron"><ArrowDown /></el-icon>
-            </span>
+  <el-dropdown class="account-menu" size="large" @command="handleCommand" @visible-change="menuOpen = $event">
+    <button
+      class="account-trigger"
+      type="button"
+      aria-haspopup="menu"
+      :aria-expanded="menuOpen"
+      aria-label="打开账号菜单"
+    >
+      <avatar class="account-avatar" :size="32" />
+      <el-icon class="account-trigger__chevron"><ArrowDown /></el-icon>
+    </button>
     <template #dropdown>
       <el-dropdown-menu>
-        <el-dropdown-item command="setting">账号设置</el-dropdown-item>
+        <el-dropdown-item command="profile">个人中心</el-dropdown-item>
         <el-dropdown-item v-if="hasAccessToBackend" command="backend">进入后台</el-dropdown-item>
         <el-dropdown-item v-if="returnToUserPage" command="frontend">返回前台</el-dropdown-item>
         <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
@@ -18,33 +24,52 @@
 <script setup lang="ts">
 
 import {logout} from "@/api/auth/authentication.ts";
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import {useMenuStore} from "@/stores/useMenuStore.ts";
+import {useUserStore} from "@/stores/useUserStore.ts";
 import Avatar from "@/components/Avatar/Avatar.vue";
 import {ArrowDown} from "@element-plus/icons-vue";
+import {hasBackendAccess} from "@/utils/authUtil.ts";
+
+const emit = defineEmits<{
+  (event: 'command', key: string): void;
+  (event: 'close'): void;
+}>();
+
 const router = useRouter();
-
 const route = useRoute();
+const userStore = useUserStore();
+const menuOpen = ref(false);
 
-const goToSetting = () => router.push({name: 'setting'});
+const goToProfile = async () => {
+  const id = userStore.user?.userId;
+  if (id !== undefined && id !== null) {
+    await router.push({name: 'profile', params: {id}});
+  }
+};
 
-const handleCommand = (key: string) => {
-  if (key === 'logout') {
-    logout();
-  } else if (key === 'setting') {
-    goToSetting();
-  } else if (key === 'backend') {
-    router.push({name: 'backend'});
-  } else if (key === 'frontend') {
-    router.push({name: 'home'});
+const handleCommand = async (key: string) => {
+  emit('command', key);
+  try {
+    if (key === 'logout') {
+      await logout();
+    } else if (key === 'profile') {
+      await goToProfile();
+    } else if (key === 'backend') {
+      await router.push({name: 'backend'});
+    } else if (key === 'frontend') {
+      await router.push({name: 'home'});
+    }
+  } catch {
+    // 导航或登出失败不能留下未处理 Promise，也不能阻塞移动端抽屉关闭。
+  } finally {
+    menuOpen.value = false;
+    emit('close');
   }
 }
 
-const menuStore = useMenuStore();
-
 const hasAccessToBackend = computed(() => {
-  return menuStore.hasBackendAccess() && !route.fullPath.startsWith("/backend");
+  return hasBackendAccess(userStore.getAuths()) && !route.fullPath.startsWith("/backend");
 });
 
 const returnToUserPage = computed(() => {
@@ -57,13 +82,13 @@ const returnToUserPage = computed(() => {
 
 <style scoped>
 .account-menu { height: 100%; }
-.account-trigger { display: inline-flex; height: 38px; align-items: center; gap: 3px; padding: 2px 3px 2px 2px; border: 1px solid transparent; border-radius: 999px; color: var(--el-text-color-secondary); cursor: pointer; transition: border-color .18s ease, background-color .18s ease, color .18s ease; }
+.account-trigger { display: inline-flex; height: 38px; align-items: center; gap: 3px; padding: 2px 3px 2px 2px; border: 1px solid transparent; border-radius: 999px; color: var(--el-text-color-secondary); background: transparent; cursor: pointer; font: inherit; transition: border-color .18s ease, background-color .18s ease, color .18s ease, transform .18s ease; }
 .account-trigger:hover, .account-trigger:focus-visible { border-color: var(--el-border-color); background: var(--el-fill-color-light); color: var(--el-color-primary); outline: none; }
+.account-trigger:active { transform: scale(.98); }
 .account-avatar { cursor: pointer; transition: transform .18s ease, filter .18s ease; }
 .account-trigger:hover .account-avatar { transform: scale(1.05); filter: saturate(1.08); }
 .account-trigger__chevron { margin-right: 3px; font-size: 12px; }
-</style>
-
-<style>
-.account-menu-popper { z-index: 3000 !important; }
+@media (prefers-reduced-motion: reduce) {
+  .account-trigger, .account-avatar { transition: none; }
+}
 </style>

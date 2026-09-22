@@ -23,7 +23,7 @@ public class UserConfig {
     /**
      * 验证码类型
      */
-    private CaptchaCodeType captchaType = CaptchaCodeType.GIF;
+    private CaptchaCodeType captchaType = CaptchaCodeType.MATH;
 
     /**
      * Root账户密码

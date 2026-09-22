@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.ProfileMapper">
+
+    <select id="countSolved" resultType="long">
+        select count(distinct pc.problem_id)
+        from problem_complete pc
+        inner join problem p on p.problem_id = pc.problem_id and p.del_flag = 0
+        where pc.user_id = #{userId}
+          and p.type = 1
+    </select>
+
+    <select id="countAttempted" resultType="long">
+        select count(distinct problem_id)
+        from submit_log
+        where user_id = #{userId}
+    </select>
+
+    <select id="selectSolvedProblems" resultType="com.anishan.problem.domain.vo.ProfileProblemItemVo">
+        select pc.problem_id as problem_id,
+               coalesce(op.difficulty, 0) as difficulty
+        from problem_complete pc
+        inner join problem p on p.problem_id = pc.problem_id and p.del_flag = 0
+        left join oj_problem op on op.problem_id = pc.problem_id and op.del_flag = 0
+        where pc.user_id = #{userId}
+          and p.type = 1
+        order by pc.problem_id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectContests" resultType="com.anishan.problem.domain.vo.ProfileContestVo">
+        select c.contest_id as contest_id,
+               c.title,
+               c.type,
+               c.start_time as start_time,
+               c.end_time as end_time
+        from user_contest uc
+        inner join contest c on c.contest_id = uc.contest_id and c.del_flag = 0
+        where uc.user_id = #{userId}
+        order by c.start_time desc, c.contest_id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectSolutions" resultType="com.anishan.problem.domain.vo.ProfileSolutionVo">
+        select se.solution_id as solution_id,
+               se.title,
+               se.problem_id as problem_id,
+               p.title as problem_title,
+               se.`private` as private_,
+               se.create_time as create_time
+        from solution_explanation se
+        inner join problem p on p.problem_id = se.problem_id and p.del_flag = 0
+        where se.user_id = #{userId}
+        <if test="includePrivate == false">
+            and se.`private` = 0
+        </if>
+        order by se.top_up desc, se.create_time desc, se.solution_id desc
+        limit #{limit}
+    </select>
+</mapper>
