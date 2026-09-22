@@ -1,5 +1,5 @@
 import type {IdType} from "@/api/common.ts";
-import {get, post, resultNotify} from "@/utils/http.ts";
+import {del, get, post, resultNotify} from "@/utils/http.ts";
 
 export interface Supplement {
     contestId: IdType;
@@ -21,8 +21,9 @@ export const getSupplements = async (contestId: IdType) => {
 }
 
 export const removeSupplement = async (contestId: IdType, userId: IdType) => {
-    const {data} = await get<boolean>(`/problem-api/contest/lateSubmission/${contestId}/${userId}`);
-    resultNotify(data, "删除成功", "删除失败")
+    const {data} = await del<boolean>(`/problem-api/contest/lateSubmission/${contestId}/${userId}`);
+    resultNotify(data, "删除成功", "删除失败");
+    if (data !== true) throw new Error("删除迟交权限失败");
 }
 
 export const addSupplement = async (form: SupplementForm) => {

@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {DataAnalysis, Refresh, View} from "@element-plus/icons-vue";
 import {getProblemStatistic, type ProblemStatistic} from "@/api/record";
@@ -26,14 +26,15 @@ import ContestSubPageShell from "@/views/backend/teacher/contest-manage/componen
 
 const route = useRoute();
 const router = useRouter();
-const contestId = route.params.contestId as IdType;
+const contestId = computed(() => String(route.params.contestId || '') as IdType);
 const loading = ref(false);
 const list = ref<ProblemStatistic[]>([]);
 const getAccuracy = (row: ProblemStatistic) => {const total = row.absentNum + row.rightNum + row.wrongNum; return total ? Math.round(row.rightNum / total * 100) : 0;};
 const averageAccuracy = computed(() => list.value.length ? Math.round(list.value.reduce((sum, row) => sum + getAccuracy(row), 0) / list.value.length) : 0);
 const stats = computed(() => [{label: '题目数量', value: list.value.length, tone: 'violet'}, {label: '平均正确率', value: `${averageAccuracy.value}%`, tone: 'green'}, {label: '总提交数', value: list.value.reduce((sum, row) => sum + row.rightNum + row.wrongNum, 0), tone: 'blue'}, {label: '未提交数', value: list.value.reduce((sum, row) => sum + row.absentNum, 0), tone: 'amber'}]);
-const getList = async () => {loading.value = true; try {list.value = await getProblemStatistic(contestId);} finally {loading.value = false;}};
-const toProblemScore = (row: ProblemStatistic) => router.push({name: 'problem-scores', params: {contestId, problemId: row.problemId}});
+const getList = async () => {loading.value = true; try {list.value = await getProblemStatistic(contestId.value);} finally {loading.value = false;}};
+const toProblemScore = (row: ProblemStatistic) => router.push({name: 'problem-scores', params: {contestId: contestId.value, problemId: row.problemId}});
+watch(contestId, () => void getList());
 getList();
 </script>
 

@@ -13,6 +13,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ContestType;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.ContestDto;
+import com.anishan.problem.domain.dto.ContestAdminQuery;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
@@ -44,6 +45,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.util.StringUtils;
 
 /**
 * @author happy
@@ -140,6 +142,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     @Override
     @CacheEvict(key = "#contestDto.contestId")
     public boolean updateContest(ContestDto contestDto) {
+        validateSchedule(contestDto);
         Contest contest = BeanUtil.copyProperties(contestDto, Contest.class);
 
         LocalDateTime time = this.getTime(contestDto.getContestId());
@@ -150,13 +153,15 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
 
     @Override
     public boolean addContest(ContestDto classDto) {
+        validateSchedule(classDto);
         Contest contest = BeanUtil.copyProperties(classDto, Contest.class);
         return this.save(contest);
     }
 
     @Override
-    public PagedResult<ContestVo> listContestsAdmin(PagedQuery<Contest> pagedQuery, ContestType type) {
+    public PagedResult<ContestVo> listContestsAdmin(ContestAdminQuery pagedQuery, ContestType type) {
         Page<ContestVo> page = pagedQuery.customPage();
+        LocalDateTime now = LocalDateTime.now();
         MPJLambdaWrapper<Contest> wrapper = new MPJLambdaWrapper<Contest>()
                 .selectCount(UserContestRelation::getUserId, ContestVo::getJoinedNumber)
                 .selectAll(Contest.class)
@@ -165,10 +170,46 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
                 .groupBy(Contest::getContestId)
                 .orderByDesc(Contest::getStartTime);
 
+        if (StringUtils.hasText(pagedQuery.getKeyword())) {
+            String keyword = pagedQuery.getKeyword().trim();
+            wrapper.and(query -> query
+                    .like(Contest::getTitle, keyword)
+                    .or()
+                    .like(Contest::getDescription, keyword));
+        }
+
+        if (StringUtils.hasText(pagedQuery.getStatus())) {
+            switch (pagedQuery.getStatus().trim().toLowerCase()) {
+                case "pending":
+                    wrapper.gt(Contest::getStartTime, now);
+                    break;
+                case "running":
+                    wrapper.le(Contest::getStartTime, now)
+                            .ge(Contest::getEndTime, now);
+                    break;
+                case "ended":
+                    wrapper.lt(Contest::getEndTime, now);
+                    break;
+                default:
+                    break;
+            }
+        }
+
 
         page = contestMapper.selectJoinPage(page, ContestVo.class, wrapper);
 
         return PagedResult.build(page);
+    }
+
+    private void validateSchedule(ContestDto contestDto) {
+        ThrowUtil.businessError(contestDto.getStartTime() == null || contestDto.getEndTime() == null,
+                "开始时间和结束时间不能为空");
+        ThrowUtil.businessError(!contestDto.getStartTime().isBefore(contestDto.getEndTime()),
+                "结束时间必须晚于开始时间");
+        ThrowUtil.businessError(contestDto.getAuth() == null, "访问策略不能为空");
+        if (contestDto.getAuth().name().equalsIgnoreCase("PRIVATE")) {
+            ThrowUtil.businessError(!StringUtils.hasText(contestDto.getPwd()), "私有活动必须设置访问密码");
+        }
     }
 
     private boolean isInContesting(LocalDateTime startTime, LocalDateTime endTime) {
@@ -379,7 +420,6 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
         return userContestService.saveIgnore(relations);
     }
 }
-
 
 
 

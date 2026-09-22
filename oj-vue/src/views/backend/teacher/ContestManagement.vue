@@ -22,11 +22,11 @@
 
     <section class="filter-panel">
       <div class="filter-main">
-        <el-input v-model="searchText" class="keyword-input" clearable placeholder="搜索标题或描述" :prefix-icon="Search" @keyup.enter="getList" />
-        <el-select v-model="statusFilter" class="status-select" placeholder="全部状态" clearable>
+        <el-input v-model="searchText" class="keyword-input" clearable placeholder="搜索标题或描述" :prefix-icon="Search" @keyup.enter="applyFilters" />
+        <el-select v-model="statusFilter" class="status-select" placeholder="全部状态" clearable @change="applyFilters">
           <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
-        <el-button type="primary" :icon="Search" @click="getList">查询</el-button>
+        <el-button type="primary" :icon="Search" @click="applyFilters">查询</el-button>
         <el-button :icon="Refresh" @click="resetFilters">重置</el-button>
       </div>
       <div class="filter-actions">
@@ -70,10 +70,7 @@
               <el-button link type="primary" :icon="MoreFilled">更多</el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item v-if="canManageJoined" command="joined" :icon="User">{{ isHomework ? '提交管理' : '参赛管理' }}</el-dropdown-item>
-                  <el-dropdown-item v-if="canViewStatistics" command="problem-statistic" :icon="DataAnalysis">题目统计</el-dropdown-item>
-                  <el-dropdown-item v-if="canViewStatistics" command="user-statistic" :icon="Histogram">用户统计</el-dropdown-item>
-                  <el-dropdown-item v-if="isHomework && canEditContest" command="supplement" :icon="Clock">设置迟交</el-dropdown-item>
+                  <el-dropdown-item v-for="item in moreCommands" :key="item.command" :command="item.command" :icon="item.icon">{{ item.label }}</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -96,7 +93,7 @@
         <div class="form-section"><div class="form-section__title"><span>03</span><div><strong>时间安排</strong><small>开始时间必须早于结束时间</small></div></div><div class="form-grid"><el-form-item label="开始时间" prop="startTime"><el-date-picker v-model="form.startTime" class="full-width" type="datetime" placeholder="选择开始时间" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DDTHH:mm:ss" :disabled-date="disableStartDate" /></el-form-item><el-form-item label="结束时间" prop="endTime"><el-date-picker v-model="form.endTime" class="full-width" type="datetime" placeholder="选择结束时间" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DDTHH:mm:ss" :disabled-date="disableEndDate" /></el-form-item></div></div>
         <div class="form-section"><div class="form-section__title"><span>04</span><div><strong>说明</strong><small>可选，支持 Markdown</small></div></div><el-form-item prop="description"><MarkDownEditor v-model="form.description" height="280px" /></el-form-item></div>
       </el-form>
-      <template #footer><el-button @click="cancel">取消</el-button><el-button v-has="dialogState === 'add' ? 'problem:contest:add' : 'problem:contest:edit'" type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">保存{{ isHomework ? '作业' : '竞赛' }}</el-button></template>
+      <template #footer><el-button @click="cancel">取消</el-button><el-button v-has="dialogState === 'add' ? 'problem:contest:add' : 'problem:contest:edit'" type="primary" :loading="saving" @click="submitForm">保存{{ isHomework ? '作业' : '竞赛' }}</el-button></template>
     </el-dialog>
 
     <el-dialog v-model="openSelectList" title="选择题单" width="min(960px, 94vw)" class="list-picker-dialog" append-to-body destroy-on-close><ListView v-model="form.listId" v-model:isOpen="openSelectList" @select="handleListSelect" /></el-dialog>
@@ -104,10 +101,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
+import {computed, reactive, ref, watch, type Component} from "vue";
 import {ElMessageBox, type FormInstance, type FormRules} from "element-plus";
-import {Clock, Collection, DataAnalysis, Delete, EditPen, Flag, Histogram, List, Lock, MoreFilled, Notebook, Plus, Refresh, Search, User} from "@element-plus/icons-vue";
-import {ContestAuth, ContestType, type ContestForm, type ContestView, debouncedAddContest, debouncedGetContestAdmin, debouncedUpdateContest, dict, type PageContest, removeContest} from "@/api/contest";
+import {Clock, DataAnalysis, Delete, EditPen, Flag, Histogram, List, Lock, MoreFilled, Notebook, Plus, Refresh, Search, User} from "@element-plus/icons-vue";
+import {ContestAuth, ContestType, type ContestForm, type ContestView, dict} from "@/api/contest";
+import {createContest, getContestAdminPage, removeContests, updateContest, type ContestAdminQuery} from "@/api/contest/admin";
 import {authTagType, authText, formatDate as formatContestDate} from "@/utils/contest";
 import {useColumn} from "@/hooks/useColumn";
 import RightToolBar from "@/components/right-toolbar/RightToolBar.vue";
@@ -124,7 +122,7 @@ const props = defineProps<{mode: ContestType}>();
 const router = useRouter();
 const isHomework = computed(() => props.mode === ContestType.HOMEWORK);
 const pageTitle = computed(() => isHomework.value ? '作业管理' : '竞赛管理');
-const queryParams = reactive<PageContest>({currentPage: 1, pageSize: 20, type: isHomework.value ? 'HOMEWORK' : 'CONTEST'});
+const queryParams = reactive<ContestAdminQuery>({currentPage: 1, pageSize: 20, type: isHomework.value ? 'HOMEWORK' : 'CONTEST'});
 const tableList = reactive<ContestView[]>([]);
 const total = ref(0);
 const showSearch = ref(true);
@@ -137,7 +135,23 @@ const dialogState = ref<'add' | 'edit'>('add');
 const formRef = ref<FormInstance>();
 const form = reactive<ContestForm>({type: props.mode, title: '', auth: ContestAuth.PUBLIC, listId: undefined, startTime: undefined, endTime: undefined, pwd: '', description: ''});
 const columns = useColumn(['ID', '名称', '访问策略', '时间安排', '状态', '题单', '参与人数']).columns;
-const rules: FormRules<ContestForm> = {title: [{required: true, message: '请输入名称', trigger: 'blur'}], listId: [{required: true, message: '请选择题单', trigger: 'change'}], startTime: [{required: true, message: '请选择开始时间', trigger: 'change'}], endTime: [{required: true, message: '请选择结束时间', trigger: 'change'}]};
+const validateTimeRange = (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
+  if (!form.startTime || !form.endTime) return callback();
+  if (new Date(form.startTime).getTime() >= new Date(form.endTime).getTime()) return callback(new Error('结束时间必须晚于开始时间'));
+  callback();
+};
+const validatePassword = (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
+  if (form.auth !== ContestAuth.PRIVATE || String(value || '').trim()) return callback();
+  callback(new Error('私有活动必须设置访问密码'));
+};
+const rules = computed<FormRules<ContestForm>>(() => ({
+  title: [{required: true, message: '请输入名称', trigger: 'blur'}],
+  listId: [{required: true, message: '请选择题单', trigger: 'change'}],
+  auth: [{required: true, message: '请选择访问策略', trigger: 'change'}],
+  pwd: [{validator: validatePassword, trigger: 'blur'}],
+  startTime: [{required: true, message: '请选择开始时间', trigger: 'change'}, {validator: validateTimeRange, trigger: 'change'}],
+  endTime: [{required: true, message: '请选择结束时间', trigger: 'change'}, {validator: validateTimeRange, trigger: 'change'}],
+}));
 const statusOptions = [{label: '未开始', value: 'pending'}, {label: '进行中', value: 'running'}, {label: '已结束', value: 'ended'}];
 const dialogTitle = computed(() => `${dialogState.value === 'add' ? '新建' : '编辑'}${isHomework.value ? '作业' : '竞赛'}`);
 const selectedListName = ref('');
@@ -146,13 +160,23 @@ const canViewLists = computed(() => hasPerm('problem:list:list'));
 const canEditContest = computed(() => hasPerm('problem:contest:edit'));
 const canViewStatistics = computed(() => hasPerm('problem:contest:statistic'));
 const canManageJoined = computed(() => hasAnyPerm(['problem:contest:list', 'user:user:list']));
-const canUseMore = computed(() => hasAnyPerm(['problem:contest:edit', 'problem:contest:statistic', 'problem:contest:rank']));
+const moreCommands = computed<Array<{command: string; label: string; icon: Component}>>(() => {
+  const commands: Array<{command: string; label: string; icon: Component}> = [];
+  if (canManageJoined.value) commands.push({command: 'joined', label: isHomework.value ? '提交管理' : '参赛管理', icon: User});
+  if (canViewStatistics.value) {
+    commands.push({command: 'problem-statistic', label: '题目统计', icon: DataAnalysis});
+    commands.push({command: 'user-statistic', label: '用户统计', icon: Histogram});
+  }
+  if (isHomework.value && canEditContest.value) commands.push({command: 'supplement', label: '设置迟交', icon: Clock});
+  return commands;
+});
+const canUseMore = computed(() => moreCommands.value.length > 0);
 const canViewListLink = computed(() => hasAnyPerm(['problem:list:add-problem', 'problem:list:del-problem', 'problem:problem:list']));
 const single = computed(() => selectedIds.value.length !== 1);
 const multiple = computed(() => selectedIds.value.length === 0);
 const joinedCount = computed(() => tableList.reduce((sum, item) => sum + (item.joinedNumber || 0), 0));
 const runningCount = computed(() => tableList.filter(item => statusOf(item).tone === 'running').length);
-const filteredList = computed(() => {const keyword = searchText.value.trim().toLowerCase(); return tableList.filter(item => {const textMatch = !keyword || `${item.title} ${item.description || ''}`.toLowerCase().includes(keyword); return textMatch && (!statusFilter.value || statusOf(item).tone === statusFilter.value);});});
+const filteredList = computed(() => tableList);
 
 const statusOf = (row: ContestView) => {const now = Date.now(); const start = row.startTime ? new Date(row.startTime).getTime() : 0; const end = row.endTime ? new Date(row.endTime).getTime() : 0; if (start > now) return {label: '未开始', tone: 'pending'}; if (end && end < now) return {label: '已结束', tone: 'ended'}; return {label: '进行中', tone: 'running'};};
 const truncate = (value?: string) => value ? value.replace(/[#*`]/g, '').trim().slice(0, 42) : '暂无描述';
@@ -161,6 +185,7 @@ const toDateTimeInput = (value?: string) => value ? value.replace(' ', 'T').slic
 const shortListId = (value: IdType) => {const text = String(value); return text.length > 16 ? `${text.slice(0, 8)}…${text.slice(-5)}` : text;};
 const resetForm = () => {Object.assign(form, {contestId: undefined, type: props.mode, title: '', auth: ContestAuth.PUBLIC, listId: undefined, startTime: undefined, endTime: undefined, pwd: '', description: ''}); selectedListName.value = '';};
 const resetFilters = () => {searchText.value = ''; statusFilter.value = ''; queryParams.currentPage = 1; getList();};
+const applyFilters = () => {queryParams.currentPage = 1; getList();};
 const handleSelectionChange = (selection: ContestView[]) => {selectedIds.value = selection.map(item => item.contestId);};
 const handleListSelect = (list: ProblemListView) => {form.listId = list.listId; selectedListName.value = list.listName;};
 const goToList = (id: IdType) => {if (router.hasRoute('list-problem')) router.push({name: 'list-problem', params: {id}});};
@@ -168,17 +193,47 @@ const handleCommand = (command: string, row: ContestView) => {const params = {co
 const handleAdd = () => {resetForm(); dialogState.value = 'add'; open.value = true;};
 const hydrateListName = async (id?: IdType) => {if (!id || selectedListName.value) return; try {const result = await fetchProblemLists({currentPage: 1, pageSize: 1, asc: true, listId: id}); selectedListName.value = result.data.find(item => String(item.listId) === String(id))?.listName || '';} catch { /* 题单名称不是编辑的阻断条件 */ }};
 const handleUpdate = (row?: ContestView) => {const target = row || tableList.find(item => item.contestId === selectedIds.value[0]); if (!target) return; resetForm(); Object.assign(form, {...target, type: props.mode, startTime: toDateTimeInput(target.startTime), endTime: toDateTimeInput(target.endTime)}); dialogState.value = 'edit'; open.value = true; void hydrateListName(target.listId);};
-const handleDelete = async (row: ContestView) => {try {await ElMessageBox.confirm(`确认删除“${row.title}”吗？删除后无法恢复。`, '删除确认', {type: 'warning', confirmButtonText: '确认删除', cancelButtonText: '取消'}); await removeContest(row.contestId); getList();} catch { /* 用户取消 */ }};
-const handleDeleteSelected = async () => {try {await ElMessageBox.confirm(`确认删除选中的 ${selectedIds.value.length} 项吗？删除后无法恢复。`, '批量删除确认', {type: 'warning', confirmButtonText: '确认删除', cancelButtonText: '取消'}); await removeContest(selectedIds.value); getList();} catch { /* 用户取消 */ }};
-const cancel = () => {open.value = false; resetForm();};
+const handleDelete = async (row: ContestView) => {try {await ElMessageBox.confirm(`确认删除“${row.title}”吗？删除后无法恢复。`, '删除确认', {type: 'warning', confirmButtonText: '确认删除', cancelButtonText: '取消'}); await removeContests(row.contestId); await getList();} catch { /* 用户取消 */ }};
+const handleDeleteSelected = async () => {try {await ElMessageBox.confirm(`确认删除选中的 ${selectedIds.value.length} 项吗？删除后无法恢复。`, '批量删除确认', {type: 'warning', confirmButtonText: '确认删除', cancelButtonText: '取消'}); await removeContests(selectedIds.value); await getList();} catch { /* 用户取消 */ }};
+const saveVersion = ref(0);
+const saving = ref(false);
+const cancel = () => {saveVersion.value++; saving.value = false; open.value = false; resetForm();};
 const disableStartDate = (date: Date) => !!form.endTime && date.getTime() > new Date(form.endTime).getTime();
 const disableEndDate = (date: Date) => !!form.startTime && date.getTime() < new Date(form.startTime).getTime();
 const finishDialog = () => {open.value = false; resetForm(); getList();};
-const {loading: addLoading, isLoading: isAddLoading, add} = debouncedAddContest(form, finishDialog);
-const {loading: updateLoading, isLoading: isUpdateLoading, update} = debouncedUpdateContest(form, finishDialog);
-const submitForm = async () => {const valid = await formRef.value?.validate().catch(() => false); if (!valid) return; if (dialogState.value === 'add') {addLoading(); add();} else {updateLoading(); update();}};
-const {loading: listLoading, isLoading, get: getContest} = debouncedGetContestAdmin(queryParams, data => {tableList.splice(0, tableList.length, ...data.data); total.value = data.totalRecords;});
-const getList = () => {listLoading(); getContest();};
+const submitForm = async () => {
+  const valid = await formRef.value?.validate().catch(() => false);
+  if (!valid) return;
+  const requestVersion = ++saveVersion.value;
+  const payload = {...form, type: props.mode};
+  saving.value = true;
+  try {
+    if (dialogState.value === 'add') await createContest(payload);
+    else await updateContest(payload);
+    if (requestVersion === saveVersion.value) finishDialog();
+  } finally {
+    if (requestVersion === saveVersion.value) saving.value = false;
+  }
+};
+const isLoading = ref(false);
+let listRequestVersion = 0;
+const getList = async () => {
+  const requestVersion = ++listRequestVersion;
+  queryParams.keyword = searchText.value.trim() || undefined;
+  queryParams.status = (statusFilter.value || undefined) as ContestAdminQuery['status'];
+  isLoading.value = true;
+  try {
+    const data = await getContestAdminPage({...queryParams});
+    if (requestVersion !== listRequestVersion) return;
+    tableList.splice(0, tableList.length, ...data.data);
+    total.value = data.totalRecords;
+    selectedIds.value = [];
+  } finally {
+    if (requestVersion === listRequestVersion) isLoading.value = false;
+  }
+};
+watch(() => props.mode, (mode) => {queryParams.type = mode === ContestType.HOMEWORK ? 'HOMEWORK' : 'CONTEST'; queryParams.currentPage = 1; resetForm(); resetFilters();});
+watch(() => form.auth, (auth) => {if (auth !== ContestAuth.PRIVATE) form.pwd = '';});
 getList();
 </script>
 

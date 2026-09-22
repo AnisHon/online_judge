@@ -2,7 +2,7 @@
   <div class="answer-page">
     <div v-show="!isFullScreen" class="answer-toolbar">
       <div class="answer-toolbar__title"><span class="answer-icon"><el-icon><DocumentChecked /></el-icon></span><div><span class="eyebrow">SUBMISSION REVIEW</span><strong>答题详情</strong><small>用户 #{{ userId }} · 题目 #{{ problemId }}</small></div></div>
-      <el-button text :icon="ArrowLeft" @click="router.back">返回上一页</el-button>
+      <el-button text :icon="ArrowLeft" @click="goBack">返回上一页</el-button>
     </div>
     <el-row justify="center" v-if="problem !== undefined" :gutter="20">
       <el-col class="problem-content" ref="contentRef" :span="12" v-show="!isFullScreen">
@@ -104,7 +104,7 @@
 
 <script setup lang="ts">
 import {getDetailProblem, type OjProblemView, type ProblemDetailView, ProblemType,} from "@/api/problem";
-import {computed, onMounted, onUnmounted, reactive, ref,} from "vue";
+import {computed, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
 import EnhancedCodeEditor from '@/components/EnhancedCodeEdior/index.vue'
 import {problemTypeToString} from "@/utils/problem";
 import MarkdownPreview from "@/components/MarkdownPreview.vue";
@@ -136,11 +136,11 @@ const contentRef = ref<InstanceType<typeof EnhancedCodeEditor> | null>(null);
 
 const disableSubmit = ref(true);
 
-const problemId = <IdType>route.params.problemId;
+const problemId = computed(() => String(route.params.problemId || '') as IdType);
 
-const userId= <IdType>route.params.userId;
+const userId = computed(() => String(route.params.userId || '') as IdType);
 
-const contestId = <IdType>route.params.contestId;
+const contestId = computed(() => String(route.params.contestId || '') as IdType);
 
 
 // 各种信息的计算属性
@@ -195,7 +195,7 @@ const judgeResult = ref<JudgeResponse>();
 
 // 是否显示判题结果
 const isShowResult = computed(() => {
-  if (contestId) {
+  if (contestId.value) {
     return false;
   } else {
     return !!judgeResult.value;
@@ -207,7 +207,7 @@ const isShowResult = computed(() => {
 const codeSpan = computed(() => {
   let span: number;
   if (isFullScreen.value) {
-    return contestId ? 24 : 16;
+    return contestId.value ? 24 : 16;
   } else {
     span = 12;
   }
@@ -217,8 +217,8 @@ const codeSpan = computed(() => {
 
 // 判题的表单
 const judgeForm = reactive<JudgeForm>({
-  contestId: contestId,
-  problemId: problemId,
+  contestId: contestId.value,
+  problemId: problemId.value,
   answers: [],
   code: ""
 });
@@ -264,7 +264,7 @@ const initBlanks = () => {
 
 const getProblem = async () => {
 
-  problem.value = await getDetailProblem(problemId);
+  problem.value = await getDetailProblem(problemId.value);
   // 回写答案
   await getAnswer();
   // 初始化填空题
@@ -291,7 +291,7 @@ const getProblem = async () => {
 
 // 答案回写
 const getAnswer = async () => {
-  const answer = await getUserAnswer(problemId, contestId, userId);
+  const answer = await getUserAnswer(problemId.value, contestId.value, userId.value);
   // answer是null表示还没有写
   if (!answer) return;
   judgeForm.code = <string>answer.code;
@@ -301,7 +301,18 @@ const getAnswer = async () => {
 }
 
 
-// created
+const goBack = () => router.replace({name: 'user-scores', params: {contestId: contestId.value, userId: userId.value}});
+
+// 路由参数在 keep-alive/路由复用时会变化，清理旧答案后再加载当前上下文。
+watch([contestId, userId, problemId], () => {
+  problem.value = undefined;
+  judgeForm.contestId = contestId.value;
+  judgeForm.problemId = problemId.value;
+  judgeForm.answers = [];
+  judgeForm.code = '';
+  void getProblem();
+});
+
 getProblem();
 
 

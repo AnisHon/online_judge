@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from "vue";
+import {computed, reactive, ref, watch} from "vue";
 import {Delete, InfoFilled, Plus, Refresh, School, User} from "@element-plus/icons-vue";
 import {ElMessageBox, ElNotification} from "element-plus";
 import {useRoute} from "vue-router";
@@ -57,8 +57,8 @@ import ClassView from "@/views/backend/teacher/contest-manage/component/ClassVie
 import ContestSubPageShell from "@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue";
 
 const route = useRoute();
-const contestId = route.params.contestId as IdType;
-const isHomework = route.path.includes('homework');
+const contestId = computed(() => String(route.params.contestId || '') as IdType);
+const isHomework = computed(() => route.path.includes('homework'));
 const tableList = reactive<UserView[]>([]);
 const userIds = reactive<IdType[]>([]);
 const selectedIds = ref<IdType[]>([]);
@@ -75,12 +75,13 @@ const stats = computed(() => [
   {label: '名单状态', value: tableList.length ? '已建立' : '待添加', tone: tableList.length ? 'green' : 'amber'}
 ]);
 
-const getList = async () => {isLoading.value = true; try {tableList.splice(0, tableList.length, ...(await getUserByContest(contestId)));} finally {isLoading.value = false;}};
+const getList = async () => {isLoading.value = true; try {tableList.splice(0, tableList.length, ...(await getUserByContest(contestId.value)));} finally {isLoading.value = false;}};
 const handleSelectionChange = (selection: UserView[]) => {selectedIds.value = selection.map(user => user.userId);};
-const handleDelete = async (row?: UserView) => {const ids = row ? [row.userId] : selectedIds.value; try {await ElMessageBox.confirm(`确认从名单中移除 ${ids.length} 位用户吗？`, '移除确认', {type: 'warning', confirmButtonText: '确认移除', cancelButtonText: '取消'}); await removeUser(contestId, row ? row.userId : ids); await getList();} catch { /* 用户取消 */ }};
-const submit = async () => {if (!userIds.length) {ElNotification.warning('请选择至少一位用户'); return;} submitLoading.value = true; try {await addUserDirect(contestId, userIds); userIds.splice(0); userDialog.value = false; await getList();} finally {submitLoading.value = false;}};
-const handleSelectClass = async (classId: IdType) => {await addUserByClass(contestId, classId); classDialog.value = false; await getList();};
+const handleDelete = async (row?: UserView) => {const ids = row ? [row.userId] : selectedIds.value; try {await ElMessageBox.confirm(`确认从名单中移除 ${ids.length} 位用户吗？`, '移除确认', {type: 'warning', confirmButtonText: '确认移除', cancelButtonText: '取消'}); await removeUser(contestId.value, row ? row.userId : ids); await getList();} catch { /* 用户取消 */ }};
+const submit = async () => {if (!userIds.length) {ElNotification.warning('请选择至少一位用户'); return;} submitLoading.value = true; try {await addUserDirect(contestId.value, userIds); userIds.splice(0); userDialog.value = false; await getList();} finally {submitLoading.value = false;}};
+const handleSelectClass = async (classId: IdType) => {await addUserByClass(contestId.value, classId); classDialog.value = false; await getList();};
 const cancel = () => {userDialog.value = false; userIds.splice(0);};
+watch(contestId, () => void getList());
 getList();
 </script>
 

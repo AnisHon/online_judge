@@ -1,6 +1,6 @@
 <template>
   <ContestSubPageShell title="用户分数" kicker="ANALYTICS / USER SCORES" description="查看用户在本场竞赛或作业中的逐题得分，并定位具体答题记录。" :icon="User" tone="blue" :stats="stats">
-    <template #actions><el-button :icon="Refresh" :loading="loading" @click="getList">刷新数据</el-button><el-button :icon="ArrowLeft" @click="router.back()">返回统计</el-button></template>
+    <template #actions><el-button :icon="Refresh" :loading="loading" @click="getList">刷新数据</el-button><el-button :icon="ArrowLeft" @click="goBack">返回统计</el-button></template>
     <section class="score-panel">
       <div class="panel-heading"><div><span class="eyebrow">USER PERFORMANCE</span><h2>逐题成绩</h2><p>用户 #{{ userId }} · 竞赛 / 作业 #{{ contestId }}</p></div><el-input v-model="keyword" clearable class="keyword-input" :prefix-icon="Search" placeholder="搜索题目" /></div>
       <el-table v-loading="loading" class="score-table" :data="filteredList" row-key="problemId">
@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ArrowLeft, CircleCheck, Close, Refresh, Search, User, View } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { IdType } from '@/api/common'
@@ -23,7 +23,7 @@ import { getUserScores, type UserScore } from '@/api/record'
 import ContestSubPageShell from '../component/ContestSubPageShell.vue'
 
 const route = useRoute(); const router = useRouter()
-const contestId = String(route.params.contestId || ''); const userId = String(route.params.userId || '')
+const contestId = computed(() => String(route.params.contestId || '')); const userId = computed(() => String(route.params.userId || ''))
 const loading = ref(false); const list = ref<UserScore[]>([]); const keyword = ref('')
 const hasScore = (score: number | null | undefined) => score !== null && score !== undefined
 const answered = computed(() => list.value.filter((item) => hasScore(item.score)).length)
@@ -31,9 +31,11 @@ const correct = computed(() => list.value.filter((item) => hasScore(item.score) 
 const total = computed(() => list.value.reduce((sum, item) => sum + (Number(item.score) || 0), 0))
 const stats = computed(() => [{ label: '题目数', value: list.value.length, tone: 'blue' }, { label: '已提交', value: answered.value, tone: 'green' }, { label: '通过', value: correct.value, tone: 'violet' }, { label: '总分', value: total.value, tone: 'amber' }])
 const filteredList = computed(() => { const value = keyword.value.trim().toLowerCase(); return value ? list.value.filter((item) => String(item.title || '').toLowerCase().includes(value) || String(item.problemId).includes(value)) : list.value })
-const getList = async () => { loading.value = true; try { list.value = await getUserScores({ userId, contestId }) } finally { loading.value = false } }
-const toUserAnswer = (row: UserScore) => router.push({ name: 'user-answer', params: { contestId, problemId: row.problemId, userId } })
+const getList = async () => { loading.value = true; try { list.value = await getUserScores({ userId: userId.value, contestId: contestId.value }) } finally { loading.value = false } }
+const goBack = () => router.replace({ name: 'user-statistic', params: { contestId: contestId.value } })
+const toUserAnswer = (row: UserScore) => router.push({ name: 'user-answer', params: { contestId: contestId.value, problemId: row.problemId, userId: userId.value } })
 onMounted(getList)
+watch([contestId, userId], () => void getList())
 </script>
 
 <style scoped>

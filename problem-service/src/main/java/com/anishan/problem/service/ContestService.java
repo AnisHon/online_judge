@@ -5,6 +5,7 @@ import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ContestType;
 import com.anishan.problem.domain.dto.ContestDto;
+import com.anishan.problem.domain.dto.ContestAdminQuery;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
 import com.anishan.problem.domain.entity.SupplementContest;
@@ -42,7 +43,7 @@ public interface ContestService extends IService<Contest> {
 
     boolean addContest(ContestDto contestDto);
 
-    PagedResult<ContestVo> listContestsAdmin(PagedQuery<Contest> pagedQuery, ContestType type);
+    PagedResult<ContestVo> listContestsAdmin(ContestAdminQuery pagedQuery, ContestType type);
 
     ContestJoinResponse joinContest(Long userId, ContestJoinRequest contestJoinRequest);
 

@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeft,
@@ -122,8 +122,8 @@ type ResultFilter = 'all' | 'correct' | 'wrong' | 'unsubmitted'
 
 const route = useRoute()
 const router = useRouter()
-const contestId = String(route.params.contestId || '')
-const problemId = String(route.params.problemId || '')
+const contestId = computed(() => String(route.params.contestId || ''))
+const problemId = computed(() => String(route.params.problemId || ''))
 
 const loading = ref(false)
 const list = ref<ProblemScore[]>([])
@@ -195,24 +195,25 @@ const getResultIcon = (item: ProblemScore) => {
 const loadScores = async () => {
   loading.value = true
   try {
-    list.value = (await getProblemScore({ problemId, contestId })) || []
+    list.value = (await getProblemScore({ problemId: problemId.value, contestId: contestId.value })) || []
   } finally {
     loading.value = false
   }
 }
 
 const goBack = () => {
-  router.back()
+  router.replace({ name: 'problem-statistic', params: { contestId: contestId.value } })
 }
 
 const toUserScore = (userId: IdType) => {
   router.push({
     name: 'user-scores',
-    params: { contestId, problemId, userId },
+    params: { contestId: contestId.value, problemId: problemId.value, userId },
   })
 }
 
 onMounted(loadScores)
+watch([contestId, problemId], () => void loadScores())
 </script>
 
 <style lang="scss" scoped>

@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {ElMessageBox} from "element-plus";
 import {Refresh, RefreshLeft, Search, User, View} from "@element-plus/icons-vue";
@@ -25,7 +25,7 @@ import ContestSubPageShell from "@/views/backend/teacher/contest-manage/componen
 
 const route = useRoute();
 const router = useRouter();
-const contestId = route.params.contestId as IdType;
+const contestId = computed(() => String(route.params.contestId || '') as IdType);
 const loading = ref(false);
 const list = ref<UserStatistic[]>([]);
 const keyword = ref('');
@@ -33,9 +33,10 @@ const statusFilter = ref('');
 const completion = (row: UserStatistic) => {const total = row.correctNum + row.wrongNum + row.absentNum; return total ? Math.round((row.correctNum + row.wrongNum) / total * 100) : 0;};
 const filteredList = computed(() => {const query = keyword.value.trim().toLowerCase(); return list.value.filter(row => {const textMatch = !query || `${row.nikeName} ${row.userId}`.toLowerCase().includes(query); const statusMatch = !statusFilter.value || (statusFilter.value === 'submitted' && row.submitted) || (statusFilter.value === 'pending' && !row.submitted) || (statusFilter.value === 'late' && row.late); return textMatch && statusMatch;});});
 const stats = computed(() => {const submitted = list.value.filter(row => row.submitted).length; return [{label: '参与用户', value: list.value.length, tone: 'green'}, {label: '已提交', value: submitted, tone: 'blue'}, {label: '提交率', value: `${list.value.length ? Math.round(submitted / list.value.length * 100) : 0}%`, tone: 'violet'}, {label: '迟交用户', value: list.value.filter(row => row.late).length, tone: 'amber'}];});
-const getList = async () => {loading.value = true; try {list.value = await getUserStatistic(contestId);} finally {loading.value = false;}};
-const toUserScore = (row: UserStatistic) => router.push({name: 'user-scores', params: {contestId, userId: row.userId}});
-const handleReturn = async (row: UserStatistic) => {try {await ElMessageBox.confirm(`确认退回用户“${row.nikeName}”的提交吗？`, '退回提交', {type: 'warning', confirmButtonText: '确认退回', cancelButtonText: '取消'}); await returnUserSubmit(contestId, row.userId); await getList();} catch { /* 用户取消 */ }};
+const getList = async () => {loading.value = true; try {list.value = await getUserStatistic(contestId.value);} finally {loading.value = false;}};
+const toUserScore = (row: UserStatistic) => router.push({name: 'user-scores', params: {contestId: contestId.value, userId: row.userId}});
+const handleReturn = async (row: UserStatistic) => {try {await ElMessageBox.confirm(`确认退回用户“${row.nikeName}”的提交吗？`, '退回提交', {type: 'warning', confirmButtonText: '确认退回', cancelButtonText: '取消'}); await returnUserSubmit(contestId.value, row.userId); await getList();} catch { /* 用户取消 */ }};
+watch(contestId, () => void getList());
 getList();
 </script>
 

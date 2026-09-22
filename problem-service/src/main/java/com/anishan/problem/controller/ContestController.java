@@ -9,6 +9,7 @@ import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ContestType;
 import com.anishan.commons.enumeration.ValidationGroup;
 import com.anishan.problem.domain.dto.ContestDto;
+import com.anishan.problem.domain.dto.ContestAdminQuery;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
 import com.anishan.problem.domain.entity.SupplementContest;
@@ -72,7 +73,7 @@ public class ContestController {
     @GetMapping("/adminPage")
     @ApiOperation("分页获取contest,管理用,有详细信息")
     @PreAuthorize("hasAuthority('problem:contest:list')")
-    public R<PagedResult<ContestVo>> listContestsAdmin(@Validated PagedQuery<Contest> pagedQuery,  @NotNull ContestType type) {
+    public R<PagedResult<ContestVo>> listContestsAdmin(@Validated ContestAdminQuery pagedQuery, @NotNull ContestType type) {
         PagedResult<ContestVo> contestVoPagedResult = contestService.listContestsAdmin(pagedQuery, type);
         return contestVoPagedResult.toR();
     }
