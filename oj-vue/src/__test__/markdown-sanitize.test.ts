@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 import katex from 'katex'
-import {sanitizeMarkdownHtml} from '@/utils/markdown/sanitize'
+import {sanitizeMarkdownHtml, sanitizeMermaidSvg} from '@/utils/markdown/sanitize'
 
 describe('sanitizeMarkdownHtml', () => {
   it('keeps md-editor code, Mermaid and KaTeX markers', () => {
@@ -54,5 +54,19 @@ describe('sanitizeMarkdownHtml', () => {
     expect(html).toContain('<msup>')
     expect(html).toContain('<mfrac>')
     expect(html).toContain('class="katex-html"')
+  })
+
+  it('keeps Mermaid internal styles while stripping executable nodes', async () => {
+    const svg = await sanitizeMermaidSvg(`
+      <svg viewBox="0 0 10 10">
+        <style>.node rect { fill: #29456f; }</style>
+        <rect class="node" style="stroke: #8fb4ff" />
+        <script>alert('xss')</script>
+      </svg>
+    `)
+
+    expect(svg).toContain('<style>')
+    expect(svg).toContain('.node rect')
+    expect(svg).not.toContain('<script')
   })
 })

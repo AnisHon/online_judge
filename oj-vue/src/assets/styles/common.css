@@ -110,23 +110,6 @@ a {
     z-index: 1;
 }
 
-/* Mermaid 的深色主题仍可能保留深色 SVG 文本；统一使用站点暗色文字 token。 */
-.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] {
-    color: var(--el-text-color-primary);
-    color-scheme: dark;
-}
-
-.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg text,
-.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg tspan,
-.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg .nodeLabel,
-.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg .edgeLabel,
-.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg .cluster-label,
-.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg foreignObject,
-.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] svg foreignObject div {
-    color: var(--el-text-color-primary);
-    fill: var(--el-text-color-primary);
-}
-
 /*
  * KaTeX 的内部节点必须保持自己的排版上下文。阅读容器为了普通长文本
  * 使用了 anywhere 断词规则，如果让它继承到公式内部，aligned 的列和
@@ -158,6 +141,33 @@ a {
 
 .markdown-render-scope .md-editor-preview .md-editor-katex-block .katex-display {
     max-width: none;
+    margin: 0 auto;
+}
+
+/* Mermaid 的颜色由渲染时的 themeVariables 决定，CSS 只负责尺寸和容器行为，
+ * 避免用全局 fill/color 覆盖 SVG 内部的节点与标签颜色。 */
+.markdown-render-scope .md-editor-preview .md-editor-mermaid[data-processed] {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin: 1.25rem 0;
+    padding: 0.25rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    color-scheme: light;
+    scrollbar-width: thin;
+}
+
+.markdown-render-scope--dark .md-editor-preview .md-editor-mermaid[data-processed] {
+    color-scheme: dark;
+}
+
+.markdown-render-scope .md-editor-preview .md-editor-mermaid[data-processed] svg {
+    display: block;
+    width: auto;
+    max-width: none;
+    min-width: min(100%, 28rem);
+    height: auto;
     margin: 0 auto;
 }
 

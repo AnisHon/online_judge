@@ -255,7 +255,12 @@ export const constRoutes =  [
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: constRoutes
+  routes: constRoutes,
+  // Layout 使用 ElScrollbar 承载主内容，具体容器的滚动位置由 Layout 统一重置；
+  // 这里同时覆盖可能落到 window 的公共页面，避免两套滚动行为不一致。
+  scrollBehavior(_to, _from, savedPosition) {
+    return savedPosition || {top: 0}
+  }
 });
 
 

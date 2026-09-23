@@ -4,12 +4,14 @@
     :class="[`reading-preview-shell--${props.variant}`, { 'markdown-render-scope--dark': isDark }]"
   >
     <MdPreview
+        :key="`${previewId}-${theme}`"
         :id="previewId"
         :modelValue="props.text || ''"
         :theme="theme"
         :previewTheme="previewTheme"
         :codeTheme="codeTheme"
         :sanitize="sanitizeMarkdownHtml"
+        :sanitizeMermaid="sanitizeMermaidSvg"
         class="reading-preview"
     />
   </div>
@@ -21,7 +23,7 @@ import {useDark} from '@vueuse/core'
 import {MdPreview} from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 import useConfig from '@/stores/useConfig.ts'
-import {sanitizeMarkdownHtml} from '@/utils/markdown/sanitize'
+import {sanitizeMarkdownHtml, sanitizeMermaidSvg} from '@/utils/markdown/sanitize'
 import '@/utils/markdown/editorRuntime'
 
 type PreviewVariant = 'article' | 'compact' | 'embedded'
@@ -101,16 +103,6 @@ const codeTheme = computed(() => config.readonly.codeTheme || 'atom')
   overflow-wrap: normal;
   white-space: pre;
   word-break: normal;
-}
-
-.reading-preview-shell :deep(.md-editor-preview .md-editor-mermaid) {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.reading-preview-shell :deep(.md-editor-preview .md-editor-mermaid svg) {
-  max-width: 100%;
-  height: auto;
 }
 
 .reading-preview-shell :deep(.md-editor-preview p),

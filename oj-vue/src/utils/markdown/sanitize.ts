@@ -79,6 +79,12 @@ const createMarkdownWhiteList = () => {
 }
 
 const markdownWhiteList = createMarkdownWhiteList()
+const mermaidWhiteList = {
+  ...markdownWhiteList,
+  // Mermaid 的 SVG 使用内部 style 节点定义节点、边和标签的绘制规则。
+  // 该白名单只给 sanitizeMermaidSvg 使用，不会放宽普通 Markdown HTML。
+  style: []
+}
 
 const isSafeUrl = (value: string): boolean => {
   const raw = value.trim()
@@ -97,10 +103,12 @@ const isSafeUrl = (value: string): boolean => {
  * Markdown 内容是用户可编辑数据，预览前统一走 md-editor-v3 同版本的 xss 清洗器。
  * 只允许常见 Markdown 标签，并额外收紧链接和图片地址协议，禁止任意嵌入内容。
  */
-export const sanitizeMarkdownHtml = (html: string): string => xss(html, {
-  whiteList: markdownWhiteList,
+const sanitize = (html: string, allowSvgStyles = false): string => xss(html, {
+  whiteList: allowSvgStyles ? mermaidWhiteList : markdownWhiteList,
   stripIgnoreTag: true,
-  stripIgnoreTagBody: ['script', 'style', 'iframe', 'object', 'embed'],
+  stripIgnoreTagBody: allowSvgStyles
+    ? ['script', 'iframe', 'object', 'embed']
+    : ['script', 'style', 'iframe', 'object', 'embed'],
   onTagAttr: (tag, name, value, isWhiteAttr) => {
     if ((tag === 'a' && name === 'href') || (tag === 'img' && name === 'src')) {
       return isSafeUrl(value) && isWhiteAttr ? undefined : ''
@@ -108,3 +116,12 @@ export const sanitizeMarkdownHtml = (html: string): string => xss(html, {
     return undefined
   }
 })
+
+export const sanitizeMarkdownHtml = (html: string): string => sanitize(html)
+
+/**
+ * Mermaid 生成的 SVG 可能依赖 SVG 内部的 style 节点来绘制边、标签和箭头。
+ * 它不是用户直接提交的 HTML，因此只放行 Mermaid 已生成的 SVG 白名单，并保留
+ * 这段内部样式；脚本、外部嵌入和危险链接仍然由同一套过滤器处理。
+ */
+export const sanitizeMermaidSvg = async (svg: string): Promise<string> => sanitize(svg, true)

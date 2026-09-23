@@ -4,7 +4,7 @@
       <el-header class="header" >
         <MenuBar/>
       </el-header>
-      <el-scrollbar class="content-scroll" height="var(--content-height)">
+      <el-scrollbar ref="contentScrollRef" class="content-scroll" height="var(--content-height)">
         <el-main ref="elMainRef" id="main-box" class="main-content">
             <div class="main-content__inner">
               <router-view v-slot="{Component, route}">
@@ -30,11 +30,33 @@
 <script setup lang="ts">
 
 import MenuBar from "@/layout/component/menu/Menu.vue";
-import {provide, ref} from "vue";
-import {type ElMain} from "element-plus"
+import {nextTick, onMounted, provide, ref, watch} from "vue";
+import {type ElMain, type ScrollbarInstance} from "element-plus"
+import {useRoute} from "vue-router";
 //@ts-ignore
 import FloatingBall from "@/layout/component/FloatingBall/index.vue";
 const elMainRef = ref<InstanceType<typeof ElMain>>();
+const contentScrollRef = ref<ScrollbarInstance>();
+const route = useRoute();
+
+/**
+ * 页面滚动实际属于 Layout 里的 ElScrollbar，而不是 window。
+ * 路由只替换 scrollbar 内部的内容，因此如果不主动处理，进入下一个
+ * 页面时会自然沿用上一个页面的 scrollTop。
+ */
+const resetContentScroll = async () => {
+  await nextTick();
+  contentScrollRef.value?.setScrollTop(0);
+  contentScrollRef.value?.setScrollLeft(0);
+};
+
+watch(() => route.fullPath, (nextPath, previousPath) => {
+  if (nextPath !== previousPath) {
+    resetContentScroll();
+  }
+}, {flush: 'post'});
+
+onMounted(resetContentScroll);
 provide('elMain', {elMainRef: elMainRef});
 
 </script>

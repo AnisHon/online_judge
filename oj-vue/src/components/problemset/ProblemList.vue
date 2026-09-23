@@ -1,17 +1,19 @@
 <template>
   <section class="problem-list" aria-live="polite">
-    <el-skeleton v-if="state === 'loading'" :rows="6" animated />
+    <el-skeleton v-if="state === 'loading'" :rows="6" animated/>
     <el-alert v-else-if="state === 'error'" type="error" title="题目列表加载失败" show-icon>
       <template #default>
         <el-button link type="primary" @click="loadProblems">重新加载</el-button>
       </template>
     </el-alert>
-    <el-empty v-else-if="!problems.length" description="没有找到符合条件的题目" />
+    <el-empty v-else-if="!problems.length" description="没有找到符合条件的题目"/>
     <el-table v-else class="problem-table" :data="problems" stripe table-layout="fixed" style="width: 100%">
-      <el-table-column label="状态" width="62" align="center">
+      <el-table-column label="状态" width="70" align="center">
         <template #default="{row}">
           <el-tooltip v-if="row.finish" content="已完成" placement="top">
-            <el-icon color="var(--el-color-success)" aria-label="已完成"><CircleCheck /></el-icon>
+            <el-icon color="var(--el-color-success)" aria-label="已完成">
+              <CircleCheck/>
+            </el-icon>
           </el-tooltip>
           <span v-else class="not-finished" aria-label="未完成">·</span>
         </template>
@@ -29,7 +31,9 @@
         <template #default="{row}"><code class="problem-id">{{ shortId(row.id) }}</code></template>
       </el-table-column>
       <el-table-column label="类型" width="100">
-        <template #default="{row}"><el-tag :type="row.typeTone" effect="plain">{{ row.type }}</el-tag></template>
+        <template #default="{row}">
+          <el-tag :type="row.typeTone" effect="plain">{{ row.type }}</el-tag>
+        </template>
       </el-table-column>
       <el-table-column label="标签" min-width="180" show-overflow-tooltip>
         <template #default="{row}">
@@ -64,9 +68,11 @@ interface ProblemTableView {
   finish: boolean;
 }
 
-const props = defineProps<{param: ProblemParam}>();
-const emit = defineEmits<{(event: 'loadFinish', currentPage: number, pageSize: number, totalRecords: number): void}>();
-const elMain = inject<{elMainRef?: {value?: {$el?: HTMLElement}}}>('elMain');
+const props = defineProps<{ param: ProblemParam }>();
+const emit = defineEmits<{
+  (event: 'loadFinish', currentPage: number, pageSize: number, totalRecords: number): void
+}>();
+const elMain = inject<{ elMainRef?: { value?: { $el?: HTMLElement } } }>('elMain');
 const problems = ref<ProblemTableView[]>([]);
 const state = ref<'loading' | 'ready' | 'error'>('loading');
 let requestSequence = 0;
@@ -117,22 +123,91 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.problem-list { min-height: 260px; }
-.problem-table :deep(.el-table__row) { transition: background-color .2s; }
-.problem-table :deep(.el-table__row:hover) { cursor: pointer; }
-.problem-table :deep(.el-table__cell) { padding: 12px 8px; }
-.problem-table :deep(.el-table__inner-wrapper::before) { display: none; }
-.problem-title { display: flex; min-width: 0; flex-direction: column; gap: 4px; color: var(--el-color-primary); text-decoration: none; }
-.problem-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.problem-title span { overflow: hidden; color: var(--el-text-color-secondary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.problem-id { color: var(--el-text-color-secondary); font: 12px/1.4 var(--code-font-family, monospace); }
-.not-finished { color: var(--el-text-color-placeholder); font-size: 20px; }
-.tag-list { display: flex; min-width: 0; flex-wrap: wrap; gap: 5px; align-items: center; }
-.tag-list :deep(.el-tag) { max-width: 110px; overflow: hidden; border: 0; text-overflow: ellipsis; white-space: nowrap; }
-.more-tags { color: var(--el-text-color-secondary); font-size: 12px; }
+.problem-list {
+  min-height: 260px;
+}
+
+.problem-table :deep(.el-table__row) {
+  transition: background-color .2s;
+}
+
+.problem-table :deep(.el-table__row:hover) {
+  cursor: pointer;
+}
+
+.problem-table :deep(.el-table__cell) {
+  padding: 12px 8px;
+}
+
+.problem-table :deep(.el-table__inner-wrapper::before) {
+  display: none;
+}
+
+.problem-title {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--el-color-primary);
+  text-decoration: none;
+}
+
+.problem-title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.problem-title span {
+  overflow: hidden;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.problem-id {
+  color: var(--el-text-color-secondary);
+  font: 12px/1.4 var(--code-font-family, monospace);
+}
+
+.not-finished {
+  color: var(--el-text-color-placeholder);
+  font-size: 20px;
+}
+
+.tag-list {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.tag-list :deep(.el-tag) {
+  max-width: 110px;
+  overflow: hidden;
+  border: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more-tags {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
 @media (max-width: 700px) {
-  .problem-table :deep(.el-table__cell) { padding: 10px 5px; }
-  .problem-table :deep(.el-table__body-wrapper) { overflow-x: auto; }
-  .problem-table :deep(.el-table__header-wrapper), .problem-table :deep(.el-table__body-wrapper) { min-width: 720px; }
+  .problem-table :deep(.el-table__cell) {
+    padding: 10px 5px;
+  }
+
+  .problem-table :deep(.el-table__body-wrapper) {
+    overflow-x: auto;
+  }
+
+  .problem-table :deep(.el-table__header-wrapper), .problem-table :deep(.el-table__body-wrapper) {
+    min-width: 720px;
+  }
 }
 </style>
