@@ -43,7 +43,9 @@ services:
       - default
 
   oj-sandbox:
-    image: yantuocode/oj-sandbox:${RELEASE_TAG}
+    # 沙箱环境镜像独立于应用发布；未修改判题环境时复用现网镜像，避免每次发布
+    # 都因为不存在的新标签去 Docker Hub 拉取 2GB 以上的镜像。
+    image: ${OJ_SANDBOX_IMAGE}
     container_name: oj-sandbox
     restart: unless-stopped
     privileged: true

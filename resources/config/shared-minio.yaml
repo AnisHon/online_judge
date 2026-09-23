@@ -1,4 +1,6 @@
 oj:
   minio:
-    access-key: ${oj.minio.access-key:${OJ_MINIO_ACCESS_KEY:}}
-    secret-key: ${oj.minio.secret-key:${OJ_MINIO_SECRET_KEY:}}
+    # 直接读取容器环境变量，避免属性默认值再次引用自身导致 Spring
+    # 报 Circular placeholder reference。
+    access-key: ${OJ_MINIO_ACCESS_KEY:}
+    secret-key: ${OJ_MINIO_SECRET_KEY:}

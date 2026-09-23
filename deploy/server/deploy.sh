@@ -18,6 +18,18 @@ for container_name in oj-mysql oj-redis oj-mq oj-minio; do
   }
 done
 
+# 沙箱镜像独立发布。默认复用现有沙箱镜像；需要升级沙箱时可在执行脚本前
+# 显式传入 OJ_SANDBOX_IMAGE=<完整镜像名>，不会因为应用的新 RELEASE_TAG
+# 触发不必要的远程拉取。
+if [[ -z "${OJ_SANDBOX_IMAGE:-}" ]]; then
+  OJ_SANDBOX_IMAGE="$(docker inspect -f '{{.Config.Image}}' oj-sandbox 2>/dev/null || true)"
+fi
+export OJ_SANDBOX_IMAGE
+[[ -n "$OJ_SANDBOX_IMAGE" ]] || {
+  echo "Unable to determine sandbox image; set OJ_SANDBOX_IMAGE explicitly" >&2
+  exit 1
+}
+
 mkdir -p backups /opt/nacos/logs /opt/logs/{judge-server,problem-service,user-service,content-service}
 chmod 0750 backups
 install -d -m 0755 /opt/nginx/conf.d
@@ -57,13 +69,12 @@ for config_file in config/*.yaml; do
 done
 echo "Nacos configuration synchronized."
 
-docker exec -i oj-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot' \
-  < migration/V20260912__judge_pipeline.sql
-docker exec -i oj-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot' \
-  < migration/V20260920__judge_admin_pages.sql
-docker exec -i oj-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot' \
-  < migration/V20260921__user_profile.sql
-echo "Database migration applied."
+for migration_file in migration/V*.sql; do
+  echo "Applying database migration: $(basename "$migration_file")"
+  docker exec -i oj-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot' \
+    < "$migration_file"
+done
+echo "All database migrations applied."
 
 services=(oj-sandbox judge-server problem-service user-service content-service gateway-server oj-vue)
 for service in "${services[@]}"; do
