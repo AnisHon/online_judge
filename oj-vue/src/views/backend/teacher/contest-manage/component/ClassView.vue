@@ -1,6 +1,7 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" class="inline-form" :inline="true" v-show="showSearch" label-width="68px"
+             @submit.prevent="handleQuery">
       <el-form-item label="班级名称" prop="className">
         <el-input
             v-model="queryParams.className"

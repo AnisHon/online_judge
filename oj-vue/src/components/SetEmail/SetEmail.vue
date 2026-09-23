@@ -3,7 +3,7 @@
     <el-dialog v-model="open" title="请设置邮箱" append-to-body :close-on-click-modal="false" modal>
       <div class="dialog-content">
 
-        <el-form label-position="top" style="min-width: 300px">
+        <el-form label-position="top" style="min-width: 300px" @submit.prevent>
           <el-form-item label="邮箱">
             <el-input  v-model="form.email"/>
           </el-form-item>

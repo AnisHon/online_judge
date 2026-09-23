@@ -29,7 +29,7 @@
 
     <el-dialog v-model="open" :title="title === '添加' ? '新建题单' : '编辑题单'" width="min(620px, 92vw)" append-to-body>
       <div class="dialog-intro"><span class="eyebrow">COLLECTION SETTINGS</span><p>题单可以被竞赛、作业和前台题库重复使用。</p></div>
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top"><el-form-item label="题单名称" prop="listName"><el-input v-model="form.listName" maxlength="80" show-word-limit placeholder="请输入题单名称" /></el-form-item><el-form-item label="题单描述" prop="description"><el-input v-model="form.description" type="textarea" :rows="5" maxlength="450" show-word-limit placeholder="描述题单用途或适用范围" /></el-form-item></el-form>
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent="submitForm"><el-form-item label="题单名称" prop="listName"><el-input v-model="form.listName" maxlength="80" show-word-limit placeholder="请输入题单名称" /></el-form-item><el-form-item label="题单描述" prop="description"><el-input v-model="form.description" type="textarea" :rows="5" maxlength="450" show-word-limit placeholder="描述题单用途或适用范围" /></el-form-item></el-form>
       <template #footer><el-button @click="cancel">取消</el-button><el-button type="primary" :loading="isUpdateLoading || isAddLoading" @click="submitForm">保存题单</el-button></template>
     </el-dialog>
   </ProblemModuleShell>

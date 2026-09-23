@@ -36,7 +36,7 @@
 
     <el-dialog v-model="open" :title="dialogState === 1 ? '新建标签' : '编辑标签'" width="min(520px, 92vw)" append-to-body>
       <div class="dialog-intro"><span class="eyebrow">TAG SETTINGS</span><p>标签颜色会同步用于题目列表和筛选器。</p></div>
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent="submitForm">
         <el-form-item label="标签名称" prop="tagName"><el-input v-model="form.tagName" maxlength="40" show-word-limit placeholder="例如：动态规划" /></el-form-item>
         <el-form-item label="标签颜色" prop="tagColor"><div class="color-control"><el-color-picker v-model="form.tagColor" :show-alpha="false" @change="normalizeTagColor" /><code>{{ form.tagColor || '请选择颜色' }}</code></div><small class="field-tip">仅保存十六进制颜色值，例如 #080942。</small></el-form-item>
       </el-form>

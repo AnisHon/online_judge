@@ -127,6 +127,40 @@ a {
     fill: var(--el-text-color-primary);
 }
 
+/*
+ * KaTeX 的内部节点必须保持自己的排版上下文。阅读容器为了普通长文本
+ * 使用了 anywhere 断词规则，如果让它继承到公式内部，aligned 的列和
+ * 分数会被拆开；宽公式则在公式自己的滚动容器中处理。
+ */
+.markdown-render-scope .md-editor-preview .md-editor-katex-block {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin: 1.25rem 0;
+    padding: 0.2rem 0.1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overflow-wrap: normal;
+    word-break: normal;
+    scrollbar-width: thin;
+}
+
+.markdown-render-scope .md-editor-preview .md-editor-katex-block .katex,
+.markdown-render-scope .md-editor-preview .md-editor-katex-block .katex * {
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.markdown-render-scope .md-editor-preview .md-editor-katex-block .katex {
+    max-width: none;
+    white-space: nowrap;
+}
+
+.markdown-render-scope .md-editor-preview .md-editor-katex-block .katex-display {
+    max-width: none;
+    margin: 0 auto;
+}
+
 
 .common-max-width-page {
     max-width: var(--page-max-width);

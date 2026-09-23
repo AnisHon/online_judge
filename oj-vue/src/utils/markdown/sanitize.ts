@@ -64,11 +64,12 @@ const createMarkdownWhiteList = () => {
   const mathTags = [
     'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'ms', 'mtext', 'annotation', 'annotation-xml',
     'mfrac', 'msqrt', 'mroot', 'mstyle', 'mspace', 'mtable', 'mtr', 'mtd', 'munderover', 'munder',
-    'mover', 'mpadded', 'mphantom', 'mprescripts', 'none'
+    'mover', 'msup', 'msub', 'msubsup', 'mmultiscripts', 'mpadded', 'mphantom', 'mprescripts', 'none'
   ]
   const mathAttributes = [
     'class', 'id', 'style', 'xmlns', 'encoding', 'mathvariant', 'displaystyle', 'scriptlevel', 'display',
-    'columnalign', 'rowalign', 'columnspan', 'rowspan', 'width', 'height', 'depth', 'lspace', 'rspace',
+    'mathcolor', 'mathbackground', 'columnalign', 'rowalign', 'columnspan', 'rowspan', 'rowspacing',
+    'columnspacing', 'width', 'height', 'depth', 'lspace', 'rspace',
     'accent', 'stretchy', 'fence', 'separator', 'symmetric', 'movablelimits', 'largeop', 'linebreak',
     'form', 'aria-hidden', 'role'
   ]

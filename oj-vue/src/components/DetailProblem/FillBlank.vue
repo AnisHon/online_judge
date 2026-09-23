@@ -1,6 +1,6 @@
 <template>
   <div class="fill-blank">
-    <el-form label-position="top" class="fill-form">
+<el-form label-position="top" class="fill-form" @submit.prevent>
       <el-form-item v-for="item in judgeForm.answers" :key="item.index" :label="itemLabel(item.index)">
         <el-input
           :model-value="item.answer || ''"

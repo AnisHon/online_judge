@@ -1,7 +1,7 @@
 <template>
   <div class="drawer-content">
     <div class="drawer-intro"><span class="intro-icon">Aa</span><div><strong>阅读与代码</strong><p>选择适合你的内容呈现方式</p></div></div>
-    <el-form label-position="top">
+    <el-form label-position="top" @submit.prevent>
       <el-form-item label="富文本样式">
         <el-select v-model="config.previewTheme">
           <el-option label="默认" value="default"/>

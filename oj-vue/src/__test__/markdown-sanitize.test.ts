@@ -1,4 +1,5 @@
 import {describe, expect, it} from 'vitest'
+import katex from 'katex'
 import {sanitizeMarkdownHtml} from '@/utils/markdown/sanitize'
 
 describe('sanitizeMarkdownHtml', () => {
@@ -38,5 +39,20 @@ describe('sanitizeMarkdownHtml', () => {
     expect(html).not.toContain('onerror')
     expect(html).not.toContain('onclick')
     expect(html).toContain('safe text')
+  })
+
+  it('keeps the MathML nodes required by aligned and superscript formulas', () => {
+    const formula = String.raw`\begin{aligned}
+      \min \quad & \frac{1}{2}x^T A x + q^T x + r \\
+      & Ax = 0
+    \end{aligned}`
+    const rendered = katex.renderToString(formula, {displayMode: true, throwOnError: false})
+    const html = sanitizeMarkdownHtml(rendered)
+
+    expect(html).toContain('class="katex-display"')
+    expect(html).toContain('<mtable')
+    expect(html).toContain('<msup>')
+    expect(html).toContain('<mfrac>')
+    expect(html).toContain('class="katex-html"')
   })
 })

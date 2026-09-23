@@ -1,7 +1,8 @@
 <template>
 
   <div>
-    <el-form :inline="true" :model="queryForm" style="display: flex; justify-content: center; margin: 20px">
+    <el-form :inline="true" :model="queryForm" style="display: flex; justify-content: center; margin: 20px"
+             @submit.prevent="handleQuery">
       <el-form-item label="搜索ID">
         <el-select style="width: 100px" :default-first-option="true" v-model="select" @change="onSelectChange">
           <el-option value="1" label="标题" />

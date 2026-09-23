@@ -2,7 +2,8 @@
 
   <div class="list-picker">
     <div class="picker-hint"><span class="picker-hint__icon"><el-icon><List /></el-icon></span><span><strong>题单列表</strong><small>点击整行即可选中，名称和 ID 会回填到当前目录节点。</small></span></div>
-    <el-form :model="queryParams" class="inline-form picker-form" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" class="inline-form picker-form" :inline="true" v-show="showSearch" label-width="68px"
+             @submit.prevent="handleQuery">
       <el-form-item label="列表名称" prop="listName">
         <el-input
             v-model="queryParams.listName"

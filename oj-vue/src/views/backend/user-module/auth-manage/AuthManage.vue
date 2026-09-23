@@ -146,7 +146,8 @@
         <div><strong>{{ dialogState === 'add' ? '建立菜单资源' : '调整资源配置' }}</strong>
           <p>菜单类型决定它在导航和授权中的角色，按钮资源需要配置权限标识。</p></div>
       </div>
-      <el-form ref="formRef" :model="form" :rules="rules" class="editor-form" label-position="top">
+      <el-form ref="formRef" :model="form" :rules="rules" class="editor-form" label-position="top"
+               @submit.prevent="submitForm">
         <section class="form-section">
           <div class="section-title"><span>01</span>
             <div><strong>层级与类型</strong><small>先确定资源挂载位置，再配置展示和授权信息</small></div>

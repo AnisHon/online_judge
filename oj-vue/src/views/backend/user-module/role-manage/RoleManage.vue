@@ -125,7 +125,8 @@
           <p>角色保存后，再从“更多 · 资源权限”配置菜单和按钮权限。</p>
         </div>
       </div>
-      <el-form ref="formRef" :model="form" :rules="rules" class="editor-form" label-position="top">
+      <el-form ref="formRef" :model="form" :rules="rules" class="editor-form" label-position="top"
+               @submit.prevent="submitForm">
         <section class="form-section">
           <div class="section-title"><span>01</span><div><strong>角色身份</strong><small>名称用于识别角色，角色 ID 由系统生成</small></div></div>
           <el-form-item label="角色名称" prop="roleName"><el-input v-model="form.roleName" :prefix-icon="UserFilled" maxlength="60" show-word-limit placeholder="例如：教师、内容审核员" /></el-form-item>

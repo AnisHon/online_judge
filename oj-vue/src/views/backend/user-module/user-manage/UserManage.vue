@@ -156,7 +156,8 @@
               dialogState === 'add' ? '设置登录凭据和初始状态，创建后可继续维护资料。' : `正在编辑 @${editorForm.userName || '当前用户'} 的基础资料。`
             }}</p></div>
       </div>
-      <el-form ref="ruleFormRef" :model="editorForm" :rules="rules" class="editor-form" label-position="top">
+      <el-form ref="ruleFormRef" :model="editorForm" :rules="rules" class="editor-form" label-position="top"
+               @submit.prevent="submitForm">
         <section class="form-section">
           <div class="section-title"><span>01</span>
             <div><strong>身份信息</strong><small>用户名用于登录，昵称用于平台内展示</small></div>

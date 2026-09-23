@@ -124,7 +124,8 @@
     <el-alert v-else type="error" :closable="false" show-icon title="当前账号没有公告管理权限" />
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="min(1080px, 94vw)" append-to-body>
-      <el-form ref="formRef" v-loading="detailLoading" class="notice-form" label-position="top" :model="form" :rules="rules">
+      <el-form ref="formRef" v-loading="detailLoading" class="notice-form" label-position="top" :model="form"
+               :rules="rules" @submit.prevent="submitForm">
         <div class="form-intro">
           <span class="panel-eyebrow">{{ dialogState === 'add' ? 'NEW ANNOUNCEMENT' : 'EDIT ANNOUNCEMENT' }}</span>
           <p>标题负责让用户快速理解通知内容，正文支持 Markdown。</p>

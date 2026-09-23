@@ -84,7 +84,7 @@
                   <div><span class="eyebrow">PUBLIC PROFILE</span>
                     <h2>公开资料</h2></div>
                   <span class="panel-caption">这些信息会展示在你的公开主页和题解中</span></div>
-                <el-form class="profile-form" label-position="top" :model="profileForm">
+                <el-form class="profile-form" label-position="top" :model="profileForm" @submit.prevent="saveProfile">
                   <div class="form-grid">
                     <el-form-item label="用户编号">
                       <el-input :model-value="shortProfileId(profileForm.userId)" disabled/>
@@ -113,7 +113,7 @@
                     <h2>账号安全</h2></div>
                   <span class="panel-caption">修改密码需要完成验证码校验</span></div>
                 <el-form ref="passwordFormRef" class="profile-form" label-position="top" :model="passwordForm"
-                         :rules="passwordRules">
+                         :rules="passwordRules" @submit.prevent="submitPassword">
                   <el-form-item label="当前账号">
                     <el-input :model-value="profile.user.userName" disabled/>
                   </el-form-item>

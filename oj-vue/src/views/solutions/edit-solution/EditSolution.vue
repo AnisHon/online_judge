@@ -41,6 +41,7 @@
             label-position="top"
             :rules="rules"
             :model="form"
+            @submit.prevent="submit"
         >
           <el-form-item class="title-item" prop="title">
             <el-input

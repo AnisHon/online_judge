@@ -84,7 +84,7 @@
 
     <el-dialog v-model="open" :title="dialogTitle" width="min(820px, 94vw)" class="contest-dialog" append-to-body destroy-on-close>
       <div class="dialog-intro"><span class="dialog-intro__icon"><el-icon><component :is="isHomework ? Notebook : Flag" /></el-icon></span><div><strong>{{ dialogState === 'add' ? '创建新的' : '编辑' }}{{ isHomework ? '作业' : '竞赛' }}</strong><p>完善基本信息、访问策略和时间安排后再保存。</p></div></div>
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="contest-form" @submit.prevent>
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="contest-form" @submit.prevent="submitForm">
         <div class="form-section"><div class="form-section__title"><span>01</span><div><strong>基本信息</strong><small>用于列表展示和内容识别</small></div></div><div class="form-grid form-grid--basic">
           <el-form-item label="名称" prop="title"><el-input v-model="form.title" maxlength="100" show-word-limit placeholder="例如：2026 春季算法训练赛" /></el-form-item>
           <el-form-item label="题单" prop="listId"><el-input v-model="selectedListText" class="selected-list-input" readonly :title="selectedListText" placeholder="请选择题单"><template #append><el-button :disabled="!canViewLists" :icon="List" @click="openSelectList = true">选择</el-button></template></el-input><small class="field-tip">{{ canViewLists ? `题单决定本次${isHomework ? '作业' : '竞赛'}包含的题目` : '当前账号没有题单查看权限，请联系管理员' }}</small></el-form-item>

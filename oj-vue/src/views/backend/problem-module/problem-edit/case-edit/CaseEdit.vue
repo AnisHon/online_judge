@@ -99,7 +99,7 @@
     </el-table>
     <el-dialog :title="title" v-model="openDialog" class="case-dialog" width="min(760px, 92vw)" append-to-body destroy-on-close>
       <div class="dialog-intro"><span class="dialog-icon"><el-icon><Files /></el-icon></span><div><strong>配置测试用例</strong><p>每个测试用例可以手动输入，也可以上传输入和输出文件。</p></div></div>
-      <el-form :model="form" label-width="100px" label-position="top">
+      <el-form :model="form" label-width="100px" label-position="top" @submit.prevent="submit">
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="题例ID" prop="listName">

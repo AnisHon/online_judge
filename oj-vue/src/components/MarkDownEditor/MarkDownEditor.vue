@@ -27,6 +27,7 @@ import {uploadImages} from '@/api/file'
 import {MAX_IMAGE_COUNT, MAX_IMAGE_SIZE, MAX_IMAGE_SIZE_BYTES} from '@/utils/file'
 import {baseURL} from '@/utils/http.ts'
 import {sanitizeMarkdownHtml} from '@/utils/markdown/sanitize'
+import '@/utils/markdown/editorRuntime'
 
 const props = withDefaults(defineProps<{
   height?: string

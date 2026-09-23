@@ -22,6 +22,7 @@ import {MdPreview} from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 import useConfig from '@/stores/useConfig.ts'
 import {sanitizeMarkdownHtml} from '@/utils/markdown/sanitize'
+import '@/utils/markdown/editorRuntime'
 
 type PreviewVariant = 'article' | 'compact' | 'embedded'
 
@@ -110,12 +111,6 @@ const codeTheme = computed(() => config.readonly.codeTheme || 'atom')
 .reading-preview-shell :deep(.md-editor-preview .md-editor-mermaid svg) {
   max-width: 100%;
   height: auto;
-}
-
-.reading-preview-shell :deep(.md-editor-preview .md-editor-katex-block) {
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
 }
 
 .reading-preview-shell :deep(.md-editor-preview p),

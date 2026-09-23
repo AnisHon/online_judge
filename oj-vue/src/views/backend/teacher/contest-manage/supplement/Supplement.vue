@@ -11,7 +11,7 @@
 
     <el-dialog v-model="open" class="supplement-dialog" title="添加迟交权限" width="min(920px, 94vw)" append-to-body destroy-on-close>
       <div class="dialog-intro"><span class="dialog-icon"><el-icon><Timer /></el-icon></span><div><strong>设置专属截止时间</strong><p>选择一名已加入当前竞赛或作业的用户，再设置本次允许提交到的时间。</p></div></div>
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent="submitForm">
         <el-form-item label="选择用户" prop="userId">
           <UserViewer v-model:ids="selectedUserIds" :selection-limit="1" :loading="false" />
         </el-form-item>

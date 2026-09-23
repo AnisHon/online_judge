@@ -1,7 +1,7 @@
 <template>
   <div class="fill-blank">
 
-    <el-form>
+    <el-form @submit.prevent>
       <el-form-item v-for="item of judgeForm.answers" :label="itemLabel(item.index)">
         <el-input
             type="textarea"

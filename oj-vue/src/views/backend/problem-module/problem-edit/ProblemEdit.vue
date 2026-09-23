@@ -6,7 +6,8 @@
     :icon="Collection"
     tone="blue"
   >
-    <el-form :model="queryParams" class="filter-panel inline-form" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" class="filter-panel inline-form" :inline="true" v-show="showSearch" label-width="68px"
+             @submit.prevent="handleQuery">
       <el-form-item label="题目" prop="problemName">
         <el-input
             v-model="queryParams.title"

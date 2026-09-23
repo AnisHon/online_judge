@@ -84,7 +84,8 @@
         <span class="dialog-intro__icon"><el-icon><DataBoard /></el-icon></span>
         <div><strong>{{ dialogState === 'add' ? '建立教学组织' : '更新班级资料' }}</strong><p>班级名称用于平台展示，备注仅供管理员内部识别。</p></div>
       </div>
-      <el-form ref="formRef" :model="form" :rules="rules" class="editor-form" label-position="top">
+      <el-form ref="formRef" :model="form" :rules="rules" class="editor-form" label-position="top"
+               @submit.prevent="submitForm">
         <section class="form-section">
           <div class="section-title"><span>01</span><div><strong>班级信息</strong><small>名称是班级在后台和成员管理中的主要识别方式</small></div></div>
           <el-form-item v-if="dialogState === 'edit'" label="班级 ID"><el-input :model-value="String(form.classId || '')" disabled :prefix-icon="Key" /></el-form-item>
