@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 /**
  * Redis 缓存管理允许浏览的键前缀。
  *
- * <p>缓存管理不能把用户传入的任意字符串直接交给 SCAN/DEL，否则一个后台
- * 权限就可以操作 Redis 中所有业务键。这里集中维护已有键空间，同时把过期
- * 的旧前缀保留为兼容项，不负责创建或迁移 Redis 数据。</p>
+ * <p>类别列表只允许浏览项目登记过的键前缀；单键读取和删除另由
+ * {@code content:cache:read/remove} 权限保护。这里仅维护类别与展示名称，
+ * 不负责创建或迁移 Redis 数据。</p>
  */
 public final class CacheCatalog {
 
@@ -54,7 +54,4 @@ public final class CacheCatalog {
         return prefix != null && TYPES.stream().anyMatch(item -> item.getType().equals(prefix));
     }
 
-    public static boolean isManagedKey(String key) {
-        return key != null && TYPES.stream().anyMatch(item -> key.startsWith(item.getType()));
-    }
 }

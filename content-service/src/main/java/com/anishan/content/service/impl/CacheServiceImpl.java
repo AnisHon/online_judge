@@ -7,11 +7,9 @@ import com.anishan.content.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.DataType;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -30,37 +28,20 @@ public class CacheServiceImpl implements CacheService {
     public CacheKeyPage list(String prefix, String cursor, int limit) {
         requireManagedPrefix(prefix);
         int safeLimit = Math.min(Math.max(limit, 1), 200);
-        long cursorValue = parseCursor(cursor);
-        Object raw = stringRedisTemplate.execute((RedisCallback<Object>) connection -> connection.execute(
-                "SCAN",
-                bytes(String.valueOf(cursorValue)),
-                bytes("MATCH"),
-                bytes(prefix + "*"),
-                bytes("COUNT"),
-                bytes(String.valueOf(safeLimit))
-        ));
-        if (!(raw instanceof List)) return new CacheKeyPage();
-
-        List<?> response = (List<?>) raw;
-        String nextCursor = response.size() > 0 ? text(response.get(0)) : "0";
-        List<String> keys = new ArrayList<>();
-        if (response.size() > 1 && response.get(1) instanceof List) {
-            for (Object key : (List<?>) response.get(1)) {
-                String value = text(key);
-                if (value != null) keys.add(value);
-            }
-        }
+        Set<String> matchingKeys = stringRedisTemplate.keys(prefix + "*");
+        List<String> keys = matchingKeys == null ? new ArrayList<>() : new ArrayList<>(matchingKeys);
         Collections.sort(keys);
+
+        int start = (int) Math.min(parseCursor(cursor), keys.size());
+        int end = (int) Math.min((long) start + safeLimit, keys.size());
         return new CacheKeyPage()
-                .setKeys(keys)
-                .setNextCursor(nextCursor)
-                .setHasMore(!"0".equals(nextCursor));
+                .setKeys(new ArrayList<>(keys.subList(start, end)))
+                .setNextCursor(end < keys.size() ? String.valueOf(end) : "0")
+                .setHasMore(end < keys.size());
     }
 
     @Override
     public CacheVo get(String key) {
-        requireManagedKey(key);
-
         DataType dataType = stringRedisTemplate.type(key);
         Long expire = stringRedisTemplate.getExpire(key, TimeUnit.SECONDS);
         String value = readValue(key, dataType);
@@ -78,7 +59,6 @@ public class CacheServiceImpl implements CacheService {
 
     @Override
     public boolean remove(String key) {
-        requireManagedKey(key);
         return Boolean.TRUE.equals(stringRedisTemplate.delete(key));
     }
 
@@ -115,27 +95,12 @@ public class CacheServiceImpl implements CacheService {
         }
     }
 
-    private static void requireManagedKey(String key) {
-        if (!CacheCatalog.isManagedKey(key)) {
-            throw new IllegalArgumentException("Unsupported cache key");
-        }
-    }
-
     private static long parseCursor(String cursor) {
         try {
             return Math.max(Long.parseLong(cursor), 0);
         } catch (Exception ignored) {
             return 0;
         }
-    }
-
-    private static byte[] bytes(String value) {
-        return value.getBytes(StandardCharsets.UTF_8);
-    }
-
-    private static String text(Object value) {
-        if (value instanceof byte[]) return new String((byte[]) value, StandardCharsets.UTF_8);
-        return value == null ? null : String.valueOf(value);
     }
 
     private static boolean isSensitiveKey(String key) {

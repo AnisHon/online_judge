@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 import java.util.Collections;
 import java.util.List;
 
-/** 有界 Redis SCAN 结果，nextCursor 由客户端原样带回。 */
+/** 有界缓存键分页结果；nextCursor 是下一页的偏移量。 */
 @Data
 @Accessors(chain = true)
 public class CacheKeyPage {
