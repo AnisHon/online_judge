@@ -24,4 +24,16 @@ mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSW
 mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
   < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260922__backend_route_permissions.sql"
 
-echo "OJ judge pipeline, admin pages, user profile, backend access, system permissions and backend route permissions migrations applied."
+mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
+  < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260924__role_display_special.sql"
+
+mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
+  < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260925__faq.sql"
+
+mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
+  < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260925_1__faq_admin_route.sql"
+
+mysql --protocol=tcp -h"$MYSQL_HOST" -P"$MYSQL_PORT" -uroot -p"$MYSQL_ROOT_PASSWORD" \
+  < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/V20260925_2__remove_redundant_permissions.sql"
+
+echo "OJ database migrations applied, including role display labels, FAQ routes and permissions."

@@ -48,6 +48,14 @@ docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
   < "$ROOT_DIR/resources/sql/migration/V20260920__judge_admin_pages.sql"
 docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
   < "$ROOT_DIR/resources/sql/migration/V20260921__user_profile.sql"
+docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
+  < "$ROOT_DIR/resources/sql/migration/V20260924__role_display_special.sql"
+docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
+  < "$ROOT_DIR/resources/sql/migration/V20260925__faq.sql"
+docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
+  < "$ROOT_DIR/resources/sql/migration/V20260925_1__faq_admin_route.sql"
+docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
+  < "$ROOT_DIR/resources/sql/migration/V20260925_2__remove_redundant_permissions.sql"
 
 echo '[4/4] 等待 Nacos 并同步开发配置'
 for _ in $(seq 1 60); do

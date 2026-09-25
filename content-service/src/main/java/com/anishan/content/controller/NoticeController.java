@@ -115,6 +115,7 @@ public class NoticeController {
         NoticeContent noticeContent = new NoticeContent().setContent(noticeDto.getContent());
 
         Long userId = AuthUtil.getUserId();
+        notice.setNoticeId(null);
         notice.setUserId(userId);
 
         boolean save = noticeService.save(notice);
@@ -135,7 +136,7 @@ public class NoticeController {
                 .setNoticeId(notice.getNoticeId());
 
 
-        noticeDto.setUserId(null);
+        notice.setUserId(null);
         notice.setCreateTime(null);
 
         boolean save = noticeService.updateById(notice);

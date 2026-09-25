@@ -126,6 +126,7 @@ public class MinioFileOperationImpl implements FileOperation {
             );
         } catch (InternalException | NoSuchAlgorithmException | ServerException | InvalidKeyException | XmlParserException e) {
             log.error("Minio内部出现错误：",e);
+            throw new IllegalStateException("MinIO对象上传失败: " + path, e);
         } catch (InsufficientDataException | IOException | InvalidResponseException | ErrorResponseException e) {
             throw new RuntimeException(e);
         }
@@ -144,6 +145,7 @@ public class MinioFileOperationImpl implements FileOperation {
             );
         } catch (InternalException | NoSuchAlgorithmException | ServerException | InvalidKeyException | XmlParserException e) {
             log.error("Minio内部出现错误：",e);
+            throw new IllegalStateException("MinIO对象上传失败: " + path, e);
         } catch (InsufficientDataException | IOException | InvalidResponseException | ErrorResponseException e) {
             throw new RuntimeException(e);
         }
@@ -161,6 +163,7 @@ public class MinioFileOperationImpl implements FileOperation {
             );
         }catch (InternalException | NoSuchAlgorithmException | ServerException | InvalidKeyException | XmlParserException e) {
             log.error("Minio内部出现错误：",e);
+            throw new IllegalStateException("MinIO对象上传失败: " + path, e);
         } catch (InsufficientDataException | IOException | InvalidResponseException | ErrorResponseException e) {
             throw new RuntimeException(e);
         }

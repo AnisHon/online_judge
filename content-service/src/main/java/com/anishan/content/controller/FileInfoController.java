@@ -45,17 +45,17 @@ public class FileInfoController {
     @DeleteMapping("/{ids}")
     @PreAuthorize("hasAuthority('content:file:remove')")
     public R<Boolean> delete(@PathVariable List<Long> ids) {
-        boolean b;
         if (CollUtil.isEmpty(ids)) {
-            b = false;
-        } else {
-            b = fileInfoService.removeByIds(ids);
+            return R.success(false);
         }
 
+        // 先读取对象路径，再删除文件元数据；删除后再查询会丢失路径，导致 MinIO 对象成为孤儿。
         List<FileInfo> fileInfos = fileInfoService.listByIds(ids);
         List<String> paths = fileInfos.stream().map(FileInfo::getFilePath).collect(Collectors.toList());
-
-        fileOperation.deleteFiles(paths);
+        boolean b = fileInfoService.removeByIds(ids);
+        if (b) {
+            fileOperation.deleteFiles(paths);
+        }
         return R.success(b);
     }
 

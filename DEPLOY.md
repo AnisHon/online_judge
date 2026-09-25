@@ -70,7 +70,7 @@ MYSQL_HOST=127.0.0.1 MYSQL_PORT=3306 MYSQL_ROOT_PASSWORD='你的密码' \
 ```
 
 迁移会新增提交源代码、比赛 ID、测试用例统计、内部错误字段，创建 `judge_case_log`，并写入
-`problem:submit:read`、`problem:judge:submit:read` 与 `problem:judge:case:read` 权限。脚本兼容 MySQL 8.0.27，可重复执行；内部错误字段和测试用例日志不要直接暴露给普通用户。
+`problem:judge:submit:read` 与 `problem:judge:case:read` 管理权限。本人提交记录由登录态和提交归属校验保护，不使用单独的 `problem:submit:read` 权限；资料下载保留登录校验，不使用对所有默认角色都开放的 `content:file:download` 权限。脚本兼容 MySQL 8.0.27，可重复执行；内部错误字段和测试用例日志不要直接暴露给普通用户。
 
 判题机并发可通过 Nacos 的 `judge-server.yaml` 或环境变量调整：
 

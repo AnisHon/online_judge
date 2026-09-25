@@ -84,7 +84,7 @@
         <el-table-column label="操作" width="180" fixed="right" align="right">
           <template #default="{ row }">
             <el-space>
-              <el-button v-has="'content:file:download'" link type="primary" :icon="Download" @click="handleDownload(row)">下载</el-button>
+              <el-button v-has="'content:file:list'" link type="primary" :icon="Download" @click="handleDownload(row)">下载</el-button>
               <el-button
                 v-has="'content:file:remove'"
                 link
@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, h, onMounted, reactive, ref } from 'vue'
 import { Delete, Document, Download, Folder, Refresh, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, type TableInstance } from 'element-plus'
 import ContestSubPageShell from '../../teacher/contest-manage/component/ContestSubPageShell.vue'
@@ -176,9 +176,23 @@ const handleDownload = (row: FileInfo) => {
 const handleDelete = async (row?: FileInfo) => {
   const ids = row ? [row.fileId] : [...selectedIds.value]
   if (!ids.length) return
+  const targetFiles = row
+    ? [row]
+    : tableList.value.filter((file) => ids.some((id) => String(id) === String(file.fileId)))
+  const referencedFiles = targetFiles.filter((file) => Number(file.reference) > 0)
+  const fileNames = referencedFiles.slice(0, 3).map((file) => file.fileName).join('、')
+  const warning = referencedFiles.length
+    ? h('div', { class: 'file-delete-confirm' }, [
+        h('p', `确定删除选中的 ${ids.length} 个文件吗？删除后无法恢复。`),
+        h('p', { class: 'file-delete-confirm__warning' }, [
+          `其中 ${referencedFiles.length} 个文件的引用计数不为 0${fileNames ? `（${fileNames}${referencedFiles.length > 3 ? '等' : ''}）` : ''}。`,
+          '它们可能仍被业务内容使用，删除后相关图片或资源可能无法显示。仍要继续吗？',
+        ]),
+      ])
+    : `确定删除选中的 ${ids.length} 个文件吗？删除后无法恢复。`
   try {
-    await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 个文件吗？删除后无法恢复。`, '删除文件', {
-      confirmButtonText: '确认删除',
+    await ElMessageBox.confirm(warning, '删除文件', {
+      confirmButtonText: referencedFiles.length ? '仍然删除' : '确认删除',
       cancelButtonText: '取消',
       type: 'warning',
     })
@@ -199,6 +213,7 @@ onMounted(getList)
 
 <style lang="scss" scoped>
 .file-panel { padding: 22px 24px 12px; border: 1px solid var(--el-border-color-lighter); border-radius: 20px; background: var(--el-bg-color); box-shadow: 0 16px 40px rgb(15 23 42 / 4%); }
+.file-delete-confirm p { margin: 0; line-height: 1.65; }.file-delete-confirm p + p { margin-top: 10px; }.file-delete-confirm__warning { color: var(--el-color-warning-dark-2); }
 .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 18px; }.panel-eyebrow { color: var(--el-color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; }.panel-heading h2 { margin: 7px 0 5px; font-size: 21px; }.panel-heading p { margin: 0; color: var(--el-text-color-secondary); font-size: 13px; }.keyword-input { width: 290px; }
 .selection-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 8px 12px; border-radius: 10px; background: var(--el-fill-color-light); color: var(--el-text-color-secondary); font-size: 13px; }.selection-hint { color: var(--el-color-warning); font-size: 12px; }.file-table { border-radius: 14px; overflow: hidden; }.file-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }.file-icon { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 11px; background: color-mix(in srgb, var(--el-color-primary) 10%, var(--el-bg-color)); color: var(--el-color-primary); }.file-cell > div:last-child { display: flex; min-width: 0; flex-direction: column; gap: 4px; }.file-cell strong { overflow: hidden; color: var(--el-text-color-primary); text-overflow: ellipsis; white-space: nowrap; }.file-cell span { overflow: hidden; color: var(--el-text-color-secondary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }.type-pill { display: inline-flex; padding: 4px 9px; border-radius: 999px; background: var(--el-fill-color-light); color: var(--el-text-color-secondary); font-size: 12px; }.reference-count { color: var(--el-text-color-secondary); font-variant-numeric: tabular-nums; }.reference-count.is-used { color: var(--el-color-success); font-weight: 700; }
 :deep(.el-table__header th.el-table__cell) { color: var(--el-text-color-secondary); font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); }:deep(.el-table__row td.el-table__cell) { height: 68px; }

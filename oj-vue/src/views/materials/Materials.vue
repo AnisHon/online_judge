@@ -4,7 +4,8 @@
       <div><span class="eyebrow">RESOURCE CENTER</span><h1>资料中心</h1><p>整理、查找并下载你的学习资料。</p></div>
       <div class="hero-mark" aria-hidden="true">↗</div>
     </header>
-    <section class="resource-panel">
+    <section class="resource-panel" :aria-busy="initialLoading || refreshing">
+    <div v-if="showRefreshIndicator" class="list-refresh-indicator" aria-label="正在更新文件列表"><span /></div>
     <div class="search-bar">
       <el-button
           :disabled="unselect"
@@ -57,6 +58,8 @@
 
     <div class="files">
       <el-table
+          ref="tableRef"
+          v-loading="initialLoading"
           class="file-table"
           header-row-class-name="file-header-bar"
           header-cell-class-name="file-header-cell"
@@ -82,7 +85,7 @@
               </el-text>
               <div class="filename-input" v-show="scope.row.edit">
                 <el-input v-model="scope.row.fileName" placeholder="请输入文件名"/>
-                <el-button icon="check" type="success" @click.stop="submit(scope.row)" plain circle/>
+                <el-button icon="check" type="success" :loading="savingRow" :disabled="savingRow" @click.stop="submit(scope.row)" plain circle/>
                 <el-button icon="close" type="primary" @click.stop="cancel(scope.row)" plain circle/>
               </div>
             </div>
@@ -147,37 +150,44 @@
     </div>
     </section>
 
-    <upload :parent-id="query.parentId" v-model="openUpload" @finished="getList"/>
+    <upload :parent-id="query.parentId" v-model="openUpload" @finished="scheduleListRefresh"/>
   </main>
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed, onUnmounted, ref} from "vue";
 import {
   type CloudFile,
-  debouncedAddDir,
+  addDir,
   deleteFile,
   download, downloadFile,
   listFiles, preview,
   type QueryCloudFile,
   updateFile
 } from "@/api/file";
-import __ from "lodash";
-import {ElMessageBox, ElNotification} from "element-plus";
+import {ElMessageBox, ElNotification, type TableInstance} from "element-plus";
 import FileIcon from "@/components/FileIcon/FileIcon.vue";
 import Upload from "@/views/materials/component/upload.vue";
 import {bytesToSize} from "@/utils/byte2size.ts";
 
 
 const openUpload = ref(false);
+const initialLoading = ref(true);
+const refreshing = ref(false);
+const showRefreshIndicator = ref(false);
+const savingRow = ref(false);
+const tableRef = ref<TableInstance>();
+const hasLoadedList = ref(false);
+let listRequestSequence = 0;
+let refreshIndicatorTimer: ReturnType<typeof setTimeout> | undefined;
+let listRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
 // 文件数据
 const list = ref<CloudFile[]>([])
 
 
 const sortList = computed(() => {
-  list.value.sort((a: CloudFile, b: CloudFile) => +b.dir - +a.dir);
-  return list.value;
+  return [...list.value].sort((a: CloudFile, b: CloudFile) => Number(b.dir) - Number(a.dir));
 })
 
 // 当前面包屑文件路径
@@ -213,13 +223,48 @@ const selectable = (row: CloudFile) => {
 
 // 获取列表
 const getList = async () => {
-  list.value.length = 0;
-  list.value = await listFiles(query.value);
-  list.value.sort((a, b) => +a.dir - +b.dir);
+  const sequence = ++listRequestSequence;
+  const querySnapshot = {...query.value};
+  const isInitialLoad = !hasLoadedList.value;
+  if (isInitialLoad) {
+    initialLoading.value = true;
+  } else {
+    refreshing.value = true;
+    if (refreshIndicatorTimer) clearTimeout(refreshIndicatorTimer);
+    refreshIndicatorTimer = setTimeout(() => {
+      if (sequence === listRequestSequence) showRefreshIndicator.value = true;
+    }, 260);
+  }
+
+  try {
+    const files = await listFiles(querySnapshot);
+    if (sequence !== listRequestSequence) return;
+    // Replace rows atomically; never blank the table while a refresh is in flight.
+    list.value = files || [];
+    hasLoadedList.value = true;
+    ids.value = [];
+    single.value = true;
+    multiple.value = true;
+    tableRef.value?.clearSelection();
+  } catch {
+    if (sequence === listRequestSequence) ElNotification.error("文件列表加载失败，请稍后重试");
+  } finally {
+    if (sequence === listRequestSequence) {
+      initialLoading.value = false;
+      refreshing.value = false;
+      showRefreshIndicator.value = false;
+      if (refreshIndicatorTimer) clearTimeout(refreshIndicatorTimer);
+    }
+  }
 }
 
-// 抖动添加
-const addDir = debouncedAddDir(getList)
+const scheduleListRefresh = () => {
+  if (listRefreshTimer) clearTimeout(listRefreshTimer);
+  listRefreshTimer = setTimeout(() => {
+    listRefreshTimer = undefined;
+    void getList();
+  }, 140);
+}
 
 // 选框改变
 const handleSelectionChange = (selection: CloudFile[]) => {
@@ -249,28 +294,31 @@ const submit = async (row: CloudFile) => {
   if (!row.fileName) {
     ElNotification.warning("文件夹名不能为空");
     return;
-  } else if (__.findIndex(list.value, item => item.fileName === row.fileName && item !== row) != -1) {
+  } else if (list.value.some(item => item.fileName === row.fileName && item !== row)) {
     ElNotification.warning("文件夹名不能重复");
     return;
   }
-  if (row.add) {
-    addDir({
-      fileName: row.fileName,
-      parentId: row.parentId,
-    })
-
-  } else {
-    await updateFile(row);
+  if (savingRow.value) return;
+  savingRow.value = true;
+  try {
+    const saved = row.add
+      ? await addDir({fileName: row.fileName, parentId: row.parentId})
+      : await updateFile(row);
+    if (!saved) return;
+    row.edit = false;
+    scheduleListRefresh();
+  } catch {
+    // Keep the draft editable; the shared HTTP layer reports request failures.
+  } finally {
+    savingRow.value = false;
   }
-  row.edit = false;
-  await getList();
 }
 
 
 // 取消更改文件夹
 const cancel = (row: CloudFile) => {
   if (row.add) {
-    __.remove(list.value, file => file === row);
+    list.value = list.value.filter(file => file !== row);
   } else {
     row.fileName = row.fileNameCopy || "";
     row.edit = false;
@@ -297,8 +345,12 @@ const handleDelete = (row: CloudFile) => {
     cancelButtonText: '取消'
   })
       .then(async () => {
-        await deleteFile(row.cloudFileId);
-        await getList();
+        const removed = await deleteFile(row.cloudFileId);
+        if (removed) {
+          list.value = list.value.filter(file => file.cloudFileId !== row.cloudFileId);
+          ids.value = ids.value.filter(id => id !== row.cloudFileId);
+          scheduleListRefresh();
+        }
       }).catch(() => {})
 
 }
@@ -352,7 +404,12 @@ const handlePreview = (row: CloudFile) => {
   }
 }
 
-getList();
+void getList();
+onUnmounted(() => {
+  listRequestSequence++;
+  if (refreshIndicatorTimer) clearTimeout(refreshIndicatorTimer);
+  if (listRefreshTimer) clearTimeout(listRefreshTimer);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -361,6 +418,11 @@ getList();
 .app-container {
   margin: auto;
 }
+
+.resource-panel { position: relative; }
+.list-refresh-indicator { position: absolute; z-index: var(--oj-z-panel-control); top: 0; left: 0; width: 100%; height: 2px; overflow: hidden; border-radius: 99px; background: var(--el-fill-color-light); }
+.list-refresh-indicator span { display: block; width: 30%; height: 100%; border-radius: inherit; background: var(--el-color-primary); animation: file-list-refresh 1s ease-in-out infinite; }
+@keyframes file-list-refresh { from { transform: translateX(-110%); } to { transform: translateX(440%); } }
 
 .breadcrumb {
   margin-bottom: 10px;

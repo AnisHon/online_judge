@@ -75,6 +75,9 @@
             </span>
           </template>
         </el-table-column>
+        <el-table-column label="发布人ID" width="170" show-overflow-tooltip>
+          <template #default="{ row }"><code class="publisher-id">{{ row.userId }}</code></template>
+        </el-table-column>
         <el-table-column label="发布时间" min-width="190" show-overflow-tooltip>
           <template #default="{ row }">{{ formatAdminDateTime(row.createTime) }}</template>
         </el-table-column>
@@ -327,6 +330,7 @@ onMounted(getList)
 .notice-title-cell div:last-child { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
 .notice-title-cell strong { overflow: hidden; color: var(--el-text-color-primary); text-overflow: ellipsis; white-space: nowrap; }
 .notice-title-cell span:last-child { color: var(--el-text-color-secondary); font-size: 12px; }
+.publisher-id { color: var(--el-text-color-secondary); font: 12px/1.4 var(--code-font-family, monospace); }
 .priority-pill { display: inline-flex; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .priority-pill.is-important { background: color-mix(in srgb, var(--el-color-warning) 12%, var(--el-bg-color)); color: var(--el-color-warning); }
 .priority-pill.is-normal { background: color-mix(in srgb, var(--el-color-success) 10%, var(--el-bg-color)); color: var(--el-color-success); }

@@ -1,7 +1,5 @@
-import {addResultNotify, baseURL, binaryService, get, getWithParams, post, put, resultNotify, service} from "@/utils/http.ts";
+import {addResultNotify, baseURL, binaryService, del, get, getWithParams, post, put, resultNotify, service} from "@/utils/http.ts";
 import {ElNotification} from "element-plus";
-import __ from "lodash";
-import {remove} from "@/utils/simpleCRUD.ts";
 import type {IdType} from "@/api/common.ts";
 import { saveAs } from 'file-saver'
 import {ApiError} from "@/utils/http.ts";
@@ -121,29 +119,26 @@ export const listFiles = async (query: QueryCloudFile): Promise<CloudFile[]> => 
     return data;
 }
 
-const addDir = async (file: CloudFileForm): Promise<void> => {
+export const addDir = async (file: CloudFileForm): Promise<boolean> => {
     const {data} = await post<CloudFileForm, boolean>("/file/dir", file);
     resultNotify(data, "添加成功", "添加失败");
+    return data === true;
 }
 // 验证是否为blob格式
 export function blobValidate(data: any) {
     return !String(data?.type || '').toLowerCase().includes('application/json')
 }
 
-export const debouncedAddDir = (callback: Function) => {
-    return __.debounce(async (data) => {
-        await addDir(data);
-        callback();
-    }, 500);
-}
-
-export const updateFile = async (form: CloudFileForm) => {
+export const updateFile = async (form: CloudFileForm): Promise<boolean> => {
     const {data} = await put<CloudFileForm, boolean>("/file", form);
     resultNotify(data, "修改成功", "修改失败");
+    return data === true;
 }
 
-export const deleteFile = (id: IdType) => {
-    return remove(id, "/file")
+export const deleteFile = async (id: IdType): Promise<boolean> => {
+    const {data} = await del<boolean, IdType>("/file", id);
+    resultNotify(data, "删除成功", "删除失败");
+    return data === true;
 }
 
 export const addFile = async (md5: string, fileName: string, parentId: string) => {
