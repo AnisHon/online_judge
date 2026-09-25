@@ -88,8 +88,30 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
 
     @Override
     @CacheEvict(key = "'all-tag'", allEntries = true)
+    @Transactional
     public boolean deleteTag(Long id) {
-        return this.removeById(id);
+        return deleteTags(List.of(id));
+    }
+
+    @Override
+    @CacheEvict(key = "'all-tag'", allEntries = true)
+    @Transactional
+    public boolean deleteTags(List<Long> ids) {
+        if (CollectionUtil.isEmpty(ids)) {
+            return false;
+        }
+        problemTagService.remove(new LambdaQueryWrapper<ProblemTagRelation>()
+                .in(ProblemTagRelation::getTagId, ids));
+        return this.removeByIds(ids);
+    }
+
+    @Override
+    public void removeProblemRelations(List<Long> problemIds) {
+        if (CollectionUtil.isEmpty(problemIds)) {
+            return;
+        }
+        problemTagService.remove(new LambdaQueryWrapper<ProblemTagRelation>()
+                .in(ProblemTagRelation::getProblemId, problemIds));
     }
 
     @Override
@@ -153,6 +175,4 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
 
 
 }
-
-
 

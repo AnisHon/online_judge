@@ -6,6 +6,8 @@ import com.anishan.problem.domain.entity.ProblemListRelation;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Delete;
 
 import java.util.List;
 
@@ -22,7 +24,20 @@ public interface ProblemProblemListMapper extends MPJBaseMapper<ProblemProblemLi
 
     int updateProblemOrderBatch(@Param("listId") Long listId,
                                 @Param("items") List<ProblemListOrderItemDto> items);
+
+    @Select({"<script>",
+            "select count(distinct c.contest_id)",
+            "from contest c join problem_problem_list ppl on ppl.list_id = c.list_id",
+            "where c.del_flag = 0",
+            "and ppl.problem_id in",
+            "<foreach collection='problemIds' item='problemId' open='(' separator=',' close=')'>#{problemId}</foreach>",
+            "</script>"})
+    long countEventsUsingProblems(@Param("problemIds") List<Long> problemIds);
+
+    @Delete({"<script>",
+            "delete from problem_problem_list where problem_id in",
+            "<foreach collection='problemIds' item='problemId' open='(' separator=',' close=')'>#{problemId}</foreach>",
+            "</script>"})
+    int deleteByProblemIds(@Param("problemIds") List<Long> problemIds);
 }
-
-
 

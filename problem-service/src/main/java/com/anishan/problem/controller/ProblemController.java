@@ -57,17 +57,31 @@ public class ProblemController {
         return R.success(ojProblemCases);
     }
 
+    @GetMapping("/case/{caseId}/content")
+    @ApiOperation("在线查看小型测试用例内容（单文件最大1MiB）")
+    @PreAuthorize("hasAuthority('problem:problem:list')")
+    public R<String> getCaseContent(@PathVariable Long caseId, @RequestParam String field) {
+        return R.success(ojProblemCaseService.readCaseContent(caseId, field));
+    }
+
     @PostMapping("/case")
     @ApiOperation("添加测试用例")
-    @PreAuthorize("hasAuthority('problem:problem:edit')")
+    @PreAuthorize("hasAnyAuthority('problem:problem:add', 'problem:problem:edit')")
     public R<Boolean> uploadCase(OjProblemCaseDto ojProblemCase) {
         boolean b = ojProblemCaseService.addOjProblemCase(ojProblemCase);
         return R.success(b);
     }
 
+    @PutMapping("/case/{caseId}")
+    @ApiOperation("在线编辑或上传替换测试用例")
+    @PreAuthorize("hasAuthority('problem:problem:edit')")
+    public R<Boolean> updateCase(@PathVariable Long caseId, @ModelAttribute OjProblemCaseDto ojProblemCase) {
+        return R.success(ojProblemCaseService.updateOjProblemCase(caseId, ojProblemCase));
+    }
+
     @DeleteMapping("/case/{caseId}")
     @ApiOperation("删除")
-    @PreAuthorize("hasAuthority('problem:problem:edit')")
+    @PreAuthorize("hasAnyAuthority('problem:problem:remove', 'problem:problem:edit')")
     public R<Boolean> deleteCase(@PathVariable List<Long> caseId) {
         boolean b = ojProblemCaseService.removeCase(caseId);
         return R.success(b);
@@ -184,8 +198,7 @@ public class ProblemController {
 
         CacheUtil.clearAllCaches("problem:detail:", ids);
 
-        boolean b = problemService.removeByIds(ids);
-        problemService.removeCaseFiles(ids);
+        boolean b = problemService.removeProblems(ids);
         return R.success(b);
     }
 

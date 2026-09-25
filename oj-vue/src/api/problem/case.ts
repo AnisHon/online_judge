@@ -1,4 +1,4 @@
-import {addResultNotify, binaryService, del, get, getFormData, removeResultNotify, service} from "@/utils/http.ts";
+import {addResultNotify, binaryService, del, get, getFormData, getWithParams, removeResultNotify, service} from "@/utils/http.ts";
 import type {OjCase} from "@/api/problem/index.ts";
 import type {IdType} from "@/api/common.ts";
 import {ElNotification} from "element-plus";
@@ -22,12 +22,29 @@ export const addCase = async (problemCase: OjCase) => {
         data: formData
     });
     addResultNotify(data);
+    return data === true;
 }
 
 
 export const listCase = async (problemId: IdType) => {
     const {data} = await get<OjCaseView[]>("/problem-api/problem/case", problemId);
     return data;
+}
+
+export const getCaseContent = async (caseId: IdType, field: 'input' | 'output') => {
+    const {data} = await getWithParams<string, {field: string}>(
+        `/problem-api/problem/case/${encodeURIComponent(String(caseId))}/content`,
+        {field},
+    );
+    return data;
+}
+
+export const updateCase = async (caseId: IdType, problemCase: OjCase): Promise<boolean> => {
+    const formData = getFormData(problemCase);
+    const response = await service.put<boolean>(`/problem-api/problem/case/${encodeURIComponent(String(caseId))}`, formData);
+    const result = response.data === true;
+    addResultNotify(result, '测试用例已更新', '测试用例更新失败');
+    return result;
 }
 
 export const removeCase = async (caseId: IdType | IdType[]) => {

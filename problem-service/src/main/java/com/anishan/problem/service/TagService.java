@@ -23,6 +23,10 @@ public interface TagService extends IService<Tag> {
 
     boolean deleteTag(Long id);
 
+    boolean deleteTags(List<Long> ids);
+
+    void removeProblemRelations(List<Long> problemIds);
+
     boolean addTagForProblem(ProblemTagDto problemTagDto);
 
     boolean removeTagForProblem(ProblemTagDto problemTagDto);
@@ -39,4 +43,3 @@ public interface TagService extends IService<Tag> {
 
 
 }
-

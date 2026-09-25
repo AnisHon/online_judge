@@ -70,7 +70,7 @@
       <span>拖动题目调整顺序后，点击“保存排序”一次性提交。</span>
       <el-button link type="primary" :disabled="isOrderSaving" @click="resetProblemOrder">撤销排序</el-button>
     </div>
-    <el-table ref="tableRef" v-loading="isLoading" class="list-problem-table" :data="sortedTableList" row-key="problemId" @selection-change="handleSelectionChange">
+    <el-table ref="tableRef" v-loading="isLoading" class="list-problem-table" :data="sortedTableList" row-key="problemId" :row-class-name="problemRowClassName" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="问题ID" align="center" prop="problemId" v-if="columns[0].visible" show-overflow-tooltip />
       <el-table-column label="题目" align="center" prop="title" v-if="columns[1].visible" />
@@ -101,20 +101,21 @@
                 'is-before': dragOverProblemId === String(scope.row.problemId) && dragOverPosition === 'before',
                 'is-after': dragOverProblemId === String(scope.row.problemId) && dragOverPosition === 'after'
               }"
-              @dragover.prevent="handleDragOver(scope.row, $event)"
-              @drop.prevent="handleDrop(scope.row)"
+              :data-problem-id="String(scope.row.problemId)"
           >
             <button
                 type="button"
                 class="drag-handle"
                 :class="{ 'is-disabled': !isEdit }"
-                :draggable="isEdit"
                 :aria-disabled="!isEdit"
                 :aria-grabbed="draggingProblemId === String(scope.row.problemId)"
                 :aria-label="`调整 ${scope.row.title || '题目'} 的顺序，可使用上下方向键移动`"
-                title="拖动调整顺序；编辑状态下也可使用上下方向键"
-                @dragstart="handleDragStart(scope.row, $event)"
-                @dragend="handleDragEnd"
+                title="按住并拖动调整顺序；也可使用上下方向键或旁边的移动按钮"
+                @pointerdown="handleDragPointerDown(scope.row, $event)"
+                @pointermove="handleDragPointerMove"
+                @pointerup="handleDragPointerUp"
+                @pointercancel="handleDragPointerCancel"
+                @lostpointercapture="handleDragPointerCancel"
                 @keydown.up.prevent="moveRow(scope.$index, -1)"
                 @keydown.down.prevent="moveRow(scope.$index, 1)"
             ><el-icon><Rank /></el-icon></button>
@@ -228,6 +229,7 @@ const isOrderSaving = ref(false);
 const draggingProblemId = ref<string | null>(null);
 const dragOverProblemId = ref<string | null>(null);
 const dragOverPosition = ref<'before' | 'after'>('after');
+const pointerDrag = ref<{ pointerId: number; sourceId: string; startX: number; startY: number; active: boolean } | null>(null);
 const tableRef = ref<TableInstance>();
 const isLoading = ref(false);
 const isAddLoading = ref(false);
@@ -360,40 +362,79 @@ const handleScoreUpdate = async (data: ProblemInListView) => {
   }
 }
 
-const handleDragStart = (row: ProblemInListView, event: DragEvent) => {
-  if (!isEdit.value) {
-    event.preventDefault();
-    return;
-  }
-  draggingProblemId.value = String(row.problemId);
-  event.dataTransfer?.setData('text/plain', String(row.problemId));
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move';
-  }
+const locateDropTarget = (clientX: number, clientY: number) => {
+  const tableElement = tableRef.value?.$el as HTMLElement | undefined;
+  const element = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+  if (!tableElement || !element || !tableElement.contains(element)) return null;
+
+  const orderCell = element.closest<HTMLElement>('[data-problem-id]');
+  const rowElement = element.closest<HTMLElement>('tr.el-table__row');
+  const rowClass = Array.from(rowElement?.classList || []).find(name => name.startsWith('problem-row-'));
+  const rowKey = rowElement?.getAttribute('data-row-key');
+  const targetId = orderCell?.dataset.problemId || rowClass?.slice('problem-row-'.length) || rowKey;
+  if (!targetId) return null;
+
+  const targetRow = sortedTableList.value.find(row => String(row.problemId) === targetId);
+  const positionElement = orderCell || rowElement;
+  if (!targetRow || !positionElement) return null;
+
+  return {
+    row: targetRow,
+    position: clientY > positionElement.getBoundingClientRect().top + positionElement.getBoundingClientRect().height / 2
+        ? 'after' as const
+        : 'before' as const,
+  };
 }
 
-const handleDragOver = (row: ProblemInListView, event: DragEvent) => {
-  if (draggingProblemId.value && draggingProblemId.value !== String(row.problemId)) {
-    dragOverProblemId.value = String(row.problemId);
-    const target = event.currentTarget as HTMLElement | null;
-    dragOverPosition.value = target && event.clientY > target.getBoundingClientRect().top + target.offsetHeight / 2
-        ? 'after'
-        : 'before';
+const updateDropTarget = (clientX: number, clientY: number) => {
+  const target = locateDropTarget(clientX, clientY);
+  if (!target || String(target.row.problemId) === pointerDrag.value?.sourceId) {
+    dragOverProblemId.value = null;
+    return null;
   }
+  dragOverProblemId.value = String(target.row.problemId);
+  dragOverPosition.value = target.position;
+  return target.row;
 }
 
-const handleDrop = (target: ProblemInListView) => {
+const handleDragPointerDown = (row: ProblemInListView, event: PointerEvent) => {
+  if (!isEdit.value || !event.isPrimary || event.button !== 0) return;
+  event.preventDefault();
+  const handle = event.currentTarget as HTMLElement;
+  try {
+    handle.setPointerCapture(event.pointerId);
+  } catch {
+    // Pointer capture may be unavailable in older browsers; local pointer events still work.
+  }
+  pointerDrag.value = {
+    pointerId: event.pointerId,
+    sourceId: String(row.problemId),
+    startX: event.clientX,
+    startY: event.clientY,
+    active: false,
+  };
+}
+
+const handleDragPointerMove = (event: PointerEvent) => {
+  const drag = pointerDrag.value;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  if (!drag.active && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 4) return;
+  if (!drag.active) {
+    drag.active = true;
+    draggingProblemId.value = drag.sourceId;
+  }
+  updateDropTarget(event.clientX, event.clientY);
+}
+
+const placeDraggedRow = (target: ProblemInListView) => {
   const sourceId = draggingProblemId.value;
   if (!sourceId || sourceId === String(target.problemId)) {
-    handleDragEnd();
     return;
   }
 
   const current = sortedTableList.value;
   const sourceIndex = current.findIndex(row => String(row.problemId) === sourceId);
-  const targetIndex = current.findIndex(row => String(row.problemId) === String(target.problemId));
-  if (sourceIndex < 0 || targetIndex < 0) {
-    handleDragEnd();
+  if (sourceIndex < 0) {
     return;
   }
 
@@ -411,13 +452,27 @@ const handleDrop = (target: ProblemInListView) => {
     row.tempOrder = index + 1;
   });
   tableList.splice(0, tableList.length, ...reordered);
-  handleDragEnd();
 }
 
-const handleDragEnd = () => {
+const finishPointerDrag = () => {
+  pointerDrag.value = null;
   draggingProblemId.value = null;
   dragOverProblemId.value = null;
   dragOverPosition.value = 'after';
+}
+
+const handleDragPointerUp = (event: PointerEvent) => {
+  const drag = pointerDrag.value;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  if (drag.active) {
+    const target = updateDropTarget(event.clientX, event.clientY);
+    if (target) placeDraggedRow(target);
+  }
+  finishPointerDrag();
+}
+
+const handleDragPointerCancel = (event: PointerEvent) => {
+  if (pointerDrag.value?.pointerId === event.pointerId) finishPointerDrag();
 }
 
 const moveRow = (index: number, direction: -1 | 1) => {
@@ -433,6 +488,8 @@ const moveRow = (index: number, direction: -1 | 1) => {
   });
   tableList.splice(0, tableList.length, ...current);
 };
+
+const problemRowClassName = ({row}: {row: ProblemInListView}) => `problem-row-${row.problemId}`;
 
 const saveProblemOrder = async () => {
   if (!hasPendingOrderChanges.value || isOrderSaving.value) {
@@ -546,6 +603,6 @@ watch(listId, (value) => {
 
 .list-problem-table { border-radius: 14px; overflow: hidden; }
 .order-notice { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--el-color-primary-light-7); border-radius: 10px; color: var(--el-text-color-secondary); background: var(--el-color-primary-light-9); font-size: 12px; }.order-notice .el-icon { color: var(--el-color-primary); }.order-notice .el-button { margin-left: auto; }
-.order-cell { position: relative; display: inline-flex; align-items: center; gap: 5px; min-width: 116px; min-height: 30px; padding: 2px 7px; border: 1px dashed transparent; border-radius: 8px; transition: border-color .2s, background-color .2s, box-shadow .2s; }.order-cell.is-drag-over { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.order-cell.is-before { box-shadow: inset 0 2px var(--el-color-primary); }.order-cell.is-after { box-shadow: inset 0 -2px var(--el-color-primary); }.drag-handle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; color: var(--el-text-color-secondary); background: transparent; cursor: grab; }.drag-handle:hover, .drag-handle:focus-visible { outline: none; color: var(--el-color-primary); background: var(--el-fill-color-light); }.drag-handle:active { cursor: grabbing; }.drag-handle.is-disabled { cursor: not-allowed; opacity: .45; }.order-actions { display: inline-flex; align-items: center; gap: 0; }.order-actions .el-button { width: 22px; height: 22px; margin: 0; padding: 0; }.order-number { min-width: 20px; font-variant-numeric: tabular-nums; }
+.order-cell { position: relative; display: inline-flex; align-items: center; gap: 5px; min-width: 116px; min-height: 30px; padding: 2px 7px; border: 1px dashed transparent; border-radius: 8px; transition: border-color .2s, background-color .2s, box-shadow .2s; }.order-cell.is-drag-over { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }.order-cell.is-before { box-shadow: inset 0 2px var(--el-color-primary); }.order-cell.is-after { box-shadow: inset 0 -2px var(--el-color-primary); }.drag-handle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; color: var(--el-text-color-secondary); background: transparent; cursor: grab; touch-action: none; user-select: none; }.drag-handle:hover, .drag-handle:focus-visible { outline: none; color: var(--el-color-primary); background: var(--el-fill-color-light); }.drag-handle:active { cursor: grabbing; }.drag-handle[aria-grabbed="true"] { color: var(--el-color-primary); background: var(--el-color-primary-light-9); cursor: grabbing; }.drag-handle.is-disabled { cursor: not-allowed; opacity: .45; }.order-actions { display: inline-flex; align-items: center; gap: 0; }.order-actions .el-button { width: 22px; height: 22px; margin: 0; padding: 0; }.order-number { min-width: 20px; font-variant-numeric: tabular-nums; }
 .dialog-intro { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; padding: 13px 15px; border-radius: 12px; background: var(--el-fill-color-light); }.dialog-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: rgb(5 150 105 / 12%); color: var(--el-color-success); }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.picker-body { min-height: 0; max-height: min(62vh, 640px); overflow: auto; }.selection-summary { margin-right: auto; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

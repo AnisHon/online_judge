@@ -12,7 +12,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -56,5 +55,5 @@ public interface ProblemService extends IService<Problem> {
 
     List<ProblemVo> recentProblems(@NotNull Integer limit);
 
-    void removeCaseFiles(@NotEmpty List<Long> ids);
+    boolean removeProblems(List<Long> ids);
 }

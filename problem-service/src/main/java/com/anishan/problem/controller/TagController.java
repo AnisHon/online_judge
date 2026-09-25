@@ -66,7 +66,7 @@ public class TagController {
     @ApiOperation("批量删除标签")
     @CacheEvict(key = "'all'", allEntries = true)
     public R<Boolean> deleteBatch(@PathVariable @NotNull List<Long> ids) {
-        boolean b = tagService.removeBatchByIds(ids);
+        boolean b = tagService.deleteTags(ids);
         return R.success(b);
     }
 

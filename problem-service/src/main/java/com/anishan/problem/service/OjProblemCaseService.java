@@ -24,7 +24,11 @@ public interface OjProblemCaseService extends IService<OjProblemCase> {
 
     List<OjProblemCaseVo> getCaseVoById(Long problemId);
 
+    String readCaseContent(Long caseId, String field);
+
     boolean addOjProblemCase(OjProblemCaseDto ojProblemCase);
+
+    boolean updateOjProblemCase(Long caseId, OjProblemCaseDto ojProblemCase);
 
     boolean removeCase(List<Long> caseId);
 

@@ -22,7 +22,9 @@ import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.SupplementContestVo;
 import com.anishan.problem.mapper.ContestMapper;
 import com.anishan.problem.service.ContestService;
+import com.anishan.problem.service.ContestRecordsService;
 import com.anishan.problem.service.ProblemListService;
+import com.anishan.problem.service.SubmitLogService;
 import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -63,6 +65,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     private final ProblemListService problemListService;
     private final UserClient userClient;
     private final ClassClient classClient;
+    private final SubmitLogService submitLogService;
+    private final ContestRecordsService contestRecordsService;
 
     @Override
     public LocalDateTime getTime(long id) {
@@ -141,8 +145,26 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
 
     @Override
     @CacheEvict(key = "#contestDto.contestId")
+    @Transactional
     public boolean updateContest(ContestDto contestDto) {
         validateSchedule(contestDto);
+        Contest current = this.getById(contestDto.getContestId());
+        ThrowUtil.businessError(current == null, "活动不存在");
+
+        Long newListId = contestDto.getListId();
+        if (newListId != null && !Objects.equals(current.getListId(), newListId)) {
+            boolean hasJudgeSubmissions = submitLogService.count(
+                    Wrappers.lambdaQuery(SubmitLog.class)
+                            .eq(SubmitLog::getContestId, contestDto.getContestId())
+            ) > 0;
+            boolean hasAnswerSubmissions = contestRecordsService.count(
+                    Wrappers.lambdaQuery(ContestRecords.class)
+                            .eq(ContestRecords::getContestId, contestDto.getContestId())
+            ) > 0;
+            ThrowUtil.businessError(hasJudgeSubmissions || hasAnswerSubmissions,
+                    "该比赛或作业已有题目提交记录，不能更换题单");
+        }
+
         Contest contest = BeanUtil.copyProperties(contestDto, Contest.class);
 
         LocalDateTime time = this.getTime(contestDto.getContestId());
@@ -420,6 +442,5 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
         return userContestService.saveIgnore(relations);
     }
 }
-
 
 

@@ -1,12 +1,17 @@
 <template>
-  <section class="problem-list" aria-live="polite">
-    <el-skeleton v-if="state === 'loading'" :rows="6" animated/>
+  <section class="problem-list" :aria-busy="isLoading" aria-live="polite">
+    <div v-if="isRefreshing" class="problem-list__progress" aria-label="正在更新题目列表"><span /></div>
+    <el-alert v-if="refreshFailed" class="refresh-warning" type="warning" :closable="false" show-icon title="刷新失败，仍显示上一次结果">
+      <template #default><el-button link type="primary" @click="loadProblems">重试</el-button></template>
+    </el-alert>
+    <el-skeleton v-if="state === 'loading' && !hasLoaded" :rows="6" animated/>
     <el-alert v-else-if="state === 'error'" type="error" title="题目列表加载失败" show-icon>
       <template #default>
         <el-button link type="primary" @click="loadProblems">重新加载</el-button>
       </template>
     </el-alert>
-    <el-empty v-else-if="!problems.length" description="没有找到符合条件的题目"/>
+    <div v-else-if="hasLoaded" class="problem-list__results" :class="{ 'is-updating': isRefreshing }">
+    <el-empty v-if="!problems.length" description="没有找到符合条件的题目"/>
     <el-table v-else class="problem-table" :data="problems" stripe table-layout="fixed" style="width: 100%">
       <el-table-column label="状态" width="70" align="center">
         <template #default="{row}">
@@ -46,6 +51,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </div>
   </section>
 </template>
 
@@ -55,7 +61,6 @@ import {getProblems, type ProblemParam, type TaggedProblemView} from '@/api/prob
 import type {TagView} from '@/api/problem/label';
 import {getProblemTypeMeta} from '@/utils/problem';
 import {CircleCheck} from '@element-plus/icons-vue';
-import debounce from 'lodash/debounce';
 import type {IdType} from '@/api/common.ts';
 
 interface ProblemTableView {
@@ -75,6 +80,10 @@ const emit = defineEmits<{
 const elMain = inject<{ elMainRef?: { value?: { $el?: HTMLElement } } }>('elMain');
 const problems = ref<ProblemTableView[]>([]);
 const state = ref<'loading' | 'ready' | 'error'>('loading');
+const isLoading = ref(false);
+const hasLoaded = ref(false);
+const refreshFailed = ref(false);
+const isRefreshing = ref(false);
 let requestSequence = 0;
 
 const shortId = (id: IdType) => {
@@ -97,35 +106,57 @@ const normalizeProblem = (item: TaggedProblemView): ProblemTableView => {
 
 const loadProblems = async () => {
   const sequence = ++requestSequence;
-  state.value = 'loading';
+  const refreshing = hasLoaded.value;
+  isLoading.value = true;
+  isRefreshing.value = refreshing;
+  refreshFailed.value = false;
+  if (!refreshing) state.value = 'loading';
+  if (refreshing) {
+    const target = elMain?.elMainRef?.value?.$el;
+    target?.scrollTo?.({top: 0, behavior: 'smooth'});
+  }
   try {
     const result = await getProblems({...props.param, tagIds: props.param.tagIds ? [...props.param.tagIds] : []});
     if (sequence !== requestSequence) return;
     problems.value = result.data.map(normalizeProblem);
     state.value = 'ready';
+    hasLoaded.value = true;
     emit('loadFinish', result.currentPage, result.pageSize, result.totalRecords);
-    const target = elMain?.elMainRef?.value?.$el;
-    target?.scrollTo?.({top: 0, behavior: 'smooth'});
   } catch {
     if (sequence !== requestSequence) return;
-    problems.value = [];
-    state.value = 'error';
-    emit('loadFinish', props.param.currentPage, props.param.pageSize, 0);
+    if (refreshing) {
+      refreshFailed.value = true;
+    } else {
+      problems.value = [];
+      state.value = 'error';
+      emit('loadFinish', props.param.currentPage, props.param.pageSize, 0);
+    }
+  } finally {
+    if (sequence === requestSequence) {
+      isLoading.value = false;
+      isRefreshing.value = false;
+    }
   }
 };
 
-const debouncedLoad = debounce(loadProblems, 280);
-watch(() => props.param, () => debouncedLoad(), {immediate: true, deep: true});
+watch(() => props.param, () => void loadProblems(), {immediate: true, deep: true});
 onBeforeUnmount(() => {
   requestSequence++;
-  debouncedLoad.cancel();
 });
 </script>
 
 <style scoped>
 .problem-list {
+  position: relative;
   min-height: 260px;
 }
+
+.problem-list__progress { position: absolute; z-index: var(--oj-z-panel-control); top: 0; left: 0; width: 100%; height: 3px; overflow: hidden; border-radius: 99px; background: var(--el-fill-color-light); }
+.problem-list__progress span { display: block; width: 32%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--el-color-primary-light-5), var(--el-color-primary)); animation: problem-loading-slide 1.15s cubic-bezier(.45, 0, .55, 1) infinite; }
+.problem-list__results { transition: opacity .22s ease, transform .22s ease; transform-origin: top center; }
+.problem-list__results.is-updating { opacity: .48; transform: translateY(3px); pointer-events: none; }
+.refresh-warning { margin-bottom: 10px; }
+@keyframes problem-loading-slide { from { transform: translateX(-110%); } to { transform: translateX(330%); } }
 
 .problem-table :deep(.el-table__row) {
   transition: background-color .2s;

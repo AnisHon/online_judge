@@ -21,6 +21,9 @@ import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.mapper.ProblemMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
+import com.anishan.problem.mapper.SubmitLogMapper;
+import com.anishan.problem.mapper.RecordsMapper;
+import com.anishan.problem.mapper.ContestRecordsMapper;
 import com.anishan.problem.service.*;
 import com.anishan.problem.util.ProblemUploadUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -66,6 +69,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final TagService tagService;
     private final OjProblemCaseService ojProblemCaseService;
     private final ProblemProblemListMapper problemProblemListMapper;
+    private final SubmitLogMapper submitLogMapper;
+    private final RecordsMapper recordsMapper;
+    private final ContestRecordsMapper contestRecordsMapper;
     private final ProblemUploadUtil problemUploadUtil;
     private final FileOperation fileOperation;
 
@@ -615,12 +621,50 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     @Override
-    public void removeCaseFiles(List<Long> ids) {
+    @Transactional
+    public boolean removeProblems(List<Long> ids) {
+        if (CollectionUtil.isEmpty(ids)) {
+            return false;
+        }
 
+        boolean hasSubmissionHistory = submitLogMapper.selectCount(
+                new LambdaQueryWrapper<SubmitLog>().in(SubmitLog::getProblemId, ids)) > 0
+                || recordsMapper.selectCount(
+                new LambdaQueryWrapper<Records>().in(Records::getProblemId, ids)) > 0
+                || contestRecordsMapper.selectCount(
+                new LambdaQueryWrapper<ContestRecords>().in(ContestRecords::getProblemId, ids)) > 0
+                || Db.count(new LambdaQueryWrapper<ProblemComplete>().in(ProblemComplete::getProblemId, ids)) > 0
+                || Db.count(new LambdaQueryWrapper<SolutionExplanation>().in(SolutionExplanation::getProblemId, ids)) > 0;
+        ThrowUtil.businessError(hasSubmissionHistory,
+                "题目已有提交、作答或题解内容，为避免破坏历史关联，不能删除；请改为调整题目可见范围");
+
+        long eventReferences = problemProblemListMapper.countEventsUsingProblems(ids);
+        ThrowUtil.businessError(eventReferences > 0,
+                "题目仍被比赛或作业引用，不能删除；请先从活动题单中移除");
+
+        boolean removed = this.removeByIds(ids);
+        if (!removed) {
+            return false;
+        }
+
+        tagService.removeProblemRelations(ids);
+        problemProblemListMapper.deleteByProblemIds(ids);
+        ojProblemService.removeByIds(ids);
+        choiceFillAnswersService.remove(new LambdaQueryWrapper<ChoiceFillAnswers>()
+                .in(ChoiceFillAnswers::getProblemId, ids));
+
+        List<Long> caseIds = ojProblemCaseService.list(new LambdaQueryWrapper<OjProblemCase>()
+                        .select(OjProblemCase::getCaseId)
+                        .in(OjProblemCase::getProblemId, ids))
+                .stream()
+                .map(OjProblemCase::getCaseId)
+                .collect(Collectors.toList());
+        if (!caseIds.isEmpty()) {
+            ojProblemCaseService.removeCase(caseIds);
+        }
+        return true;
     }
 
 }
-
-
 
 

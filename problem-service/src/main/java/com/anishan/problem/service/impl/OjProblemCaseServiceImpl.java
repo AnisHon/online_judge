@@ -9,6 +9,7 @@ import com.anishan.api.client.judgeserver.domain.OjProblemCaseDto;
 import com.anishan.api.client.problem.domain.vo.OjProblemCaseVo;
 import com.anishan.api.domain.entity.OjProblemCase;
 import com.anishan.api.file.FileOperation;
+import com.anishan.commons.exception.BusinessException;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.mapper.OjProblemCaseMapper;
 import com.anishan.problem.service.OjProblemCaseService;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -38,6 +40,8 @@ import java.util.Optional;
 @Service
 public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, OjProblemCase>
     implements OjProblemCaseService {
+
+    public static final long MAX_INLINE_CASE_BYTES = 1024L * 1024L;
 
     private final FileOperation fileOperation;
 
@@ -95,6 +99,92 @@ public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, O
                     ojProblemCaseVo.setOutputSize(out.getSize());
                 });
         return cases;
+    }
+
+    @Override
+    public String readCaseContent(Long caseId, String field) {
+        OjProblemCase problemCase = getById(caseId);
+        ThrowUtil.businessError(problemCase == null, "测试用例不存在");
+
+        String path = casePath(problemCase, field);
+        OSSFileInfo fileInfo = fileOperation.getFileInfo(path);
+        ThrowUtil.businessError(fileInfo == null, "测试用例文件不存在");
+        ThrowUtil.businessError(fileInfo.getSize() > MAX_INLINE_CASE_BYTES,
+                "测试用例超过1MiB，不能在线查看，请下载后本地编辑并上传替换");
+
+        try (OssFileInputStream stream = fileOperation.getFile(path)) {
+            ThrowUtil.businessError(stream == null, "测试用例文件读取失败");
+            byte[] content = stream.readNBytes((int) MAX_INLINE_CASE_BYTES + 1);
+            ThrowUtil.businessError(content.length > MAX_INLINE_CASE_BYTES,
+                    "测试用例超过1MiB，不能在线查看，请下载后本地编辑并上传替换");
+            return new String(content, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new BusinessException("测试用例读取失败");
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean updateOjProblemCase(Long caseId, OjProblemCaseDto dto) {
+        OjProblemCase problemCase = getById(caseId);
+        ThrowUtil.businessError(problemCase == null, "测试用例不存在");
+        ThrowUtil.businessError(dto == null, "测试用例更新内容不能为空");
+
+        byte[] inputText = textBytes(dto.getInput());
+        byte[] outputText = textBytes(dto.getOutput());
+        validateInlineSize(inputText);
+        validateInlineSize(outputText);
+
+        boolean hasChanges = dto.getScore() != null
+                || dto.getInputFile() != null
+                || dto.getOutputFile() != null
+                || inputText != null
+                || outputText != null;
+        ThrowUtil.businessError(!hasChanges, "请至少修改分数或测试用例文件");
+
+        try {
+            if (dto.getInputFile() != null) {
+                try (java.io.InputStream stream = dto.getInputFile().getInputStream()) {
+                    fileOperation.saveFile(problemCase.getInput(), stream);
+                }
+            } else if (inputText != null) {
+                try (ByteArrayInputStream stream = new ByteArrayInputStream(inputText)) {
+                    fileOperation.saveFile(problemCase.getInput(), stream);
+                }
+            }
+            if (dto.getOutputFile() != null) {
+                try (java.io.InputStream stream = dto.getOutputFile().getInputStream()) {
+                    fileOperation.saveFile(problemCase.getOutput(), stream);
+                }
+            } else if (outputText != null) {
+                try (ByteArrayInputStream stream = new ByteArrayInputStream(outputText)) {
+                    fileOperation.saveFile(problemCase.getOutput(), stream);
+                }
+            }
+        } catch (IOException e) {
+            throw new BusinessException("测试用例文件更新失败");
+        }
+
+        if (dto.getScore() == null) return true;
+        return this.update(Wrappers.lambdaUpdate(OjProblemCase.class)
+                .eq(OjProblemCase::getCaseId, caseId)
+                .set(OjProblemCase::getScore, dto.getScore()));
+    }
+
+    private static byte[] textBytes(String text) {
+        return text == null ? null : text.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static void validateInlineSize(byte[] content) {
+        ThrowUtil.businessError(content != null && content.length > MAX_INLINE_CASE_BYTES,
+                "单个测试用例在线编辑不能超过1MiB，请使用文件上传");
+    }
+
+    private static String casePath(OjProblemCase problemCase, String field) {
+        String normalized = field == null ? "" : field.toLowerCase(Locale.ROOT);
+        if ("input".equals(normalized)) return problemCase.getInput();
+        if ("output".equals(normalized)) return problemCase.getOutput();
+        throw new BusinessException("测试用例字段无效");
     }
 
     @Override
@@ -179,7 +269,5 @@ public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, O
     }
 
 }
-
-
 
 
