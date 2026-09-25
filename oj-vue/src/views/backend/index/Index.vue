@@ -146,6 +146,7 @@ import {countOnline, freeDisk} from "@/api/file";
 import {type Notice, recentNotices} from "@/api/notice";
 import {ElNotification} from "element-plus";
 import {copyTextToClipboard} from "@/utils/clipboard.ts";
+import {hasPerm} from "@/utils/authUtil.ts";
 
 const router = useRouter();
 const loading = ref(false);
@@ -173,12 +174,13 @@ const metrics = computed(() => [
   {label: "公告数量", caption: "ANNOUNCEMENTS", value: formatNumber(notices.value.length), description: "最近同步的公告", icon: markRaw(EditPen), tone: "amber"}
 ]);
 
-const quickActions = [
+const quickActions = computed(() => [
   {label: "题目管理", description: "编辑与维护题库", route: "problem-edit", icon: markRaw(Collection), tone: "blue"},
   {label: "用户管理", description: "查看用户与角色", route: "user-manage", icon: markRaw(User), tone: "violet"},
   {label: "公告管理", description: "发布平台通知", route: "notice-manage", icon: markRaw(EditPen), tone: "amber"},
+  ...(hasPerm('content:faq:list') ? [{label: "FAQ管理", description: "维护常见问题", route: "faq-manage", icon: markRaw(QuestionFilled), tone: "green"}] : []),
   {label: "系统设置", description: "配置后台权限", route: "auth-manage", icon: markRaw(Setting), tone: "green"}
-];
+]);
 
 const copyButtons = [
   {label: "全部基础设施", port: [8848, 15672, 3306, 6379, 9090], icon: markRaw(Monitor)},

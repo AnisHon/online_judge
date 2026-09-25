@@ -219,6 +219,15 @@ export const constRoutes =  [
           name: "通知",
           isLoginAccess: true
         },
+      },
+      {
+        path: "faq",
+        name: "faq",
+        component: () => import('@/views/faq/Faq.vue'),
+        meta: {
+          name: "常见问题",
+          isLoginAccess: true
+        }
       }
     ]
   },

@@ -45,6 +45,8 @@ drop table if exists sys_role;
 create table sys_role (
     role_id           bigint(20)      not null auto_increment    comment '角色ID',
     role_name         varchar(30)     not null unique            comment '角色名称',
+    display_name      varchar(50)     not null                   comment '面向用户展示的角色名称',
+    special_role      boolean         not null default 0          comment '是否公开显示为特殊身份标签',
     status            boolean         default 0                  comment '角色状态（0正常 1停用）',
     del_flag          boolean         default 0                  comment '删除标志（0代表存在 1代表删除）',
     create_time       datetime        default now()              comment '创建时间',
@@ -53,10 +55,10 @@ create table sys_role (
     primary key (role_id)
 ) engine=innodb auto_increment=100 comment = '角色信息表';
 
-insert into sys_role(role_id, role_name, remark) values (1, 'student', '学生');
-insert into sys_role(role_id, role_name, remark) values (2, 'teacher', '教师');
-insert into sys_role(role_id, role_name, remark) values (3, 'admin', '管理员');
-insert into sys_role(role_id, role_name, remark) values (4, 'super_admin', '超级管理员');
+insert into sys_role(role_id, role_name, display_name, special_role, remark) values (1, 'student', '学生', 0, '学生');
+insert into sys_role(role_id, role_name, display_name, special_role, remark) values (2, 'teacher', '教师', 1, '教师');
+insert into sys_role(role_id, role_name, display_name, special_role, remark) values (3, 'admin', '管理员', 1, '管理员');
+insert into sys_role(role_id, role_name, display_name, special_role, remark) values (4, 'super_admin', '超级管理员', 1, '超级管理员');
 
 
 -- ----------------------------
@@ -152,6 +154,7 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (43, '通知管理', 3, 4, 'notice-manage', 'I', '#', 'Notification', 'backend/system/notice-manage/NoticeManage');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (44, '判题记录', 4, 4, 'judge-submit-log', 'I', 'problem:judge:submit:read', 'DocumentChecked', 'backend/system/judge-submit-log/JudgeSubmitLog');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (45, '判题日志', 5, 4, 'judge-case-log', 'I', 'problem:judge:case:read', 'DataAnalysis', 'backend/system/judge-case-log/JudgeCaseLog');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon, component) values (46, 'FAQ管理', 6, 4, 'faq-manage', 'I', '#', 'QuestionFilled', 'backend/system/faq-manage/FaqManage');
 
 
 # menu_id 10 题目编辑
@@ -161,7 +164,6 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (104, '添加题目', 4, 10, '#', 'B', 'problem:problem:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (105, '删除题目', 5, 10, '#', 'B', 'problem:problem:remove', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (106, '更改题目', 6, 10, '#', 'B', 'problem:problem:edit', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (150, '查看本人提交', 7, 10, '#', 'B', 'problem:submit:read', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (151, '查看判题内部日志', 8, 10, '#', 'B', 'problem:judge:case:read', '#');
 
 # menu_id 11 标签编辑
@@ -242,13 +244,19 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 # 文件管理 menu_id 42
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (420, '列出文件', 1, 42, '#', 'B', 'content:file:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (421, '删除文件', 2, 42, '#', 'B', 'content:file:remove', '#');
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (422, '下载文件', 3, 42, '#', 'B', 'content:file:download', '#');
 
 # 通知管理 menu_id 43
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (430, '列出公告', 0, 43, '#', 'B', 'content:notice:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (431, '添加公告', 1, 43, '#', 'B', 'content:notice:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (432, '编辑公告', 2, 43, '#', 'B', 'content:notice:edit', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (433, '删除公告', 3, 43, '#', 'B', 'content:notice:remove', '#');
+
+# FAQ 操作权限属于 FAQ 管理页面；页面路由本身由 menu_id=46 提供。
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values
+    (440, '查看FAQ', 1, 46, '#', 'B', 'content:faq:list', '#'),
+    (441, '新增FAQ', 2, 46, '#', 'B', 'content:faq:add', '#'),
+    (442, '编辑FAQ', 3, 46, '#', 'B', 'content:faq:edit', '#'),
+    (443, '删除FAQ', 4, 46, '#', 'B', 'content:faq:remove', '#');
 
 
 # 文件上传下载删除
@@ -323,11 +331,11 @@ values
     (2, 1100);
 
 # 所有登录用户可查看自己的提交；内部测试用例日志只授予管理员。
-insert ignore into sys_role_menu(role_id, menu_id) values (1, 150), (2, 150), (3, 150), (4, 150), (3, 151), (4, 151);
+insert ignore into sys_role_menu(role_id, menu_id) values (3, 151), (4, 151);
 insert ignore into sys_role_menu(role_id, menu_id) values (2, 1004), (3, 1004), (4, 1004);
 insert ignore into sys_role_menu(role_id, menu_id) values
-    (1, 422), (2, 422), (3, 410), (3, 411), (3, 412), (3, 422), (3, 430),
-    (4, 410), (4, 411), (4, 412), (4, 422), (4, 430);
+    (3, 410), (3, 411), (3, 412), (3, 430),
+    (4, 410), (4, 411), (4, 412), (4, 430);
 
 # 管理员，没有权限相关操作，权限操作危险，可能会毁坏网站
 delete from sys_role_menu where role_id = 3;

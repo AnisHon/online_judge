@@ -124,3 +124,16 @@ CREATE TABLE chunk_upload (
     constraint chunk_upload_file_id foreign key chunk_upload(chunk_id)
         references file_info(file_id) on delete cascade
 ) engine=InnoDB default charset=utf8mb4 comment='分片上传记录';
+
+-- ----------------------------
+-- 9.常见问题（公开问答）
+-- ----------------------------
+create table if not exists faq (
+    faq_id      bigint(20)      not null primary key comment '主键',
+    question    varchar(500)    not null            comment '问题',
+    answer      mediumtext      not null            comment '回答',
+    del_flag    boolean         not null default 0  comment '逻辑删除',
+    create_time datetime        not null default current_timestamp,
+    update_time datetime        not null default current_timestamp on update current_timestamp,
+    key faq_visible_order_idx (del_flag, faq_id)
+) engine=InnoDB default charset=utf8mb4 comment='常见问题表';
