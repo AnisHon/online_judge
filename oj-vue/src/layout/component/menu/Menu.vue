@@ -14,7 +14,7 @@
       <span class="brand-logo-wrap"><el-image class="brand-logo" src="/code_logo.png" alt="延拓Code" /></span>
       <div class="mobile-actions"><theme-trigger/><el-button class="mobile-menu-button" text aria-label="打开菜单" @click="mobileMenuOpen = true"><el-icon><Menu /></el-icon></el-button></div>
     </div>
-    <el-drawer v-model="mobileMenuOpen" class="mobile-menu-drawer" direction="rtl" size="min(320px, 86vw)" title="导航">
+    <el-drawer v-model="mobileMenuOpen" append-to-body class="mobile-menu-drawer" direction="rtl" size="min(320px, 86vw)" title="导航">
       <el-menu :default-active="activeIndex" class="mobile-nav" router @select="mobileMenuOpen = false">
         <recursive-menu-item v-for="item of constMenu" :key="item.path" :route="item" />
       </el-menu>

@@ -47,7 +47,7 @@ watch(() => route.path, value => { url.value = value }, {immediate: true})
 <style scoped lang="scss">
 .auth-page { min-height: 100vh; display: grid; grid-template-columns: minmax(420px, 1.12fr) minmax(420px, .88fr); overflow: hidden; background: #f7f9fc; }
 .brand-panel { position: relative; display: flex; align-items: center; padding: clamp(48px, 8vw, 120px); overflow: hidden; color: #fff; background: linear-gradient(145deg, #172554 0%, #1e3a8a 48%, #2563eb 100%); }
-.brand-copy { position: relative; z-index: 1; max-width: 560px; }
+.brand-copy { position: relative; z-index: var(--oj-z-content-raised); max-width: 560px; }
 .brand-mark { width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.4); border-radius: 18px; color: #dbeafe; font-size: 30px; font-weight: 800; background: rgba(255,255,255,.14); backdrop-filter: blur(12px); }
 .brand-mark.small { width: 34px; height: 34px; border-radius: 10px; font-size: 18px; }
 .eyebrow { margin: 34px 0 18px; color: #bfdbfe; letter-spacing: .18em; font-size: 12px; font-weight: 700; }

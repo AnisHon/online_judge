@@ -24,6 +24,15 @@
               <p class="summary-hint">{{
                   statusError ? statusError : isAnswering ? '可以继续作答，答案会在提交时记录。' : '当前活动不再接受新的提交。'
                 }}</p>
+              <div v-if="countdown" class="activity-countdown" :aria-label="`${countdownLabel} ${countdown.days}天${countdown.hours}时${countdown.minutes}分${countdown.seconds}秒`">
+                <div class="activity-countdown__label"><el-icon><Clock /></el-icon>{{ countdownLabel }}</div>
+                <div class="activity-countdown__time" aria-hidden="true">
+                  <span><strong>{{ countdown.days }}</strong><small>天</small></span>
+                  <span><strong>{{ countdown.hours }}</strong><small>时</small></span>
+                  <span><strong>{{ countdown.minutes }}</strong><small>分</small></span>
+                  <span><strong>{{ countdown.seconds }}</strong><small>秒</small></span>
+                </div>
+              </div>
               <div class="summary-metrics">
                 <div><strong>{{ score }}</strong><small>当前得分</small></div>
                 <div><strong>{{ completedCount }}<em>/{{ problemList.length }}</em></strong><small>已完成</small></div>
@@ -131,6 +140,7 @@ import {
   Calendar,
   CircleCheck,
   CircleClose,
+  Clock,
   DArrowLeft,
   Finished,
   House,
@@ -171,6 +181,19 @@ const completedCount = computed(() => problemList.filter(problem => problem.fini
 const progressPercent = computed(() => problemList.length ? Math.round(completedCount.value / problemList.length * 100) : 0)
 const currentIndex = computed(() => sortedProblemList.value.findIndex(item => String(item.problemId) === String(currentRow.value?.problemId)))
 const activityTime = computed(() => getActivityTimeState(contest.value?.startTime, contest.value?.endTime, now.value))
+const countdownLabel = computed(() => activityTime.value.notStarted ? '距离开始' : '距离结束')
+const countdown = computed(() => {
+  if (!contest.value || !activityTime.value.valid || activityTime.value.over) return undefined
+  const target = activityTime.value.notStarted ? contest.value.startTime : contest.value.endTime
+  const totalSeconds = Math.max(0, dayjs(target).diff(now.value, 'second'))
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return {
+    days: Math.floor(totalSeconds / 86_400),
+    hours: pad(Math.floor(totalSeconds / 3_600) % 24),
+    minutes: pad(Math.floor(totalSeconds / 60) % 60),
+    seconds: pad(totalSeconds % 60),
+  }
+})
 const activityStatus = computed(() => {
   if (!contest.value) return {label: '加载中', tone: 'pending'}
   if (contestError.value) return {label: '信息异常', tone: 'ended'}
@@ -289,7 +312,7 @@ const handleHandIn = async () => {
 
 watch(contestId, id => { void loadPage(id) }, {immediate: true})
 onMounted(() => {
-  clockTimer = setInterval(() => { now.value = dayjs() }, 30_000)
+  clockTimer = setInterval(() => { now.value = dayjs() }, 1_000)
 })
 onUnmounted(() => {
   if (clockTimer) clearInterval(clockTimer)
@@ -462,6 +485,48 @@ onUnmounted(() => {
   font-size: 11px;
   line-height: 1.5;
 }
+
+.activity-countdown {
+  margin: 0 0 13px;
+  padding: 9px 10px 8px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  background: var(--el-bg-color);
+}
+
+.activity-countdown__label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+  color: var(--el-text-color-secondary);
+  font-size: 10px;
+}
+
+.activity-countdown__label .el-icon { color: var(--el-color-primary); }
+
+.activity-countdown__time {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.activity-countdown__time > span {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.activity-countdown__time strong {
+  color: var(--el-text-color-primary);
+  font: 700 14px/1.2 var(--code-font-family, monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-countdown__time small { color: var(--el-text-color-secondary); font-size: 9px; }
 
 .summary-metrics {
   gap: 26px;

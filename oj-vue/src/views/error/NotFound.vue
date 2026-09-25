@@ -42,7 +42,7 @@ html {
   background-image: url("https://media.giphy.com/media/oEI9uBYSzLpBK/giphy.gif");
   background-repeat: no-repeat;
   background-size: cover;
-  z-index: -1;
+  z-index: var(--oj-z-underlay);
   opacity: .02;
 }
 
@@ -58,7 +58,7 @@ html {
           rgba(0, 0, 0, 0.3) 50%,
           rgba(0, 0, 0, 0) 100%);
   background-size: auto 4px;
-  z-index: 1;
+  z-index: var(--oj-z-content-raised);
 }
 
 .overlay::before {

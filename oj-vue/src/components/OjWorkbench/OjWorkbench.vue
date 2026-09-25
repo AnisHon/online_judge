@@ -384,7 +384,7 @@ onUnmounted(() => {
 
 .oj-workbench--fullscreen {
   position: fixed;
-  z-index: 100;
+  z-index: var(--oj-z-fullscreen-workspace);
   top: var(--menu-height);
   right: 0;
   bottom: 0;
@@ -736,7 +736,7 @@ onUnmounted(() => {
 /* 判题提示是浮层，不参与编辑器布局，避免状态变化挤压代码区。 */
 .judge-toast {
   position: fixed;
-  z-index: 2050;
+  z-index: var(--oj-z-transient-feedback);
   top: max(16px, env(safe-area-inset-top));
   left: 50%;
   display: flex;

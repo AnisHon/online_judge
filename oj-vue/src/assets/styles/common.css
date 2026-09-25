@@ -49,15 +49,19 @@ a {
     --backend-content-height: calc(100vh - var(--backend-header-height));
     --backend-content-no-padding-height: calc(100vh - var(--backend-header-height) - 40px);
 
-    /* 页面标题、后台头部和浮动球都不应形成弹层遮挡层；Element Plus 弹层统一置于其上。 */
-    --oj-overlay-z-index: 3000;
-    --el-index-popper: 3000;
-}
-
-.el-popper.backend-menu-popper,
-.el-popper.account-menu-popper,
-.el-popper.resource-icon-picker-popper {
-    z-index: var(--oj-overlay-z-index) !important;
+    /* Layer policy: page content 0-3, fixed workspace 100, floating control 1000,
+       transient feedback 1100; Element Plus dialogs/drawers/poppers start at 2000
+       and are incremented by its z-index manager. Avoid per-component global overrides. */
+    --oj-z-underlay: -1;
+    --oj-z-content: 0;
+    --oj-z-content-raised: 1;
+    --oj-z-panel-control: 2;
+    --oj-z-panel-active: 3;
+    --oj-z-page-panel: 20;
+    --oj-z-fullscreen-workspace: 100;
+    --oj-z-floating-control: 1000;
+    --oj-z-transient-feedback: 1100;
+    --oj-z-framework-base: 2000;
 }
 
 .backend-menu-popper .el-menu--popup {
@@ -107,7 +111,7 @@ a {
 
 /* md-editor-v3 默认把代码块标题栏放在 z-index: 10000，会越过抽屉和浮动球。 */
 .markdown-render-scope .md-editor-preview .md-editor-code .md-editor-code-head {
-    z-index: 1;
+    z-index: var(--oj-z-content-raised);
 }
 
 /*

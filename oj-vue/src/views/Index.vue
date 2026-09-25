@@ -81,7 +81,7 @@
     position: absolute;
     width: 50%;
     height: 100%;
-    z-index: 1;
+    z-index: var(--oj-z-content-raised);
 
     .text {
 

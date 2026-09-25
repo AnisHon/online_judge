@@ -17,6 +17,7 @@
     <el-drawer
         class="point-drawer"
         v-model="drawerVisible"
+        append-to-body
         direction="rtl"
         size="min(390px, 92vw)"
     >
@@ -153,7 +154,7 @@ export default {
 .float-ball {
   position: fixed;
   right: 20px;
-  z-index: 1000;
+  z-index: var(--oj-z-floating-control);
 }
 .float-button { display: flex; align-items: center; gap: 6px; min-width: 108px; height: 46px; padding: 4px 7px 4px 5px; border: 1px solid var(--el-border-color-light); border-radius: 14px; color: var(--el-text-color-primary); background: var(--el-bg-color); box-shadow: 0 8px 20px color-mix(in srgb, var(--el-color-primary) 16%, transparent); transition: transform .2s, border-color .2s, box-shadow .2s; }
 .float-button:hover { border-color: var(--el-color-primary-light-5); color: var(--el-text-color-primary); background: var(--el-bg-color); transform: translateY(-2px); box-shadow: 0 14px 30px color-mix(in srgb, var(--el-color-primary) 23%, transparent); }

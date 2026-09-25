@@ -209,7 +209,7 @@ onBeforeUnmount(() => cleanupDragging?.())
 
 .activity-resizable-panel__restore {
   position: absolute;
-  z-index: 2;
+  z-index: var(--oj-z-panel-control);
   top: 50%;
   left: 8px;
   display: grid;
@@ -253,7 +253,7 @@ onBeforeUnmount(() => cleanupDragging?.())
 
   .activity-resizable-panel__sidebar {
     position: absolute;
-    z-index: 3;
+    z-index: var(--oj-z-panel-active);
     top: 0;
     bottom: 0;
     left: 0;

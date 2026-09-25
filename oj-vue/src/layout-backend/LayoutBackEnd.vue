@@ -94,7 +94,7 @@ provide('elMain', {elMainRef: elMainRef});
   height: var(--backend-header-height);
   position: relative;
   /* 不创建高层级 stacking context，避免遮住 teleport 到 body 的菜单、抽屉和对话框。 */
-  z-index: 0;
+  z-index: var(--oj-z-content);
   overflow: visible;
 }
 

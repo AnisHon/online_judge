@@ -45,7 +45,7 @@ const handleIconClick = () => {
 
 .app-container {
   position: relative;
-  z-index: 0;
+  z-index: var(--oj-z-content);
   height: var(--header-bar-height);
   width: 100%;
   flex: 0 0 var(--header-bar-height);

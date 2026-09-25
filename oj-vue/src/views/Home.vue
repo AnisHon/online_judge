@@ -8,6 +8,7 @@
         <div class="hero-actions">
           <el-button type="primary" round @click="go('problems')">开始刷题</el-button>
           <el-button round @click="go('solutions')">浏览题解</el-button>
+          <el-button class="faq-entry" link :icon="QuestionFilled" @click="go('faq')">常见问题</el-button>
         </div>
       </div>
       <div class="hero-decoration" aria-hidden="true"><span>&lt;/&gt;</span><i /></div>
@@ -90,7 +91,7 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from "vue";
 import {useRouter} from "vue-router";
-import {ArrowRight, Trophy} from "@element-plus/icons-vue";
+import {ArrowRight, QuestionFilled, Trophy} from "@element-plus/icons-vue";
 import HomeSectionCard from "@/components/HomeSectionCard/HomeSectionCard.vue";
 import Avatar from "@/components/Avatar/Avatar.vue";
 import {rank, type UserView} from "@/api/user";
@@ -143,10 +144,10 @@ onMounted(loadHomeData);
 <style scoped>
 .home-page { max-width: var(--page-max-width); margin: 0 auto; padding: 8px 0 28px; color: var(--el-text-color-primary); }
 .home-hero { position: relative; display: flex; min-height: 220px; align-items: center; justify-content: space-between; margin-bottom: 18px; padding: 38px 48px; overflow: hidden; border: 1px solid var(--el-border-color-light); border-radius: 22px; background: linear-gradient(135deg, var(--el-color-primary-light-9), var(--el-bg-color)); }
-.home-hero__copy { position: relative; z-index: 1; }
+.home-hero__copy { position: relative; z-index: var(--oj-z-content-raised); }
 .home-eyebrow { margin: 0 0 12px; color: var(--el-color-primary); font-size: 11px; font-weight: 800; letter-spacing: .18em; }
 .home-hero h1 { margin: 0; font-size: clamp(28px, 4vw, 46px); letter-spacing: -.05em; }.home-hero h1 span { color: var(--el-color-primary); }
-.home-description { margin: 14px 0 20px; color: var(--el-text-color-secondary); font-size: 15px; }.hero-actions { display: flex; gap: 8px; }
+.home-description { margin: 14px 0 20px; color: var(--el-text-color-secondary); font-size: 15px; }.hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }.faq-entry { margin-left: 3px; color: var(--el-text-color-secondary); }.faq-entry:hover { color: var(--el-color-primary); }
 .hero-decoration { position: absolute; right: 7%; color: var(--el-color-primary-light-5); font: 900 120px/1 var(--code-font-family, monospace); transform: rotate(-8deg); opacity: .32; }.hero-decoration i { position: absolute; right: -20px; bottom: -10px; width: 92px; height: 16px; border-radius: 50%; background: var(--el-color-primary-light-7); filter: blur(12px); }
 .home-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }.stat-item { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border: 1px solid var(--el-border-color-light); border-radius: 14px; background: var(--el-bg-color); }.stat-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 11px; color: var(--el-color-primary); background: var(--el-color-primary-light-9); font-size: 19px; }.stat-item strong, .stat-item small { display: block; }.stat-item strong { font-size: 21px; }.stat-item small { margin-top: 2px; color: var(--el-text-color-secondary); }
 .home-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, .8fr); gap: 18px; align-items: stretch; }.home-feed { display: flex; flex-direction: column; gap: 18px; }.ranking-card { display: flex; height: 100%; box-sizing: border-box; flex-direction: column; }.ranking-card :deep(.el-card__body) { flex: 1; }

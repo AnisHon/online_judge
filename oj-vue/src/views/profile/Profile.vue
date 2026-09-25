@@ -13,6 +13,7 @@
             <span class="eyebrow">{{ isOwner ? 'MY PROFILE' : 'PUBLIC PROFILE' }}</span>
             <div class="profile-name-line">
               <h1>{{ profile.user.nikeName || profile.user.userName }}</h1>
+              <el-tag v-for="role in profile.user.specialRoles" :key="role" class="profile-role-tag" size="small" effect="dark">{{ role }}</el-tag>
               <el-tag v-if="isOwner" size="small" effect="plain">我的主页</el-tag>
             </div>
             <p class="profile-signature">{{ profile.user.signature || '还没有写下个性签名。' }}</p>
@@ -402,7 +403,7 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 
 .profile-identity {
   position: relative;
-  z-index: 1;
+  z-index: var(--oj-z-content-raised);
   display: flex;
   align-items: center;
   gap: 22px;
@@ -471,6 +472,13 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
   gap: 10px;
 }
 
+.profile-role-tag {
+  border: 0;
+  background: linear-gradient(135deg, #5b7cfa, #8b5cf6);
+  color: #fff;
+  font-weight: 650;
+}
+
 .profile-name-line h1 {
   margin: 0;
   overflow: hidden;
@@ -507,7 +515,7 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 
 .hero-action {
   position: relative;
-  z-index: 1;
+  z-index: var(--oj-z-content-raised);
   align-self: flex-start;
 }
 
