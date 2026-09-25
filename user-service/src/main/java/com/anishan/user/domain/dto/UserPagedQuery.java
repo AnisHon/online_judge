@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.Min;
 import java.util.*;
 
 @EqualsAndHashCode(callSuper = true)
@@ -48,5 +49,13 @@ public class UserPagedQuery extends SortedPagedQuery<SysUser> {
     @ConditionColumn("eq")
     @ApiModelProperty("用户状态(0 1封禁)")
     private UserState status;
+
+    @Min(value = 1, message = "角色筛选值不合法")
+    @ApiModelProperty("角色ID")
+    private Long roleId;
+
+    @Min(value = 1, message = "班级筛选值不合法")
+    @ApiModelProperty("班级ID")
+    private Long classId;
 
 }

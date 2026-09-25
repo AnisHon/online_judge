@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 个人主页公开资料。这里刻意不包含邮箱、权限、备注和任何认证信息。
@@ -37,4 +38,7 @@ public class UserProfileVo {
 
     @ApiModelProperty("最近登录时间")
     private LocalDateTime lastLoginTime;
+
+    @ApiModelProperty("公开展示的特殊角色标签")
+    private List<String> specialRoles;
 }

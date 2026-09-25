@@ -18,6 +18,8 @@ interface UserRoleRelation{
 interface RoleForm {
     roleId?: IdType;
     roleName?: string;
+    displayName?: string;
+    specialRole?: boolean;
     status?: RoleStatus;
     remark?: string;
 }
@@ -25,6 +27,8 @@ interface RoleForm {
 interface RoleView {
     roleId: IdType;
     roleName: string;
+    displayName: string;
+    specialRole: boolean;
     status: RoleStatus;
     createTime: Date;
     remark: string;
@@ -148,4 +152,3 @@ export {
     revoke,
     dict
 }
-

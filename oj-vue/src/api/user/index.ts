@@ -56,6 +56,8 @@ interface QueryUser extends SortedPagedType{
     nikeName?: string;
     email?: string;
     status?: UserStatus;
+    roleId?: IdType;
+    classId?: IdType;
 }
 
 interface QueryRoleUser extends PagedType{

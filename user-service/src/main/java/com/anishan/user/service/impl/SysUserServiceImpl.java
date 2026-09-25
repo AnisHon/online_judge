@@ -28,8 +28,8 @@ import com.anishan.user.service.SysRoleService;
 import com.anishan.user.service.SysUserRoleService;
 import com.anishan.user.service.SysUserService;
 import com.anishan.user.util.UserUtil;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
@@ -98,7 +98,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     @Override
     public PagedResult<UserVo> queryUser(UserPagedQuery userPagedQuery) {
-        Wrapper<SysUser> wrapper = userPagedQuery.wrapper();
+        QueryWrapper<SysUser> wrapper = userPagedQuery.queryWrapper();
+        if (userPagedQuery.getRoleId() != null) {
+            wrapper.apply("user_id IN (SELECT user_id FROM sys_user_role WHERE role_id = {0})", userPagedQuery.getRoleId());
+        }
+        if (userPagedQuery.getClassId() != null) {
+            wrapper.apply("user_id IN (SELECT student_id FROM student_class WHERE class_id = {0})", userPagedQuery.getClassId());
+        }
         Page<SysUser> page = userPagedQuery.page();
         page = page(page, wrapper);
         return PagedResult.build(page, UserVo.class);
@@ -332,6 +338,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         profile.setPoints(user.getPoints());
         profile.setCreateTime(user.getCreateTime());
         profile.setLastLoginTime(user.getLastLoginTime());
+        profile.setSpecialRoles(sysUserRoleService.getRolesByUserId(userId).stream()
+                .filter(role -> Boolean.TRUE.equals(role.getSpecialRole()))
+                .map(role -> StrUtil.blankToDefault(role.getDisplayName(), role.getRoleName()))
+                .filter(StrUtil::isNotBlank)
+                .distinct()
+                .collect(Collectors.toList()));
         return profile;
     }
 

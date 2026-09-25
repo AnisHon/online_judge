@@ -8,6 +8,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 @Data
@@ -21,6 +22,13 @@ public class RoleDto {
     @ApiModelProperty("角色名称")
     @NotEmpty
     private String roleName;
+
+    @ApiModelProperty("面向用户展示的角色名称")
+    @NotBlank
+    private String displayName;
+
+    @ApiModelProperty("是否在个人主页显示特殊身份标签")
+    private Boolean specialRole;
 
     @ApiModelProperty("角色状态（0正常 1停用）")
     @NotNull

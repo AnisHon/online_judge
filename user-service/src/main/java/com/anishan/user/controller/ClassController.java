@@ -95,7 +95,7 @@ public class ClassController {
     @PreAuthorize("hasAuthority('user:class:remove')")
     @ApiOperation("删除class")
     public R<Boolean> removeBatch(@PathVariable @NotNull List<Long> ids) {
-        boolean b = sysClassService.removeBatchByIds(ids);
+        boolean b = sysClassService.removeClasses(ids);
         return R.success(b);
     }
 

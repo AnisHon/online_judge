@@ -141,7 +141,7 @@ async function loadRole() {
   try {
     const data = await getRole({ asc: true, currentPage: 1, pageSize: 1, roleId })
     role.value = data.data[0]
-    if (role.value?.roleName) roleName.value = role.value.roleName
+    if (role.value) roleName.value = role.value.displayName || role.value.roleName
     roleReady.value = Boolean(role.value)
     if (!roleReady.value) {
       roleName.value = '无法加载角色'

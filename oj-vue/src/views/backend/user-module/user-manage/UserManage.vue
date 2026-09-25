@@ -59,6 +59,16 @@
               <el-option v-for="item in dict.userStatus" :key="item.value" :label="item.label" :value="item.value"/>
             </el-select>
           </el-form-item>
+          <el-form-item label="角色" prop="roleId">
+            <el-select v-model="queryParams.roleId" clearable filterable class="filter-select" placeholder="全部角色">
+              <el-option v-for="role in roles" :key="role.roleId" :label="role.displayName || role.roleName" :value="role.roleId"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="班级" prop="classId">
+            <el-select v-model="queryParams.classId" clearable filterable :loading="classesLoading" class="filter-select" placeholder="全部班级">
+              <el-option v-for="item in classes" :key="item.classId" :label="item.className" :value="item.classId"/>
+            </el-select>
+          </el-form-item>
           <div class="filter-actions">
             <el-button type="primary" :icon="Search" @click="handleQuery">搜索</el-button>
             <el-button :icon="Refresh" @click="resetQuery">重置</el-button>
@@ -189,7 +199,7 @@
             <el-form-item v-if="dialogState === 'add'" label="初始角色" prop="role">
               <el-select v-model="editorForm.role" class="full-width" :loading="rolesLoading"
                          :disabled="rolesLoading || !roles.length" placeholder="请选择角色">
-                <el-option v-for="role in roles" :key="role.roleId" :label="role.roleName" :value="role.roleId"/>
+                <el-option v-for="role in roles" :key="role.roleId" :label="role.displayName || role.roleName" :value="role.roleId"/>
               </el-select>
             </el-form-item>
             <el-form-item v-if="dialogState === 'add'" label="初始密码" prop="password">
@@ -262,6 +272,7 @@ import {getRole, type RoleView} from '@/api/role'
 import type {IdType} from '@/api/common'
 import {useColumn} from '@/hooks/useColumn'
 import {hasPerm} from '@/utils/authUtil'
+import {getClass, type ClassView} from '@/api/class'
 
 type DialogState = 'add' | 'edit'
 const queryParams = reactive<QueryUser>({
@@ -272,7 +283,9 @@ const queryParams = reactive<QueryUser>({
   userName: undefined,
   nikeName: undefined,
   email: undefined,
-  status: undefined
+  status: undefined,
+  roleId: undefined,
+  classId: undefined
 })
 const editorForm = reactive<UserAddForm & { userId?: IdType }>({
   userId: undefined,
@@ -289,7 +302,9 @@ const open = ref(false)
 const dialogState = ref<DialogState>('add')
 const showSearch = ref(true)
 const roles = reactive<RoleView[]>([])
+const classes = reactive<ClassView[]>([])
 const rolesLoading = ref(false)
+const classesLoading = ref(false)
 const actionLoading = ref(false)
 const submitting = ref(false)
 const tableList = reactive<UserView[]>([])
@@ -299,9 +314,22 @@ const selectedIds = ref<IdType[]>([])
 const {columns} = useColumn(['用户', '邮箱地址', '用户状态', '创建时间', '奖励分', '标记'])
 
 const rules = {
-  userName: [{required: true, message: '用户名不能为空', trigger: 'blur'}, {
-    pattern: /^[a-zA-Z0-9_-]{4,16}$/,
-    message: '用户名需为 4-16 位字母、数字、_ 或 -',
+  userName: [{
+    validator: (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
+      if (dialogState.value === 'edit') {
+        callback();
+        return;
+      }
+      if (!String(value || '').trim()) {
+        callback(new Error('用户名不能为空'));
+        return;
+      }
+      if (!/^[a-zA-Z0-9_-]{4,16}$/.test(String(value))) {
+        callback(new Error('用户名需为 4-16 位字母、数字、_ 或 -'));
+        return;
+      }
+      callback();
+    },
     trigger: 'blur'
   }],
   nikeName: [{max: 40, message: '昵称不能超过 40 个字符', trigger: 'blur'}],
@@ -314,7 +342,7 @@ const rules = {
   role: [{required: true, message: '请选择初始角色', trigger: 'change'}],
 }
 
-const activeFilterCount = computed(() => [queryParams.userId, queryParams.userName, queryParams.nikeName, queryParams.email, queryParams.status].filter((value) => value !== undefined && value !== '').length)
+const activeFilterCount = computed(() => [queryParams.userId, queryParams.userName, queryParams.nikeName, queryParams.email, queryParams.status, queryParams.roleId, queryParams.classId].filter((value) => value !== undefined && value !== '').length)
 const canEditUser = computed(() => hasPerm('user:user:edit'))
 const summaryStats = computed(() => [{label: '查询结果', value: total.value, tone: 'blue'}, {
   label: '当前页正常',
@@ -366,6 +394,8 @@ const resetQuery = () => {
   queryParams.nikeName = undefined;
   queryParams.email = undefined;
   queryParams.status = undefined;
+  queryParams.roleId = undefined;
+  queryParams.classId = undefined;
   queryParams.sortColumn = undefined;
   getList()
 }
@@ -507,8 +537,20 @@ const loadRoles = async () => {
     rolesLoading.value = false
   }
 }
+const loadClasses = async () => {
+  classesLoading.value = true;
+  try {
+    const result = await getClass({currentPage: 1, pageSize: 500, asc: true});
+    classes.splice(0, classes.length, ...result.data);
+  } catch {
+    ElMessage.warning('班级筛选项加载失败');
+  } finally {
+    classesLoading.value = false;
+  }
+}
 getList()
 loadRoles()
+loadClasses()
 </script>
 
 <style lang="scss" scoped>

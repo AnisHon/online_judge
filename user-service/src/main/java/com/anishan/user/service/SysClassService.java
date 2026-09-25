@@ -33,6 +33,8 @@ public interface SysClassService extends IService<SysClass> {
 
     boolean addClass(ClassDto sysClassDto);
 
+    boolean removeClasses(List<Long> classIds);
+
     // join class
     BinaryResultOv joinClass(Long userId, Long clasId);
 

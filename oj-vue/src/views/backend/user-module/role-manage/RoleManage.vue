@@ -73,13 +73,14 @@
         <el-table-column v-if="columns[0].visible" label="角色" min-width="290">
           <template #default="{ row }">
             <div class="role-cell">
-              <span class="role-avatar" :class="`role-avatar--${statusTone(row.status)}`">{{ roleInitial(row.roleName) }}</span>
+              <span class="role-avatar" :class="`role-avatar--${statusTone(row.status)}`">{{ roleInitial(row.displayName || row.roleName) }}</span>
               <div class="role-cell__main">
                 <div class="role-cell__title">
-                  <strong :title="row.roleName">{{ row.roleName }}</strong>
+                  <strong :title="row.displayName">{{ row.displayName || row.roleName }}</strong>
+                  <el-tag v-if="row.specialRole" size="small" effect="dark" class="special-role-tag">特殊身份</el-tag>
                   <span class="status-pill" :class="`status-pill--${statusTone(row.status)}`"><i></i>{{ roleStatusText(row.status) }}</span>
                 </div>
-                <span class="role-cell__sub" :title="String(row.roleId)">ID {{ shortId(row.roleId) }}</span>
+                <span class="role-cell__sub"><span :title="row.roleName">{{ row.roleName }}</span><span>·</span><span :title="String(row.roleId)">ID {{ shortId(row.roleId) }}</span></span>
               </div>
             </div>
           </template>
@@ -129,7 +130,9 @@
                @submit.prevent="submitForm">
         <section class="form-section">
           <div class="section-title"><span>01</span><div><strong>角色身份</strong><small>名称用于识别角色，角色 ID 由系统生成</small></div></div>
-          <el-form-item label="角色名称" prop="roleName"><el-input v-model="form.roleName" :prefix-icon="UserFilled" maxlength="60" show-word-limit placeholder="例如：教师、内容审核员" /></el-form-item>
+          <el-form-item label="内部角色标识" prop="roleName"><el-input v-model="form.roleName" :prefix-icon="UserFilled" maxlength="30" show-word-limit placeholder="例如：content_reviewer" /></el-form-item>
+          <el-form-item label="网站显示名称" prop="displayName"><el-input v-model="form.displayName" maxlength="50" show-word-limit placeholder="例如：内容审核员" /></el-form-item>
+          <el-form-item label="身份展示" prop="specialRole"><el-switch v-model="form.specialRole" active-text="作为特殊身份标签展示" inactive-text="不公开展示" /></el-form-item>
           <el-form-item v-if="dialogState === 'edit'" label="角色 ID"><el-input :model-value="String(form.roleId || '')" disabled :prefix-icon="Key" /></el-form-item>
         </section>
         <section class="form-section">
@@ -146,6 +149,7 @@
         <div><span class="panel-eyebrow">ROLE / ACCESS</span><h3>{{ permissionRoleName || '当前角色' }}</h3><p>勾选角色可访问的菜单、菜单项和按钮权限。当前采用独立勾选，不会自动替换父子节点。</p></div>
         <span class="permission-count">已选 {{ checkedPermissionCount }} 项</span>
       </div>
+      <el-alert v-if="permissionDependencyError" class="permission-dependency-alert" type="error" :closable="false" show-icon :title="permissionDependencyError" />
       <div v-loading="loadingRole" class="permission-tree-wrap">
         <el-tree ref="treeRef" :data="menuTree" node-key="id" show-checkbox check-strictly :expand-on-click-node="false" :default-expand-all="false" :props="treeProps" empty-text="暂无资源权限" @check="handlePermissionCheck" />
       </div>
@@ -175,7 +179,7 @@ import type { TreeNodeData } from 'element-plus/lib/components/tree/src/tree.typ
 type DialogState = 'add' | 'edit'
 
 const queryParams = reactive<QueryRole>({ asc: true, currentPage: 1, pageSize: 20, roleId: undefined, roleName: undefined, status: undefined, remark: undefined })
-const form = reactive<RoleForm>({ roleId: undefined, roleName: '', status: RoleStatus.NORMAL, remark: '' })
+const form = reactive<RoleForm>({ roleId: undefined, roleName: '', displayName: '', specialRole: false, status: RoleStatus.NORMAL, remark: '' })
 const formRef = ref<FormInstance>()
 const open = ref(false)
 const openDataScope = ref(false)
@@ -193,6 +197,7 @@ const router = useRouter()
 
 const rules = {
   roleName: [{ required: true, message: '角色名称不能为空', trigger: 'blur' }],
+  displayName: [{ required: true, message: '网站显示名称不能为空', trigger: 'blur' }],
   status: [{ required: true, message: '请选择角色状态', trigger: 'change' }],
 }
 
@@ -261,7 +266,7 @@ const handleRefresh = async () => {
   }
 }
 
-const resetForm = () => { form.roleId = undefined; form.roleName = ''; form.status = RoleStatus.NORMAL; form.remark = ''; formRef.value?.clearValidate() }
+const resetForm = () => { form.roleId = undefined; form.roleName = ''; form.displayName = ''; form.specialRole = false; form.status = RoleStatus.NORMAL; form.remark = ''; formRef.value?.clearValidate() }
 const handleAdd = () => { resetForm(); dialogState.value = 'add'; open.value = true }
 const handleUpdate = (row?: RoleView) => {
   const target = row || tableList.find(role => String(role.roleId) === String(selectedIds.value[0]))
@@ -320,6 +325,7 @@ const permissionRoleName = ref('')
 const originalPermissionIds = ref<IdType[]>([])
 const checkedPermissionIds = ref<IdType[]>([])
 const permissionSaving = ref(false)
+const permissionDependencyError = ref('')
 let permissionSession = 0
 
 const treeProps = reactive<TreeOptionProps>({
@@ -334,6 +340,32 @@ function sortMenuTree(nodes: TreedMenu[]): TreedMenu[] {
   return [...nodes].sort((a, b) => menuTypeRank(a.menu.menuType) - menuTypeRank(b.menu.menuType) || (a.menu.orderNum ?? 0) - (b.menu.orderNum ?? 0) || String(a.menu.menuName).localeCompare(String(b.menu.menuName), 'zh-CN')).map(node => ({ ...node, children: sortMenuTree(node.children || []) }))
 }
 const sameId = (left: IdType, right: IdType) => String(left) === String(right)
+
+function findMissingPermissionParent(ids: Array<IdType | number | string>) {
+  const selected = new Set(ids.map(String))
+  const nodes = new Map<string, { label: string; parentId?: string }>()
+  const collect = (items: TreedMenu[], parentId?: string) => {
+    items.forEach(item => {
+      const id = String(item.id ?? item.menu.menuId)
+      nodes.set(id, {label: item.menu.menuName, parentId})
+      collect(item.children || [], id)
+    })
+  }
+  collect(menuTree)
+
+  for (const id of selected) {
+    const child = nodes.get(id)
+    let parentId = child?.parentId
+    while (child && parentId) {
+      if (!selected.has(parentId)) {
+        const parent = nodes.get(parentId)
+        return `“${child.label}”权限依赖于“${parent?.label || parentId}”权限，请检查父级权限。`
+      }
+      parentId = nodes.get(parentId)?.parentId
+    }
+  }
+  return ''
+}
 
 const isPermissionSessionActive = (session: number, roleId?: IdType) => {
   if (session !== permissionSession || !openDataScope.value) return false
@@ -356,6 +388,7 @@ async function loadMenuTree(session: number, roleId: IdType) {
 }
 
 const handlePermissionCheck = (_data: unknown, state: { checkedKeys: Array<IdType | number | string> }) => {
+  permissionDependencyError.value = ''
   const current = (state.checkedKeys || []).map(String)
   const removed = originalPermissionIds.value.some(id => !current.some(item => sameId(item, id)))
   const added = current.some(id => !originalPermissionIds.value.some(item => sameId(item, id)))
@@ -372,6 +405,7 @@ const loadRolePermissions = async (roleId: IdType, session: number) => {
   if (!isPermissionSessionActive(session, roleId)) return
   const ids = data.map(item => item.menuId)
   originalPermissionIds.value = [...ids]
+  permissionDependencyError.value = findMissingPermissionParent(ids)
   await restorePermissionSnapshot(ids, session, roleId)
 }
 
@@ -379,7 +413,7 @@ const handleMenu = async (row: RoleView) => {
   if (!canManageScope.value) return
   const session = ++permissionSession
   permissionRoleId.value = row.roleId
-  permissionRoleName.value = row.roleName
+  permissionRoleName.value = row.displayName || row.roleName
   openDataScope.value = true
   loadingRole.value = true
   checkedPermissionIds.value = []
@@ -393,6 +427,11 @@ const submitMenu = async () => {
   const roleId = permissionRoleId.value
   if (!roleId || !canManageScope.value || loadingRole.value || permissionSaving.value) return
   const current = (treeRef.value?.getCheckedKeys() || []) as IdType[]
+  permissionDependencyError.value = findMissingPermissionParent(current)
+  if (permissionDependencyError.value) {
+    ElMessage.error(permissionDependencyError.value)
+    return
+  }
   const original = [...originalPermissionIds.value]
   const removed = original.filter(id => !current.some(item => sameId(item, id)))
   const added = current.filter(id => !original.some(item => sameId(item, id)))
@@ -423,6 +462,7 @@ const cancelMenu = () => {
   openDataScope.value = false
   permissionRoleId.value = undefined
   permissionRoleName.value = ''
+  permissionDependencyError.value = ''
   originalPermissionIds.value = []
   checkedPermissionIds.value = []
 }
@@ -439,7 +479,7 @@ getList()
 .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 20px; }.panel-eyebrow { color: #8b5cf6; font-size: 11px; font-weight: 800; letter-spacing: .14em; }.panel-heading h2 { margin: 7px 0 5px; font-size: 21px; letter-spacing: -.03em; }.panel-heading p { margin: 0; color: var(--el-text-color-secondary); font-size: 13px; }.panel-heading__meta { display: inline-flex; align-items: center; gap: 7px; padding-top: 5px; color: var(--el-text-color-secondary); font-size: 12px; white-space: nowrap; }.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--el-color-success); }.sync-dot.is-loading { background: var(--el-color-warning); animation: pulse 1.1s ease-in-out infinite; }
 .filter-panel { margin-bottom: 18px; padding: 14px 16px 4px; border: 1px solid var(--el-border-color-lighter); border-radius: 13px; background: var(--el-bg-color-page); }.filter-panel__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 11px; }.filter-title { display: flex; align-items: center; gap: 7px; font-size: 13px; }.filter-title .el-icon { color: #8b5cf6; }.filter-title span { color: var(--el-text-color-secondary); font-size: 11px; font-weight: 400; }.role-filters { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)) auto; align-items: end; gap: 0 14px; }.role-filters :deep(.el-form-item) { min-width: 0; margin-bottom: 10px; }.role-filters :deep(.el-form-item__label) { height: auto; margin-bottom: 5px; color: var(--el-text-color-secondary); font-size: 11px; line-height: 1.2; }.full-width { width: 100%; }.filter-actions { display: flex; align-items: flex-end; gap: 7px; height: 68px; padding-bottom: 10px; }
 .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; min-height: 36px; margin-bottom: 10px; }.list-toolbar__left { display: flex; align-items: center; gap: 12px; }.selection-status { display: inline-flex; align-items: center; gap: 6px; color: var(--el-text-color-secondary); font-size: 12px; }.selection-status .el-icon { color: var(--el-text-color-placeholder); }.selection-status.has-selection { color: #8b5cf6; font-weight: 650; }.selection-status.has-selection .el-icon { color: #8b5cf6; }
-.role-table { overflow: hidden; border-radius: 14px; }.role-table :deep(.el-table__header th.el-table__cell) { color: var(--el-text-color-secondary); font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); }.role-table :deep(.el-table__row td.el-table__cell) { height: 70px; }.role-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }.role-avatar { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 12px; font-size: 15px; font-weight: 800; }.role-avatar--green { color: #059669; background: rgb(5 150 105 / 13%); }.role-avatar--amber { color: #d97706; background: rgb(217 119 6 / 13%); }.role-cell__main { display: flex; min-width: 0; flex-direction: column; gap: 5px; }.role-cell__title { display: flex; align-items: center; min-width: 0; gap: 8px; }.role-cell__title strong { max-width: 210px; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.role-cell__sub { color: var(--el-text-color-secondary); font: 11px var(--code-font-family, monospace); }.status-pill { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-size: 10px; }.status-pill i { width: 5px; height: 5px; border-radius: 50%; }.status-pill--green { color: #059669; background: rgb(5 150 105 / 11%); }.status-pill--green i { background: #10b981; }.status-pill--amber { color: #d97706; background: rgb(217 119 6 / 11%); }.status-pill--amber i { background: #f59e0b; }.status-text { font-size: 12px; font-weight: 650; }.status-text--green { color: #059669; }.status-text--amber { color: #d97706; }
+.role-table { overflow: hidden; border-radius: 14px; }.role-table :deep(.el-table__header th.el-table__cell) { color: var(--el-text-color-secondary); font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); }.role-table :deep(.el-table__row td.el-table__cell) { height: 70px; }.role-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }.role-avatar { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 12px; font-size: 15px; font-weight: 800; }.role-avatar--green { color: #059669; background: rgb(5 150 105 / 13%); }.role-avatar--amber { color: #d97706; background: rgb(217 119 6 / 13%); }.role-cell__main { display: flex; min-width: 0; flex-direction: column; gap: 5px; }.role-cell__title { display: flex; align-items: center; min-width: 0; gap: 8px; }.role-cell__title strong { max-width: 210px; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.role-cell__sub { display: inline-flex; align-items: center; gap: 7px; color: var(--el-text-color-secondary); font: 11px var(--code-font-family, monospace); }.special-role-tag { border: 0; background: linear-gradient(135deg, #5b7cfa, #8b5cf6); color: #fff; }.permission-dependency-alert { margin-bottom: 12px; }.status-pill { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-size: 10px; }.status-pill i { width: 5px; height: 5px; border-radius: 50%; }.status-pill--green { color: #059669; background: rgb(5 150 105 / 11%); }.status-pill--green i { background: #10b981; }.status-pill--amber { color: #d97706; background: rgb(217 119 6 / 11%); }.status-pill--amber i { background: #f59e0b; }.status-text { font-size: 12px; font-weight: 650; }.status-text--green { color: #059669; }.status-text--amber { color: #d97706; }
 .dialog-intro { display: flex; align-items: center; gap: 12px; margin-bottom: 19px; padding: 14px 16px; border: 1px solid var(--el-border-color-lighter); border-radius: 13px; background: var(--el-fill-color-light); }.dialog-intro__icon { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 11px; background: rgb(139 92 246 / 13%); color: #8b5cf6; font-size: 18px; }.dialog-intro strong, .dialog-intro p { display: block; }.dialog-intro p { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }.editor-form :deep(.el-form-item) { margin-bottom: 16px; }.editor-form :deep(.el-form-item__label) { height: auto; margin-bottom: 6px; color: var(--el-text-color-secondary); font-size: 12px; line-height: 1.2; }.form-section { padding: 18px 0 4px; border-top: 1px solid var(--el-border-color-lighter); }.form-section:first-child { padding-top: 0; border-top: 0; }.section-title { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; }.section-title > span { color: #8b5cf6; font: 700 11px/1.4 var(--code-font-family, monospace); letter-spacing: .08em; }.section-title strong, .section-title small { display: block; }.section-title small { margin-top: 3px; color: var(--el-text-color-secondary); font-size: 11px; }.status-options { min-height: 32px; align-items: center; }
 .permission-dialog__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 16px; }.permission-dialog__head h3 { margin: 6px 0 4px; font-size: 18px; }.permission-dialog__head p { max-width: 500px; margin: 0; color: var(--el-text-color-secondary); font-size: 12px; line-height: 1.6; }.permission-count { flex: 0 0 auto; padding: 6px 9px; border-radius: 8px; background: rgb(139 92 246 / 11%); color: #8b5cf6; font: 11px var(--code-font-family, monospace); }.permission-tree-wrap { min-height: 260px; max-height: 52vh; overflow: auto; padding: 12px 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 13px; background: var(--el-bg-color-page); }.permission-tree-wrap :deep(.el-tree) { background: transparent; color: var(--el-text-color-primary); }.permission-tree-wrap :deep(.el-tree-node__content) { min-height: 36px; border-radius: 8px; }.permission-tree-wrap :deep(.el-tree-node__content:hover) { background: var(--el-fill-color-light); }.permission-tree-wrap :deep(.el-tree-node__expand-icon) { color: var(--el-text-color-secondary); }.permission-tree-wrap :deep(.el-tree-node__expand-icon.expanded) { color: #8b5cf6; }
 @keyframes pulse { 50% { opacity: .35; } }

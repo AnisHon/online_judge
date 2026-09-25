@@ -90,6 +90,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole>
                 roleDto.getRoleId(),
                 SysRole::getUpdateTime);
         SysRole sysRole = BeanUtil.copyProperties(roleDto, SysRole.class);
+        if (sysRole.getDisplayName() != null) {
+            sysRole.setDisplayName(sysRole.getDisplayName().trim());
+        }
         sysRole.setUpdateTime(updateTime);
         return this.updateById(sysRole);
     }
@@ -98,13 +101,16 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole>
     @Override
     public boolean addRole(RoleDto roleDto) {
         SysRole sysRole = BeanUtil.copyProperties(roleDto, SysRole.class, "roleId");
+        sysRole.setDisplayName(sysRole.getDisplayName().trim());
+        if (sysRole.getSpecialRole() == null) {
+            sysRole.setSpecialRole(false);
+        }
         int insert = sysRoleMapper.insert(sysRole);
         return insert > 0;
     }
 
 
 }
-
 
 
 

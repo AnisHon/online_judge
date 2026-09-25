@@ -10,6 +10,7 @@ export interface UserProfile {
     points?: number | string;
     createTime?: string;
     lastLoginTime?: string;
+    specialRoles?: string[];
 }
 
 export interface ProfileContest {
@@ -87,6 +88,7 @@ const normalizeUser = (value: unknown): UserProfile => {
         points: typeof raw.points === 'number' || typeof raw.points === 'string' ? raw.points : 0,
         createTime: asDate(raw.createTime),
         lastLoginTime: asDate(raw.lastLoginTime),
+        specialRoles: Array.isArray(raw.specialRoles) ? raw.specialRoles.map(item => asText(item)).filter(Boolean) : [],
     }
 }
 

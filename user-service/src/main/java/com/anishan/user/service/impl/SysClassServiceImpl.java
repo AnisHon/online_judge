@@ -196,6 +196,17 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
     }
 
     @Override
+    @Transactional
+    public boolean removeClasses(List<Long> classIds) {
+        if (CollectionUtil.isEmpty(classIds)) {
+            return false;
+        }
+        studentClassService.remove(new LambdaQueryWrapper<StudentClassRelation>()
+                .in(StudentClassRelation::getClassId, classIds));
+        return this.removeByIds(classIds);
+    }
+
+    @Override
     public PagedResult<UserVo> getStudents(UserClassQuery query) {
 
 
@@ -227,7 +238,6 @@ public class SysClassServiceImpl extends ServiceImpl<SysClassMapper, SysClass>
 
 
 }
-
 
 
 

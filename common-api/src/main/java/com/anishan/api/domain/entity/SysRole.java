@@ -25,6 +25,12 @@ public class SysRole implements Serializable {
      */
     private String roleName;
 
+    /** 面向用户展示的角色名称 */
+    private String displayName;
+
+    /** 是否作为特殊身份标签公开展示 */
+    private Boolean specialRole;
+
     /**
      * 角色状态（0正常 1停用）
      */
