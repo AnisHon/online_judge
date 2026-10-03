@@ -12,7 +12,7 @@ command -v curl >/dev/null || { echo "需要 curl" >&2; exit 1; }
 
 echo '[1/4] 编译后端'
 docker run --rm -v "$ROOT_DIR:/workspace" -w /workspace \
-  maven:3.9-eclipse-temurin-17 mvn -B -DskipTests package
+  maven:3.9-eclipse-temurin-17 mvn -B package
 
 echo '[2/4] 编译前端'
 (cd oj-vue && pnpm install --no-frozen-lockfile && pnpm run build-only)

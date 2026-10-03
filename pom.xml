@@ -37,7 +37,7 @@
         <spring-cloud-alibaba.version>2021.0.4.0</spring-cloud-alibaba.version>
         <jakarta.mail-api>2.1.2</jakarta.mail-api>
         <openfeign.okhttp.version>11.10</openfeign.okhttp.version>
-        <skipTests>true</skipTests>
+        <skipTests>false</skipTests>
         <minio.version>8.5.2</minio.version>
         <com.squareup.okhttp.version>4.12.0</com.squareup.okhttp.version>
         <commonmark.version>0.24.0</commonmark.version>
@@ -217,8 +217,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- Keep the existing fast-build default, but allow CI/local
-                         verification with -DskipTests=false. -->
+                    <!-- Tests run by default; -DskipTests remains an explicit opt-out. -->
                     <skip>${skipTests}</skip>
                 </configuration>
             </plugin>

@@ -54,6 +54,6 @@ fi
 
 echo "正在本机前台启动 ${SERVICE_NAME}；按 Ctrl-C 停止该服务。"
 echo "先编译该模块及其本地依赖。"
-mvn -pl "$SERVICE_NAME" -am -DskipTests package
+mvn -pl "$SERVICE_NAME" -am package
 cd "$ROOT_DIR/$SERVICE_NAME"
 exec mvn spring-boot:run
