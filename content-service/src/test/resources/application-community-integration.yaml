@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${OJ_COMMUNITY_MYSQL_HOST}:${OJ_COMMUNITY_MYSQL_PORT}/oj_it_content?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+    username: ${OJ_COMMUNITY_MYSQL_USER}
+    password: ${OJ_COMMUNITY_MYSQL_PASSWORD}
+  redis:
+    host: ${OJ_COMMUNITY_REDIS_HOST}
+    port: ${OJ_COMMUNITY_REDIS_PORT}
+    database: 0
+  rabbitmq:
+    host: ${OJ_COMMUNITY_RABBIT_HOST}
+    port: ${OJ_COMMUNITY_RABBIT_PORT}
+    username: ${OJ_COMMUNITY_RABBIT_USER}
+    password: ${OJ_COMMUNITY_RABBIT_PASSWORD}
+    virtual-host: /oj-community-it
+oj:
+  community:
+    integration:
+      redis-prefix: ${OJ_COMMUNITY_REDIS_PREFIX}

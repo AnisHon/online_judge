@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.content.mapper.ContentEventOutboxMapper">
+    <resultMap id="ContentEventOutboxResultMap" type="com.anishan.content.domain.entity.ContentEventOutbox">
+        <id column="event_id" property="eventId"/>
+        <result column="dedupe_key" property="dedupeKey"/>
+        <result column="event_type" property="eventType"/>
+        <result column="exchange_name" property="exchangeName"/>
+        <result column="routing_key" property="routingKey"/>
+        <result column="payload" property="payload" jdbcType="VARCHAR"/>
+        <result column="status" property="status"/>
+        <result column="attempts" property="attempts"/>
+        <result column="next_attempt_at" property="nextAttemptAt"/>
+        <result column="lease_owner" property="leaseOwner"/>
+        <result column="lease_until" property="leaseUntil"/>
+        <result column="last_error" property="lastError"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="sent_at" property="sentAt"/>
+    </resultMap>
+
+    <sql id="CommunityEventTypes">
+        event_type IN (
+            'SOLUTION_PUBLISHED', 'SOLUTION_LIKED', 'SOLUTION_COMMENTED', 'COMMENT_REPLIED',
+            'COMMENT_LIKED', 'SOLUTION_MODERATED', 'COMMENT_MODERATED'
+        )
+    </sql>
+
+    <select id="selectByDedupeKey" resultMap="ContentEventOutboxResultMap">
+        SELECT * FROM content_event_outbox WHERE dedupe_key = #{dedupeKey} LIMIT 1
+    </select>
+
+    <select id="selectByDedupeKeyForUpdate" resultMap="ContentEventOutboxResultMap">
+        SELECT * FROM content_event_outbox WHERE dedupe_key = #{dedupeKey} LIMIT 1 FOR UPDATE
+    </select>
+
+    <select id="selectByEventIdForUpdate" resultMap="ContentEventOutboxResultMap">
+        SELECT *
+        FROM content_event_outbox
+        WHERE event_id = #{eventId}
+        FOR UPDATE
+    </select>
+
+    <select id="selectClaimable" resultMap="ContentEventOutboxResultMap">
+        SELECT *
+        FROM content_event_outbox
+        WHERE <include refid="CommunityEventTypes"/>
+          AND attempts &lt; 20
+          AND ((status = 'PENDING' AND next_attempt_at &lt;= #{now})
+            OR (status = 'SENDING' AND lease_until &lt;= #{now}))
+        ORDER BY next_attempt_at ASC, created_at ASC, event_id ASC
+        LIMIT #{limit}
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <update id="markClaimed">
+        UPDATE content_event_outbox
+        SET status = 'SENDING', attempts = attempts + 1,
+            lease_owner = #{leaseOwner}, lease_until = #{leaseUntil}, last_error = NULL
+        WHERE event_id = #{eventId}
+          AND <include refid="CommunityEventTypes"/>
+          AND attempts &lt; 20
+          AND ((status = 'PENDING' AND next_attempt_at &lt;= #{now})
+            OR (status = 'SENDING' AND lease_until &lt;= #{now}))
+    </update>
+
+    <update id="failExhaustedExpiredClaims">
+        UPDATE content_event_outbox
+        SET status = 'FAILED', lease_owner = NULL, lease_until = NULL,
+            next_attempt_at = #{now}, last_error = 'LEASE_EXPIRED_AFTER_MAX_ATTEMPTS'
+        WHERE <include refid="CommunityEventTypes"/>
+          AND status = 'SENDING'
+          AND lease_until &lt;= #{now}
+          AND attempts &gt;= 20
+        ORDER BY lease_until ASC, event_id ASC
+        LIMIT #{limit}
+    </update>
+
+    <update id="markSent">
+        UPDATE content_event_outbox
+        SET status = 'SENT', sent_at = #{now}, lease_owner = NULL,
+            lease_until = NULL, last_error = NULL
+        WHERE event_id = #{eventId}
+          AND <include refid="CommunityEventTypes"/>
+          AND status = 'SENDING'
+          AND lease_owner = #{leaseOwner}
+          AND lease_until &gt; #{now}
+    </update>
+
+    <update id="markFailed">
+        UPDATE content_event_outbox
+        SET status = #{status}, next_attempt_at = #{nextAttemptAt},
+            lease_owner = NULL, lease_until = NULL, last_error = #{errorCode}
+        WHERE event_id = #{eventId}
+          AND <include refid="CommunityEventTypes"/>
+          AND status = 'SENDING'
+          AND lease_owner = #{leaseOwner}
+          AND lease_until &gt; #{now}
+    </update>
+
+    <update id="replayCommunityFailed">
+        UPDATE content_event_outbox
+        SET status = 'PENDING',
+            attempts = 0,
+            next_attempt_at = #{now},
+            lease_owner = NULL,
+            lease_until = NULL,
+            last_error = NULL
+        WHERE event_id = #{eventId}
+          AND <include refid="CommunityEventTypes"/>
+          AND status = 'FAILED'
+    </update>
+
+    <select id="selectUnsupportedDue" resultMap="ContentEventOutboxResultMap">
+        SELECT event_id, event_type
+        FROM content_event_outbox
+        WHERE event_type NOT IN (
+            'SOLUTION_PUBLISHED', 'SOLUTION_LIKED', 'SOLUTION_COMMENTED', 'COMMENT_REPLIED',
+            'COMMENT_LIKED', 'SOLUTION_MODERATED', 'COMMENT_MODERATED'
+        )
+          AND ((status = 'PENDING' AND next_attempt_at &lt;= #{now})
+            OR (status = 'SENDING' AND lease_until &lt;= #{now}))
+        ORDER BY next_attempt_at ASC, created_at ASC, event_id ASC
+        LIMIT #{limit}
+    </select>
+
+    <delete id="deleteExpiredSent">
+        DELETE FROM content_event_outbox
+        WHERE <include refid="CommunityEventTypes"/>
+          AND status = 'SENT'
+          AND sent_at &lt; #{sentBefore}
+        ORDER BY sent_at ASC, event_id ASC
+        LIMIT #{limit}
+    </delete>
+</mapper>

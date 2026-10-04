@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.content.mapper.SolutionModerationActionMapper">
+    <select id="selectOwnSolutionActions" resultType="com.anishan.content.domain.vo.ModerationActionVo">
+        SELECT action, reason, created_at FROM solution_moderation_action
+        WHERE solution_id = #{solutionId} AND target_type = 'SOLUTION'
+          AND target_id = #{solutionId} AND author_id = #{authorId}
+        ORDER BY action_id DESC LIMIT 50
+    </select>
+    <select id="selectOwnCommentActions" resultType="com.anishan.content.domain.vo.ModerationActionVo">
+        SELECT action,reason,created_at FROM solution_moderation_action
+        WHERE target_type='COMMENT' AND target_id=#{commentId} AND author_id=#{authorId}
+        ORDER BY action_id DESC LIMIT 50
+    </select>
+    <select id="selectCommentActionsByTargets"
+            resultType="com.anishan.content.domain.entity.SolutionModerationAction">
+        SELECT action_id,solution_id,target_type,target_id,author_id,operator_id,action,reason,created_at
+        FROM solution_moderation_action
+        WHERE target_type='COMMENT' AND target_id IN
+        <foreach collection="targetIds" item="targetId" open="(" separator="," close=")">
+            #{targetId}
+        </foreach>
+        ORDER BY action_id DESC
+    </select>
+    <select id="countHistory" resultType="long">
+        SELECT COUNT(*) FROM solution_moderation_action WHERE solution_id = #{solutionId}
+    </select>
+    <select id="selectHistory" resultType="com.anishan.content.domain.vo.ModerationActionVo">
+        SELECT action_id, solution_id, target_type, target_id, author_id, operator_id, action, reason, created_at
+        FROM solution_moderation_action WHERE solution_id = #{solutionId}
+        ORDER BY action_id DESC LIMIT #{offset}, #{limit}
+    </select>
+</mapper>

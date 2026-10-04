@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.content.mapper.CommentLikeMapper">
+    <resultMap id="CommentLikeResultMap" type="com.anishan.content.domain.entity.CommentLike">
+        <id column="comment_id" property="commentId"/><id column="user_id" property="userId"/>
+        <result column="active" property="active"/><result column="first_notified" property="firstNotified"/>
+        <result column="created_at" property="createdAt"/><result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    <select id="selectByCommentAndUser" resultMap="CommentLikeResultMap">
+        SELECT comment_id,user_id,active,first_notified,created_at,updated_at FROM comment_like
+        WHERE comment_id=#{commentId} AND user_id=#{userId}
+    </select>
+    <select id="selectByCommentAndUserForUpdate" resultMap="CommentLikeResultMap">
+        SELECT comment_id,user_id,active,first_notified,created_at,updated_at FROM comment_like
+        WHERE comment_id=#{commentId} AND user_id=#{userId}
+        FOR UPDATE
+    </select>
+    <insert id="insertState">
+        INSERT INTO comment_like(comment_id,user_id,active,first_notified,created_at,updated_at)
+        VALUES(#{record.commentId},#{record.userId},#{record.active},#{record.firstNotified},#{record.createdAt},#{record.updatedAt})
+    </insert>
+    <update id="updateActiveState">
+        UPDATE comment_like SET active=#{active},updated_at=#{updatedAt}
+        WHERE comment_id=#{commentId} AND user_id=#{userId} AND active &lt;&gt; #{active}
+    </update>
+    <update id="markFirstNotified">
+        UPDATE comment_like SET first_notified=1,updated_at=#{updatedAt}
+        WHERE comment_id=#{commentId} AND user_id=#{userId} AND active=1 AND first_notified=0
+    </update>
+    <select id="countActiveByComment" resultType="long">
+        SELECT COUNT(*) FROM comment_like WHERE comment_id=#{commentId} AND active=1
+    </select>
+    <select id="selectActiveUserIds" resultType="long">
+        SELECT user_id FROM comment_like WHERE comment_id=#{commentId} AND active=1 AND user_id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">#{userId}</foreach>
+    </select>
+    <select id="selectActiveCommentIdsForUser" resultType="long">
+        SELECT comment_id FROM comment_like WHERE user_id=#{userId} AND active=1 AND comment_id IN
+        <foreach collection="commentIds" item="commentId" open="(" separator="," close=")">#{commentId}</foreach>
+    </select>
+</mapper>

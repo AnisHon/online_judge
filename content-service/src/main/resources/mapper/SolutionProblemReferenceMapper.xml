@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.content.mapper.SolutionProblemReferenceMapper">
+    <resultMap id="SolutionProblemReferenceResultMap" type="com.anishan.content.domain.entity.SolutionProblemReference">
+        <id column="problem_id" property="problemId"/>
+        <result column="exists_flag" property="existsFlag"/>
+        <result column="del_flag" property="delFlag"/>
+        <result column="auth" property="auth"/>
+        <result column="title" property="title"/>
+        <result column="checked_at" property="checkedAt"/>
+        <result column="requested_at" property="requestedAt"/>
+    </resultMap>
+
+    <insert id="upsertFenced">
+        INSERT INTO solution_problem_reference
+            (problem_id, exists_flag, del_flag, auth, title, checked_at, requested_at)
+        VALUES
+            (#{reference.problemId}, #{reference.existsFlag}, #{reference.delFlag}, #{reference.auth},
+             #{reference.title}, #{reference.checkedAt}, #{reference.requestedAt})
+        ON DUPLICATE KEY UPDATE
+            exists_flag = IF(VALUES(requested_at) &gt; requested_at, VALUES(exists_flag), exists_flag),
+            del_flag = IF(VALUES(requested_at) &gt; requested_at, VALUES(del_flag), del_flag),
+            auth = IF(VALUES(requested_at) &gt; requested_at, VALUES(auth), auth),
+            title = IF(VALUES(requested_at) &gt; requested_at, VALUES(title), title),
+            checked_at = IF(VALUES(requested_at) &gt; requested_at, VALUES(checked_at), checked_at),
+            requested_at = GREATEST(requested_at, VALUES(requested_at))
+    </insert>
+
+    <select id="selectByProblemIds" resultMap="SolutionProblemReferenceResultMap">
+        SELECT problem_id, exists_flag, del_flag, auth, title, checked_at, requested_at
+        FROM solution_problem_reference
+        WHERE problem_id IN
+        <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+            #{problemId}
+        </foreach>
+    </select>
+
+    <select id="selectRefreshCandidates" resultMap="SolutionProblemReferenceResultMap">
+        SELECT problem_id, exists_flag, del_flag, auth, title, checked_at, requested_at
+        FROM solution_problem_reference
+        WHERE checked_at &lt;= #{cutoff}
+        <if test="cursorCheckedAt != null and cursorProblemId != null">
+            AND (checked_at &gt; #{cursorCheckedAt}
+                 OR (checked_at = #{cursorCheckedAt} AND problem_id &gt; #{cursorProblemId}))
+        </if>
+        ORDER BY checked_at ASC, problem_id ASC
+        LIMIT #{limit}
+    </select>
+</mapper>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.content.mapper.SolutionExplanationMapper">
+    <resultMap id="SolutionRecordResultMap" type="com.anishan.content.domain.vo.SolutionRecord">
+        <id column="solution_id" property="solutionId"/>
+        <result column="title" property="title"/>
+        <result column="problem_id" property="problemId"/>
+        <result column="user_id" property="userId"/>
+        <result column="top_up" property="topUp"/>
+        <result column="private" property="private_"/>
+        <result column="del_flag" property="delFlag"/>
+        <result column="moderation_state" property="moderationState"/>
+        <result column="version" property="version"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="comments_open" property="commentsOpen"/>
+        <result column="first_published_at" property="firstPublishedAt"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="content" property="content"/>
+    </resultMap>
+
+    <resultMap id="SolutionCandidateResultMap" type="com.anishan.content.domain.vo.SolutionCandidate">
+        <id column="solution_id" property="solutionId"/>
+        <result column="problem_id" property="problemId"/>
+        <result column="user_id" property="userId"/>
+        <result column="version" property="version"/>
+        <result column="top_up" property="topUp"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <sql id="candidateWhere">
+        FROM solution_explanation s
+        LEFT JOIN solution_problem_reference r ON r.problem_id = s.problem_id
+        WHERE s.del_flag = 0
+        <if test="filterUserId != null">
+            AND s.user_id = #{filterUserId}
+        </if>
+        <if test="problemId != null">
+            AND s.problem_id = #{problemId}
+        </if>
+        <choose>
+            <when test="publicOnly">
+                AND s.`private` = 0 AND s.moderation_state = 'NORMAL'
+                AND r.exists_flag = 1 AND r.del_flag = 0 AND r.auth = 1
+            </when>
+            <when test="admin">
+                <!-- The solution-list capability does not grant problem-management privileges. -->
+            </when>
+            <otherwise>
+                AND (
+                    s.user_id = #{viewerId}
+                    OR (s.`private` = 0 AND s.moderation_state = 'NORMAL'
+                        AND r.exists_flag = 1 AND r.del_flag = 0 AND r.auth = 1)
+                )
+            </otherwise>
+        </choose>
+    </sql>
+
+    <select id="selectRecordById" resultMap="SolutionRecordResultMap">
+        SELECT s.solution_id, s.title, s.problem_id, s.user_id, s.top_up, s.`private`, s.del_flag,
+               s.moderation_state, s.version, s.like_count, s.comment_count, s.comments_open, s.first_published_at,
+               s.create_time, s.update_time, c.content
+        FROM solution_explanation s
+        LEFT JOIN solution_explanation_content c ON c.solution_id = s.solution_id
+        WHERE s.solution_id = #{solutionId}
+    </select>
+
+    <select id="selectLikeSnapshot" resultMap="SolutionRecordResultMap">
+        SELECT s.solution_id, s.problem_id, s.user_id, s.`private`, s.del_flag, s.moderation_state
+        FROM solution_explanation s
+        WHERE s.solution_id = #{solutionId}
+    </select>
+
+    <select id="selectCommentSnapshot" resultMap="SolutionRecordResultMap">
+        SELECT solution_id, problem_id, user_id, `private`, del_flag, moderation_state,
+               version, comments_open, comment_count
+        FROM solution_explanation
+        WHERE solution_id = #{solutionId}
+    </select>
+
+    <select id="selectRecordForUpdate" resultMap="SolutionRecordResultMap">
+        SELECT s.solution_id, s.title, s.problem_id, s.user_id, s.top_up, s.`private`, s.del_flag,
+               s.moderation_state, s.version, s.like_count, s.comment_count, s.comments_open, s.first_published_at,
+               s.create_time, s.update_time, c.content
+        FROM solution_explanation s
+        LEFT JOIN solution_explanation_content c ON c.solution_id = s.solution_id
+        WHERE s.solution_id = #{solutionId}
+        FOR UPDATE
+    </select>
+
+    <!-- Interaction writers lock only the parent metadata row, never the large body row. -->
+    <select id="selectLikeTargetForUpdate" resultMap="SolutionRecordResultMap">
+        SELECT solution_id, problem_id, user_id, `private`, del_flag, moderation_state
+        FROM solution_explanation
+        WHERE solution_id = #{solutionId}
+        FOR UPDATE
+    </select>
+
+    <!-- Comment creation takes the same parent-first lock used by comment-state changes. -->
+    <select id="selectCommentTargetForUpdate" resultMap="SolutionRecordResultMap">
+        SELECT solution_id, problem_id, user_id, `private`, del_flag, moderation_state,
+               version, comments_open, comment_count
+        FROM solution_explanation
+        WHERE solution_id = #{solutionId}
+        FOR UPDATE
+    </select>
+
+    <select id="selectLikeCount" resultType="java.lang.Long">
+        SELECT like_count FROM solution_explanation WHERE solution_id = #{solutionId}
+    </select>
+
+    <update id="adjustLikeCount">
+        UPDATE solution_explanation
+        SET like_count = like_count + #{delta}
+        WHERE solution_id = #{solutionId} AND like_count + #{delta} &gt;= 0
+    </update>
+
+    <update id="adjustCommentCount">
+        UPDATE solution_explanation
+        SET comment_count = comment_count + #{delta}
+        WHERE solution_id = #{solutionId} AND comment_count + #{delta} &gt;= 0
+    </update>
+
+    <update id="setCommentsOpen">
+        UPDATE solution_explanation SET comments_open=#{open} WHERE solution_id=#{solutionId}
+    </update>
+
+    <select id="selectRecordsByIds" resultMap="SolutionRecordResultMap">
+        SELECT s.solution_id, s.title, s.problem_id, s.user_id, s.top_up, s.`private`, s.del_flag,
+               s.moderation_state, s.version, s.like_count, s.comment_count, s.comments_open, s.first_published_at,
+               s.create_time, s.update_time, c.content
+        FROM solution_explanation s
+        LEFT JOIN solution_explanation_content c ON c.solution_id = s.solution_id
+        WHERE s.solution_id IN
+        <foreach collection="solutionIds" item="solutionId" open="(" separator="," close=")">
+            #{solutionId}
+        </foreach>
+    </select>
+
+    <!-- Profile reads metadata only, not up to 51 potentially large Markdown bodies. -->
+    <select id="selectProfileRecordsByIds" resultMap="SolutionRecordResultMap">
+        SELECT s.solution_id, s.title, s.problem_id, s.user_id, s.top_up, s.`private`, s.del_flag,
+               s.moderation_state, s.version, s.create_time, s.update_time
+        FROM solution_explanation s
+        WHERE s.solution_id IN
+        <foreach collection="solutionIds" item="solutionId" open="(" separator="," close=")">
+            #{solutionId}
+        </foreach>
+    </select>
+
+    <select id="countCandidates" resultType="long">
+        SELECT COUNT(*)
+        <include refid="candidateWhere"/>
+    </select>
+
+    <select id="selectCandidates" resultMap="SolutionCandidateResultMap">
+        SELECT s.solution_id, s.problem_id, s.user_id, s.version, s.top_up, s.create_time
+        <include refid="candidateWhere"/>
+        <if test="cursor != null">
+            AND (
+                COALESCE(s.top_up, 0) &lt; COALESCE(#{cursor.topUp}, 0)
+                OR (COALESCE(s.top_up, 0) = COALESCE(#{cursor.topUp}, 0)
+                    AND s.create_time &lt; #{cursor.createTime})
+                OR (COALESCE(s.top_up, 0) = COALESCE(#{cursor.topUp}, 0)
+                    AND s.create_time = #{cursor.createTime}
+                    AND s.solution_id &lt; #{cursor.solutionId})
+            )
+        </if>
+        ORDER BY COALESCE(s.top_up, 0) DESC, s.create_time DESC, s.solution_id DESC
+        <choose>
+            <when test="cursor != null">LIMIT #{limit}</when>
+            <otherwise>LIMIT #{offset}, #{limit}</otherwise>
+        </choose>
+    </select>
+
+    <update id="updateFieldsByVersion">
+        UPDATE solution_explanation
+        SET title = #{title}, `private` = #{privateValue},
+            <if test="firstPublishedAt != null">first_published_at = #{firstPublishedAt},</if>
+            <if test="topUp != null">top_up = #{topUp},</if>
+            update_time = CURRENT_TIMESTAMP(3), version = version + 1
+        WHERE solution_id = #{solutionId} AND user_id = #{userId}
+          AND del_flag = 0 AND version = #{version}
+    </update>
+
+    <update id="softDeleteOwned">
+        UPDATE solution_explanation
+        SET del_flag = 1, update_time = CURRENT_TIMESTAMP(3), version = version + 1
+        WHERE user_id = #{userId} AND del_flag = 0 AND solution_id IN
+        <foreach collection="solutionIds" item="solutionId" open="(" separator="," close=")">
+            #{solutionId}
+        </foreach>
+    </update>
+
+    <update id="setTopUpByVersion">
+        UPDATE solution_explanation
+        SET top_up = #{topUp}, update_time = CURRENT_TIMESTAMP(3), version = version + 1
+        WHERE solution_id = #{solutionId} AND del_flag = 0 AND version = #{version}
+    </update>
+    <update id="moderateByVersion">
+        UPDATE solution_explanation
+        SET moderation_state = #{state}, del_flag = #{deleted},
+            <if test="firstPublishedAt != null">first_published_at = #{firstPublishedAt},</if>
+            update_time = #{now}, version = version + 1
+        WHERE solution_id = #{solutionId} AND version = #{version} AND del_flag = 0
+    </update>
+</mapper>

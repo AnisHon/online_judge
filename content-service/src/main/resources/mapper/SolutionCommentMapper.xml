@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.content.mapper.SolutionCommentMapper">
+    <resultMap id="SolutionCommentResultMap" type="com.anishan.content.domain.entity.SolutionComment">
+        <id column="comment_id" property="commentId"/><result column="solution_id" property="solutionId"/>
+        <result column="user_id" property="userId"/><result column="root_id" property="rootId"/>
+        <result column="parent_id" property="parentId"/><result column="reply_to_user_id" property="replyToUserId"/>
+        <result column="content" property="content"/><result column="state" property="state"/>
+        <result column="deleted_by" property="deletedBy"/><result column="deleted_at" property="deletedAt"/>
+        <result column="like_count" property="likeCount"/><result column="reply_count" property="replyCount"/>
+        <result column="client_request_id" property="clientRequestId"/><result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    <select id="selectByUserAndClientRequestId" resultMap="SolutionCommentResultMap">
+        SELECT comment_id,solution_id,user_id,root_id,parent_id,reply_to_user_id,content,state,deleted_by,deleted_at,
+               like_count,reply_count,client_request_id,created_at,updated_at
+        FROM solution_comment WHERE user_id=#{userId} AND client_request_id=#{clientRequestId} LIMIT 1
+    </select>
+    <select id="countRootComments" resultType="long">
+        SELECT COUNT(*) FROM solution_comment
+        WHERE solution_id=#{solutionId} AND root_id IS NULL AND parent_id IS NULL
+    </select>
+    <!-- Deleted roots remain visible as tombstones so their existing replies keep a container. -->
+    <select id="selectRootComments" resultMap="SolutionCommentResultMap">
+        SELECT comment_id,solution_id,user_id,root_id,parent_id,reply_to_user_id,content,state,deleted_by,deleted_at,
+               like_count,reply_count,client_request_id,created_at,updated_at
+        FROM solution_comment
+        WHERE solution_id=#{solutionId} AND root_id IS NULL AND parent_id IS NULL
+        ORDER BY created_at DESC, comment_id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    <!-- Metadata-only preflight: qualification and user summaries happen outside write locks. -->
+    <select id="selectReplyTarget" resultMap="SolutionCommentResultMap">
+        SELECT comment_id,solution_id,user_id,root_id,parent_id,reply_to_user_id,state,deleted_by,deleted_at,
+               like_count,reply_count,client_request_id,created_at,updated_at
+        FROM solution_comment WHERE comment_id=#{commentId} LIMIT 1
+    </select>
+    <select id="selectRootForUpdate" resultMap="SolutionCommentResultMap">
+        SELECT comment_id,solution_id,user_id,root_id,parent_id,reply_to_user_id,state,deleted_by,deleted_at,
+               like_count,reply_count,client_request_id,created_at,updated_at
+        FROM solution_comment
+        WHERE comment_id=#{rootId} AND solution_id=#{solutionId}
+          AND root_id IS NULL AND parent_id IS NULL
+        FOR UPDATE
+    </select>
+    <select id="selectReplyParentForUpdate" resultMap="SolutionCommentResultMap">
+        SELECT comment_id,solution_id,user_id,root_id,parent_id,reply_to_user_id,state,deleted_by,deleted_at,
+               like_count,reply_count,client_request_id,created_at,updated_at
+        FROM solution_comment
+        WHERE comment_id=#{parentId} AND solution_id=#{solutionId}
+        FOR UPDATE
+    </select>
+    <select id="selectTargetForUpdate" resultMap="SolutionCommentResultMap">
+        SELECT comment_id,solution_id,user_id,root_id,parent_id,reply_to_user_id,state,deleted_by,deleted_at,
+               like_count,reply_count,client_request_id,created_at,updated_at
+        FROM solution_comment
+        WHERE comment_id=#{commentId} AND solution_id=#{solutionId}
+        FOR UPDATE
+    </select>
+    <select id="selectLikeCount" resultType="java.lang.Long">
+        SELECT like_count FROM solution_comment WHERE comment_id=#{commentId}
+    </select>
+    <update id="adjustLikeCount">
+        UPDATE solution_comment
+        SET like_count=like_count+#{delta},updated_at=#{updatedAt}
+        WHERE comment_id=#{commentId} AND like_count+#{delta} &gt;= 0
+    </update>
+    <select id="countRootReplies" resultType="long">
+        SELECT COUNT(*) FROM solution_comment WHERE root_id=#{rootId}
+    </select>
+    <!-- Replies are always returned as one flat page; no recursive tree query is used. -->
+    <select id="selectRootReplies" resultMap="SolutionCommentResultMap">
+        SELECT comment_id,solution_id,user_id,root_id,parent_id,reply_to_user_id,content,state,deleted_by,deleted_at,
+               like_count,reply_count,client_request_id,created_at,updated_at
+        FROM solution_comment
+        WHERE root_id=#{rootId}
+        ORDER BY created_at ASC, comment_id ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+    <update id="incrementRootReplyCount">
+        UPDATE solution_comment SET reply_count=reply_count+1,updated_at=CURRENT_TIMESTAMP(3)
+        WHERE comment_id=#{rootId} AND root_id IS NULL AND parent_id IS NULL AND reply_count &gt;= 0
+    </update>
+    <update id="markVisibleDeleted">
+        UPDATE solution_comment
+        SET state=#{newState},deleted_by=#{operatorId},deleted_at=#{now},updated_at=#{now}
+        WHERE comment_id=#{commentId} AND solution_id=#{solutionId} AND state='VISIBLE'
+    </update>
+    <update id="decrementRootReplyCount">
+        UPDATE solution_comment SET reply_count=reply_count-1,updated_at=CURRENT_TIMESTAMP(3)
+        WHERE comment_id=#{rootId} AND root_id IS NULL AND parent_id IS NULL AND reply_count &gt; 0
+    </update>
+    <select id="countAdminComments" resultType="long">
+        SELECT COUNT(*) FROM solution_comment
+        WHERE 1=1
+        <if test="solutionId != null">AND solution_id=#{solutionId}</if>
+        <if test="state != null">AND state=#{state}</if>
+    </select>
+    <select id="selectAdminComments" resultMap="SolutionCommentResultMap">
+        SELECT comment_id,solution_id,user_id,root_id,parent_id,reply_to_user_id,content,state,deleted_by,deleted_at,
+               like_count,reply_count,client_request_id,created_at,updated_at
+        FROM solution_comment
+        WHERE 1=1
+        <if test="solutionId != null">AND solution_id=#{solutionId}</if>
+        <if test="state != null">AND state=#{state}</if>
+        ORDER BY created_at DESC,comment_id DESC
+        LIMIT #{offset},#{limit}
+    </select>
+</mapper>

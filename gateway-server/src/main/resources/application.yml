@@ -22,6 +22,14 @@ spring:
           lower-case-service-id: true
 
       routes:
+        - id: legacy-solution
+          order: -10
+          uri: lb://content-service
+          predicates:
+            - Path=/problem-api/solution/**
+          filters:
+            - StripPrefix=1
+
         - id: user
           uri: lb://user-service
           predicates:
@@ -90,6 +98,11 @@ oj:
   rule:
     block-rules:
       - "/**/internal/**"
+      - "/**/record/judge-save"
+      - "/**/log/queue"
+      - "/**/log/log-judge"
+      - "/**/log/update"
+      - "/**/log/change-status"
 
     product-env-block-rules:
       # 这里是swagger路径

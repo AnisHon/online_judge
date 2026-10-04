@@ -1,0 +1,18 @@
+server:
+  port: ${CONTENT_SERVICE_PORT:8081}
+
+oj:
+  content:
+    solution:
+      # Enable only after the explicit solution-domain-v1 data cutover is complete.
+      reference-refresh-enabled: false
+      reference-refresh-interval-ms: 1000
+  content-community-outbox:
+    # Keep relay/cleanup off until the content solution-domain cutover is confirmed.
+    enabled: false
+    batch-size: 20
+    poll-interval-ms: 1000
+    lease-seconds: 60
+    confirm-timeout-seconds: 5
+    cleanup-batch-size: 500
+    cleanup-interval-ms: 3600000
