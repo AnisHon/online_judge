@@ -30,12 +30,6 @@ public interface AuthenticationService {
 
     AuthResultVo resetPassword(Long userId, String email, String code, String newPassword);
 
-    // resetPassword
-    AuthResultVo resetPassword(String code, String newPassword);
-
-    // resetEmail
-    AuthResultVo resetEmail(String code, String newEmail);
-
     // sendEmailCode
     AuthResultVo sendEmailCode(String email, String captchaToken, String captchaCode);
 

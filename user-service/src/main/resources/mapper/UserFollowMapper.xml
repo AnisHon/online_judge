@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.user.mapper.UserFollowMapper">
+
+    <insert id="insert">
+        insert into user_follow (follower_id, followee_id, created_at)
+        values (#{follow.followerId}, #{follow.followeeId}, #{follow.createdAt})
+    </insert>
+
+    <delete id="deleteByFollowerAndFollowee">
+        delete from user_follow
+        where follower_id = #{followerId}
+          and followee_id = #{followeeId}
+    </delete>
+
+    <select id="countFollowing" resultType="java.lang.Long">
+        select count(*)
+        from user_follow f
+        inner join sys_user u on u.user_id = f.followee_id and u.del_flag = 0
+        where f.follower_id = #{followerId}
+    </select>
+
+    <select id="countFollowers" resultType="java.lang.Long">
+        select count(*)
+        from user_follow f
+        inner join sys_user u on u.user_id = f.follower_id and u.del_flag = 0
+        where f.followee_id = #{followeeId}
+    </select>
+
+    <select id="exists" resultType="java.lang.Boolean">
+        select exists(
+            select 1 from user_follow
+            where follower_id = #{followerId} and followee_id = #{followeeId}
+        )
+    </select>
+
+    <select id="selectFollowingPage" resultType="java.lang.Long">
+        select f.followee_id
+        from user_follow f
+        inner join sys_user u on u.user_id = f.followee_id and u.del_flag = 0
+        where f.follower_id = #{followerId}
+        order by f.created_at desc, f.followee_id desc
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectFollowersPage" resultType="java.lang.Long">
+        select f.follower_id
+        from user_follow f
+        inner join sys_user u on u.user_id = f.follower_id and u.del_flag = 0
+        where f.followee_id = #{followeeId}
+        order by f.created_at desc, f.follower_id desc
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectActiveFollowersForFanout" resultType="java.lang.Long">
+        select f.follower_id
+        from user_follow f
+        inner join sys_user u on u.user_id = f.follower_id
+        where f.followee_id = #{followeeId}
+          and f.follower_id &gt; #{cursorUserId}
+          and f.created_at &lt;= #{occurredAt}
+          and u.del_flag = 0
+          and u.status = 0
+        order by f.follower_id asc
+        limit #{limit}
+    </select>
+</mapper>

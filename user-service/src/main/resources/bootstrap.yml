@@ -13,5 +13,5 @@ spring:
           - data-id: shared-redis.yaml
           - data-id: shared-common.yaml
           - data-id: shared-minio.yaml
-
+          - data-id: shared-rabbit.yaml
 

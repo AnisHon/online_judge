@@ -2,6 +2,7 @@ package com.anishan.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import com.anishan.api.util.AccountPolicy;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.util.MysqlMappingUtils;
@@ -142,7 +143,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
                 new LambdaQueryWrapper<SysMenu>()
                         .eq(SysMenu::getMenuType, MenuType.BUTTON)
         );
-        return BeanUtil.copyToList(list, MenuVo.class);
+        return BeanUtil.copyToList(list.stream()
+                .filter(menu -> !AccountPolicy.isDenyPermission(menu.getPerms())).collect(Collectors.toList()), MenuVo.class);
     }
 
     @Override
@@ -249,6 +251,10 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
         }
 
         Long parentId = normalizeParentId(menuDto.getParentId());
+        if (AccountPolicy.isDenyPermission(menuDto.getPerms())) {
+            ThrowUtil.illegalArgument(!MenuType.BUTTON.equals(menuType) || parentId != null,
+                    "禁止权限必须是根节点按钮，不依赖后台路由");
+        }
         if (menuId != null && Objects.equals(menuId, parentId)) {
             throw new BusinessException("菜单不能挂载到自身");
         }
@@ -287,17 +293,39 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
         List<SysRoleMenuRelation> collect = relation.stream().map(SysRoleMenuRelation::new).collect(Collectors.toList());
 
 
-        List<Long> menuIds = collect.stream().map(SysRoleMenuRelation::getMenuId).collect(Collectors.toList());
+        List<Long> menuIds = collect.stream().map(SysRoleMenuRelation::getMenuId).distinct().collect(Collectors.toList());
         boolean menuExist = isAllExist(menuIds);
 
         ThrowUtil.illegalArgument(!menuExist, "菜单不存在");
 
 
-        List<Long> roleIds = collect.stream().map(SysRoleMenuRelation::getRoleId).collect(Collectors.toList());
+        List<Long> roleIds = collect.stream().map(SysRoleMenuRelation::getRoleId).distinct().collect(Collectors.toList());
         boolean roleExist = sysRoleService.isAllExist(roleIds);
 
 
         ThrowUtil.illegalArgument(!roleExist, "角色不存在");
+
+        // Match the independent-checkbox UI: positive permissions require their route ancestors,
+        // but negative account policies may be granted on their own, including legacy nested nodes.
+        for (Long roleId : roleIds) {
+            Set<Long> selected = new HashSet<>(sysRoleMenuService.getMenuIdByRole(List.of(roleId)));
+            collect.stream().filter(item -> Objects.equals(item.getRoleId(), roleId))
+                    .map(SysRoleMenuRelation::getMenuId).forEach(selected::add);
+            for (SysRoleMenuRelation item : collect) {
+                if (!Objects.equals(item.getRoleId(), roleId)) continue;
+                SysMenu menu = getById(item.getMenuId());
+                if (AccountPolicy.isDenyPermission(menu.getPerms())) continue;
+                Set<Long> visited = new HashSet<>();
+                Long parentId = normalizeParentId(menu.getParentId());
+                while (parentId != null) {
+                    ThrowUtil.illegalArgument(!visited.add(parentId), "菜单父级关系存在循环");
+                    ThrowUtil.illegalArgument(!selected.contains(parentId), "正向权限依赖父级菜单授权");
+                    SysMenu parent = getById(parentId);
+                    ThrowUtil.illegalArgument(parent == null, "父级菜单不存在");
+                    parentId = normalizeParentId(parent.getParentId());
+                }
+            }
+        }
 
         return sysRoleMenuService.saveBatch(collect);
     }
@@ -315,4 +343,3 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu>
         return buildTreeMenu(menuVos);
     }
 }
-

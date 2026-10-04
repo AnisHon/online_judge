@@ -1,6 +1,5 @@
 package com.anishan.user.service.impl;
 
-import cn.hutool.captcha.generator.RandomGenerator;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.mail.MailUtil;
@@ -13,29 +12,28 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.util.concurrent.ExecutorService;
+import java.security.SecureRandom;
+import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class EmailServiceImpl implements EmailService {
 
-    private static final int SIZE = 6;
-    private static final String RANDOM_BASE = "1234567890";
     private static final String SUBJECT = "OJ网 验证码";
 
 
-    private static final RandomGenerator randomGenerator;
+    private static final SecureRandom randomGenerator = new SecureRandom();
     private final TemplateEngine templateEngine;
 
     private final static ExecutorService executorService;
 
     static {
         executorService = ThreadUtil.newFixedExecutor(4, Integer.MAX_VALUE, "email", false);
-        randomGenerator = new RandomGenerator(RANDOM_BASE, SIZE);
     }
 
 
     private static String getRandomCode() {
-        return randomGenerator.generate();
+        return String.format(Locale.ROOT, "%06d", randomGenerator.nextInt(1_000_000));
     }
 
 

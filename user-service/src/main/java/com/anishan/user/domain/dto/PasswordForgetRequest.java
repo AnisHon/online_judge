@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @ApiModel("密码发送验证码申请")
-@ToString(exclude = "password")
+@ToString(exclude = {"password", "code"})
 public class PasswordForgetRequest {
 
     @NotNull

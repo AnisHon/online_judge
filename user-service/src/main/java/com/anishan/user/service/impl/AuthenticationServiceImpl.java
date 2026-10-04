@@ -20,7 +20,6 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -50,6 +49,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final CacheRoleService cacheRoleService;
     private final UserConfig userConfig;
     private final AuthTokenService authTokenService;
+    private final AccountSecurityService accountSecurityService;
 
     // 默认就是student
 
@@ -203,17 +203,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return loginVo;
     }
 
-    private boolean doCheckEmailCode(String code) {
-        String email = me().getEmail();
-        return doCheckEmailCode(email, code);
-    }
-
     private boolean doCheckEmailCode(String email, String code) {
-        return authUtil.checkEmailCode(email, code);
-    }
-    private AuthResultVo checkEmailCode(String code) {
-        String email = me().getEmail();
-        return checkEmailCode(email, code);
+        return email != null && !email.isBlank() && code != null && !code.isBlank() && authUtil.checkEmailCode(email, code);
     }
 
     private AuthResultVo checkEmailCode(String email, String code) {
@@ -249,6 +240,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     }
 
+    @Transactional
     @Override
     public AuthResultVo resetPassword(Long userId, String email, String code, String newPassword) {
         AuthResultVo authResultVo = checkEmailCode(email, code);
@@ -258,42 +250,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         newPassword = passwordEncoder.encode(newPassword);
 
-        sysUserService.update(new LambdaUpdateWrapper<SysUser>()
+        boolean updated = sysUserService.update(new LambdaUpdateWrapper<SysUser>()
                 .set(SysUser::getPassword, newPassword)
                 .eq(SysUser::getUserId, userId)
         );
-
-        return authResultVo;
-    }
-
-    @Override
-    public AuthResultVo resetPassword(String code, String newPassword) {
-        LoginUserVo user = me();
-
-        return resetPassword(user.getUserId(), user.getEmail(), code, newPassword);
-    }
-
-    @Override
-    public AuthResultVo resetEmail(String code, String newEmail) {
-
-        AuthResultVo authResultVo = checkEmailCode(code);
-        if (!authResultVo.isSuccess()) {
-            return authResultVo;
-        }
-
-        Long userId = me().getUserId();
-
-        try{
-            sysUserService.update(new LambdaUpdateWrapper<SysUser>()
-                    .set(SysUser::getEmail, newEmail)
-                    .eq(SysUser::getUserId, userId)
-            );
-        } catch (DuplicateKeyException e) {
-            authResultVo.setSuccess(false);
-            authResultVo.setMessage("邮箱已经被使用了");
-            return authResultVo;
-        }
-
+        if (!updated) return AuthResultVo.fail("密码更新失败，请稍后重试");
+        authUtil.removeEmailCode(email);
+        accountSecurityService.revokeSessionsAfterCommit(userId);
         return authResultVo;
     }
 

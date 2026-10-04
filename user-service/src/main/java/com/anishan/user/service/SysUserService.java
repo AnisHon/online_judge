@@ -6,6 +6,7 @@ import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.vo.UserProfileVo;
+import com.anishan.api.client.user.domain.vo.UserSummaryVo;
 import com.anishan.api.domain.entity.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.anishan.api.client.user.domain.vo.UserVo;
@@ -69,4 +70,10 @@ public interface SysUserService extends IService<SysUser> {
     UserPoint getPoint(Long userId);
 
     Map<Long, String> getNikeNameToMap(List<Long> ids);
+
+    boolean isVisibleUser(Long userId);
+
+    boolean isFollowableUser(Long userId);
+
+    List<UserSummaryVo> getUserSummariesByIds(List<Long> userIds);
 }

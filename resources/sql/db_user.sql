@@ -190,6 +190,26 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (142, '修改题解', 3, 14, '#', 'B', 'problem:solution:add', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (143, '删除题解', 4, 14, '#', 'B', 'problem:solution:remove', '#');
 
+# 题解互动及判题派发重试的管理权限，动态挂到现有页面路由，不创建新页面。
+insert into sys_menu(menu_name, order_num, parent_id, router, menu_type, perms, icon)
+select '查看评论', 5, parent.menu_id, '#', 'B', 'problem:comment:list', '#'
+from sys_menu parent
+where parent.router = 'solution-edit' and parent.menu_type = 'I' and parent.del_flag = 0
+  and not exists (select 1 from sys_menu where perms = 'problem:comment:list')
+order by parent.menu_id limit 1;
+insert into sys_menu(menu_name, order_num, parent_id, router, menu_type, perms, icon)
+select '删除评论', 6, parent.menu_id, '#', 'B', 'problem:comment:remove', '#'
+from sys_menu parent
+where parent.router = 'solution-edit' and parent.menu_type = 'I' and parent.del_flag = 0
+  and not exists (select 1 from sys_menu where perms = 'problem:comment:remove')
+order by parent.menu_id limit 1;
+insert into sys_menu(menu_name, order_num, parent_id, router, menu_type, perms, icon)
+select '重试判题派发', 6, parent.menu_id, '#', 'B', 'problem:judge:dispatch:retry', '#'
+from sys_menu parent
+where parent.router = 'judge-submit-log' and parent.menu_type = 'I' and parent.del_flag = 0
+  and not exists (select 1 from sys_menu where perms = 'problem:judge:dispatch:retry')
+order by parent.menu_id limit 1;
+
 # menu_id 20
 # 用户管理
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (200, '封禁用户', 1, 20, '#', 'B', 'user:auth:ban', '#');
@@ -198,6 +218,7 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (203, '编辑用户', 4, 20, '#', 'B', 'user:user:edit', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (204, '列出用户', 5, 20, '#', 'B', 'user:user:list', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (205, '删除用户', 6, 20, '#', 'B', 'user:user:remove', '#');
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (206, '重置用户头像', 7, 20, '#', 'B', 'user:user:reset-avatar', '#');
 
 # menu_id 21 班级管理
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (210, '添加班级', 1, 21, '#', 'B', 'user:class:add', '#');
@@ -265,8 +286,11 @@ insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1003, '更改文件名', 2, null, '#', 'B', 'content:file:edit', '#');
 insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1004, '进入后台', 4, null, '#', 'B', 'system:backend:access', '#');
 
-# 信息展示
-insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values (1100, '信息查看', 1, null, '#', 'B', 'content:info', '#');
+# 独立禁止策略：不生成角色、不默认授权，管理员按需要配置角色。
+insert into sys_menu(menu_id, menu_name, order_num, parent_id, router, menu_type, perms, icon) values
+    (1200, '禁止题解写入', 1200, null, '#', 'B', 'policy:solution:deny', '#'),
+    (1201, '禁止评论写入', 1201, null, '#', 'B', 'policy:comment:deny', '#'),
+    (1202, '禁止更换头像', 1202, null, '#', 'B', 'policy:avatar:deny', '#');
 
 
 -- ----------------------------
@@ -309,7 +333,7 @@ create table sys_role_menu (
 # 超级管理员
 delete from sys_role_menu where role_id = 4;
 insert into sys_role_menu(role_id, menu_id)
-    (select 4, menu_id from sys_menu);
+    (select 4, menu_id from sys_menu where perms not like 'policy:%:deny');
 
 # 教师
 delete from sys_role_menu where role_id = 2;
@@ -327,8 +351,7 @@ values
     (2, 325),
     (2, 1001),
     (2, 1002),
-    (2, 1003),
-    (2, 1100);
+    (2, 1003);
 
 # 所有登录用户可查看自己的提交；内部测试用例日志只授予管理员。
 insert ignore into sys_role_menu(role_id, menu_id) values (3, 151), (4, 151);
@@ -345,8 +368,26 @@ insert into sys_role_menu(role_id, menu_id)
         from sys_menu
         where
             menu_id not in (select menu_id from sys_role_menu where role_id = 2)
+            and perms not like 'policy:%:deny'
     );
 insert ignore into sys_role_menu(role_id, menu_id) values (3, 1004);
+
+# 管理员也可访问最终榜单；复用现有权限并补齐从按钮到根菜单的实际路径。
+insert ignore into sys_role_menu(role_id, menu_id)
+with recursive contest_rank_path as (
+    select menu_id, parent_id
+    from sys_menu
+    where perms = 'problem:contest:rank' and menu_type = 'B' and del_flag = 0
+    union all
+    select parent.menu_id, parent.parent_id
+    from sys_menu parent
+    join contest_rank_path child on child.parent_id = parent.menu_id
+    where parent.del_flag = 0
+)
+select r.role_id, path.menu_id
+from sys_role r
+cross join contest_rank_path path
+where r.role_name in ('admin', 'super_admin') and r.del_flag = 0;
 
 
 
@@ -365,3 +406,83 @@ create table user_check_in (
     constraint check_in_user_id_pk foreign key user_check_in(user_id)
                            references sys_user(user_id)
 ) engine=innodb comment = '签到记录表';
+
+
+-- ----------------------------
+-- 社交关系、个人通知、关注扇出和积分消费收据
+-- Online upgrades use V20261004_1__user_social.sql; keep this initialization schema in sync.
+-- ----------------------------
+create table user_follow (
+    follower_id bigint not null,
+    followee_id bigint not null,
+    created_at datetime(3) not null,
+    primary key (follower_id, followee_id),
+    key idx_user_follow_followee (followee_id, follower_id, created_at),
+    key idx_user_follow_follower_created (follower_id, created_at, followee_id),
+    constraint chk_user_follow_not_self check (follower_id <> followee_id),
+    constraint fk_user_follow_follower foreign key (follower_id)
+        references sys_user (user_id) on delete restrict on update restrict,
+    constraint fk_user_follow_followee foreign key (followee_id)
+        references sys_user (user_id) on delete restrict on update restrict
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_unicode_ci
+  comment='Directed user follow relationships';
+
+create table user_notification (
+    notification_id bigint not null comment 'ASSIGN_ID notification identifier',
+    recipient_id bigint not null,
+    actor_id bigint null,
+    event_id char(36) character set ascii collate ascii_bin not null,
+    dedupe_key varchar(160) character set ascii collate ascii_bin not null,
+    type varchar(32) not null,
+    solution_id bigint null,
+    comment_id bigint null,
+    action varchar(32) null,
+    reason varchar(500) null,
+    occurred_at datetime(3) not null,
+    created_at datetime(3) not null,
+    read_at datetime(3) null,
+    primary key (notification_id),
+    unique key uk_user_notification_recipient_dedupe (recipient_id, dedupe_key),
+    key idx_user_notification_recipient_unread (recipient_id, read_at, notification_id),
+    key idx_user_notification_recipient_page (recipient_id, notification_id),
+    key idx_user_notification_actor (actor_id),
+    constraint fk_user_notification_recipient foreign key (recipient_id)
+        references sys_user (user_id) on delete restrict on update restrict,
+    constraint fk_user_notification_actor foreign key (actor_id)
+        references sys_user (user_id) on delete restrict on update restrict
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_unicode_ci
+  comment='Private per-user notifications';
+
+create table notification_fanout_job (
+    event_id char(36) character set ascii collate ascii_bin not null,
+    actor_id bigint not null,
+    solution_id bigint not null,
+    occurred_at datetime(3) not null,
+    cursor_user_id bigint not null default 0,
+    status varchar(16) not null default 'PENDING',
+    lease_owner varchar(64) null,
+    lease_until datetime(3) null,
+    attempts int not null default 0,
+    next_attempt_at datetime(3) not null,
+    last_error varchar(1000) null,
+    created_at datetime(3) not null,
+    updated_at datetime(3) not null,
+    primary key (event_id),
+    key idx_notification_fanout_due (status, next_attempt_at, lease_until),
+    constraint fk_notification_fanout_actor foreign key (actor_id)
+        references sys_user (user_id) on delete restrict on update restrict
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_unicode_ci
+  comment='Resumable follower notification fanout';
+
+create table user_point_award_receipt (
+    user_id bigint not null,
+    problem_id bigint not null,
+    event_id char(36) character set ascii collate ascii_bin not null,
+    amount decimal(10,2) not null,
+    created_at datetime(3) not null,
+    primary key (user_id, problem_id),
+    unique key uk_user_point_award_event (event_id),
+    constraint fk_user_point_award_user foreign key (user_id)
+        references sys_user (user_id) on delete restrict on update restrict
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_unicode_ci
+  comment='Idempotent first-AC point award receipts';

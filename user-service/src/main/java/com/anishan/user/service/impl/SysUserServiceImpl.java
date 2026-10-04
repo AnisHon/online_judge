@@ -7,10 +7,12 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.anishan.api.annotation.EnableCache;
 import com.anishan.api.client.user.domain.vo.UserVo;
+import com.anishan.api.client.user.domain.vo.UserSummaryVo;
 import com.anishan.api.domain.LoginUser;
 import com.anishan.api.domain.entity.SysRole;
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.api.util.AuthUtil;
+import com.anishan.api.util.AccountPolicy;
 import com.anishan.commons.domain.dto.PagedQuery;
 import com.anishan.commons.domain.dto.UserDto;
 import com.anishan.commons.domain.vo.PagedResult;
@@ -248,7 +250,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     public LoginUser getLoginUser(Long userId) {
         SysUser sysUser = this.getById(userId);
-
+        if (sysUser == null) return null;
         return getLoginUser(sysUser, sysUserRoleService, sysMenuService);
     }
 
@@ -256,7 +258,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     public LoginUser getRootAccount() {
 
         List<SysMenu> menus = sysMenuService.list();
-        List<String> authority = menus.stream().map(SysMenu::getPerms).collect(Collectors.toList());
+        List<String> authority = menus.stream().map(SysMenu::getPerms)
+                .filter(permission -> !AccountPolicy.isDenyPermission(permission)).collect(Collectors.toList());
 
         String password = passwordEncoder.encode(userConfig.getRootPassword());
 
@@ -281,19 +284,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     // 因为循环引用所以没有依赖注入
     @NotNull
     public static LoginUser getLoginUser(SysUser sysUser, SysUserRoleService sysUserRoleService, SysMenuService sysMenuService) {
-        List<SysRole> roles;
-        List<String> authorities;
-        try {
-            roles = sysUserRoleService.getRolesByUserId(sysUser.getUserId());
-        } catch (Exception e) {
-            roles = new ArrayList<>();
-        }
-
-        try {
-            authorities = sysMenuService.getAuthorities_(roles);
-        } catch (Exception e) {
-            authorities = new ArrayList<>();
-        }
+        // A failed role lookup must not turn a restricted account into an unrestricted one.
+        List<SysRole> roles = sysUserRoleService.getRolesByUserId(sysUser.getUserId()).stream()
+                .filter(role -> Objects.equals(role.getStatus(), 0)).collect(Collectors.toList());
+        List<String> authorities = sysMenuService.getAuthorities_(roles);
 
         LoginUser loginUser = new LoginUser();
         loginUser.setUser(sysUser);
@@ -411,6 +405,53 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
             map.put(sysUser.getUserId(), sysUser.getNikeName());
         }
         return map;
+    }
+
+    @Override
+    public boolean isVisibleUser(Long userId) {
+        return userId != null && userId > 0 && sysUserMapper.countVisibleUser(userId) > 0;
+    }
+
+    @Override
+    public boolean isFollowableUser(Long userId) {
+        return userId != null && userId > 0 && sysUserMapper.countFollowableUser(userId) > 0;
+    }
+
+    @Override
+    public List<UserSummaryVo> getUserSummariesByIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (userIds.size() > 100 || userIds.stream().anyMatch(id -> id == null || id <= 0)) {
+            throw new com.anishan.commons.exception.ApiStatusException(400, "用户ID列表不合法");
+        }
+
+        List<Long> distinctIds = new ArrayList<>(new LinkedHashSet<>(userIds));
+        List<UserSummaryRow> rows = sysUserMapper.selectUserSummaryRowsByIds(distinctIds);
+        Map<Long, UserSummaryVo> summaries = new LinkedHashMap<>();
+        for (com.anishan.user.domain.dto.UserSummaryRow row : rows) {
+            UserSummaryVo summary = summaries.computeIfAbsent(row.getUserId(), id -> {
+                UserSummaryVo value = new UserSummaryVo();
+                value.setUserId(id);
+                value.setUserName(row.getUserName());
+                value.setNikeName(row.getNikeName());
+                value.setSpecialRoles(new ArrayList<>());
+                return value;
+            });
+            if (row.getSpecialRole() != null && !row.getSpecialRole().trim().isEmpty()
+                    && !summary.getSpecialRoles().contains(row.getSpecialRole())) {
+                summary.getSpecialRoles().add(row.getSpecialRole());
+            }
+        }
+
+        List<UserSummaryVo> ordered = new ArrayList<>();
+        for (Long userId : distinctIds) {
+            UserSummaryVo summary = summaries.get(userId);
+            if (summary != null) {
+                ordered.add(summary);
+            }
+        }
+        return ordered;
     }
 
 

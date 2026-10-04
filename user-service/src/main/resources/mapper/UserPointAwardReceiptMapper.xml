@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.user.mapper.UserPointAwardReceiptMapper">
+
+    <resultMap id="PointAwardReceiptMap" type="com.anishan.user.domain.entity.UserPointAwardReceipt">
+        <id property="userId" column="user_id" jdbcType="BIGINT"/>
+        <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
+        <result property="eventId" column="event_id" jdbcType="CHAR"/>
+        <result property="amount" column="amount" jdbcType="DECIMAL"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insertReceipt">
+        insert into user_point_award_receipt (user_id, problem_id, event_id, amount, created_at)
+        values (#{receipt.userId}, #{receipt.problemId}, #{receipt.eventId}, #{receipt.amount}, #{receipt.createdAt})
+    </insert>
+
+    <select id="selectByUserAndProblem" resultMap="PointAwardReceiptMap">
+        select user_id, problem_id, event_id, amount, created_at
+        from user_point_award_receipt
+        where user_id = #{userId} and problem_id = #{problemId}
+    </select>
+
+    <select id="selectByEventId" resultMap="PointAwardReceiptMap">
+        select user_id, problem_id, event_id, amount, created_at
+        from user_point_award_receipt
+        where event_id = #{eventId}
+    </select>
+</mapper>

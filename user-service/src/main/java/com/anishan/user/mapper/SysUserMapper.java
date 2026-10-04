@@ -2,6 +2,7 @@ package com.anishan.user.mapper;
 
 import com.anishan.api.domain.entity.SysUser;
 import com.anishan.user.domain.dto.PagedUserRoleQuery;
+import com.anishan.user.domain.dto.UserSummaryRow;
 import com.anishan.user.domain.entity.SysUserRoleRelation;
 import com.anishan.api.client.user.domain.vo.UserVo;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -30,8 +31,16 @@ public interface SysUserMapper extends MPJBaseMapper<SysUser> {
     int addPoints(@Param("userId") Long userId, @Param("points") BigDecimal points);
 
     List<UserVo> selectUserByUserRoleQuery(Page<SysUserRoleRelation> page, @Param("userQuery") PagedUserRoleQuery userQuery);
+
+    int countVisibleUser(@Param("userId") Long userId);
+
+    int countFollowableUser(@Param("userId") Long userId);
+
+    List<UserSummaryRow> selectUserSummaryRowsByIds(@Param("userIds") List<Long> userIds);
+
+    List<Long> selectNormalUserIds(@Param("userIds") List<Long> userIds);
+
+    Long selectVisibleUserIdForUpdate(@Param("userId") Long userId);
 }
-
-
 
 

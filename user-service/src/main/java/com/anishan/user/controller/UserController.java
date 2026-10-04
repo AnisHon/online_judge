@@ -13,6 +13,7 @@ import com.anishan.user.domain.dto.SysUserInfoDto;
 import com.anishan.user.domain.dto.UserPagedQuery;
 import com.anishan.user.domain.vo.UserProfileVo;
 import com.anishan.user.service.SysUserService;
+import com.anishan.user.service.UserAvatarService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -35,11 +36,21 @@ import java.util.List;
 public class UserController {
 
     private final SysUserService sysUserService;
+    private final UserAvatarService userAvatarService;
 
 
     @Autowired
-    public UserController(SysUserService sysUserService) {
+    public UserController(SysUserService sysUserService, UserAvatarService userAvatarService) {
         this.sysUserService = sysUserService;
+        this.userAvatarService = userAvatarService;
+    }
+
+    @PutMapping("/{id}/reset-avatar")
+    @PreAuthorize("hasAuthority('user:user:reset-avatar')")
+    @ApiOperation("管理员重置用户头像")
+    public R<Boolean> resetAvatar(@PathVariable Long id) {
+        userAvatarService.resetAvatar(id);
+        return R.success(true);
     }
 
     @GetMapping("/rank/{limit}")

@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS sys_user (
+    user_id BIGINT NOT NULL,
+    status INT NOT NULL DEFAULT 0,
+    del_flag TINYINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

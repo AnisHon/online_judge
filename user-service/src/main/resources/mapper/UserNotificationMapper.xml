@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.user.mapper.UserNotificationMapper">
+
+    <resultMap id="UserNotificationMap" type="com.anishan.user.domain.entity.UserNotification">
+        <id property="notificationId" column="notification_id" jdbcType="BIGINT"/>
+        <result property="recipientId" column="recipient_id" jdbcType="BIGINT"/>
+        <result property="actorId" column="actor_id" jdbcType="BIGINT"/>
+        <result property="eventId" column="event_id" jdbcType="CHAR"/>
+        <result property="dedupeKey" column="dedupe_key" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="VARCHAR"/>
+        <result property="solutionId" column="solution_id" jdbcType="BIGINT"/>
+        <result property="commentId" column="comment_id" jdbcType="BIGINT"/>
+        <result property="action" column="action" jdbcType="VARCHAR"/>
+        <result property="reason" column="reason" jdbcType="VARCHAR"/>
+        <result property="occurredAt" column="occurred_at" jdbcType="TIMESTAMP"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="readAt" column="read_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insertNotificationRow">
+        insert into user_notification (
+            notification_id, recipient_id, actor_id, event_id, dedupe_key, type,
+            solution_id, comment_id, action, reason, occurred_at, created_at, read_at
+        ) values (
+            #{notification.notificationId}, #{notification.recipientId}, #{notification.actorId},
+            #{notification.eventId}, #{notification.dedupeKey}, #{notification.type},
+            #{notification.solutionId}, #{notification.commentId}, #{notification.action},
+            #{notification.reason}, #{notification.occurredAt}, #{notification.createdAt}, #{notification.readAt}
+        )
+    </insert>
+
+    <select id="selectIdByRecipientAndDedupeForUpdate" resultType="java.lang.Long">
+        select notification_id
+        from user_notification
+        where recipient_id = #{recipientId}
+          and dedupe_key = #{dedupeKey}
+        limit 1
+        for update
+    </select>
+
+    <select id="selectPageByRecipient" resultMap="UserNotificationMap">
+        select notification_id, recipient_id, actor_id, event_id, dedupe_key, type,
+               solution_id, comment_id, action, reason, occurred_at, created_at, read_at
+        from user_notification
+        where recipient_id = #{recipientId}
+        <if test="unreadOnly">
+            and read_at is null
+        </if>
+        order by notification_id desc
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="countUnread" resultType="java.lang.Long">
+        select count(*) from user_notification
+        where recipient_id = #{recipientId} and read_at is null
+    </select>
+
+    <select id="countByRecipient" resultType="java.lang.Long">
+        select count(*)
+        from user_notification
+        where recipient_id = #{recipientId}
+        <if test="unreadOnly">
+            and read_at is null
+        </if>
+    </select>
+
+    <select id="existsByRecipientAndId" resultType="java.lang.Integer">
+        select count(*)
+        from user_notification
+        where recipient_id = #{recipientId}
+          and notification_id = #{notificationId}
+    </select>
+
+    <update id="markRead">
+        update user_notification
+        set read_at = #{readAt}
+        where notification_id = #{notificationId}
+          and recipient_id = #{recipientId}
+          and read_at is null
+    </update>
+
+    <update id="markAllRead">
+        update user_notification
+        set read_at = #{readAt}
+        where recipient_id = #{recipientId}
+          and notification_id &lt;= #{throughId}
+          and read_at is null
+    </update>
+
+    <delete id="deleteExpired">
+        delete from user_notification
+        where created_at &lt; #{createdBefore}
+        order by created_at asc, notification_id asc
+        limit #{limit}
+    </delete>
+</mapper>

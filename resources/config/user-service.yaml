@@ -1,4 +1,11 @@
 oj:
+  notification-worker:
+    # Consumers and fanout are opt-in until the event topology is verified in the target vhost.
+    community-enabled: false
+    points-enabled: false
+    fanout-batch-size: 200
+    fanout-poll-interval-ms: 1000
+    lease-seconds: 60
   config:
     check-in-award: 10
     default-role-id: 1

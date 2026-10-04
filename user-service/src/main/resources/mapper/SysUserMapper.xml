@@ -73,4 +73,57 @@
         </if>
     </select>
 
+    <select id="countVisibleUser" resultType="java.lang.Integer">
+        select count(*)
+        from sys_user
+        where user_id = #{userId}
+          and del_flag = 0
+    </select>
+
+    <select id="countFollowableUser" resultType="java.lang.Integer">
+        select count(*)
+        from sys_user
+        where user_id = #{userId}
+          and del_flag = 0
+          and status = 0
+    </select>
+
+    <select id="selectUserSummaryRowsByIds" resultType="com.anishan.user.domain.dto.UserSummaryRow">
+        select su.user_id as userId,
+               su.user_name as userName,
+               su.nike_name as nikeName,
+               coalesce(nullif(sr.display_name, ''), sr.role_name) as specialRole
+        from sys_user su
+        left join sys_user_role sur on sur.user_id = su.user_id
+        left join sys_role sr on sr.role_id = sur.role_id
+             and sr.special_role = 1
+             and sr.status = 0
+             and sr.del_flag = 0
+        where su.del_flag = 0
+          and su.user_id in
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        order by su.user_id asc, sr.role_id asc
+    </select>
+
+    <select id="selectNormalUserIds" resultType="java.lang.Long">
+        select user_id
+        from sys_user
+        where del_flag = 0
+          and status = 0
+          and user_id in
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </select>
+
+    <select id="selectVisibleUserIdForUpdate" resultType="java.lang.Long">
+        select user_id
+        from sys_user
+        where user_id = #{userId}
+          and del_flag = 0
+        for update
+    </select>
+
 </mapper>

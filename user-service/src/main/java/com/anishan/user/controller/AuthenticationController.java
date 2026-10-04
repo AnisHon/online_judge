@@ -8,6 +8,7 @@ import com.anishan.commons.domain.R;
 import com.anishan.user.domain.dto.*;
 import com.anishan.user.domain.vo.*;
 import com.anishan.user.service.AuthenticationService;
+import com.anishan.user.service.AccountSecurityService;
 import com.anishan.user.service.RefreshCookieService;
 import com.anishan.user.service.SysUserService;
 import io.swagger.annotations.Api;
@@ -37,6 +38,7 @@ public class AuthenticationController {
     private final SysUserService sysUserService;
     private final AuthUtil authUtil;
     private final RefreshCookieService refreshCookieService;
+    private final AccountSecurityService accountSecurityService;
 
 
     @PutMapping("/resetToDefault/{id}")
@@ -124,14 +126,14 @@ public class AuthenticationController {
 
 
     @PutMapping("/reset-pass")
+    @PreAuthorize("isAuthenticated()")
     @ApiOperation("重制密码，重新设置密码")
     @ControllerLog(api = "auth", operation = "reset-pass", desc = "用户重设密码")
-    public R<AuthResultVo> resetPass(@RequestBody @Validated PasswordResetRequest passwordResetRequest) {
-        AuthResultVo authResultVo = authenticationService.resetPassword(
-                passwordResetRequest.getCode(),
-                passwordResetRequest.getPassword()
-        );
-        return authResultVo.toR();
+    public R<AuthResultVo> resetPass(@RequestBody @Validated PasswordResetRequest passwordResetRequest,
+                                   HttpServletResponse response) {
+        accountSecurityService.changePassword(passwordResetRequest);
+        refreshCookieService.clear(response);
+        return AuthResultVo.success("密码已更新，请重新登录").toR();
     }
 
     @PostMapping("/forget-pass")
@@ -155,14 +157,12 @@ public class AuthenticationController {
 
 
     @PutMapping("/reset-email")
+    @PreAuthorize("isAuthenticated()")
     @ApiOperation("重制邮箱")
     @ControllerLog(api = "auth", operation = "reset-email", desc = "用户重设邮箱")
     public R<AuthResultVo> resetEmail(@RequestBody @Validated EmailResetRequest emailResetRequest) {
-        AuthResultVo authResultVo = authenticationService.resetEmail(
-                emailResetRequest.getCode(),
-                emailResetRequest.getNewEmail()
-        );
-        return authResultVo.toR();
+        accountSecurityService.changeEmail(emailResetRequest);
+        return AuthResultVo.success("邮箱已更新").toR();
     }
     
     @PostMapping("/send-email-code")

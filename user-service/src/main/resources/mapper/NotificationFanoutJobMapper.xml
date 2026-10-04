@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.user.mapper.NotificationFanoutJobMapper">
+
+    <resultMap id="FanoutJobMap" type="com.anishan.user.domain.entity.NotificationFanoutJob">
+        <id property="eventId" column="event_id" jdbcType="CHAR"/>
+        <result property="actorId" column="actor_id" jdbcType="BIGINT"/>
+        <result property="solutionId" column="solution_id" jdbcType="BIGINT"/>
+        <result property="occurredAt" column="occurred_at" jdbcType="TIMESTAMP"/>
+        <result property="cursorUserId" column="cursor_user_id" jdbcType="BIGINT"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+        <result property="leaseOwner" column="lease_owner" jdbcType="VARCHAR"/>
+        <result property="leaseUntil" column="lease_until" jdbcType="TIMESTAMP"/>
+        <result property="attempts" column="attempts" jdbcType="INTEGER"/>
+        <result property="nextAttemptAt" column="next_attempt_at" jdbcType="TIMESTAMP"/>
+        <result property="lastError" column="last_error" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insertIfAbsent">
+        insert into notification_fanout_job (
+            event_id, actor_id, solution_id, occurred_at, cursor_user_id, status,
+            lease_owner, lease_until, attempts, next_attempt_at, last_error, created_at, updated_at
+        ) values (
+            #{job.eventId}, #{job.actorId}, #{job.solutionId}, #{job.occurredAt}, #{job.cursorUserId},
+            #{job.status}, #{job.leaseOwner}, #{job.leaseUntil}, #{job.attempts}, #{job.nextAttemptAt},
+            #{job.lastError}, #{job.createdAt}, #{job.updatedAt}
+        ) on duplicate key update event_id = values(event_id)
+    </insert>
+
+    <select id="selectByEventIdForUpdate" resultMap="FanoutJobMap">
+        select event_id, actor_id, solution_id, occurred_at, cursor_user_id, status,
+               lease_owner, lease_until, attempts, next_attempt_at, last_error, created_at, updated_at
+        from notification_fanout_job
+        where event_id = #{eventId}
+        for update
+    </select>
+
+    <!-- Call inside a transaction; the worker marks selected rows as leased before commit. -->
+    <select id="selectClaimable" resultMap="FanoutJobMap">
+        select event_id, actor_id, solution_id, occurred_at, cursor_user_id, status,
+               lease_owner, lease_until, attempts, next_attempt_at, last_error, created_at, updated_at
+        from notification_fanout_job
+        where attempts &lt; 20
+          and next_attempt_at &lt;= #{now}
+          and (status = 'PENDING' or (status = 'SENDING' and lease_until &lt;= #{now}))
+        order by next_attempt_at asc, created_at asc, event_id asc
+        limit #{limit}
+        for update skip locked
+    </select>
+
+    <update id="markClaimed">
+        update notification_fanout_job
+        set status = 'SENDING',
+            lease_owner = #{leaseOwner},
+            lease_until = #{leaseUntil},
+            attempts = attempts + 1,
+            updated_at = #{now}
+        where event_id = #{eventId}
+          and next_attempt_at &lt;= #{now}
+          and attempts &lt; 20
+          and (status = 'PENDING' or (status = 'SENDING' and lease_until &lt;= #{now}))
+    </update>
+
+    <update id="failExhaustedExpiredClaims">
+        update notification_fanout_job
+        set status = 'FAILED',
+            lease_owner = null,
+            lease_until = null,
+            next_attempt_at = #{now},
+            last_error = 'LEASE_EXPIRED_AFTER_MAX_ATTEMPTS',
+            updated_at = #{now}
+        where status = 'SENDING'
+          and lease_until &lt;= #{now}
+          and attempts &gt;= 20
+        order by lease_until asc, event_id asc
+        limit 1
+    </update>
+
+    <!-- Cursor, notification writes and job state are committed in one local transaction. -->
+    <update id="finishBatch">
+        update notification_fanout_job
+        set cursor_user_id = #{cursorUserId},
+            status = #{status},
+            lease_owner = null,
+            lease_until = null,
+            attempts = case when #{status} = 'PENDING' then 0 else attempts end,
+            next_attempt_at = #{now},
+            last_error = null,
+            updated_at = #{now}
+        where event_id = #{eventId}
+          and status = 'SENDING'
+          and lease_owner = #{leaseOwner}
+          and lease_until &gt; #{now}
+    </update>
+
+    <update id="markFailed">
+        update notification_fanout_job
+        set status = #{status},
+            next_attempt_at = #{nextAttemptAt},
+            lease_owner = null,
+            lease_until = null,
+            last_error = #{errorCode},
+            updated_at = #{now}
+        where event_id = #{eventId}
+          and status = 'SENDING'
+          and lease_owner = #{leaseOwner}
+          and lease_until &gt; #{now}
+    </update>
+
+    <update id="replayFailed">
+        update notification_fanout_job
+        set status = 'PENDING',
+            attempts = 0,
+            next_attempt_at = #{now},
+            lease_owner = null,
+            lease_until = null,
+            last_error = null,
+            updated_at = #{now}
+        where event_id = #{eventId}
+          and status = 'FAILED'
+    </update>
+
+    <select id="selectStatusByEventId" resultType="com.anishan.user.domain.enumeration.NotificationFanoutStatus">
+        select status
+        from notification_fanout_job
+        where event_id = #{eventId}
+    </select>
+
+    <delete id="deleteDoneBefore">
+        delete from notification_fanout_job
+        where status = 'DONE'
+          and updated_at &lt; #{completedBefore}
+        order by updated_at asc, event_id asc
+        limit #{limit}
+    </delete>
+</mapper>
