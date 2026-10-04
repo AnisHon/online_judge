@@ -5,7 +5,9 @@ import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.client.problem.client.ProblemInternalClient;
+import com.anishan.api.client.problem.domain.vo.JudgeSubmissionStatusVo;
 import com.anishan.commons.enumeration.JudgeResult;
+import com.anishan.commons.domain.R;
 import com.anishan.judge.judge.JudgeRun;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +46,19 @@ public class JudgeListener {
             )
     )
     public void judge(JudgeInfo info) {
+
+        if (info == null || info.getSubmitId() == null || info.getSubmitId() <= 0) {
+            throw new IllegalArgumentException("judge message is missing a valid submission id");
+        }
+
+        R<JudgeSubmissionStatusVo> statusResponse = problemInternalClient.judgeSubmissionStatus(info.getSubmitId());
+        if (statusResponse == null || statusResponse.getCode() != 200 || statusResponse.getData() == null) {
+            throw new IllegalStateException("problem-service returned no submission status");
+        }
+        if (Boolean.TRUE.equals(statusResponse.getData().getResultApplied())) {
+            log.info("跳过已原子应用的重复判题消息 submitId={}", info.getSubmitId());
+            return;
+        }
 
         log.debug("用户ID:{} 开始判题", info.getUserId());
 

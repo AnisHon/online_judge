@@ -10,4 +10,13 @@
             <result property="submitTime" column="submit_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
+    <insert id="insertIgnore">
+        INSERT IGNORE INTO user_submit(user_id, contest_id, submit_time)
+        VALUES (#{userId}, #{contestId}, #{submitTime})
+    </insert>
+
+    <delete id="deleteByContestAndUser">
+        DELETE FROM user_submit WHERE contest_id = #{contestId} AND user_id = #{userId}
+    </delete>
+
 </mapper>

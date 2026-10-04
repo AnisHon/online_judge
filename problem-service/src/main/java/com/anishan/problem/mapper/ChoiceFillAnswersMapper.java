@@ -2,6 +2,9 @@ package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.ChoiceFillAnswers;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author happy
@@ -11,8 +14,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface ChoiceFillAnswersMapper extends BaseMapper<ChoiceFillAnswers> {
 
-}
+    List<ChoiceFillAnswers> selectByProblemIdForUpdate(@Param("problemId") Long problemId);
 
+}
 
 
 

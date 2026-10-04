@@ -1,11 +1,12 @@
 package com.anishan.problem.domain.vo;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.springframework.beans.BeanUtils;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
 
-import java.util.List;
-import java.util.Map;
 
 /**
  * 个人主页的学习活动摘要。
@@ -13,16 +14,37 @@ import java.util.Map;
  * <p>这是有意设计成摘要而不是分页明细：主页只需要有限数量的入口，完整记录仍由原有业务接口负责。</p>
  */
 @Data
-public class ProfileActivityVo {
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long userId;
+@EqualsAndHashCode(callSuper = true)
+public class ProfileActivityVo extends ProfileActivityBaseVo {
     private boolean owner;
-    private long solvedCount;
-    private long attemptedCount;
-    private Map<String, List<String>> solvedProblems;
-    private List<ProfileContestVo> contests;
-    private List<ProfileSolutionVo> solutions;
-    private boolean solvedProblemsTruncated;
-    private boolean contestsTruncated;
-    private boolean solutionsTruncated;
+
+    /** Copy nested values so callers cannot mutate a shared hot-cache instance. */
+    public static ProfileActivityVo fromBase(ProfileActivityBaseVo base, boolean owner) {
+        ProfileActivityVo result = new ProfileActivityVo();
+        BeanUtils.copyProperties(base, result);
+        result.setOwner(owner);
+        if (base.getSolvedProblems() != null) {
+            result.setSolvedProblems(new LinkedHashMap<>());
+            base.getSolvedProblems().forEach((key, ids) ->
+                    result.getSolvedProblems().put(key, new ArrayList<>(ids)));
+        }
+        if (base.getContests() != null) {
+            result.setContests(base.getContests().stream().map(item -> {
+                ProfileContestVo copy = new ProfileContestVo();
+                BeanUtils.copyProperties(item, copy);
+                return copy;
+            }).collect(Collectors.toList()));
+        }
+        if (base.getHeatmap() != null) {
+            ProfileActivityHeatmapVo heatmap = new ProfileActivityHeatmapVo();
+            BeanUtils.copyProperties(base.getHeatmap(), heatmap);
+            heatmap.setDays(base.getHeatmap().getDays().stream().map(item -> {
+                ProfileActivityDayVo copy = new ProfileActivityDayVo();
+                BeanUtils.copyProperties(item, copy);
+                return copy;
+            }).collect(Collectors.toList()));
+            result.setHeatmap(heatmap);
+        }
+        return result;
+    }
 }

@@ -19,6 +19,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.anishan</groupId><artifactId>common-api</artifactId>
+            <version>${project.version}</version><type>test-jar</type><classifier>tests</classifier><scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.anishan</groupId>
             <artifactId>common-api</artifactId>
         </dependency>

@@ -6,6 +6,7 @@ import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListOrderBatchDto;
 import com.anishan.problem.domain.dto.ProblemListRelationDto;
 import com.anishan.problem.domain.entity.ProblemList;
+import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.domain.vo.ProblemVo;
@@ -34,6 +35,8 @@ public interface ProblemListService extends IService<ProblemList> {
     boolean addProblemList(List<ProblemListRelationDto> relations);
 
     boolean delProblem(List<ProblemListRelationDto> relations);
+
+    boolean updateProblemRelation(ProblemProblemListRelation relation);
 
     boolean updateProblemOrder(ProblemListOrderBatchDto request);
 

@@ -7,12 +7,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableRabbit
 @EnableFeignClients(defaultConfiguration = FeignConfig.class, basePackages = "com.anishan.api.client")
 @SpringBootApplication
 @MapperScan("com.anishan.problem.mapper")
 @EnableCaching
+@EnableScheduling
 public class ProblemApplication {
 
     public static void main(String[] args) {

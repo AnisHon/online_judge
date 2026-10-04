@@ -62,4 +62,6 @@ public interface ContestService extends IService<Contest> {
     boolean removeUser(Long contestId, List<Long> userIds);
 
     boolean addUserByClass(Long contestId, Long classIds);
+
+    boolean addUser(Long contestId, List<Long> userIds);
 }

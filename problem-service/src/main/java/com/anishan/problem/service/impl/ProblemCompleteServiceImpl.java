@@ -29,21 +29,10 @@ public class ProblemCompleteServiceImpl extends ServiceImpl<ProblemCompleteMappe
     @Override
     @Transactional
     public boolean finish(Long userId, Long problemId) {
-        ProblemComplete problemComplete = new ProblemComplete();
-        problemComplete.setUserId(userId);
-        problemComplete.setProblemId(problemId);
-
-
-        // 忽略主键冲突异常
-        boolean save = true;
-        if (!exists(userId, problemId)) {
-            save = this.save(problemComplete);
-        }
-
-        return save;
+        // Preserve the legacy idempotent "finished" result while callers that emit
+        // one-time side effects use insertIgnore's affected-row count directly.
+        return baseMapper.insertIgnore(userId, problemId) == 1 || exists(userId, problemId);
     }
 }
-
-
 
 

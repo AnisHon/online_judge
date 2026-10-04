@@ -35,6 +35,45 @@
         </collection>
     </resultMap>
 
+    <resultMap id="ContentProblemReadMap" type="com.anishan.problem.domain.entity.Problem">
+        <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="auth" column="auth" jdbcType="INTEGER"
+                typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <resultMap id="SnapshotProblemLockMap" type="com.anishan.problem.domain.entity.Problem">
+        <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="INTEGER"
+                typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result property="auth" column="auth" jdbcType="INTEGER"
+                typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <!-- Raw SQL intentionally includes soft-deleted rows and selects no statement, hint, or answer data. -->
+    <select id="selectContentReadByProblemIds" resultMap="ContentProblemReadMap">
+        select problem_id, title, auth, del_flag
+        from problem
+        where problem_id in
+        <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+            #{problemId}
+        </foreach>
+    </select>
+
+    <select id="selectByProblemIdsForUpdate" resultMap="SnapshotProblemLockMap">
+        SELECT problem_id, title, type, auth, del_flag
+        FROM problem
+        WHERE problem_id IN
+        <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+            #{problemId}
+        </foreach>
+        ORDER BY problem_id ASC
+        FOR UPDATE
+    </select>
+
 <!--    List<Problem> selectAllByProblemIdAndTagId(Wrapper<Problem> wrapper);-->
     <select id="selectAllByProblemIdAndTagId" resultType="com.anishan.problem.domain.entity.Problem">
         select

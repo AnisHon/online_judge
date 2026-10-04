@@ -37,9 +37,8 @@ public interface RecordsMapper extends MPJBaseMapper<Records> {
     /**
      * 用户每道题的正误情况
      */
-    List<UserScore> selectUserScore(@Param("userId") Long userId, @Param("contestId") Long contestId, @Param("listId") Long listId);
+    List<UserScore> selectUserScore(@Param("userId") Long userId, @Param("contestId") Long contestId);
 }
-
 
 
 

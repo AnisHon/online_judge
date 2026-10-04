@@ -2,7 +2,6 @@ package com.anishan.problem.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.util.ObjUtil;
 import com.anishan.api.client.content.domain.OSSFileInfo;
 import com.anishan.api.client.content.domain.OssFileInputStream;
 import com.anishan.api.client.judgeserver.domain.OjProblemCaseDto;
@@ -12,14 +11,16 @@ import com.anishan.api.file.FileOperation;
 import com.anishan.commons.exception.BusinessException;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.mapper.OjProblemCaseMapper;
+import com.anishan.problem.service.ContestMutationGuard;
 import com.anishan.problem.service.OjProblemCaseService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.ServletOutputStream;
@@ -29,8 +30,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
 * @author happy
@@ -38,15 +46,22 @@ import java.util.Optional;
 * @createDate 2024-10-16 22:39:16
 */
 @Service
+@Slf4j
 public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, OjProblemCase>
     implements OjProblemCaseService {
 
     public static final long MAX_INLINE_CASE_BYTES = 1024L * 1024L;
 
     private final FileOperation fileOperation;
+    private final ContestMutationGuard mutationGuard;
+    private final TransactionTemplate transactionTemplate;
 
-    public OjProblemCaseServiceImpl(FileOperation fileOperation) {
+    public OjProblemCaseServiceImpl(FileOperation fileOperation,
+                                    ContestMutationGuard mutationGuard,
+                                    PlatformTransactionManager transactionManager) {
         this.fileOperation = fileOperation;
+        this.mutationGuard = mutationGuard;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
     /**
@@ -124,10 +139,9 @@ public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, O
     }
 
     @Override
-    @Transactional
     public boolean updateOjProblemCase(Long caseId, OjProblemCaseDto dto) {
-        OjProblemCase problemCase = getById(caseId);
-        ThrowUtil.businessError(problemCase == null, "测试用例不存在");
+        OjProblemCase current = getById(caseId);
+        ThrowUtil.businessError(current == null, "测试用例不存在");
         ThrowUtil.businessError(dto == null, "测试用例更新内容不能为空");
 
         byte[] inputText = textBytes(dto.getInput());
@@ -141,34 +155,51 @@ public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, O
                 || inputText != null
                 || outputText != null;
         ThrowUtil.businessError(!hasChanges, "请至少修改分数或测试用例文件");
-
-        try {
-            if (dto.getInputFile() != null) {
-                try (java.io.InputStream stream = dto.getInputFile().getInputStream()) {
-                    fileOperation.saveFile(problemCase.getInput(), stream);
-                }
-            } else if (inputText != null) {
-                try (ByteArrayInputStream stream = new ByteArrayInputStream(inputText)) {
-                    fileOperation.saveFile(problemCase.getInput(), stream);
-                }
-            }
-            if (dto.getOutputFile() != null) {
-                try (java.io.InputStream stream = dto.getOutputFile().getInputStream()) {
-                    fileOperation.saveFile(problemCase.getOutput(), stream);
-                }
-            } else if (outputText != null) {
-                try (ByteArrayInputStream stream = new ByteArrayInputStream(outputText)) {
-                    fileOperation.saveFile(problemCase.getOutput(), stream);
-                }
-            }
-        } catch (IOException e) {
-            throw new BusinessException("测试用例文件更新失败");
+        if (dto.getScore() != null && dto.getScore().signum() < 0) {
+            throw new BusinessException("测试用例分数不能为负数");
         }
 
-        if (dto.getScore() == null) return true;
-        return this.update(Wrappers.lambdaUpdate(OjProblemCase.class)
-                .eq(OjProblemCase::getCaseId, caseId)
-                .set(OjProblemCase::getScore, dto.getScore()));
+        StagedCaseFiles staged = stageReplacementFiles(current, dto, inputText, outputText);
+        boolean committed = false;
+        try {
+            Boolean result = transactionTemplate.execute(status -> {
+                ContestMutationGuard.MutationContext context = mutationGuard.lockAndInspect(
+                        Collections.singletonList(current.getProblemId()));
+                mutationGuard.requireScoringMutable(context);
+                OjProblemCase lockedCase = findLockedCase(context.getLockedCases(), caseId);
+                if (lockedCase == null || !current.getProblemId().equals(lockedCase.getProblemId())) {
+                    throw new BusinessException("测试用例已被删除或修改，请刷新后重试");
+                }
+
+                com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<OjProblemCase> update =
+                        Wrappers.lambdaUpdate(OjProblemCase.class)
+                                .eq(OjProblemCase::getCaseId, caseId)
+                                .eq(OjProblemCase::getProblemId, current.getProblemId());
+                boolean changed = false;
+                if (staged.inputPath != null) {
+                    update.set(OjProblemCase::getInput, staged.inputPath);
+                    changed = true;
+                }
+                if (staged.outputPath != null) {
+                    update.set(OjProblemCase::getOutput, staged.outputPath);
+                    changed = true;
+                }
+                if (dto.getScore() != null) {
+                    update.set(OjProblemCase::getScore, dto.getScore());
+                    changed = true;
+                }
+                if (!changed) return true;
+                int rows = baseMapper.update(null, update);
+                if (rows == 0 && staged.hasUploadedFiles()) {
+                    throw new BusinessException("测试用例引用更新失败，请刷新后重试");
+                }
+                return true;
+            });
+            committed = Boolean.TRUE.equals(result);
+            return committed;
+        } finally {
+            if (!committed) cleanupStagedFiles(staged.uploadedPaths);
+        }
     }
 
     private static byte[] textBytes(String text) {
@@ -188,72 +219,153 @@ public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, O
     }
 
     @Override
-    @Transactional
-    @SneakyThrows
     public boolean addOjProblemCase(OjProblemCaseDto ojProblemCase) {
-
+        if (ojProblemCase == null || ojProblemCase.getProblemId() == null || ojProblemCase.getProblemId() <= 0) {
+            throw new BusinessException("题目ID无效");
+        }
         String inputText = Optional.ofNullable(ojProblemCase.getInput()).orElse("");
         String outputText = Optional.ofNullable(ojProblemCase.getOutput()).orElse("");
-        MultipartFile inputFile = ojProblemCase.getInputFile();
-        MultipartFile outputFile = ojProblemCase.getOutputFile();
-
         long id = IdWorker.getId();
+        CaseFiles files = stageNewCaseFiles(ojProblemCase.getProblemId(), id,
+                ojProblemCase.getInputFile(), ojProblemCase.getOutputFile(), inputText, outputText);
+        OjProblemCase problemCase = BeanUtil.copyProperties(ojProblemCase,
+                OjProblemCase.class, "inputFile", "outputFile");
+        problemCase.setCaseId(id).setInput(files.inputPath).setOutput(files.outputPath);
 
-
-        OjProblemCase problemCase = saveAndBuildCase(ojProblemCase, inputText, outputText, inputFile, outputFile, id);
-
-        return this.save(problemCase);
-    }
-
-    private OjProblemCase saveAndBuildCase(OjProblemCaseDto ojProblemCase, String inputText, String outputText, MultipartFile inputFile, MultipartFile outputFile, long id) throws IOException {
-        String inPath = getPath(ojProblemCase.getProblemId(), id, true);
-        String outPath = getPath(ojProblemCase.getProblemId(), id, false);
-
-        ojProblemCase.setInput(inPath);
-        ojProblemCase.setOutput(outPath);
-
-        OjProblemCase problemCase =
-                BeanUtil.copyProperties(ojProblemCase,
-                                OjProblemCase.class, "inputFile", "outputFile")
-                        .setCaseId(id);
-
-        if (ObjUtil.isNotNull(inputFile)) {
-            // 上传 input
-            fileOperation.saveFile(inPath, inputFile.getInputStream());
-       } else {
-           ByteArrayInputStream inIs = new ByteArrayInputStream(inputText.getBytes(StandardCharsets.UTF_8));
-           fileOperation.saveFile(inPath, inIs);
-       }
-
-        if (ObjUtil.isNotNull(outputFile)) {
-            // 上传 output
-            fileOperation.saveFile(outPath, outputFile.getInputStream());
-       } else {
-           // 上传 output
-           ByteArrayInputStream outIs = new ByteArrayInputStream(outputText.getBytes(StandardCharsets.UTF_8));
-           fileOperation.saveFile(outPath, outIs);
-       }
-        return problemCase;
+        boolean committed = false;
+        try {
+            Boolean result = transactionTemplate.execute(status -> {
+                ContestMutationGuard.MutationContext context = mutationGuard.lockAndInspect(
+                        Collections.singletonList(problemCase.getProblemId()));
+                mutationGuard.requireScoringMutable(context);
+                if (!save(problemCase)) {
+                    throw new BusinessException("测试用例保存失败");
+                }
+                return true;
+            });
+            committed = Boolean.TRUE.equals(result);
+            return committed;
+        } finally {
+            if (!committed) cleanupStagedFiles(files.uploadedPaths);
+        }
     }
 
     @Override
-    @Transactional
     public boolean removeCase(List<Long> caseId) {
-        List<OjProblemCase> cases = this.listByIds(caseId);
+        List<Long> ids = normalizeCaseIds(caseId);
+        if (ids.isEmpty()) return false;
+        List<OjProblemCase> existing = this.listByIds(ids);
+        if (existing.isEmpty()) return false;
+        List<Long> problemIds = existing.stream().map(OjProblemCase::getProblemId)
+                .distinct().sorted().collect(Collectors.toList());
 
-
-
-
-        boolean b = this.removeByIds(caseId);
-
-        cases.forEach(problemCase -> {
-            String input = problemCase.getInput();
-            String output = problemCase.getOutput();
-            fileOperation.deleteFile(input);
-            fileOperation.deleteFile(output);
+        Boolean result = transactionTemplate.execute(status -> {
+            ContestMutationGuard.MutationContext context = mutationGuard.lockAndInspect(problemIds);
+            mutationGuard.requireScoringMutable(context);
+            Set<Long> lockedCaseIds = context.getLockedCases().stream()
+                    .map(OjProblemCase::getCaseId).collect(Collectors.toSet());
+            List<Long> deletableIds = ids.stream().filter(lockedCaseIds::contains).collect(Collectors.toList());
+            return !deletableIds.isEmpty() && this.removeByIds(deletableIds);
         });
+        // Keep old objects: an already accepted practice judge may still be reading their paths.
+        return Boolean.TRUE.equals(result);
+    }
 
-        return b;
+    private StagedCaseFiles stageReplacementFiles(OjProblemCase current, OjProblemCaseDto dto,
+                                                   byte[] inputText, byte[] outputText) {
+        StagedCaseFiles staged = new StagedCaseFiles();
+        try {
+            if (dto.getInputFile() != null || inputText != null) {
+                staged.inputPath = stageOne(current.getProblemId(), current.getCaseId(), true,
+                        dto.getInputFile(), inputText, staged.uploadedPaths);
+            }
+            if (dto.getOutputFile() != null || outputText != null) {
+                staged.outputPath = stageOne(current.getProblemId(), current.getCaseId(), false,
+                        dto.getOutputFile(), outputText, staged.uploadedPaths);
+            }
+            return staged;
+        } catch (IOException | RuntimeException e) {
+            cleanupStagedFiles(staged.uploadedPaths);
+            if (e instanceof BusinessException) throw (BusinessException) e;
+            throw new BusinessException("测试用例文件更新失败");
+        }
+    }
+
+    private CaseFiles stageNewCaseFiles(Long problemId, Long caseId,
+                                        MultipartFile inputFile, MultipartFile outputFile,
+                                        String inputText, String outputText) {
+        CaseFiles files = new CaseFiles();
+        String uuid = UUID.randomUUID().toString();
+        files.inputPath = problemId + "/" + caseId + "-" + uuid + ".in";
+        files.outputPath = problemId + "/" + caseId + "-" + uuid + ".out";
+        try {
+            stagePath(files.inputPath, inputFile, inputText.getBytes(StandardCharsets.UTF_8), files.uploadedPaths);
+            stagePath(files.outputPath, outputFile, outputText.getBytes(StandardCharsets.UTF_8), files.uploadedPaths);
+            return files;
+        } catch (IOException | RuntimeException e) {
+            cleanupStagedFiles(files.uploadedPaths);
+            if (e instanceof BusinessException) throw (BusinessException) e;
+            throw new BusinessException("测试用例文件上传失败");
+        }
+    }
+
+    private String stageOne(Long problemId, Long caseId, boolean input,
+                            MultipartFile file, byte[] text, List<String> uploadedPaths) throws IOException {
+        String path = problemId + "/" + caseId + "-" + UUID.randomUUID()
+                + (input ? ".in" : ".out");
+        stagePath(path, file, text, uploadedPaths);
+        return path;
+    }
+
+    private void stagePath(String path, MultipartFile file, byte[] text, List<String> uploadedPaths)
+            throws IOException {
+        uploadedPaths.add(path);
+        if (file != null) {
+            try (java.io.InputStream stream = file.getInputStream()) {
+                fileOperation.saveFile(path, stream, "text/plain");
+            }
+        } else {
+            try (ByteArrayInputStream stream = new ByteArrayInputStream(text == null ? new byte[0] : text)) {
+                fileOperation.saveFile(path, stream, "text/plain");
+            }
+        }
+    }
+
+    private OjProblemCase findLockedCase(List<OjProblemCase> cases, Long caseId) {
+        if (cases == null) return null;
+        return cases.stream().filter(item -> caseId.equals(item.getCaseId())).findFirst().orElse(null);
+    }
+
+    private List<Long> normalizeCaseIds(Collection<Long> values) {
+        if (values == null || values.isEmpty()) return Collections.emptyList();
+        LinkedHashSet<Long> ids = new LinkedHashSet<>();
+        for (Long id : values) {
+            if (id == null || id <= 0) throw new BusinessException("测试用例ID无效");
+            ids.add(id);
+        }
+        return new ArrayList<>(ids);
+    }
+
+    private void cleanupStagedFiles(List<String> paths) {
+        for (String path : paths) {
+            try {
+                fileOperation.deleteFile(path);
+            } catch (RuntimeException cleanupError) {
+                log.warn("Failed to clean staged case object after rollback; manual case-file reconciliation is required");
+            }
+        }
+    }
+
+    private static class CaseFiles {
+        String inputPath;
+        String outputPath;
+        final List<String> uploadedPaths = new ArrayList<>();
+    }
+
+    private static final class StagedCaseFiles extends CaseFiles {
+        private boolean hasUploadedFiles() {
+            return !uploadedPaths.isEmpty();
+        }
     }
 
     @Override
@@ -269,5 +381,3 @@ public class OjProblemCaseServiceImpl extends ServiceImpl<OjProblemCaseMapper, O
     }
 
 }
-
-

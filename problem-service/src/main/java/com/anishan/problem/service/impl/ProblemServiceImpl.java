@@ -21,6 +21,7 @@ import com.anishan.problem.domain.entity.*;
 import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.mapper.ProblemMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
+import com.anishan.problem.mapper.ChoiceFillAnswersMapper;
 import com.anishan.problem.mapper.SubmitLogMapper;
 import com.anishan.problem.mapper.RecordsMapper;
 import com.anishan.problem.mapper.ContestRecordsMapper;
@@ -74,6 +75,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     private final ContestRecordsMapper contestRecordsMapper;
     private final ProblemUploadUtil problemUploadUtil;
     private final FileOperation fileOperation;
+    private final ContestMutationGuard contestMutationGuard;
+    private final ChoiceFillAnswersMapper choiceFillAnswersMapper;
 
 
     public Problem doGetProblem(Long id) {
@@ -360,7 +363,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
         switch (entity.getType()) {
             case OJ:
-                result = doUpdateOjProblem(problem);
+                result = problem.getOjProblem() == null || doUpdateOjProblem(problem);
                 break;
             case FILL:
             case CHOICE:
@@ -399,7 +402,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     private boolean doUpdateOjProblem(DetailProblemDto problem) {
-        problem.getCases().forEach(x -> x.setProblemId(problem.getProblem().getProblemId()));
+        if (problem.getCases() != null) {
+            problem.getCases().forEach(x -> x.setProblemId(problem.getProblem().getProblemId()));
+        }
         return ojProblemService.updateById(problem.getOjProblem());
 
     }
@@ -414,9 +419,39 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             @CacheEvict(cacheNames = "problem:choice-fill:", key = "#problem.problem.problemId")
     })
     public boolean updateProblem(DetailProblemDto problem) {
+        ThrowUtil.businessError(problem == null || problem.getProblem() == null
+                || problem.getProblem().getProblemId() == null, "题目参数无效");
         ProblemDto dto = problem.getProblem();
+        ContestMutationGuard.MutationContext mutation = contestMutationGuard.lockAndInspect(
+                Collections.singletonList(dto.getProblemId()));
+        Problem existing = mutation.getProblem(dto.getProblemId());
+        ProblemType requestedType = dto.getType() == null ? existing.getType() : dto.getType();
+        boolean scoringChanged = dto.getType() != null && dto.getType() != existing.getType();
+
+        if (!scoringChanged && requestedType != null
+                && (requestedType == ProblemType.FILL || requestedType == ProblemType.CHOICE
+                || requestedType == ProblemType.MULTI_CHOICE)
+                && !CollectionUtil.isEmpty(problem.getChoices())) {
+            List<ChoiceFillAnswers> currentAnswers = choiceFillAnswersMapper
+                    .selectByProblemIdForUpdate(dto.getProblemId());
+            scoringChanged = choiceAnswersChanged(problem.getChoices(), currentAnswers);
+        }
+        if (!scoringChanged && requestedType == ProblemType.OJ && problem.getOjProblem() != null) {
+            OjProblem currentOj = ojProblemService.getById(dto.getProblemId());
+            if (currentOj != null) {
+                OjProblemDto requestedOj = problem.getOjProblem();
+                scoringChanged = changed(requestedOj.getTimeLimit(), currentOj.getTimeLimit())
+                        || changed(requestedOj.getMemoryLimit(), currentOj.getMemoryLimit())
+                        || changed(requestedOj.getStackLimit(), currentOj.getStackLimit());
+            }
+        }
+        if (scoringChanged) {
+            contestMutationGuard.requireScoringMutable(mutation);
+        }
+
         Problem entity = BeanUtil.copyProperties(dto, Problem.class);
         ThrowUtil.runtime(entity == null, "题目不存在");
+        if (entity.getType() == null) entity.setType(existing.getType());
 
         boolean b = this.updateById(entity);
 
@@ -627,16 +662,18 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             return false;
         }
 
+        ContestMutationGuard.MutationContext mutation = contestMutationGuard.lockAndInspect(ids);
+        contestMutationGuard.requireScoringMutable(mutation);
+
         boolean hasSubmissionHistory = submitLogMapper.selectCount(
                 new LambdaQueryWrapper<SubmitLog>().in(SubmitLog::getProblemId, ids)) > 0
                 || recordsMapper.selectCount(
                 new LambdaQueryWrapper<Records>().in(Records::getProblemId, ids)) > 0
                 || contestRecordsMapper.selectCount(
                 new LambdaQueryWrapper<ContestRecords>().in(ContestRecords::getProblemId, ids)) > 0
-                || Db.count(new LambdaQueryWrapper<ProblemComplete>().in(ProblemComplete::getProblemId, ids)) > 0
-                || Db.count(new LambdaQueryWrapper<SolutionExplanation>().in(SolutionExplanation::getProblemId, ids)) > 0;
+                || Db.count(new LambdaQueryWrapper<ProblemComplete>().in(ProblemComplete::getProblemId, ids)) > 0;
         ThrowUtil.businessError(hasSubmissionHistory,
-                "题目已有提交、作答或题解内容，为避免破坏历史关联，不能删除；请改为调整题目可见范围");
+                "题目已有提交或作答记录，为避免破坏历史关联，不能删除；请改为调整题目可见范围");
 
         long eventReferences = problemProblemListMapper.countEventsUsingProblems(ids);
         ThrowUtil.businessError(eventReferences > 0,
@@ -665,6 +702,41 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         return true;
     }
 
+    private boolean choiceAnswersChanged(List<ChoiceFillAnswersDto> requested,
+                                        List<ChoiceFillAnswers> current) {
+        if (CollectionUtil.isEmpty(requested)) return false;
+        List<ChoiceFillAnswers> existing = current == null ? Collections.emptyList() : current;
+        java.util.Set<Long> existingIds = existing.stream().map(ChoiceFillAnswers::getAnswerId)
+                .collect(Collectors.toSet());
+        for (ChoiceFillAnswersDto answer : requested) {
+            if (answer.getAnswerId() != null && !existingIds.contains(answer.getAnswerId())) {
+                throw new com.anishan.commons.exception.ApiStatusException(409,
+                        "题目答案已变化，请刷新后重试");
+            }
+        }
+        List<String> before = existing.stream().map(this::answerSignature)
+                .sorted().collect(Collectors.toList());
+        List<String> after = requested.stream().map(this::answerSignature)
+                .sorted().collect(Collectors.toList());
+        return !before.equals(after);
+    }
+
+    private String answerSignature(ChoiceFillAnswers answer) {
+        return String.valueOf(answer.getAnswerText()) + '\u0000'
+                + String.valueOf(answer.getIsCorrect()) + '\u0000'
+                + String.valueOf(answer.getBlankIndex()) + '\u0000'
+                + String.valueOf(answer.getScore());
+    }
+
+    private String answerSignature(ChoiceFillAnswersDto answer) {
+        return String.valueOf(answer.getAnswerText()) + '\u0000'
+                + String.valueOf(answer.getIsCorrect()) + '\u0000'
+                + String.valueOf(answer.getBlankIndex()) + '\u0000'
+                + String.valueOf(answer.getScore());
+    }
+
+    private boolean changed(Number requested, Number current) {
+        return requested != null && !requested.toString().equals(current == null ? null : current.toString());
+    }
+
 }
-
-

@@ -219,6 +219,9 @@
                 <configuration>
                     <!-- Tests run by default; -DskipTests remains an explicit opt-out. -->
                     <skip>${skipTests}</skip>
+                    <excludes>
+                        <exclude>**/*IntegrationTest.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
 
@@ -226,5 +229,35 @@
 
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>community-integration</id>
+            <build><plugins><plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.22.2</version>
+                <configuration>
+                    <skipTests>false</skipTests>
+                    <!-- Spring Boot repackages the artifact into BOOT-INF/classes; integration tests
+                         need the exploded classes directory on their ordinary JVM classpath. -->
+                    <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                    <testClassesDirectory>${project.build.testOutputDirectory}</testClassesDirectory>
+                    <systemPropertyVariables>
+                        <oj.community.integration.required>true</oj.community.integration.required>
+                    </systemPropertyVariables>
+                    <includes>
+                        <include>**/CommunityPersistenceIntegrationTest.java</include>
+                        <include>**/JudgeResultRaceIntegrationTest.java</include>
+                        <include>**/ContestRankIntegrationTest.java</include>
+                        <include>**/NotificationIntegrationTest.java</include>
+                        <include>**/UserSocialMigrationIntegrationTest.java</include>
+                        <include>**/SolutionDomainMigrationIntegrationTest.java</include>
+                    </includes>
+                </configuration>
+                <executions><execution><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>
+            </plugin></plugins></build>
+        </profile>
+    </profiles>
 
 </project>

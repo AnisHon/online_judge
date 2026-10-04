@@ -1,1 +1,17 @@
 judge: {}
+oj:
+  contest-rank:
+    enabled: true
+    interval-ms: 15000
+    batch-size: 20
+    lease-seconds: 120
+    cleanup-batch-size: 500
+    query-timeout-seconds: 60
+  problem-outbox:
+    enabled: false
+    batch-size: 20
+    lease-seconds: 60
+    confirm-timeout-seconds: 5
+    poll-interval-ms: 1000
+    cleanup-batch-size: 500
+    cleanup-interval-ms: 3600000

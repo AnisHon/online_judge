@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.ContestProblemSnapshotMapper">
+    <resultMap id="ContestProblemSnapshotResultMap" type="com.anishan.problem.domain.entity.ContestProblemSnapshot">
+        <id column="contest_id" property="contestId" jdbcType="BIGINT"/>
+        <id column="problem_id" property="problemId" jdbcType="BIGINT"/>
+        <result column="problem_order" property="problemOrder" jdbcType="INTEGER"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="problem_type" property="problemType" jdbcType="INTEGER"/>
+        <result column="max_score" property="maxScore" jdbcType="DECIMAL"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByContestId" resultMap="ContestProblemSnapshotResultMap">
+        SELECT contest_id, problem_id, problem_order, title, problem_type, max_score, created_at
+        FROM contest_problem_snapshot
+        WHERE contest_id = #{contestId}
+        ORDER BY problem_order ASC, problem_id ASC
+    </select>
+
+    <delete id="deleteByContestId">
+        DELETE FROM contest_problem_snapshot WHERE contest_id = #{contestId}
+    </delete>
+
+    <select id="selectMaxScore" resultType="java.math.BigDecimal">
+        SELECT max_score
+        FROM contest_problem_snapshot
+        WHERE contest_id = #{contestId} AND problem_id = #{problemId}
+    </select>
+</mapper>

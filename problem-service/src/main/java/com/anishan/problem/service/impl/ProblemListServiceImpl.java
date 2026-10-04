@@ -7,6 +7,7 @@ import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.vo.PagedResult;
 import com.anishan.commons.enumeration.ProblemAuth;
 import com.anishan.commons.exception.BusinessException;
+import com.anishan.commons.exception.ApiStatusException;
 import com.anishan.problem.domain.dto.PagedProblemList;
 import com.anishan.problem.domain.dto.ProblemListDto;
 import com.anishan.problem.domain.dto.ProblemListOrderBatchDto;
@@ -22,6 +23,7 @@ import com.anishan.problem.mapper.ProblemListMapper;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
 import com.anishan.problem.service.ProblemListService;
 import com.anishan.problem.service.ProblemProblemListService;
+import com.anishan.problem.service.ContestProblemSnapshotService;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -35,7 +37,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -52,6 +57,7 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     private final ProblemProblemListService problemProblemListService;
     private final ProblemListMapper problemListMapper;
     private final ProblemProblemListMapper problemProblemListMapper;
+    private final ContestProblemSnapshotService snapshotService;
     private final ConstConfig constConfig;
 
     @Override
@@ -79,10 +85,17 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
         if (CollectionUtil.isEmpty(ids)) {
             return;
         }
+        lockLists(ids);
+        if (problemListMapper.countContestReferencesByListIds(ids) > 0) {
+            throw new ApiStatusException(409, "题单仍被比赛或作业引用，不能删除；请先调整活动题单");
+        }
         this.remove(new LambdaQueryWrapper<ProblemList>()
                 .in(ProblemList::getListId, ids)
         );
-        problemProblemListService.delByListIds(ids);
+        // Do not use delByListIds here: its legacy implementation uses an empty wrapper.
+        // Keep this deletion scoped while the corresponding list rows are locked.
+        problemProblemListService.remove(new LambdaQueryWrapper<ProblemProblemListRelation>()
+                .in(ProblemProblemListRelation::getListId, ids));
     }
 
     @Override
@@ -98,7 +111,10 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     @Override
     @Transactional
     public boolean updateProblemList(ProblemListDto problemListDto) {
-        LocalDateTime dataTime = getDataTime(problemListDto.getListId());
+        LocalDateTime dataTime = lockList(problemListDto.getListId());
+        if (dataTime == null) {
+            throw new BusinessException("题单不存在或已删除");
+        }
         ProblemList problemList = BeanUtil.copyProperties(problemListDto, ProblemList.class);
         problemList.setUpdateTime(dataTime);
 
@@ -106,22 +122,61 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean addProblemList(List<ProblemListRelationDto> relations) {
+        if (CollectionUtil.isEmpty(relations)) {
+            return true;
+        }
+        Map<Long, LocalDateTime> listVersions = lockLists(relations.stream()
+                .map(ProblemListRelationDto::getListId).collect(Collectors.toList()));
         List<ProblemProblemListRelation> list = BeanUtil.copyToList(relations, ProblemProblemListRelation.class);
         BigDecimal score = constConfig.getListDefaultScore();
         list.forEach(x -> x.setScore(score));
-
-        return problemProblemListService.saveBatch(list);
-
+        if (!problemProblemListService.saveBatch(list)) {
+            throw new BusinessException("题单添加题目失败");
+        }
+        touchLists(listVersions);
+        return true;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean delProblem(List<ProblemListRelationDto> relations) {
         if (CollectionUtil.isEmpty(relations)) {
             return true;
         }
+        Map<Long, LocalDateTime> listVersions = lockLists(relations.stream()
+                .map(ProblemListRelationDto::getListId).collect(Collectors.toList()));
+        int deleted = problemProblemListMapper.deleteBatch(relations);
+        touchLists(listVersions);
+        return deleted > 0;
+    }
 
-        return problemProblemListMapper.deleteBatch(relations) > 0;
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateProblemRelation(ProblemProblemListRelation relation) {
+        if (relation == null || relation.getListId() == null || relation.getProblemId() == null) {
+            throw new BusinessException("题单题目参数无效");
+        }
+        if (relation.getScore() == null && relation.getProblemOrder() == null) {
+            return false;
+        }
+        LocalDateTime expectedUpdateTime = lockList(relation.getListId());
+        if (expectedUpdateTime == null) {
+            throw new BusinessException("题单不存在或已删除");
+        }
+        boolean updated = problemProblemListService.update(
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ProblemProblemListRelation>()
+                        .set(relation.getScore() != null,
+                                ProblemProblemListRelation::getScore, relation.getScore())
+                        .set(relation.getProblemOrder() != null,
+                                ProblemProblemListRelation::getProblemOrder, relation.getProblemOrder())
+                        .eq(ProblemProblemListRelation::getProblemId, relation.getProblemId())
+                        .eq(ProblemProblemListRelation::getListId, relation.getListId()));
+        if (updated && problemListMapper.touchUpdateTime(relation.getListId(), expectedUpdateTime) != 1) {
+            throw new BusinessException("题单已被其他管理员修改，请刷新后重试");
+        }
+        return updated;
     }
 
     @Override
@@ -173,6 +228,40 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
         return true;
     }
 
+    private Map<Long, LocalDateTime> lockLists(List<Long> listIds) {
+        TreeSet<Long> orderedIds = new TreeSet<>();
+        for (Long listId : listIds) {
+            if (listId == null || listId <= 0) {
+                throw new BusinessException("题单ID无效");
+            }
+            orderedIds.add(listId);
+        }
+        Map<Long, LocalDateTime> versions = new LinkedHashMap<>();
+        for (Long listId : orderedIds) {
+            LocalDateTime updateTime = lockList(listId);
+            if (updateTime == null) {
+                throw new BusinessException("题单不存在或已删除");
+            }
+            versions.put(listId, updateTime);
+        }
+        return versions;
+    }
+
+    private LocalDateTime lockList(Long listId) {
+        if (listId == null || listId <= 0) {
+            return null;
+        }
+        return problemListMapper.selectUpdateTimeForUpdate(listId);
+    }
+
+    private void touchLists(Map<Long, LocalDateTime> listVersions) {
+        for (Map.Entry<Long, LocalDateTime> entry : listVersions.entrySet()) {
+            if (problemListMapper.touchUpdateTime(entry.getKey(), entry.getValue()) != 1) {
+                throw new BusinessException("题单已被其他管理员修改，请刷新后重试");
+            }
+        }
+    }
+
     @Override
     public List<ProblemInListVo> getProblems(Long id) {
         return problemListMapper.selectAdminProblems(id);
@@ -191,7 +280,8 @@ public class ProblemListServiceImpl extends ServiceImpl<ProblemListMapper, Probl
     @Override
     public List<ProblemInListVo> getContestProblemsByListId(Long listId, Long contestId) {
         Long userId = AuthUtil.getUserId();
-        return problemListMapper.selectContestProblemByListId(contestId, userId, listId);
+        snapshotService.createAfterStart(contestId);
+        return problemListMapper.selectContestSnapshotProblems(contestId, userId);
     }
 
     @Override

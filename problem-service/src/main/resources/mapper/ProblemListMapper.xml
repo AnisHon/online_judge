@@ -12,13 +12,13 @@
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
     </resultMap>
-    <select id="selectContestProblemByListId" resultType="com.anishan.problem.domain.vo.ProblemInListVo">
+    <select id="selectContestSnapshotProblems" resultType="com.anishan.problem.domain.vo.ProblemInListVo">
         select
-            ppl.score as score,
-            ppl.problem_order as problemOrder,
-            ppl.problem_id as problemId,
-            p.title as title,
-            p.type as type,
+            s.max_score as score,
+            s.problem_order as problemOrder,
+            s.problem_id as problemId,
+            s.title as title,
+            s.problem_type as type,
             p.source as source,
             p.description as description,
             p.hint as hint,
@@ -27,21 +27,23 @@
             cr.score as userScore,
             cr.status as correct,
             cr.record_id is not null as finish
-        from contest c
-        left join problem_problem_list ppl on c.list_id = ppl.list_id
-        left join problem p on p.problem_id = ppl.problem_id
-            and p.del_flag = 0
-        left join contest_records cr on cr.problem_id = ppl.problem_id
-            and cr.contest_id = #{contestId}
+        from contest_problem_snapshot s
+        left join problem p on p.problem_id = s.problem_id
+        left join contest_records cr on cr.contest_id = s.contest_id
+            and cr.problem_id = s.problem_id
             and cr.user_id = #{userId}
+        where s.contest_id = #{contestId}
+        order by s.problem_order asc, s.problem_id asc
+    </select>
 
-        where
-            not isnull(p.problem_id)
-        and
-            ppl.list_id = #{listId}
-        <if test="contestId != null">
-            and c.contest_id = #{contestId}
-        </if>
+    <select id="countContestReferencesByListIds" resultType="long">
+        select count(*)
+        from contest c
+        where c.del_flag = 0
+          and c.list_id in
+        <foreach collection="listIds" item="listId" open="(" separator="," close=")">
+            #{listId}
+        </foreach>
     </select>
     <select id="selectProblemByListId" resultType="com.anishan.problem.domain.vo.ProblemInListVo">
         select

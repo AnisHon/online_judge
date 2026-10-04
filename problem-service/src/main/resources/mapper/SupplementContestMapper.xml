@@ -10,5 +10,15 @@
             <result property="deadline" column="deadline" jdbcType="TIMESTAMP"/>
     </resultMap>
 
+    <insert id="upsertDeadline">
+        INSERT INTO supplement_contest(user_id, contest_id, deadline)
+        VALUES (#{userId}, #{contestId}, #{deadline})
+        ON DUPLICATE KEY UPDATE deadline = VALUES(deadline)
+    </insert>
+
+    <delete id="deleteByContestAndUser">
+        DELETE FROM supplement_contest WHERE contest_id = #{contestId} AND user_id = #{userId}
+    </delete>
+
 
 </mapper>

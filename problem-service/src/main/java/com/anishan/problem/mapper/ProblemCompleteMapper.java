@@ -2,6 +2,7 @@ package com.anishan.problem.mapper;
 
 import com.anishan.problem.domain.entity.ProblemComplete;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
 * @author anishan
@@ -11,8 +12,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface ProblemCompleteMapper extends BaseMapper<ProblemComplete> {
 
-}
+    int insertIgnore(@Param("userId") Long userId, @Param("problemId") Long problemId);
 
+}
 
 
 

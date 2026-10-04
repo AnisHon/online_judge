@@ -52,5 +52,11 @@ public class ContestRecords implements Serializable {
     @TableField("score")
     private BigDecimal score;
 
+    /** Latest formally applied attempt sequence; legacy rows remain zero until reconciled. */
+    private Long appliedAttemptSeq;
+
+    /** Attempt that produced the current projection, if created by the versioned pipeline. */
+    private Long appliedAttemptId;
+
 
 }

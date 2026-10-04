@@ -15,23 +15,18 @@
 
     <select id="selectProblemStatistic" resultType="com.anishan.problem.domain.vo.ProblemStatistic">
         select
-            ppl.problem_id                  as problem_id,
-            p.title                         as title,
-            ppl.score                       as score,
-            sum(IF(status = 1, 1, 0))       as right_num,
-            sum(IF(status = 0, 1, 0))       as wrong_num,
+            s.problem_id                    as problem_id,
+            s.title                         as title,
+            s.max_score                     as score,
+            sum(case when r.status = 1 then 1 else 0 end) as right_num,
+            sum(case when r.record_id is not null and r.status = 0 then 1 else 0 end) as wrong_num,
             avg(r.score)                    as average
-        from problem_problem_list ppl
-        left join contest c on c.list_id = ppl.list_id
-            and c.del_flag = 0
-        left join contest_records r on r.problem_id = ppl.problem_id
-            and r.contest_id = #{contestId}
-        left join problem p on p.problem_id = ppl.problem_id
-        where
-            c.contest_id = #{contestId}
-        and
-            p.del_flag = 0
-        group by ppl.problem_id
+        from contest_problem_snapshot s
+        left join contest_records r on r.problem_id = s.problem_id
+            and r.contest_id = s.contest_id
+        where s.contest_id = #{contestId}
+        group by s.problem_id, s.problem_order, s.title, s.max_score
+        order by s.problem_order, s.problem_id
     </select>
 
     <select id="selectUserStatistic" resultType="com.anishan.problem.domain.vo.UserStatistic">
@@ -46,10 +41,13 @@
                 where cr.contest_id = #{contestId}
                   and cr.user_id = uc.user_id
                   and cr.status = 0)               as wrong_num,
-               (select count(*) - correct_num - wrong_num
-                from problem_problem_list ppl
-                         left join contest c on c.list_id = ppl.list_id
-                where c.contest_id = #{contestId}) as absent_num,
+               (select count(*)
+                from contest_problem_snapshot s
+                where s.contest_id = #{contestId}) -
+               (select count(*) from contest_records cr
+                where cr.contest_id = #{contestId}
+                  and cr.user_id = uc.user_id
+                  and cr.status in (0, 1)) as absent_num,
                (select sum(cr.score)
                 from contest_records cr
                 where cr.contest_id = #{contestId}
@@ -69,6 +67,8 @@
             if(cr.status, 1, 0) as correct,
             cr.score            as score
         from user_contest c
+        inner join contest_problem_snapshot s on s.contest_id = c.contest_id
+            and s.problem_id = #{problemId}
         left join contest_records cr on cr.user_id = c.user_id
            and cr.problem_id = #{problemId}
            and cr.contest_id = #{contestId}
@@ -77,19 +77,16 @@
     </select>
     <select id="selectUserScore" resultType="com.anishan.problem.domain.vo.UserScore">
         select
-            ppl.problem_id      as problemId,
-            p.title             as title,
+            s.problem_id        as problemId,
+            s.title             as title,
             cr.status           as correct,
             cr.score            as score,
             cr.contest_id
-        from problem_problem_list ppl
-        left join problem p on ppl.problem_id = p.problem_id
-        left join contest_records cr on p.problem_id = cr.problem_id
-            and cr.contest_id = #{contestId}
+        from contest_problem_snapshot s
+        left join contest_records cr on s.problem_id = cr.problem_id
+            and s.contest_id = cr.contest_id
             and cr.user_id = #{userId}
-        where
-            ppl.list_id = #{listId}
-        and
-            p.del_flag = 0
+        where s.contest_id = #{contestId}
+        order by s.problem_order, s.problem_id
     </select>
 </mapper>

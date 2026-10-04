@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.ContestAttemptMapper">
+    <resultMap id="ContestAttemptResultMap" type="com.anishan.problem.domain.entity.ContestAttempt">
+        <id column="attempt_id" property="attemptId" jdbcType="BIGINT"/>
+        <result column="contest_id" property="contestId" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="problem_id" property="problemId" jdbcType="BIGINT"/>
+        <result column="attempt_seq" property="attemptSeq" jdbcType="BIGINT"/>
+        <result column="submit_id" property="submitId" jdbcType="BIGINT"/>
+        <result column="kind" property="kind" jdbcType="VARCHAR"/>
+        <result column="accepted_at" property="acceptedAt" jdbcType="TIMESTAMP"/>
+        <result column="state" property="state" javaType="com.anishan.problem.domain.enumeration.ContestAttemptState" jdbcType="VARCHAR"
+                typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result column="judge_status" property="judgeStatus" jdbcType="VARCHAR"/>
+        <result column="score" property="score" jdbcType="DECIMAL"/>
+        <result column="correct" property="correct" jdbcType="BOOLEAN"/>
+        <result column="completed_at" property="completedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="countByContestId" resultType="long">
+        SELECT COUNT(*) FROM contest_attempt WHERE contest_id = #{contestId}
+    </select>
+
+    <select id="selectBySubmitIdForUpdate" resultMap="ContestAttemptResultMap">
+        SELECT attempt_id, contest_id, user_id, problem_id, attempt_seq, submit_id, kind,
+               accepted_at, state, judge_status, score, correct, completed_at
+        FROM contest_attempt
+        WHERE submit_id = #{submitId}
+        FOR UPDATE
+    </select>
+
+    <update id="updatePendingAttemptStatus">
+        UPDATE contest_attempt
+        SET judge_status = #{status,javaType=com.anishan.commons.enumeration.JudgeResult,typeHandler=com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler}
+        WHERE submit_id = #{submitId} AND state = 'PENDING'
+    </update>
+
+    <update id="applyPendingAttemptResult">
+        UPDATE contest_attempt
+        SET state = #{state},
+            judge_status = #{status,javaType=com.anishan.commons.enumeration.JudgeResult,typeHandler=com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler},
+            score = #{score},
+            correct = #{correct},
+            completed_at = #{completedAt}
+        WHERE submit_id = #{submitId} AND state = 'PENDING'
+    </update>
+
+    <select id="selectUserIdsWithAttempts" resultType="java.lang.Long">
+        SELECT DISTINCT user_id
+        FROM contest_attempt
+        WHERE contest_id = #{contestId}
+          AND user_id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        ORDER BY user_id ASC
+    </select>
+
+    <select id="countPendingByContestId" resultType="long">
+        SELECT COUNT(*) FROM contest_attempt
+        WHERE contest_id = #{contestId} AND state = 'PENDING'
+    </select>
+
+    <select id="selectPendingAttemptReferences" resultType="java.lang.Long">
+        SELECT COALESCE(submit_id, attempt_id)
+        FROM contest_attempt
+        WHERE contest_id = #{contestId} AND state = 'PENDING'
+        ORDER BY attempt_seq ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectInconsistentAttemptReferences" resultType="java.lang.Long">
+        SELECT COALESCE(a.submit_id, a.attempt_id)
+        FROM contest_attempt a
+        LEFT JOIN submit_log sl ON sl.submit_id = a.submit_id
+        LEFT JOIN contest_records cr
+               ON cr.contest_id = a.contest_id AND cr.user_id = a.user_id AND cr.problem_id = a.problem_id
+        WHERE a.contest_id = #{contestId}
+          AND (
+              (a.kind = 'OJ' AND (
+                  a.submit_id IS NULL OR sl.submit_id IS NULL OR sl.contest_id &lt;&gt; a.contest_id
+                  OR (a.state = 'PENDING' AND (
+                      COALESCE(sl.result_applied, 0) &lt;&gt; 0
+                      OR LOWER(COALESCE(sl.status, '')) NOT IN ('queue', 'compiling', 'running')
+                  ))
+                  OR (a.state = 'COMPLETED' AND (
+                      COALESCE(sl.result_applied, 0) &lt;&gt; 1
+                      OR LOWER(COALESCE(sl.status, '')) IN ('queue', 'compiling', 'running', 'judge_error')
+                      OR NOT (sl.score &lt;=&gt; a.score)
+                      OR cr.record_id IS NULL OR COALESCE(cr.applied_attempt_seq, 0) &lt; a.attempt_seq
+                      OR (COALESCE(cr.applied_attempt_seq, 0) = a.attempt_seq
+                          AND (NOT (cr.score &lt;=&gt; a.score) OR NOT (cr.status &lt;=&gt; a.correct)))
+                  ))
+                  OR (a.state = 'INFRA_ERROR' AND (
+                      COALESCE(sl.result_applied, 0) &lt;&gt; 1
+                      OR LOWER(COALESCE(sl.status, '')) &lt;&gt; 'judge_error'
+                  ))
+              ))
+              OR (a.kind = 'NON_OJ' AND (
+                  a.state &lt;&gt; 'COMPLETED' OR a.submit_id IS NOT NULL OR a.score IS NULL OR a.correct IS NULL
+                  OR cr.record_id IS NULL OR COALESCE(cr.applied_attempt_seq, 0) &lt; a.attempt_seq
+                  OR (COALESCE(cr.applied_attempt_seq, 0) = a.attempt_seq
+                      AND (NOT (cr.score &lt;=&gt; a.score) OR NOT (cr.status &lt;=&gt; a.correct)))
+              ))
+              OR a.kind NOT IN ('OJ', 'NON_OJ')
+          )
+        ORDER BY a.attempt_seq ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectUnlinkedUnappliedSubmitIds" resultType="java.lang.Long">
+        SELECT sl.submit_id
+        FROM submit_log sl
+        LEFT JOIN contest_attempt a
+               ON a.submit_id = sl.submit_id AND a.contest_id = sl.contest_id
+        WHERE sl.contest_id = #{contestId} AND a.attempt_id IS NULL
+          AND (COALESCE(sl.result_applied, 0) = 0
+               OR LOWER(COALESCE(sl.status, '')) IN ('queue', 'compiling', 'running'))
+        ORDER BY sl.submit_id ASC
+        LIMIT #{limit}
+    </select>
+</mapper>

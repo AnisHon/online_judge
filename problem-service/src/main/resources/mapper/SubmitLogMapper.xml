@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.SubmitLogMapper">
+    <resultMap id="SubmitLogResultMap" type="com.anishan.problem.domain.entity.SubmitLog">
+        <id column="submit_id" property="submitId" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="problem_id" property="problemId" jdbcType="BIGINT"/>
+        <result column="contest_id" property="contestId" jdbcType="BIGINT"/>
+        <result column="language" property="language" jdbcType="VARCHAR"/>
+        <result column="code" property="code" jdbcType="LONGVARCHAR"/>
+        <result column="status" property="status" javaType="com.anishan.commons.enumeration.JudgeResult" jdbcType="VARCHAR"
+                typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result column="time" property="time" jdbcType="BIGINT"/>
+        <result column="memory" property="memory" jdbcType="BIGINT"/>
+        <result column="stderr" property="stderr" jdbcType="VARCHAR"/>
+        <result column="internal_error" property="internalError" jdbcType="LONGVARCHAR"/>
+        <result column="error_code" property="errorCode" jdbcType="VARCHAR"/>
+        <result column="total_count" property="totalCount" jdbcType="INTEGER"/>
+        <result column="pass_count" property="passCount" jdbcType="INTEGER"/>
+        <result column="score" property="score" jdbcType="DECIMAL"/>
+        <result column="result_applied" property="resultApplied" jdbcType="BOOLEAN"/>
+        <result column="completed_at" property="completedAt" jdbcType="TIMESTAMP"/>
+        <result column="submit_time" property="submitTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdForUpdate" resultMap="SubmitLogResultMap">
+        SELECT submit_id, user_id, problem_id, contest_id, language, code, status,
+               time, memory, stderr, internal_error, error_code, total_count,
+               pass_count, score, result_applied, completed_at, submit_time
+        FROM submit_log
+        WHERE submit_id = #{submitId}
+        FOR UPDATE
+    </select>
+
+    <select id="selectContestIdBySubmitId" resultType="java.lang.Long">
+        SELECT contest_id FROM submit_log WHERE submit_id = #{submitId}
+    </select>
+
+    <update id="updateIntermediateStatus">
+        UPDATE submit_log
+        SET status = #{status,javaType=com.anishan.commons.enumeration.JudgeResult,typeHandler=com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler}
+        WHERE submit_id = #{submitId} AND result_applied = FALSE
+    </update>
+
+    <update id="applyFinalResult">
+        UPDATE submit_log
+        SET status = #{status,javaType=com.anishan.commons.enumeration.JudgeResult,typeHandler=com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler},
+            time = #{time},
+            memory = #{memory},
+            stderr = #{stderr},
+            internal_error = #{internalError},
+            error_code = #{errorCode},
+            total_count = #{totalCount},
+            pass_count = #{passCount},
+            score = #{score},
+            result_applied = TRUE,
+            completed_at = #{completedAt}
+        WHERE submit_id = #{submitId} AND result_applied = FALSE
+    </update>
+</mapper>

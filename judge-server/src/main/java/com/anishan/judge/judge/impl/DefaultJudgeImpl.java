@@ -6,6 +6,7 @@ import com.anishan.api.client.gojudge.domain.TestResult;
 import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeCaseResult;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
+import com.anishan.api.util.WeightedScoreCalculator;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.client.problem.client.ProblemInternalClient;
 import com.anishan.commons.enumeration.JudgeResult;
@@ -28,7 +29,6 @@ import javax.annotation.PreDestroy;
 
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -260,13 +260,7 @@ public class DefaultJudgeImpl implements JudgeRun {
         }
 
         if (judgeInfo.getContestId() != null && judgeInfo.getListScore() != null) {
-            if (BigDecimal.ZERO.equals(totalScore)) {
-                score = BigDecimal.ZERO;
-            } else {
-                BigDecimal temp = score.divide(totalScore, 8, RoundingMode.DOWN);
-                BigDecimal ttt = judgeInfo.getListScore();
-                score =  temp.multiply(ttt);
-            }
+            score = WeightedScoreCalculator.normalize(score, totalScore, judgeInfo.getListScore());
         }
 
 

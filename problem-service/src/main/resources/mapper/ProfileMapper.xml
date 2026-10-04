@@ -18,6 +18,18 @@
         where user_id = #{userId}
     </select>
 
+    <!-- submit_time 是 Asia/Shanghai 的 DATETIME；范围过滤保留索引可用性。 -->
+    <select id="selectActivityDays" resultType="com.anishan.problem.domain.vo.ProfileActivityDayVo">
+        select date_format(submit_time, '%Y-%m-%d') as date, count(*) as count
+        from submit_log
+        where user_id = #{userId}
+          and submit_time &gt;= #{startTime}
+          and submit_time &lt; #{endTime}
+        group by date_format(submit_time, '%Y-%m-%d')
+        order by date
+        limit 366
+    </select>
+
     <select id="selectSolvedProblems" resultType="com.anishan.problem.domain.vo.ProfileProblemItemVo">
         select pc.problem_id as problem_id,
                coalesce(op.difficulty, 0) as difficulty
@@ -43,20 +55,4 @@
         limit #{limit}
     </select>
 
-    <select id="selectSolutions" resultType="com.anishan.problem.domain.vo.ProfileSolutionVo">
-        select se.solution_id as solution_id,
-               se.title,
-               se.problem_id as problem_id,
-               p.title as problem_title,
-               se.`private` as private_,
-               se.create_time as create_time
-        from solution_explanation se
-        inner join problem p on p.problem_id = se.problem_id and p.del_flag = 0
-        where se.user_id = #{userId}
-        <if test="includePrivate == false">
-            and se.`private` = 0
-        </if>
-        order by se.top_up desc, se.create_time desc, se.solution_id desc
-        limit #{limit}
-    </select>
 </mapper>

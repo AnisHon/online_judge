@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.ContestRankEntryMapper">
+    <resultMap id="ContestRankEntryResultMap" type="com.anishan.problem.domain.entity.ContestRankEntry">
+        <id column="contest_id" property="contestId" jdbcType="BIGINT"/>
+        <id column="version" property="version" jdbcType="BIGINT"/>
+        <id column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="rank_no" property="rankNo" jdbcType="BIGINT"/>
+        <result column="row_position" property="rowPosition" jdbcType="BIGINT"/>
+        <result column="score" property="score" jdbcType="DECIMAL"/>
+        <result column="correct_count" property="correctCount" jdbcType="INTEGER"/>
+        <result column="answered_count" property="answeredCount" jdbcType="INTEGER"/>
+        <result column="handed_in" property="handedIn" jdbcType="BOOLEAN"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insertCandidate" timeout="60">
+        INSERT INTO contest_rank_entry
+            (contest_id, version, user_id, rank_no, row_position, score,
+             correct_count, answered_count, handed_in, created_at)
+        SELECT #{contestId}, #{version}, ranked.user_id,
+               RANK() OVER (ORDER BY ranked.total_score DESC),
+               ROW_NUMBER() OVER (ORDER BY ranked.total_score DESC, ranked.user_id ASC),
+               ranked.total_score, ranked.correct_count, ranked.answered_count,
+               ranked.handed_in, #{createdAt}
+        FROM (
+            SELECT uc.user_id,
+                   CAST(COALESCE(SUM(CASE
+                       WHEN c.scoring_version = 1 OR COALESCE(cr.applied_attempt_seq, 0) &gt; 0
+                       THEN COALESCE(cr.score, 0) ELSE 0 END), 0) AS DECIMAL(18, 2)) AS total_score,
+                   CAST(COALESCE(SUM(CASE
+                       WHEN (c.scoring_version = 1 OR COALESCE(cr.applied_attempt_seq, 0) &gt; 0)
+                            AND cr.status = 1 THEN 1 ELSE 0 END), 0) AS UNSIGNED) AS correct_count,
+                   CAST(COALESCE(SUM(CASE
+                       WHEN c.scoring_version = 1 AND cr.record_id IS NOT NULL THEN 1
+                       WHEN c.scoring_version &lt;&gt; 1 AND COALESCE(cr.applied_attempt_seq, 0) &gt; 0 THEN 1
+                       ELSE 0 END), 0) AS UNSIGNED) AS answered_count,
+                   CASE WHEN EXISTS (
+                       SELECT 1 FROM user_submit us
+                       WHERE us.contest_id = uc.contest_id AND us.user_id = uc.user_id
+                   ) THEN 1 ELSE 0 END AS handed_in
+            FROM user_contest uc
+            INNER JOIN contest c ON c.contest_id = uc.contest_id
+            LEFT JOIN contest_records cr
+                   ON cr.contest_id = uc.contest_id AND cr.user_id = uc.user_id
+            WHERE uc.contest_id = #{contestId} AND c.type = 0 AND c.del_flag = 0
+            GROUP BY uc.user_id, c.scoring_version, uc.contest_id
+        ) ranked
+    </insert>
+
+    <select id="countByContestVersion" resultType="long">
+        SELECT COUNT(*) FROM contest_rank_entry
+        WHERE contest_id = #{contestId} AND version = #{version}
+    </select>
+
+    <select id="countRosterUsers" resultType="long">
+        SELECT COUNT(*) FROM user_contest WHERE contest_id = #{contestId}
+    </select>
+
+    <select id="selectPageByVersion" resultMap="ContestRankEntryResultMap">
+        SELECT contest_id, version, user_id, rank_no, row_position, score,
+               correct_count, answered_count, handed_in, created_at
+        FROM contest_rank_entry
+        WHERE contest_id = #{contestId} AND version = #{version}
+        ORDER BY row_position ASC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <delete id="deleteUnretainedVersions">
+        DELETE FROM contest_rank_entry
+        WHERE contest_id = #{contestId}
+          AND version NOT IN (
+              SELECT retained.version FROM (
+                  SELECT DISTINCT version
+                  FROM contest_rank_entry
+                  WHERE contest_id = #{contestId} AND version &lt;= #{publishedVersion}
+                  ORDER BY version DESC
+                  LIMIT 2
+              ) retained
+          )
+          <if test="protectedCandidate != null">
+              AND version &lt;&gt; #{protectedCandidate}
+          </if>
+        LIMIT #{batchSize}
+    </delete>
+</mapper>

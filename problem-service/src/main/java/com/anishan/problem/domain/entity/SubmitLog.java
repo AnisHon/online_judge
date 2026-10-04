@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -71,6 +73,15 @@ public class SubmitLog implements Serializable {
     private Integer totalCount;
 
     private Integer passCount;
+
+    /** Final score applied to the contest projection; historical values are unknown. */
+    private BigDecimal score;
+
+    /** Idempotency marker for applying this terminal result to contest records. */
+    private Boolean resultApplied;
+
+    /** Actual result completion time; intentionally null for historical submissions. */
+    private LocalDateTime completedAt;
 
     /**
      * 

@@ -1,6 +1,5 @@
 package com.anishan.problem.controller;
 
-import cn.hutool.core.date.LocalDateTimeUtil;
 import com.anishan.api.client.user.domain.vo.UserVo;
 import com.anishan.api.util.AuthUtil;
 import com.anishan.commons.domain.R;
@@ -13,29 +12,23 @@ import com.anishan.problem.domain.dto.ContestAdminQuery;
 import com.anishan.problem.domain.dto.ContestJoinRequest;
 import com.anishan.problem.domain.entity.Contest;
 import com.anishan.problem.domain.entity.SupplementContest;
-import com.anishan.problem.domain.entity.UserContestRelation;
-import com.anishan.problem.domain.entity.UserSubmit;
 import com.anishan.problem.domain.vo.ContestJoinResponse;
 import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.SupplementContestVo;
 import com.anishan.problem.service.ContestService;
+import com.anishan.problem.service.ContestParticipationService;
 import com.anishan.api.util.CacheUtil;
-import com.anishan.problem.service.UserContestService;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @Api("比赛相关接口")
@@ -44,7 +37,7 @@ import java.util.stream.Collectors;
 public class ContestController {
 
     private final ContestService contestService;
-    private final UserContestService userContestService;
+    private final ContestParticipationService participationService;
 
     @GetMapping("/{id}")
     @ApiOperation("通过id获取比赛")
@@ -53,6 +46,11 @@ public class ContestController {
 
     public R<ContestVo> getContestById(@PathVariable("id") @NotNull(message = "id为Null") Long id) {
         ContestVo clazz = contestService.getContestById(id);
+        // Older detail cache entries omitted the existing type field. Refresh only that entry.
+        if (clazz != null && clazz.getType() == null) {
+            CacheUtil.evict("problem:contest:", id);
+            clazz = contestService.getContestById(id);
+        }
         return R.success(clazz);
     }
 
@@ -126,32 +124,17 @@ public class ContestController {
 
     @PostMapping("/submit/{contestId}")
     @ApiOperation("交卷")
-    @Transactional
     public R<Object> submit(@PathVariable Long contestId) {
         Long userId = AuthUtil.getUserId();
-        boolean status = contestService.getStatus(userId, contestId);
-        if (!status) {
-            return R.badRequest("不可以交卷");
-        }
-        boolean save = Db.save(
-                new UserSubmit()
-                        .setContestId(contestId)
-                        .setUserId(userId)
-                        .setSubmitTime(LocalDateTimeUtil.now())
-        );
+        boolean save = participationService.handIn(contestId, userId);
         return R.success(save);
     }
 
     @DeleteMapping("/submit/{contestId}/{userId}")
     @ApiOperation("退回提交")
     @PreAuthorize("hasAuthority('problem:contest:edit')")
-    @Transactional
     public R<Object> submit(@PathVariable Long contestId, @PathVariable Long userId) {
-        boolean remove = Db.remove(
-                Wrappers.lambdaQuery(UserSubmit.class)
-                        .eq(UserSubmit::getContestId, contestId)
-                        .eq(UserSubmit::getUserId, userId)
-        );
+        boolean remove = participationService.withdrawHandIn(contestId, userId);
         return R.success(remove);
     }
 
@@ -174,13 +157,8 @@ public class ContestController {
     @DeleteMapping("/lateSubmission/{contestId}/{userId}")
     @ApiOperation("获取所有补交信息")
     @PreAuthorize("hasAnyAuthority('problem:contest:list', 'user:user:list')")
-    public R<Boolean> getLateSubmission(@PathVariable String contestId, @PathVariable String userId) {
-        boolean b = Db.remove(
-                Wrappers
-                        .lambdaQuery(SupplementContest.class)
-                        .eq(SupplementContest::getContestId, contestId)
-                        .eq(SupplementContest::getUserId, userId)
-        );
+    public R<Boolean> getLateSubmission(@PathVariable Long contestId, @PathVariable Long userId) {
+        boolean b = participationService.removeSupplement(contestId, userId);
         return R.success(b);
     }
 
@@ -195,13 +173,8 @@ public class ContestController {
     @PostMapping("/user/{contestId}/{userIds}")
     @ApiOperation("向比赛添加用户")
     @PreAuthorize("hasAuthority('problem:contest:edit')")
-    @Transactional
     public R<Boolean> addUser(@PathVariable Long contestId, @PathVariable List<Long> userIds) {
-        List<UserContestRelation> relations = userIds.stream()
-                .map(x -> new UserContestRelation(x, contestId))
-                .collect(Collectors.toList());
-
-        boolean b = userContestService.saveIgnore(relations);
+        boolean b = contestService.addUser(contestId, userIds);
 
         return R.success(b);
     }

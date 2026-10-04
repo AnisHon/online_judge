@@ -17,7 +17,10 @@ import java.util.List;
 public interface ProblemListMapper extends MPJBaseMapper<ProblemList> {
 
 
-    List<ProblemInListVo> selectContestProblemByListId(@Param("contestId") Long contestId, @Param("userId") Long userId, @Param("listId") Long listId);
+    List<ProblemInListVo> selectContestSnapshotProblems(@Param("contestId") Long contestId,
+                                                        @Param("userId") Long userId);
+
+    long countContestReferencesByListIds(@Param("listIds") List<Long> listIds);
 
     List<ProblemInListVo> selectProblemByListId(@Param("userId") Long userId, @Param("listId") Long listId);
 
@@ -29,6 +32,4 @@ public interface ProblemListMapper extends MPJBaseMapper<ProblemList> {
                         @Param("expectedUpdateTime") LocalDateTime expectedUpdateTime);
 
 }
-
-
 

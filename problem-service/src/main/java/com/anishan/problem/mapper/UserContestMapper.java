@@ -15,8 +15,10 @@ import java.util.List;
 public interface UserContestMapper extends BaseMapper<UserContestRelation> {
 
     int insertBatchIgnore(@Param("relations") List<UserContestRelation> relations);
-}
 
+    int deleteByContestAndUsers(@Param("contestId") Long contestId,
+                                @Param("userIds") List<Long> userIds);
+}
 
 
 

@@ -11,8 +11,6 @@ import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.ProblemListVo;
 import com.anishan.problem.service.ProblemListService;
-import com.anishan.problem.service.ProblemProblemListService;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +28,6 @@ import java.util.List;
 public class ListController {
 
     private final ProblemListService problemListService;
-    private final ProblemProblemListService problemProblemListService;
 
     @PostMapping
     @PreAuthorize("hasAuthority('problem:list:add')")
@@ -68,20 +65,7 @@ public class ListController {
     @PreAuthorize("hasAuthority('problem:list:add-problem')")
     @ApiOperation("修改题单题目顺序之类的")
     public R<Boolean> updateProblem(@RequestBody ProblemProblemListRelation relation) {
-        boolean update = problemProblemListService.update(
-                new LambdaUpdateWrapper<ProblemProblemListRelation>()
-                        .set(
-                                relation.getScore() != null,
-                                ProblemProblemListRelation::getScore,
-                                relation.getScore()
-                        )
-                        .set(relation.getProblemOrder() != null,
-                                ProblemProblemListRelation::getProblemOrder,
-                                relation.getProblemOrder()
-                        )
-                        .eq(ProblemProblemListRelation::getProblemId, relation.getProblemId())
-                        .eq(ProblemProblemListRelation::getListId, relation.getListId())
-        );
+        boolean update = problemListService.updateProblemRelation(relation);
         return R.success(update);
     }
 

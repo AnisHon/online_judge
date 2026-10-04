@@ -10,13 +10,20 @@
             <result property="title" column="title" jdbcType="VARCHAR"/>
             <result property="listId" column="list_id" jdbcType="BIGINT"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
-            <result property="auth" column="auth" jdbcType="INTEGER"/>
+            <result property="auth" column="auth" javaType="com.anishan.commons.enumeration.ContestAuth" jdbcType="INTEGER"
+                    typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+            <result property="type" column="type" javaType="com.anishan.commons.enumeration.ContestType" jdbcType="INTEGER"
+                    typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
             <result property="pwd" column="pwd" jdbcType="VARCHAR"/>
             <result property="startTime" column="start_time" jdbcType="TIMESTAMP"/>
             <result property="endTime" column="end_time" jdbcType="TIMESTAMP"/>
+            <result property="submitted" column="submitted" jdbcType="TINYINT"/>
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="scoringVersion" column="scoring_version" jdbcType="INTEGER"/>
+            <result property="nextAttemptSeq" column="next_attempt_seq" jdbcType="BIGINT"/>
+            <result property="problemSnapshotAt" column="problem_snapshot_at" jdbcType="TIMESTAMP"/>
     </resultMap>
     <delete id="deleteBatchUserContestRelations">
         delete from user_contest
@@ -25,6 +32,36 @@
             (#{relation.userId}, #{relation.contestId})
         </foreach>
     </delete>
+
+    <select id="selectContestForUpdate" resultMap="BaseResultMap">
+        SELECT contest_id, user_id, title, list_id, description, auth, type, pwd,
+               start_time, end_time, submitted, del_flag, create_time, update_time,
+               scoring_version, next_attempt_seq, problem_snapshot_at
+        FROM contest
+        WHERE contest_id = #{contestId} AND del_flag = 0
+        FOR UPDATE
+    </select>
+
+    <update id="setProblemSnapshotAt">
+        UPDATE contest
+        SET problem_snapshot_at = #{snapshotAt},
+            update_time = GREATEST(CURRENT_TIMESTAMP, DATE_ADD(update_time, INTERVAL 1 SECOND))
+        WHERE contest_id = #{contestId} AND del_flag = 0 AND problem_snapshot_at IS NULL
+    </update>
+
+    <update id="resetProblemSnapshot">
+        UPDATE contest
+        SET list_id = #{listId}, problem_snapshot_at = #{snapshotAt},
+            update_time = GREATEST(CURRENT_TIMESTAMP, DATE_ADD(update_time, INTERVAL 1 SECOND))
+        WHERE contest_id = #{contestId} AND del_flag = 0
+    </update>
+
+    <update id="updateNextAttemptSeq">
+        UPDATE contest
+        SET next_attempt_seq = #{nextSeq}
+        WHERE contest_id = #{contestId} AND del_flag = 0
+          AND COALESCE(next_attempt_seq, 0) = #{expectedSeq}
+    </update>
 
 
 </mapper>

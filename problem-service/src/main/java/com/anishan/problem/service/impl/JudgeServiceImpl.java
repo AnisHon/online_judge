@@ -7,7 +7,6 @@ import com.anishan.api.client.judgeserver.domain.JudgeInfo;
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.judgeserver.domain.RunTestInfo;
 import com.anishan.api.util.RedisJudgeTestUtil;
-import com.anishan.api.util.RedisJudgeSubmissionLock;
 import com.anishan.problem.domain.dto.TestRequest;
 import com.anishan.commons.enumeration.ProblemType;
 import com.anishan.commons.enumeration.JudgeResult;
@@ -25,10 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.util.StringUtils;
 
@@ -37,15 +37,14 @@ import org.springframework.util.StringUtils;
 public class JudgeServiceImpl implements JudgeService {
 
     private final ProblemService problemService;
-    private final ContestService contestService;
     private final RecordsService recordsService;
     private final OjProblemService ojProblemService;
     private final ChoiceFillAnswersService choiceFillAnswersService;
     private final SysLanguageService sysLanguageService;
     private final RedisJudgeTestUtil redisJudgeTestUtil;
     private final JudgeClient judgeClient;
-    private final SubmitLogService submitLogService;
-    private final RedisJudgeSubmissionLock redisJudgeSubmissionLock;
+    private final JudgeSubmissionService judgeSubmissionService;
+    private final ContestAnswerSubmissionService contestAnswerSubmissionService;
 
 
     private ProblemJudgeResult judgeOj(Long userId, Problem problem, JudgeRequest judgeRequest) {
@@ -58,24 +57,8 @@ public class JudgeServiceImpl implements JudgeService {
         String languageName = sysLanguageService.getNameById(judgeRequest.getLanguageId());
         ThrowUtil.runtime(languageName == null, "不支持的语言");
 
-        ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
-//        problemJudgeResult.setSubmitId(submitId);
-
-
-        BigDecimal score = null;
-        if (judgeRequest.getContestId() != null) {
-            score = contestService.getScore(judgeRequest.getContestId(), problem.getProblemId());
-            // 竞赛题必须真实属于该竞赛，不能仅凭请求中的 contestId 进入竞赛判题链路。
-            ThrowUtil.businessError(score == null, "题目不属于指定比赛");
-        }
-
-        // 校验通过后再加锁，避免无效请求占用用户的判题名额。
-        String submissionLockToken = redisJudgeSubmissionLock.tryAcquire(userId);
-        ThrowUtil.businessError(submissionLockToken == null, "上一条提交正在判题，请等待结果后再提交");
-
         JudgeInfo info = new JudgeInfo()
                 .setUserId(userId)
-                .setSubmissionLockToken(submissionLockToken)
                 .setProblemId(problem.getProblemId())
                 .setContestId(judgeRequest.getContestId())
                 .setLanguageId(judgeRequest.getLanguageId())
@@ -83,59 +66,12 @@ public class JudgeServiceImpl implements JudgeService {
                 .setLanguage(languageName)
                 .setTimeLimit(ojProblem.getTimeLimit())
                 .setMemoryLimit(ojProblem.getMemoryLimit())
-                .setStackLimit(ojProblem.getStackLimit())
-                .setListScore(score);
+                .setStackLimit(ojProblem.getStackLimit());
 
-        Long submitId = null;
-        boolean dispatched = false;
-        Boolean dispatchAccepted = null;
-        try {
-            // 先建立公开提交记录，再把提交 ID 传入判题机，保证异步链路有稳定主键。
-            submitId = submitLogService.createQueued(info);
-            info.setSubmitId(submitId);
-
-            dispatchAccepted = judgeClient.judge(info).getData();
-            // 成功投递后保留锁，等 judgeResult 异步回调释放。
-            dispatched = Boolean.TRUE.equals(dispatchAccepted);
-        } catch (Exception e) {
-            // Feign/MQ 不可用时不能留下永久 QUEUE，内部原因落库，用户只看到通用提示。
-            if (submitId != null) {
-                submitLogService.complete(new JudgeScore()
-                        .setSubmitId(submitId)
-                        .setUserId(userId)
-                        .setProblemId(problem.getProblemId())
-                        .setContestId(judgeRequest.getContestId())
-                        .setCode(judgeRequest.getCode())
-                        .setResult(JudgeResult.JUDGE_ERROR)
-                        .setErrorCode("DISPATCH_EXCEPTION")
-                        .setInternalError(e.getClass().getName() + ": " + e.getMessage()));
-            }
-            ThrowUtil.businessError(true, "判题服务暂时不可用，请稍后重试");
-            return problemJudgeResult;
-        } finally {
-            // 成功投递后由 /internal/judgeResult 释放；其余路径立即释放。
-            // Redis 本身仍保留 12 秒硬过期，覆盖进程崩溃和回调丢失。
-            if (!dispatched) {
-                redisJudgeSubmissionLock.release(userId, submissionLockToken);
-            }
-        }
-
-        if (!Boolean.TRUE.equals(dispatchAccepted)) {
-            submitLogService.complete(new JudgeScore()
-                    .setSubmitId(submitId)
-                    .setUserId(userId)
-                    .setProblemId(problem.getProblemId())
-                    .setContestId(judgeRequest.getContestId())
-                    .setCode(judgeRequest.getCode())
-                    .setResult(JudgeResult.JUDGE_ERROR)
-                    .setErrorCode("DISPATCH_REJECTED")
-                    .setInternalError("judge-server rejected the submission"));
-            ThrowUtil.businessError(true, "判题服务繁忙，请稍后提交");
-        }
-
-        problemJudgeResult.setSubmitId(submitId);
-
-
+        // The durable outbox relay dispatches after the log, attempt and event commit together.
+        com.anishan.problem.domain.ContestSubmissionContext accepted = judgeSubmissionService.submit(info);
+        ProblemJudgeResult problemJudgeResult = new ProblemJudgeResult();
+        problemJudgeResult.setSubmitId(accepted.getSubmitId());
         return problemJudgeResult;
 
     }
@@ -364,10 +300,7 @@ public class JudgeServiceImpl implements JudgeService {
             return;
         }
         ThrowUtil.businessError(judgeRequest.getContestId() <= 0, "比赛参数无效");
-        boolean joined = contestService.isUserJoined(judgeRequest.getContestId(), userId);
-        boolean isEnabled = contestService.isContestEnable(judgeRequest.getContestId());
-        ThrowUtil.permissionDeny(!joined, "非法访问");
-        ThrowUtil.businessError(!isEnabled, "不允许提交题目");
+        // Contest eligibility is rechecked under the contest row lock at the write boundary.
     }
 
     /**
@@ -382,6 +315,12 @@ public class JudgeServiceImpl implements JudgeService {
             ThrowUtil.businessError(judgeRequest.getCode().length() > 512 * 1024, "提交代码不能超过 512KB");
         } else {
             ThrowUtil.businessError(judgeRequest.getAnswers() == null, "答案参数不能为空");
+            Set<Integer> indices = new HashSet<>();
+            for (JudgeAnswer answer : judgeRequest.getAnswers()) {
+                ThrowUtil.businessError(answer == null || answer.getIndex() == null,
+                        "答案序号不能为空");
+                ThrowUtil.businessError(!indices.add(answer.getIndex()), "答案中包含重复序号");
+            }
         }
     }
 
@@ -417,41 +356,16 @@ public class JudgeServiceImpl implements JudgeService {
             return judgeResult;
         }
 
-        BigDecimal contestScore = null;
-        if (judgeRequest.getContestId() != null) {
-            contestScore = contestService.getScore(judgeRequest.getContestId(), problemId);
-            ThrowUtil.businessError(contestScore == null, "题目不属于指定比赛");
+        if (judgeRequest.getContestId() == null) {
+            // Practice keeps its existing raw-score behavior; only an AC marks completion.
+            record(judgeRequest, userId, judgeResult);
+            return judgeResult;
         }
 
-        // 添加做题记录
-        record(judgeRequest, userId, judgeResult);
-
-//        比赛题目不给答案 不显示对错 分数重算
-        if (judgeRequest.getContestId() != null) {
-            judgeResult.setAnswers(null);
-            judgeResult.setCorrect(false);
-
-//            比赛题目需要重新计算分数   (totalScore / fullMark) * score
-            BigDecimal score = contestScore;
-
-            BigDecimal fullMark = judgeResult.getFullMark();
-            BigDecimal totalScore = judgeResult.getTotalScore();
-            BigDecimal newScore = BigDecimal.ZERO;
-            if (!fullMark.equals(BigDecimal.ZERO)) {
-                 newScore = totalScore.divide(fullMark, RoundingMode.DOWN).multiply(score);
-            }
-
-
-//            新分数
-            judgeResult.setTotalScore(newScore);
-            judgeResult.setFullMark(score);
-
-        }
-
-
-
-
-        return judgeResult;
+        UserAnswer answer = new UserAnswer(judgeRequest.getAnswers(), judgeRequest.getCode(),
+                judgeRequest.getLanguageId());
+        return contestAnswerSubmissionService.submit(judgeRequest.getContestId(), userId, problemId,
+                judgeResult, answer);
     }
 
     @Override

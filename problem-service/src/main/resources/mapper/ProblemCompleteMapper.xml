@@ -9,5 +9,10 @@
             <id property="problemId" column="problem_id" jdbcType="BIGINT"/>
     </resultMap>
 
+    <insert id="insertIgnore">
+        INSERT IGNORE INTO problem_complete (user_id, problem_id)
+        VALUES (#{userId}, #{problemId})
+    </insert>
+
 
 </mapper>

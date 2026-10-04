@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.ContestMutationReferenceMapper">
+    <sql id="busyWindow">
+        (
+            (c.start_time is not null and c.start_time &lt;= #{now}
+                and (c.end_time &gt; #{now}
+                    or (c.type = 1 and exists (
+                        select 1
+                        from supplement_contest sc
+                        inner join user_contest uc
+                            on uc.contest_id = sc.contest_id and uc.user_id = sc.user_id
+                        where sc.contest_id = c.contest_id
+                          and c.end_time is not null
+                          and sc.deadline &gt;= c.end_time
+                          and sc.deadline &gt; #{now}
+                    ))))
+            or exists (
+                select 1
+                from contest_attempt pending_attempt
+                where pending_attempt.contest_id = c.contest_id
+                  and pending_attempt.problem_id in
+                  <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+                      #{problemId}
+                  </foreach>
+                  and pending_attempt.state = 'PENDING'
+            )
+        )
+    </sql>
+
+    <select id="selectBusyContestIds" resultType="java.lang.Long">
+        select refs.contest_id
+        from (
+            select c.contest_id
+            from contest c
+            inner join contest_problem_snapshot s on s.contest_id = c.contest_id
+            where c.del_flag = 0
+              and s.problem_id in
+              <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+                  #{problemId}
+              </foreach>
+              and <include refid="busyWindow"/>
+            union
+            select c.contest_id
+            from contest c
+            inner join problem_problem_list ppl on ppl.list_id = c.list_id
+            where c.del_flag = 0
+              and c.problem_snapshot_at is null
+              and ppl.problem_id in
+              <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+                  #{problemId}
+              </foreach>
+              and <include refid="busyWindow"/>
+            union
+            select c.contest_id
+            from contest_attempt a
+            inner join contest c on c.contest_id = a.contest_id
+            where c.del_flag = 0
+              and a.problem_id in
+              <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+                  #{problemId}
+              </foreach>
+              and a.state = 'PENDING'
+        ) refs
+        order by refs.contest_id asc
+    </select>
+
+    <select id="selectBusySnapshotContestIdsCurrent" resultType="java.lang.Long">
+        select c.contest_id
+        from contest c
+        inner join contest_problem_snapshot s on s.contest_id = c.contest_id
+        where c.del_flag = 0
+          and s.problem_id in
+          <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+              #{problemId}
+          </foreach>
+          and <include refid="busyWindow"/>
+        order by c.contest_id asc
+        for share of s
+    </select>
+
+    <select id="selectBusyListContestIdsCurrent" resultType="java.lang.Long">
+        select c.contest_id
+        from contest c
+        inner join problem_problem_list ppl on ppl.list_id = c.list_id
+        where c.del_flag = 0
+          and c.problem_snapshot_at is null
+          and ppl.problem_id in
+          <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+              #{problemId}
+          </foreach>
+          and <include refid="busyWindow"/>
+        order by c.contest_id asc
+        for share of ppl
+    </select>
+
+    <select id="selectPendingContestIdsCurrent" resultType="java.lang.Long">
+        select c.contest_id
+        from contest_attempt a
+        inner join contest c on c.contest_id = a.contest_id
+        where c.del_flag = 0
+          and a.problem_id in
+          <foreach collection="problemIds" item="problemId" open="(" separator="," close=")">
+              #{problemId}
+          </foreach>
+          and a.state = 'PENDING'
+        order by c.contest_id asc
+        for share of a
+    </select>
+</mapper>

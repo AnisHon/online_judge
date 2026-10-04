@@ -11,12 +11,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.anishan.problem.domain.entity.ProblemProblemListRelation;
 import com.anishan.problem.service.ProblemProblemListService;
 import com.anishan.problem.mapper.ProblemProblemListMapper;
+import com.anishan.problem.mapper.ProblemListMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +32,7 @@ public class ProblemProblemListServiceImpl extends ServiceImpl<ProblemProblemLis
     implements ProblemProblemListService{
 
     private final ProblemProblemListMapper problemProblemListMapper;
+    private final ProblemListMapper problemListMapper;
 
     @Override
     public List<Long> getProblemIds(Long id) {
@@ -53,8 +56,21 @@ public class ProblemProblemListServiceImpl extends ServiceImpl<ProblemProblemLis
         if (CollectionUtil.isEmpty(ids)) {
             return;
         }
+        TreeSet<Long> orderedIds = new TreeSet<>();
+        for (Long listId : ids) {
+            if (listId == null || listId <= 0) {
+                throw new com.anishan.commons.exception.BusinessException("题单ID无效");
+            }
+            orderedIds.add(listId);
+        }
+        for (Long listId : orderedIds) {
+            if (problemListMapper.selectUpdateTimeForUpdate(listId) == null) {
+                throw new com.anishan.commons.exception.BusinessException("题单不存在或已删除");
+            }
+        }
         this.remove(
-                new LambdaUpdateWrapper<>()
+                new LambdaUpdateWrapper<ProblemProblemListRelation>()
+                        .in(ProblemProblemListRelation::getListId, orderedIds)
         );
     }
 
@@ -64,8 +80,5 @@ public class ProblemProblemListServiceImpl extends ServiceImpl<ProblemProblemLis
 
 
 }
-
-
-
 
 

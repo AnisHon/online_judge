@@ -1,15 +1,14 @@
 package com.anishan.problem.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.anishan.api.client.judgeserver.domain.JudgeMessage;
 import com.anishan.commons.domain.R;
-import com.anishan.api.client.problem.domain.dto.SubmitLogDto;
 import com.anishan.problem.domain.entity.SubmitLog;
 import com.anishan.problem.domain.entity.JudgeCaseLog;
 import com.anishan.problem.domain.dto.AdminJudgeLogQuery;
 import com.anishan.problem.domain.vo.AdminJudgeCaseLogVo;
 import com.anishan.problem.domain.vo.AdminSubmitLogVo;
 import com.anishan.problem.service.JudgeCaseLogService;
+import com.anishan.problem.service.JudgeSubmissionService;
 import com.anishan.api.client.problem.domain.vo.SubmitLogVo;
 import com.anishan.api.client.problem.domain.vo.SubmitCaseResultVo;
 import com.anishan.problem.service.SubmitLogService;
@@ -38,35 +37,7 @@ public class SubmitLogController {
 
     private final SubmitLogService submitLogService;
     private final JudgeCaseLogService judgeCaseLogService;
-
-    @PostMapping("/queue")
-    public R<Long> logQueue(JudgeMessage judgeMessage) {
-        Long id = this.submitLogService.logQueue(
-                judgeMessage.getUserId(),
-                judgeMessage.getProblemId(),
-                judgeMessage.getLanguage()
-        );
-        return R.success(id);
-    }
-
-    @PostMapping("/log-judge")
-    public R<Long> logJudge(@RequestBody SubmitLogDto submitLog) {
-        Long id = this.submitLogService.logJudge(submitLog);
-        return R.success(id);
-    }
-
-    @PostMapping("/update")
-    public R<Boolean> update(@RequestBody SubmitLogDto submitLog) {
-        boolean b = this.submitLogService.update(submitLog);
-        return R.success(b);
-    }
-
-    @PostMapping("/change-status")
-    public R<Boolean> changeStatus(@RequestBody SubmitLogDto submitLog, @RequestHeader("user-id") Long userId) {
-        SubmitLog log = BeanUtil.copyProperties(submitLog, SubmitLog.class);
-        boolean b = submitLogService.changeStatus(userId, log.getSubmitId(), log.getStatus());
-        return R.success(b);
-    }
+    private final JudgeSubmissionService judgeSubmissionService;
 
     @GetMapping("/get/{id}")
     @ApiOperation("外部接口，用户获取运行结果")
@@ -135,6 +106,15 @@ public class SubmitLogController {
     @PreAuthorize("hasAuthority('problem:judge:submit:read')")
     public R<AdminSubmitLogVo> adminDetail(@PathVariable Long submitId) {
         return R.success(AdminSubmitLogVo.from(submitLogService.getById(submitId)));
+    }
+
+    /** 重放既有失败派发，不创建新的提交或 outbox 事件。 */
+    @PostMapping("/admin/{submitId}/dispatch-retry")
+    @ApiOperation("重试失败的判题派发")
+    @PreAuthorize("hasAuthority('problem:judge:dispatch:retry')")
+    public R<java.util.Map<String, Boolean>> retryDispatch(@PathVariable Long submitId) {
+        judgeSubmissionService.retryFailedDispatch(submitId);
+        return R.success(java.util.Collections.singletonMap("accepted", true));
     }
 
     /** 管理侧查看用户一次完整提交的分页记录。 */

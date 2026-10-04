@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.JudgeCaseLogMapper">
+    <resultMap id="JudgeCaseLogResultMap" type="com.anishan.problem.domain.entity.JudgeCaseLog">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="submit_id" property="submitId" jdbcType="BIGINT"/>
+        <result column="problem_id" property="problemId" jdbcType="BIGINT"/>
+        <result column="case_id" property="caseId" jdbcType="BIGINT"/>
+        <result column="case_index" property="caseIndex" jdbcType="INTEGER"/>
+        <result column="status" property="status" javaType="com.anishan.commons.enumeration.JudgeResult" jdbcType="VARCHAR"
+                typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result column="score" property="score" jdbcType="DECIMAL"/>
+        <result column="time" property="time" jdbcType="BIGINT"/>
+        <result column="memory" property="memory" jdbcType="BIGINT"/>
+        <result column="internal_error" property="internalError" jdbcType="LONGVARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- The forward migration adds UNIQUE(submit_id, case_index), making this lookup deterministic. -->
+    <select id="selectBySubmitIdAndCaseIndex" resultMap="JudgeCaseLogResultMap">
+        SELECT id, submit_id, problem_id, case_id, case_index, status, score,
+               time, memory, internal_error, create_time, update_time
+        FROM judge_case_log
+        WHERE submit_id = #{submitId} AND case_index = #{caseIndex}
+        LIMIT 1
+    </select>
+
+    <select id="selectBySubmitId" resultMap="JudgeCaseLogResultMap">
+        SELECT id, submit_id, problem_id, case_id, case_index, status, score,
+               time, memory, internal_error, create_time, update_time
+        FROM judge_case_log
+        WHERE submit_id = #{submitId}
+        ORDER BY case_index ASC
+    </select>
+
+    <!-- A locking/current read is required after the submission row lock: the transaction may have opened an older
+         REPEATABLE READ snapshot before another callback committed the final result and case rows. -->
+    <select id="selectBySubmitIdForUpdate" resultMap="JudgeCaseLogResultMap">
+        SELECT id, submit_id, problem_id, case_id, case_index, status, score,
+               time, memory, internal_error, create_time, update_time
+        FROM judge_case_log
+        WHERE submit_id = #{submitId}
+        ORDER BY case_index ASC
+        FOR UPDATE
+    </select>
+</mapper>

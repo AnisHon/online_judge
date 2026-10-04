@@ -1,18 +1,14 @@
 package com.anishan.problem.controller;
 
-import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.commons.domain.R;
-import com.anishan.commons.enumeration.JudgeResult;
-import com.anishan.commons.enumeration.ProblemType;
 import com.anishan.commons.util.ThrowUtil;
 import com.anishan.problem.domain.dto.JudgeRequest;
 import com.anishan.problem.domain.dto.UserAnswerRequest;
-import com.anishan.problem.domain.entity.Problem;
-import com.anishan.problem.domain.entity.Records;
 import com.anishan.problem.domain.entity.UserContestRelation;
 import com.anishan.problem.domain.vo.*;
 import com.anishan.problem.service.ContestService;
-import com.anishan.problem.service.JudgeService;
+import com.anishan.problem.service.ContestParticipationService;
+import com.anishan.problem.service.ContestDraftService;
 import com.anishan.problem.service.RecordsService;
 import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -39,24 +35,10 @@ import java.util.List;
 public class RecordController {
 
     private final RecordsService recordsService;
-    private final JudgeService judgeService;
     private final ContestService contestService;
+    private final ContestParticipationService participationService;
+    private final ContestDraftService contestDraftService;
     private final UserContestService userContestService;
-
-    @PostMapping("judge-save")
-    @ApiOperation("内部接口，保存judge数据")
-    public void judgeSave(@RequestBody JudgeScore judgeScore) {
-
-        Records records = new Records()
-                .setContestId(judgeScore.getContestId())
-                .setProblemId(judgeScore.getProblemId())
-                .setUserId(judgeScore.getUserId())
-                .setStatus(judgeScore.getResult() == JudgeResult.ACCEPT)
-                .setScore(judgeScore.getScore())
-                .setAnswer(new UserAnswer(null, judgeScore.getCode(), judgeScore.getLanguageId()));
-        recordsService.addRecord(records);
-    }
-
 
     @PostMapping
     @ApiOperation("保存数据")
@@ -70,7 +52,7 @@ public class RecordController {
             return R.success(false);
         }
 
-        boolean status = contestService.getStatus(userId, contestId);
+        boolean status = participationService.canUserSubmit(contestId, userId);
 
         // 不能提交了
         if (!status) {
@@ -78,27 +60,9 @@ public class RecordController {
         }
 
 
-        Long problemId = judgeRequest.getProblemId();
-        ProblemType type = Db.getById(problemId, Problem.class).getType();
-
-
-//        选择题填空直接判
-        if (type != ProblemType.OJ) {
-            judgeService.judge(userId, judgeRequest);
-            return R.success(true);
-        } else  {
-            Records records = new Records(
-                    null,
-                    contestId,
-                    userId,
-                    problemId,
-                    null,
-                    null,
-                    new UserAnswer(judgeRequest.getAnswers(), judgeRequest.getCode(), judgeRequest.getLanguageId())
-            );
-            boolean b = recordsService.addRecord(records);
-            return R.success(b);
-        }
+        boolean saved = contestDraftService.save(contestId, userId, judgeRequest.getProblemId(),
+                new UserAnswer(judgeRequest.getAnswers(), judgeRequest.getCode(), judgeRequest.getLanguageId()));
+        return R.success(saved);
     }
 
     @GetMapping

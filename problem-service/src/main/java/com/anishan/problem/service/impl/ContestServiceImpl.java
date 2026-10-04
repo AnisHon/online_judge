@@ -3,7 +3,7 @@ package com.anishan.problem.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.date.LocalDateTimeUtil;
+import com.anishan.commons.domain.R;
 import com.anishan.api.client.user.client.ClassClient;
 import com.anishan.api.client.user.client.UserClient;
 import com.anishan.api.client.user.domain.vo.UserVo;
@@ -21,10 +21,13 @@ import com.anishan.problem.domain.vo.ContestVo;
 import com.anishan.problem.domain.vo.ProblemInListVo;
 import com.anishan.problem.domain.vo.SupplementContestVo;
 import com.anishan.problem.mapper.ContestMapper;
+import com.anishan.problem.mapper.ContestProblemSnapshotMapper;
+import com.anishan.problem.mapper.ProblemListMapper;
 import com.anishan.problem.service.ContestService;
-import com.anishan.problem.service.ContestRecordsService;
-import com.anishan.problem.service.ProblemListService;
-import com.anishan.problem.service.SubmitLogService;
+import com.anishan.problem.service.ContestParticipationService;
+import com.anishan.problem.service.ContestProblemSnapshotService;
+import com.anishan.problem.service.ContestScheduleService;
+import com.anishan.problem.service.ContestFinalRankService;
 import com.anishan.problem.service.UserContestService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -37,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,11 +64,14 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
 
     private final UserContestService userContestService;
     private final ContestMapper contestMapper;
-    private final ProblemListService problemListService;
+    private final ProblemListMapper problemListMapper;
+    private final ContestProblemSnapshotMapper snapshotMapper;
+    private final ContestProblemSnapshotService snapshotService;
     private final UserClient userClient;
     private final ClassClient classClient;
-    private final SubmitLogService submitLogService;
-    private final ContestRecordsService contestRecordsService;
+    private final ContestParticipationService participationService;
+    private final ContestScheduleService scheduleService;
+    private final ContestFinalRankService finalRankService;
 
     @Override
     public LocalDateTime getTime(long id) {
@@ -107,7 +112,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
                 new LambdaQueryWrapper<Contest>()
                         .select(
                                 Contest::getContestId, Contest::getUserId, Contest::getTitle, Contest::getListId,
-                                Contest::getDescription, Contest::getAuth, Contest::getStartTime, Contest::getEndTime
+                                Contest::getDescription, Contest::getAuth, Contest::getStartTime, Contest::getEndTime,
+                                Contest::getType
                         )
                         .eq(Contest::getContestId, id)
         );
@@ -145,39 +151,22 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
 
     @Override
     @CacheEvict(key = "#contestDto.contestId")
-    @Transactional
     public boolean updateContest(ContestDto contestDto) {
-        validateSchedule(contestDto);
-        Contest current = this.getById(contestDto.getContestId());
-        ThrowUtil.businessError(current == null, "活动不存在");
-
-        Long newListId = contestDto.getListId();
-        if (newListId != null && !Objects.equals(current.getListId(), newListId)) {
-            boolean hasJudgeSubmissions = submitLogService.count(
-                    Wrappers.lambdaQuery(SubmitLog.class)
-                            .eq(SubmitLog::getContestId, contestDto.getContestId())
-            ) > 0;
-            boolean hasAnswerSubmissions = contestRecordsService.count(
-                    Wrappers.lambdaQuery(ContestRecords.class)
-                            .eq(ContestRecords::getContestId, contestDto.getContestId())
-            ) > 0;
-            ThrowUtil.businessError(hasJudgeSubmissions || hasAnswerSubmissions,
-                    "该比赛或作业已有题目提交记录，不能更换题单");
-        }
-
-        Contest contest = BeanUtil.copyProperties(contestDto, Contest.class);
-
-        LocalDateTime time = this.getTime(contestDto.getContestId());
-        contest.setUpdateTime(time);
-
-        return this.updateById(contest);
+        return scheduleService.update(contestDto);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean addContest(ContestDto classDto) {
         validateSchedule(classDto);
         Contest contest = BeanUtil.copyProperties(classDto, Contest.class);
-        return this.save(contest);
+        contest.setScoringVersion(2);
+        contest.setNextAttemptSeq(0L);
+        boolean saved = this.save(contest);
+        if (saved && contest.getType() == ContestType.CONTEST) {
+            finalRankService.initializeForContest(contest.getContestId());
+        }
+        return saved;
     }
 
     @Override
@@ -234,72 +223,17 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
         }
     }
 
-    private boolean isInContesting(LocalDateTime startTime, LocalDateTime endTime) {
-        LocalDateTime now = LocalDateTime.now();
-        return now.isAfter(startTime) && now.isBefore(endTime);
-    }
-
-    private ContestJoinResponse joinContestCheck(ContestJoinRequest req) {
-        Contest contest = this.getById(req.getContestId());
-        if (contest == null) {
-            return ContestJoinResponse.fail("比赛不存在");
-        } else if (!isInContesting(contest.getStartTime(), contest.getEndTime())) {
-            return ContestJoinResponse.fail("比赛目前不可加入");
-        }
-
-
-
-        ContestJoinResponse resp = null;
-
-        switch (contest.getAuth()) {
-            case PUBLIC:
-                resp = ContestJoinResponse.success();
-                break;
-            case PRIVATE:
-                boolean equals = Objects.equals(contest.getPwd(), req.getPassword());
-                resp = ContestJoinResponse.conditional(equals, "密码错误");
-                break;
-            case WhiteList:
-                resp = ContestJoinResponse.fail("无法加入");
-                break;
-        }
-
-        return resp;
-    }
-
-
     @Override
     public ContestJoinResponse joinContest(Long userId, ContestJoinRequest req) {
-
-        ContestJoinResponse response = joinContestCheck(req);
-        if (!response.isSuccess()) {
-            return response;
-        }
-
-        try {
-            userContestService.save(new UserContestRelation(userId, req.getContestId()));
-        } catch (DuplicateKeyException ignore) {
-            response.setSuccess(false);
-            response.setMessage("已经加入了");
-        }
-
-        return response;
+        return participationService.join(userId, req);
     }
 
     @Override
     public List<ProblemInListVo> listProblemInContest(Long userId, @NotNull Long contestId) {
         boolean b = isUserJoined(contestId, userId);
         ThrowUtil.permissionDeny(!b , "您无权访问");
-
-
-        Long listId = this.getObj(
-                new LambdaQueryWrapper<Contest>()
-                        .select(Contest::getListId)
-                        .eq(Contest::getContestId, contestId),
-                x -> (Long) x
-        );
-
-        return problemListService.getContestProblemsByListId(listId, contestId);
+        snapshotService.createAfterStart(contestId);
+        return problemListMapper.selectContestSnapshotProblems(contestId, userId);
     }
 
 
@@ -309,69 +243,17 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
             return BigDecimal.ZERO;
         }
 
-        MPJLambdaWrapper<Contest> wrapper = new MPJLambdaWrapper<Contest>()
-                .selectAll(ProblemProblemListRelation.class)
-                .leftJoin(ProblemProblemListRelation.class, ProblemProblemListRelation::getListId, Contest::getListId)
-                .eq(Contest::getContestId, contestId)
-                .eq(ProblemProblemListRelation::getProblemId, ProblemId);
-
-        ProblemProblemListRelation relation = contestMapper.selectJoinOne(ProblemProblemListRelation.class, wrapper);
-        return relation.getScore();
+        return snapshotMapper.selectMaxScore(contestId, ProblemId);
     }
 
     @Override
     public boolean getStatus(Long userId, Long contestId) {
-        LocalDateTime now = LocalDateTimeUtil.now();
-
-        boolean submitted = Db.count(Wrappers.lambdaQuery(UserSubmit.class)
-                .eq(UserSubmit::getUserId, userId)
-                .eq(UserSubmit::getContestId, contestId)) > 0;
-
-        Contest contest = this.getById(contestId);
-        SupplementContest supplementContest = Db.getOne(
-                Wrappers.lambdaQuery(SupplementContest.class)
-                        .eq(SupplementContest::getContestId, contestId)
-                        .eq(SupplementContest::getUserId, userId)
-        );
-        boolean joined = isUserJoined(contestId, userId);
-
-        // 没参加
-        if (!joined) {
-            return false;
-        }
-
-        // 已提交
-        if (submitted) {
-            return false;
-        }
-
-        // 当前日期是否早于结束日期
-        boolean status = now.isBefore(contest.getEndTime());
-
-
-        // 如果有补交当前时间是否早于supplement的deadline
-        if (supplementContest != null) {
-            status = now.isBefore(supplementContest.getDeadline());
-        }
-
-        return status;
+        return participationService.canUserSubmit(contestId, userId);
     }
 
     @Override
-    @Transactional
     public boolean addLateSubmission(SupplementContest supplementContest) {
-
-        Contest contest = this.getById(supplementContest.getContestId());
-
-        boolean joined = isUserJoined(contest.getContestId(), supplementContest.getUserId());
-        LocalDateTime endTime = contest.getEndTime();
-        LocalDateTime deadline = supplementContest.getDeadline();
-
-        ThrowUtil.businessError(contest.getType() == ContestType.CONTEST, "比赛不支持补交");
-        ThrowUtil.businessError(deadline.isBefore(endTime), "最迟时间不能早于结束时间");
-        ThrowUtil.businessError(!joined, "用户未参加比赛");
-
-        return Db.save(supplementContest);
+        return participationService.setSupplement(supplementContest);
     }
 
     @Override
@@ -411,36 +293,28 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest>
     }
 
     @Override
-    @Transactional
     public boolean removeUser(Long contestId, List<Long> userIds) {
-        if (CollUtil.isEmpty(userIds)) {
-            return false;
-        }
-
-
-        Db.remove(
-                Wrappers.lambdaQuery(ContestRecords.class)
-                        .eq(ContestRecords::getContestId, contestId)
-                        .in(ContestRecords::getUserId, userIds)
-        );
-
-        return userContestService.remove(
-                Wrappers.lambdaQuery(UserContestRelation.class)
-                        .eq(UserContestRelation::getContestId, contestId)
-                        .in(UserContestRelation::getUserId, userIds)
-        );
+        return participationService.removeUsers(contestId, userIds);
     }
 
     @Override
     public boolean addUserByClass(Long contestId, Long classIds) {
-        List<UserContestRelation> relations = classClient.listUser(classIds).getData().stream()
-                .map(UserVo::getUserId)
-                .map(userId -> new UserContestRelation(userId, contestId))
-                .collect(Collectors.toList());
+        if (classIds == null || classIds <= 0) {
+            throw new com.anishan.commons.exception.ApiStatusException(400, "班级ID无效");
+        }
+        R<List<UserVo>> response = classClient.listUser(classIds);
+        if (response == null || response.getCode() != 200 || response.getData() == null) {
+            throw new com.anishan.commons.exception.ApiStatusException(503, "无法获取班级成员，请稍后重试");
+        }
+        if (response.getData().size() > ContestParticipationService.MAX_ROSTER_BATCH_SIZE) {
+            throw new com.anishan.commons.exception.ApiStatusException(400, "班级成员超过单次调整上限，请缩小班级范围");
+        }
+        List<Long> userIds = response.getData().stream().map(UserVo::getUserId).collect(Collectors.toList());
+        return participationService.addUsers(contestId, userIds);
+    }
 
-
-        return userContestService.saveIgnore(relations);
+    @Override
+    public boolean addUser(Long contestId, List<Long> userIds) {
+        return participationService.addUsers(contestId, userIds);
     }
 }
-
-

@@ -5,9 +5,19 @@
 <mapper namespace="com.anishan.problem.mapper.UserContestMapper">
 
     <insert id="insertBatchIgnore">
-        <foreach collection="relations" item="relation" separator=";">
-            insert ignore into user_contest(user_id, contest_id) values (#{relation.userId}, #{relation.contestId})
+        INSERT IGNORE INTO user_contest(user_id, contest_id) VALUES
+        <foreach collection="relations" item="relation" separator=",">
+            (#{relation.userId}, #{relation.contestId})
         </foreach>
     </insert>
+
+    <delete id="deleteByContestAndUsers">
+        DELETE FROM user_contest
+        WHERE contest_id = #{contestId}
+          AND user_id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
 
 </mapper>

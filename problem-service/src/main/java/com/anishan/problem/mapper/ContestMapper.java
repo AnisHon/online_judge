@@ -16,8 +16,19 @@ import java.util.List;
 public interface ContestMapper extends MPJBaseMapper<Contest> {
 
     int deleteBatchUserContestRelations(@Param("relations") List<UserContestRelation> relations);
+
+    Contest selectContestForUpdate(@Param("contestId") Long contestId);
+
+    int setProblemSnapshotAt(@Param("contestId") Long contestId,
+                             @Param("snapshotAt") java.time.LocalDateTime snapshotAt);
+
+    int resetProblemSnapshot(@Param("contestId") Long contestId,
+                             @Param("listId") Long listId,
+                             @Param("snapshotAt") java.time.LocalDateTime snapshotAt);
+
+    int updateNextAttemptSeq(@Param("contestId") Long contestId,
+                             @Param("expectedSeq") Long expectedSeq,
+                             @Param("nextSeq") Long nextSeq);
 }
-
-
 
 

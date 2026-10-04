@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anishan.problem.mapper.ContestAnswerRecordsMapper">
-
+    <insert id="upsertAnswer">
+        INSERT INTO contest_answer_records (record_id, answer)
+        VALUES (#{recordId}, CAST(#{answer,typeHandler=com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler,jdbcType=VARCHAR} AS JSON))
+        ON DUPLICATE KEY UPDATE answer = VALUES(answer)
+    </insert>
 </mapper>

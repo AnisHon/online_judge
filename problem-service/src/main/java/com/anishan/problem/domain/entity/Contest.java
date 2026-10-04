@@ -71,6 +71,15 @@ public class Contest implements Serializable {
      */
     private Boolean submitted;
 
+    /** Scoring/history contract: 1=legacy projection, 2=versioned current scoring. */
+    private Integer scoringVersion;
+
+    /** Highest formally accepted attempt sequence for this activity. */
+    private Long nextAttemptSeq;
+
+    /** Time at which the contest problem roster was frozen. */
+    private LocalDateTime problemSnapshotAt;
+
     /**
      * 删除标记
      */

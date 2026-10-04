@@ -32,8 +32,10 @@ public interface ProblemMapper extends MPJBaseMapper<Problem> {
             @Param("title") String title,
             @Param("type") Integer type
     );
+
+    List<Problem> selectContentReadByProblemIds(@Param("problemIds") List<Long> problemIds);
+
+    List<Problem> selectByProblemIdsForUpdate(@Param("problemIds") List<Long> problemIds);
 }
-
-
 
 

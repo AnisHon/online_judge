@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anishan.problem.mapper.ProblemEventOutboxMapper">
+    <resultMap id="ProblemEventOutboxResultMap" type="com.anishan.problem.domain.entity.ProblemEventOutbox">
+        <id column="event_id" property="eventId"/>
+        <result column="dedupe_key" property="dedupeKey"/>
+        <result column="event_type" property="eventType"/>
+        <result column="exchange_name" property="exchangeName"/>
+        <result column="routing_key" property="routingKey"/>
+        <result column="payload" property="payload" jdbcType="VARCHAR"/>
+        <result column="status" property="status"/>
+        <result column="attempts" property="attempts"/>
+        <result column="next_attempt_at" property="nextAttemptAt"/>
+        <result column="lease_owner" property="leaseOwner"/>
+        <result column="lease_until" property="leaseUntil"/>
+        <result column="last_error" property="lastError"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="sent_at" property="sentAt"/>
+    </resultMap>
+
+    <sql id="ProblemOwnedEventTypes">
+        event_type IN ('POINTS_AWARDED', 'JUDGE_DISPATCH')
+    </sql>
+
+    <select id="selectByDedupeKey" resultMap="ProblemEventOutboxResultMap">
+        SELECT * FROM problem_event_outbox WHERE dedupe_key = #{dedupeKey} LIMIT 1
+    </select>
+
+    <select id="selectByDedupeKeyForUpdate" resultMap="ProblemEventOutboxResultMap">
+        SELECT * FROM problem_event_outbox WHERE dedupe_key = #{dedupeKey} LIMIT 1 FOR UPDATE
+    </select>
+
+    <update id="retryFailedJudgeDispatch">
+        UPDATE problem_event_outbox
+        SET status = 'PENDING', attempts = 0, next_attempt_at = #{now},
+            lease_owner = NULL, lease_until = NULL, last_error = NULL, sent_at = NULL
+        WHERE event_id = #{eventId}
+          AND dedupe_key = #{dedupeKey}
+          AND event_type = 'JUDGE_DISPATCH'
+          AND status = 'FAILED'
+    </update>
+
+    <select id="selectClaimable" resultMap="ProblemEventOutboxResultMap">
+        SELECT *
+        FROM problem_event_outbox
+        WHERE <include refid="ProblemOwnedEventTypes"/>
+          AND attempts &lt; 20
+          AND ((status = 'PENDING' AND next_attempt_at &lt;= #{now})
+            OR (status = 'SENDING' AND lease_until &lt;= #{now}))
+        ORDER BY next_attempt_at ASC, created_at ASC, event_id ASC
+        LIMIT #{limit}
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <update id="markClaimed">
+        UPDATE problem_event_outbox
+        SET status = 'SENDING', attempts = attempts + 1,
+            lease_owner = #{leaseOwner}, lease_until = #{leaseUntil}, last_error = NULL
+        WHERE event_id = #{eventId}
+          AND <include refid="ProblemOwnedEventTypes"/>
+          AND attempts &lt; 20
+          AND ((status = 'PENDING' AND next_attempt_at &lt;= #{now})
+            OR (status = 'SENDING' AND lease_until &lt;= #{now}))
+    </update>
+
+    <update id="markSent">
+        UPDATE problem_event_outbox
+        SET status = 'SENT', sent_at = #{now}, lease_owner = NULL,
+            lease_until = NULL, last_error = NULL
+        WHERE event_id = #{eventId}
+          AND <include refid="ProblemOwnedEventTypes"/>
+          AND status = 'SENDING'
+          AND lease_owner = #{leaseOwner}
+          AND lease_until &gt; #{now}
+    </update>
+
+    <update id="markFailed">
+        UPDATE problem_event_outbox
+        SET status = #{status}, next_attempt_at = #{nextAttemptAt},
+            lease_owner = NULL, lease_until = NULL, last_error = #{errorCode}
+        WHERE event_id = #{eventId}
+          AND <include refid="ProblemOwnedEventTypes"/>
+          AND status = 'SENDING'
+          AND lease_owner = #{leaseOwner}
+          AND lease_until &gt; #{now}
+    </update>
+
+    <update id="failExhaustedExpiredClaims">
+        UPDATE problem_event_outbox
+        SET status = 'FAILED', lease_owner = NULL, lease_until = NULL,
+            next_attempt_at = #{now}, last_error = 'LEASE_EXPIRED_AFTER_MAX_ATTEMPTS'
+        WHERE <include refid="ProblemOwnedEventTypes"/>
+          AND status = 'SENDING'
+          AND lease_until &lt;= #{now}
+          AND attempts &gt;= 20
+        ORDER BY lease_until ASC, event_id ASC
+        LIMIT #{limit}
+    </update>
+
+    <delete id="deleteExpiredSent">
+        DELETE FROM problem_event_outbox
+        WHERE status = 'SENT'
+          AND ((event_type = 'POINTS_AWARDED' AND sent_at &lt; #{pointsBefore})
+            OR (event_type = 'JUDGE_DISPATCH' AND sent_at &lt; #{judgeBefore}))
+        ORDER BY sent_at ASC, event_id ASC
+        LIMIT #{limit}
+    </delete>
+
+    <select id="selectUnsupportedDue" resultMap="ProblemEventOutboxResultMap">
+        <!-- Archived pre-cutover community types remain quarantined for explicit data transfer.
+             They are not problem-owned events and must neither dispatch nor enter generic failure cleanup. -->
+        SELECT event_id, event_type
+        FROM problem_event_outbox
+        WHERE event_type NOT IN (
+            'POINTS_AWARDED', 'JUDGE_DISPATCH',
+            'SOLUTION_PUBLISHED', 'SOLUTION_LIKED', 'SOLUTION_COMMENTED',
+            'COMMENT_REPLIED', 'COMMENT_LIKED', 'SOLUTION_MODERATED', 'COMMENT_MODERATED'
+        )
+          AND ((status = 'PENDING' AND next_attempt_at &lt;= #{now})
+            OR (status = 'SENDING' AND lease_until &lt;= #{now}))
+        ORDER BY next_attempt_at ASC, created_at ASC, event_id ASC
+        LIMIT #{limit}
+    </select>
+</mapper>
