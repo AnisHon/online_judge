@@ -1,7 +1,22 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$SCRIPT_DIR"
+
+# Invoking this script alone never mutates a server. Explicit execution still requires
+# a maintenance window and a successful read-only preflight before the first write.
+case "${1:---preflight-only}" in
+  --preflight-only) exec bash "$ROOT_DIR/scripts/check-community-deployment.sh" ;;
+  --execute)
+    [[ $# == 1 && "${OJ_DEPLOY_MAINTENANCE_CONFIRMED:-}" == 1 ]] || {
+      echo 'Explicit --execute and OJ_DEPLOY_MAINTENANCE_CONFIRMED=1 are required.' >&2; exit 2;
+    }
+    bash "$ROOT_DIR/scripts/check-community-deployment.sh"
+    ;;
+  *) echo 'Usage: deploy.sh [--preflight-only|--execute]' >&2; exit 2 ;;
+esac
 
 required=(docker docker-compose gzip)
 for command_name in "${required[@]}"; do
@@ -60,7 +75,7 @@ for attempt in $(seq 1 60); do
   sleep 2
 done
 
-for config_file in config/*.yaml; do
+for config_file in "$ROOT_DIR"/resources/config/*.yaml; do
   curl -fsS -X POST http://127.0.0.1:8848/nacos/v1/cs/configs \
     --data-urlencode "dataId=$(basename "$config_file")" \
     --data-urlencode 'group=DEFAULT_GROUP' \
@@ -69,12 +84,19 @@ for config_file in config/*.yaml; do
 done
 echo "Nacos configuration synchronized."
 
-for migration_file in migration/V*.sql; do
-  echo "Applying database migration: $(basename "$migration_file")"
+source "$ROOT_DIR/resources/sql/migration/manifest-lib.sh"
+migration_manifest_validate
+SOURCE_MODE="${OJ_MIGRATION_SOURCE_MODE:-LEGACY}"
+[[ "$SOURCE_MODE" == FRESH || "$SOURCE_MODE" == LEGACY ]] || exit 2
+for schema_phase in standard content-prepare; do
+while IFS= read -r migration_file; do
+  [[ -n "$migration_file" ]] || continue
+  echo "Applying standard database migration: $migration_file"
   docker exec -i oj-mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot' \
-    < "$migration_file"
+    < "$MIGRATION_DIR/$migration_file"
+done < <(migration_manifest_files "$schema_phase" "$SOURCE_MODE")
 done
-echo "All database migrations applied."
+echo "All standard manifest migrations applied. Content prepare/copy remains an explicit maintenance operation."
 
 services=(oj-sandbox judge-server problem-service user-service content-service gateway-server oj-vue)
 for service in "${services[@]}"; do

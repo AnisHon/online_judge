@@ -42,20 +42,18 @@ docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysqladmin ping -ur
   echo 'MySQL 未在预期时间内就绪。' >&2
   exit 1
 }
-docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
-  < "$ROOT_DIR/resources/sql/migration/V20260912__judge_pipeline.sql"
-docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
-  < "$ROOT_DIR/resources/sql/migration/V20260920__judge_admin_pages.sql"
-docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
-  < "$ROOT_DIR/resources/sql/migration/V20260921__user_profile.sql"
-docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
-  < "$ROOT_DIR/resources/sql/migration/V20260924__role_display_special.sql"
-docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
-  < "$ROOT_DIR/resources/sql/migration/V20260925__faq.sql"
-docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
-  < "$ROOT_DIR/resources/sql/migration/V20260925_1__faq_admin_route.sql"
-docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
-  < "$ROOT_DIR/resources/sql/migration/V20260925_2__remove_redundant_permissions.sql"
+source "$ROOT_DIR/resources/sql/migration/manifest-lib.sh"
+migration_manifest_validate
+SOURCE_MODE="${OJ_MIGRATION_SOURCE_MODE:-FRESH}"
+[[ "$SOURCE_MODE" == FRESH || "$SOURCE_MODE" == LEGACY ]] || { echo 'Invalid migration source mode' >&2; exit 2; }
+for schema_phase in standard content-prepare; do
+while IFS= read -r migration_file; do
+  [[ -n "$migration_file" ]] || continue
+  echo "Applying development migration: $migration_file"
+  docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" oj-dev-mysql mysql -uroot \
+    < "$MIGRATION_DIR/$migration_file"
+done < <(migration_manifest_files "$schema_phase" "$SOURCE_MODE")
+done
 
 echo '[4/4] 等待 Nacos 并同步开发配置'
 for _ in $(seq 1 60); do
