@@ -115,6 +115,7 @@ public class FileController {
     @ApiOperation("头像上传")
     @PostMapping("/avatar")
     public R<String> uploadAvatar(@RequestParam("avatar") MultipartFile avatar) {
+        com.anishan.api.util.AccountPolicy.requireAllowed(com.anishan.api.util.AccountPolicy.AVATAR_DENY);
         if (avatar.isEmpty()) {
             return R.badRequest("头像文件不能为空");
         }

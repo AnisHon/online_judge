@@ -26,10 +26,10 @@ public final class CacheCatalog {
             new CacheTypeVo(6, "problem:recent:", "最近题目缓存"),
             new CacheTypeVo(7, "contest:problem:", "比赛题目列表缓存（兼容）"),
             new CacheTypeVo(8, "user:rank:", "用户排名缓存"),
-            new CacheTypeVo(9, "problem:profile:v1:", "个人主页缓存"),
+            new CacheTypeVo(9, "problem:profile:v2:", "个人主页旧版缓存（停用，仅清理）"),
             new CacheTypeVo(10, "problem:choice-fill:", "填空/选择答案缓存"),
             new CacheTypeVo(11, "content:file:", "文件列表缓存"),
-            new CacheTypeVo(12, "problem:solution:", "题解缓存"),
+            new CacheTypeVo(12, "problem:solution:", "旧题解缓存（停用，仅清理）"),
             new CacheTypeVo(13, "user:menu:", "用户菜单缓存"),
             new CacheTypeVo(14, "user:treed-menu:", "用户菜单树缓存"),
             new CacheTypeVo(15, "file:splice:", "分片上传缓存"),
@@ -37,7 +37,12 @@ public final class CacheCatalog {
             new CacheTypeVo(17, "judge:test:", "自由测试结果（临时）"),
             new CacheTypeVo(18, "problem:submit_log:", "判题提交临时记录"),
             new CacheTypeVo(19, "user-service:refresh-session:", "刷新会话（值隐藏）"),
-            new CacheTypeVo(20, "user-service:refresh-sessions:user:", "用户刷新会话索引（值隐藏）")
+            new CacheTypeVo(20, "user-service:refresh-sessions:user:", "用户刷新会话索引（值隐藏）"),
+            new CacheTypeVo(21, "problem:profile:v1:", "个人主页旧版缓存（停用，仅清理）"),
+            new CacheTypeVo(22, "user-service:step-up:", "敏感操作验证（值隐藏）"),
+            new CacheTypeVo(23, "problem:profile:v3:", "个人主页练习/比赛/热力图缓存"),
+            new CacheTypeVo(24, "content:comment:write:", "评论创建限频（临时）"),
+            new CacheTypeVo(25, "problem:contest:final-rank:v1:", "比赛最终榜单页缓存")
     ));
 
     private CacheCatalog() {

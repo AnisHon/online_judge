@@ -5,6 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
 import com.anishan.api.file.FileOperation;
+import com.anishan.api.util.AccountPolicy;
 import com.anishan.content.domain.entity.FileInfo;
 import com.anishan.content.service.FileInfoService;
 import com.anishan.content.service.FileService;
@@ -40,6 +41,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public String uploadAvatar(MultipartFile avatar, Long userId) {
+        AccountPolicy.requireAllowedActor(AccountPolicy.AVATAR_DENY, userId);
         String filePath = getAvatarPath(userId);
 
         try {
