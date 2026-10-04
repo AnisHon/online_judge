@@ -3,6 +3,7 @@ package com.anishan.api.advice;
 import cn.hutool.http.HttpStatus;
 import com.anishan.commons.config.SharedConfig;
 import com.anishan.commons.domain.R;
+import com.anishan.commons.exception.ApiStatusException;
 import com.anishan.commons.exception.BusinessException;
 import com.anishan.commons.exception.IllegalTokenException;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -14,6 +15,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.util.StringUtils;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -71,10 +73,11 @@ public class GlobalExceptionAdvice {
 
     @ResponseBody
     @ExceptionHandler(IllegalTokenException.class)
-    public R<String> handleIllegalTokenException(IllegalTokenException e) {
+    public ResponseEntity<R<String>> handleIllegalTokenException(IllegalTokenException e) {
         log.debug("IllegalTokenException", e);
-        return R.error(HttpStatus.HTTP_UNAUTHORIZED,
+        R<String> response = R.error(HttpStatus.HTTP_UNAUTHORIZED,
                 sharedConfig.isProduct() ? "登录状态无效或已过期" : e.getMessage());
+        return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @ResponseBody
@@ -128,7 +131,8 @@ public class GlobalExceptionAdvice {
     @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
     public R<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         String defaultMessage = e.getFieldError() == null ? null : e.getFieldError().getDefaultMessage();
-        log.debug("MethodArgumentNotValidException", e);
+        // Validation exceptions include rejected values, which may contain credentials or verification tokens.
+        log.debug("请求参数校验失败，字段：{}", e.getFieldError() == null ? "unknown" : e.getFieldError().getField());
         return R.error(HttpStatus.HTTP_BAD_REQUEST,
                 sharedConfig.isProduct() ? safeClientMessage(defaultMessage, BAD_REQUEST_MESSAGE) : defaultMessage);
     }
@@ -181,11 +185,18 @@ public class GlobalExceptionAdvice {
     }
 
     @ResponseBody
+    @ExceptionHandler(ApiStatusException.class)
+    public ResponseEntity<R<String>> handleApiStatusException(ApiStatusException e) {
+        String message = safeBusinessMessage(e);
+        R<String> response = R.error(e.getStatusCode(), message);
+        return ResponseEntity.status(e.getStatusCode()).body(response);
+    }
+
+    @ResponseBody
     @ExceptionHandler(AccessDeniedException.class)
-    public R<String> handleAccessDeniedException(AccessDeniedException e) {
+    public ResponseEntity<R<String>> handleAccessDeniedException(AccessDeniedException e) {
         log.debug("AccessDeniedException", e);
-//        System.out.println(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        return R.forbidden();
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(R.forbidden());
     }
 
     @ResponseBody

@@ -20,12 +20,15 @@ import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongFunction;
 
 @Component
 @DependsOn("constConfig")
@@ -40,6 +43,9 @@ public class AuthUtil {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
+    private static final DefaultRedisScript<Long> REPLACE_EXISTING_SESSION = new DefaultRedisScript<>(
+            "local ttl = redis.call('PTTL', KEYS[1]); " +
+            "if ttl > 0 then redis.call('SET', KEYS[1], ARGV[1], 'PX', ttl); return 1; end; return 0;", Long.class);
 
     public final Long CODE_TIME_OUT_SECOND;
     public final Long CAPTCHA_TIME_OUT_SECOND;
@@ -162,6 +168,27 @@ public class AuthUtil {
         return (LoginUser) o;
     }
 
+    /** Refresh existing sessions after role changes without creating sessions or extending their TTL. */
+    public void refreshLoggedInUsers(LongFunction<LoginUser> loader) {
+        ScanOptions options = ScanOptions.scanOptions().match(getAllLoginKey()).count(200).build();
+        try (Cursor<byte[]> cursor = redisTemplate.executeWithStickyConnection(connection -> connection.scan(options))) {
+            while (cursor.hasNext()) {
+                String key = new String(cursor.next(), java.nio.charset.StandardCharsets.UTF_8);
+                Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+                if (ttl == null || ttl <= 0) continue;
+                try {
+                    Long userId = Long.valueOf(key.substring(key.lastIndexOf(':') + 1));
+                    LoginUser updated = loader.apply(userId);
+                    if (updated == null) redisTemplate.delete(key);
+                    else redisTemplate.execute(REPLACE_EXISTING_SESSION, List.of(key), updated);
+                } catch (RuntimeException e) {
+                    // Do not leave old permissions active if the current account cannot be reconstructed.
+                    redisTemplate.delete(key);
+                }
+            }
+        }
+    }
+
     public boolean isUserExisted(@NotNull Long userId) {
         String loginKey = getLoginKey(userId);
         return Boolean.TRUE.equals(redisTemplate.opsForValue().getOperations().hasKey(loginKey));
@@ -169,7 +196,7 @@ public class AuthUtil {
 
     public boolean checkEmailCode(String email, String inputCode) {
         String code = getEmailCode(email);
-        return Objects.equals(code, inputCode);
+        return code != null && inputCode != null && !inputCode.isBlank() && Objects.equals(code, inputCode);
     }
 
     /**

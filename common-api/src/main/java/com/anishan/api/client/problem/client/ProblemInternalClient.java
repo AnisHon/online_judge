@@ -2,12 +2,15 @@ package com.anishan.api.client.problem.client;
 
 import com.anishan.api.client.judgeserver.domain.JudgeScore;
 import com.anishan.api.client.gojudge.domain.TestResult;
+import com.anishan.api.client.problem.domain.vo.JudgeSubmissionStatusVo;
 import com.anishan.api.config.FeignDecoderConfig;
 import com.anishan.commons.domain.R;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(value = "problem-service", contextId = "problem-internal", path = "internal", configuration = FeignDecoderConfig.class)
 public interface ProblemInternalClient {
@@ -23,4 +26,7 @@ public interface ProblemInternalClient {
     @ApiOperation("存储代码测试结果")
     @PostMapping("/testResult")
     R<Void> testResult(@RequestBody TestResult testResult);
+
+    @GetMapping("/judge-submission/{submitId}")
+    R<JudgeSubmissionStatusVo> judgeSubmissionStatus(@PathVariable("submitId") Long submitId);
 }
