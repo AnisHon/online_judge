@@ -14,7 +14,7 @@
           size="large"
           :icon="Promotion"
           :loading="isSubmitting"
-          :disabled="initState !== 'ready' || isSubmitting"
+          :disabled="solutionDenied || !editorAllowed || initState !== 'ready' || isSubmitting"
           @click="submit"
       >
         {{ isAdd ? '发布题解' : '保存修改' }}
@@ -22,7 +22,8 @@
     </header>
 
     <section class="editor-card" :class="`editor-card--${initState}`">
-      <div v-if="initState === 'loading'" class="editor-state editor-state--loading">
+      <el-empty v-if="solutionDenied" description="当前账号暂不能发布或修改题解" />
+      <div v-else-if="initState === 'loading'" class="editor-state editor-state--loading">
         <el-skeleton :rows="5" animated />
         <div class="editor-state__hint">正在加载题解内容…</div>
       </div>
@@ -64,7 +65,7 @@
                 >
                   <template #prefix><el-icon><Collection /></el-icon></template>
                   <template #append>
-                    <el-button :icon="Search" @click="problemPickerOpen = true">选择题目</el-button>
+                    <el-button :icon="Search" :disabled="!isAdd" @click="problemPickerOpen = true">选择题目</el-button>
                   </template>
                 </el-input>
                 <small>题目只能从可访问题库中选择，悬停可查看完整 ID。</small>
@@ -73,12 +74,13 @@
 
             <el-form-item label="展示设置">
               <div class="visibility-settings">
-                <div class="setting-option">
+                <div v-if="isAdd || isAuthor" class="setting-option">
                   <span class="setting-option__icon"><el-icon><Lock /></el-icon></span>
                   <span><strong>仅自己可见</strong><small>暂不公开这篇题解</small></span>
                   <el-switch v-model="form.private_" />
                 </div>
-                <div v-if="canSolutionEdit" class="setting-option">
+                <small v-else>可见性由作者设置；审核限制请在题解管理中处理。</small>
+                <div v-if="managementMode && canSolutionEdit" class="setting-option">
                   <span class="setting-option__icon setting-option__icon--amber"><el-icon><Top /></el-icon></span>
                   <span><strong>置顶题解</strong><small>在题解列表中优先展示</small></span>
                   <el-switch v-model="form.topUp" />
@@ -130,7 +132,8 @@ import {getProblems, getProblemsAdmin, type ProblemParam, type ProblemView, type
 import type {IdType} from '@/api/common'
 import MarkDownEditor from '@/components/MarkDownEditor/MarkDownEditor.vue'
 import ProblemPicker from '@/components/ProblemPicker/ProblemPicker.vue'
-import {hasAnyPerm, hasPerm} from '@/utils/authUtil'
+import {hasPerm, isUserIdEqual} from '@/utils/authUtil'
+import {moderationError} from '@/components/SolutionModeration/moderationForm'
 import {ApiError} from '@/utils/http'
 import {notifyValidate} from '@/utils/validate'
 
@@ -179,11 +182,16 @@ const initError = ref('')
 const contentError = ref('')
 const isSubmitting = ref(false)
 const isAdd = computed(() => !String(route.query.solutionId ?? '').trim())
+const solutionDenied = computed(() => hasPerm('policy:solution:deny'))
 const canSolutionEdit = computed(() => hasPerm('problem:solution:edit'))
 const canSolutionAdd = computed(() => hasPerm('problem:solution:add'))
 const canSolutionList = computed(() => hasPerm('problem:solution:list'))
-const canAdminProblemQuery = computed(() => hasAnyPerm(['problem:problem:list', 'problem:solution:list']))
-const useAdminSolutionMutation = computed(() => isAdd.value ? canSolutionAdd.value : canSolutionEdit.value)
+const managementMode = computed(() => route.query.management === '1')
+const editorAllowed = computed(() => !managementMode.value || (hasPerm('system:backend:access')
+    && (isAdd.value ? canSolutionAdd.value : canSolutionList.value && canSolutionEdit.value)))
+const canAdminProblemQuery = computed(() => hasPerm('problem:problem:list'))
+const useAdminSolutionMutation = computed(() => managementMode.value && editorAllowed.value)
+const isAuthor = ref(true)
 
 const shortId = (value: IdType) => {
   const text = String(value)
@@ -226,32 +234,32 @@ const clearContentError = () => {
 }
 
 const submit = async () => {
-  if (!formRef.value || initState.value !== 'ready' || isSubmitting.value) return
-
-  const valid = await new Promise<boolean>(resolve => {
-    formRef.value!.validate((result, invalidFields) => {
-      notifyValidate(invalidFields)
-      resolve(result)
-    })
-  })
-  if (!valid || !validateContent()) return
-
+  if (solutionDenied.value || !editorAllowed.value || !formRef.value || initState.value !== 'ready' || isSubmitting.value) return
   isSubmitting.value = true
-  const snapshot: SolutionForm = {...form}
+  const sequence = initSequence
   try {
+    const valid = await new Promise<boolean>(resolve => {
+      formRef.value!.validate((result, invalidFields) => { notifyValidate(invalidFields); resolve(result) })
+    })
+    if (!valid || !validateContent() || sequence !== initSequence) return
+    const snapshot: SolutionForm = {title: form.title, content: form.content, problemId: form.problemId,
+      private_: isAdd.value || isAuthor.value ? form.private_ : undefined,
+      topUp: managementMode.value && canSolutionEdit.value ? form.topUp : undefined}
+    if (!isAdd.value) snapshot.solutionId = form.solutionId
     if (isAdd.value) {
       await addSolution(snapshot, useAdminSolutionMutation.value)
     } else {
       await editSolution(snapshot, useAdminSolutionMutation.value)
     }
+    if (sequence !== initSequence) return
     ElNotification.success(isAdd.value ? '题解发布成功' : '题解保存成功')
     await router.back()
   } catch (error) {
-    if (!(error instanceof ApiError && error.notified)) {
-      ElNotification.error(error instanceof Error ? error.message : '题解提交失败，请稍后重试')
+    if (sequence === initSequence && !(error instanceof ApiError && error.notified)) {
+      ElNotification.error(moderationError(error))
     }
   } finally {
-    isSubmitting.value = false
+    if (sequence === initSequence) isSubmitting.value = false
   }
 }
 
@@ -283,6 +291,8 @@ const initialize = async () => {
   initError.value = ''
   contentError.value = ''
   selectedProblem.value = undefined
+  isAuthor.value = true
+  isSubmitting.value = false
   Object.assign(form, createEmptyForm())
 
   const problemId = String(route.query.problemId ?? '').trim()
@@ -290,13 +300,17 @@ const initialize = async () => {
   if (problemId) form.problemId = problemId
 
   try {
+    if (!editorAllowed.value) throw new ApiError('当前账号没有此题解管理操作权限', 403)
     if (solutionId) {
       form.solutionId = solutionId
-      const solution = canSolutionList.value
+      const solution = managementMode.value
           ? await getSolutionAdmin(solutionId)
           : await getSolution(solutionId)
       if (sequence !== initSequence) return
-      Object.assign(form, solution)
+      isAuthor.value = isUserIdEqual(solution.userId)
+      Object.assign(form, {solutionId: solution.solutionId, problemId: solution.problemId,
+        title: solution.title, content: solution.content, private_: solution.private_, topUp: solution.topUp})
+      selectedProblem.value = {problemId: solution.problemId, title: solution.problemTitle || '题目'}
     }
     if (form.problemId) await fetchProblem(form.problemId, sequence)
     if (sequence === initSequence) initState.value = 'ready'
@@ -307,7 +321,7 @@ const initialize = async () => {
   }
 }
 
-watch(() => [route.query.solutionId, route.query.problemId], initialize, {immediate: true})
+watch(() => [route.query.solutionId, route.query.problemId, route.query.management], initialize, {immediate: true})
 onBeforeUnmount(() => {
   initSequence++
 })

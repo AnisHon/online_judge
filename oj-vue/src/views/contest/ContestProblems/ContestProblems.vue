@@ -95,7 +95,9 @@
                           :disable-submit="!isAnswering" @submitted="refreshProblemState"/>
         </div>
 
+        <ContestFinalRank v-else-if="finalRankAvailable && rankOpen" :contest-id="contestId" @close="rankOpen = false" />
         <div v-else class="activity-overview">
+          <el-button v-if="finalRankAvailable" @click="rankOpen = true">查看最终成绩</el-button>
           <template v-if="contest">
             <section class="overview-intro"><span class="overview-intro__icon"><el-icon><component
                 :is="contest.type === ContestType.HOMEWORK ? Notebook : Trophy"/></el-icon></span>
@@ -153,7 +155,8 @@ import {getContestProblems} from '@/api/list/problem'
 import DetailProblem from '@/components/DetailProblem/DetailProblem.vue'
 import MarkdownPreview from '@/components/MarkdownPreview.vue'
 import ActivityResizablePanel from '@/components/ActivityResizablePanel/ActivityResizablePanel.vue'
-import {ContestType, type ContestView, fetchContestById, getContestStatus, handInPaper} from '@/api/contest'
+import {ContestType, type ContestView, fetchContestById, getContestStatus, handInPaper, isContestJoined} from '@/api/contest'
+import ContestFinalRank from '@/components/ContestFinalRank/ContestFinalRank.vue'
 import {authTagType, authText, formatDate, getActivityTimeState} from '@/utils/contest'
 import dayjs from 'dayjs'
 
@@ -173,6 +176,12 @@ const contestError = ref('')
 const statusError = ref('')
 const isHandingIn = ref(false)
 const now = ref(dayjs())
+const rankOpen = ref(true)
+const finalRankAvailable = computed(() => {
+  if (contest.value?.type !== ContestType.CONTEST) return false
+  const time = getActivityTimeState(contest.value.startTime, contest.value.endTime, now.value)
+  return time.valid && time.over
+})
 let clockTimer: ReturnType<typeof setInterval> | undefined
 let loadSequence = 0
 const sortedProblemList = computed(() => [...problemList].sort((a, b) => (a.problemOrder ?? 0) - (b.problemOrder ?? 0)))
@@ -237,12 +246,19 @@ const loadPage = async (id = contestId.value) => {
   currentRow.value = undefined
   sidebarCollapsed.value = false
   isAnswering.value = undefined
-  void loadProblems(id, sequence)
+  rankOpen.value = true
 
   try {
     const contestData = await fetchContestById(id)
     if (sequence !== loadSequence || id !== contestId.value) return
     contest.value = contestData
+    if (finalRankAvailable.value) {
+      sidebarCollapsed.value = true
+      const joined = await isContestJoined(id)
+      if (sequence !== loadSequence || id !== contestId.value) return
+      if (!joined) { isAnswering.value = false; return }
+    }
+    void loadProblems(id, sequence)
   } catch (reason) {
     if (sequence === loadSequence && id === contestId.value) {
       contestError.value = reason instanceof Error ? reason.message : '活动信息加载失败，请刷新重试'
@@ -759,7 +775,7 @@ onUnmounted(() => {
   min-height: 0;
 }
 
-.problem-detail-shell :deep(> .oj-workbench) {
+.problem-detail-shell :deep(> .oj-workbench:not(.oj-workbench--fullscreen)) {
   width: 100%;
   height: 100%;
   min-height: 0;

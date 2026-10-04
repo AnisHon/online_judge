@@ -6,6 +6,13 @@ import type {PagedResponse} from "@/api/pagedType.ts";
 import {refreshAccessToken, SessionChangedError} from '@/utils/authSession'
 import qs from "qs"
 
+declare module 'axios' {
+    interface AxiosRequestConfig {
+        /** Optional panels handle permission failures inline instead of leaving the page. */
+        localForbidden?: boolean;
+    }
+}
+
 export const baseURL = "/api";
 
 
@@ -201,7 +208,7 @@ service.interceptors.response.use(
             return Promise.reject(new ApiError(result?.message || "登录已过期", 401));
         }
         if (result?.code === 403 || response.status === 403) {
-            error403();
+            if (!request.localForbidden) error403();
             return Promise.reject(new ApiError(result?.message || "拒绝访问", 403));
         }
         if (result.code !== 200) {
@@ -221,7 +228,7 @@ service.interceptors.response.use(
         if (status === 401) {
             if (useToken().hasToken()) error401(request?.__sessionVersion);
         } else if (status === 403) {
-            error403();
+            if (!request?.localForbidden) error403();
         }
         const result = isAxiosError(error) ? error.response?.data as Partial<AjaxResult<unknown>> | undefined : undefined;
         return Promise.reject(new ApiError(safeErrorMessage(result?.message || error.message, status || 0), status || 0));

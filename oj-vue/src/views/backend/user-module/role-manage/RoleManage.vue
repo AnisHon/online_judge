@@ -146,7 +146,7 @@
 
     <el-dialog v-model="openDataScope" class="permission-dialog" title="配置资源权限" width="min(680px, 92vw)" append-to-body destroy-on-close>
       <div class="permission-dialog__head">
-        <div><span class="panel-eyebrow">ROLE / ACCESS</span><h3>{{ permissionRoleName || '当前角色' }}</h3><p>勾选角色可访问的菜单、菜单项和按钮权限。当前采用独立勾选，不会自动替换父子节点。</p></div>
+        <div><span class="panel-eyebrow">ROLE / ACCESS</span><h3>{{ permissionRoleName || '当前角色' }}</h3><p>独立勾选角色权限。禁止权限会优先拒绝对应写入，无需授予后台父路由；基本前台操作无需正向授权。</p></div>
         <span class="permission-count">已选 {{ checkedPermissionCount }} 项</span>
       </div>
       <el-alert v-if="permissionDependencyError" class="permission-dependency-alert" type="error" :closable="false" show-icon :title="permissionDependencyError" />
@@ -169,6 +169,7 @@ import { addRole, dict, getRole as fetchRoles, refreshRoleCache, removeRole, Rol
 import { grant as grantMenu, listRoleMenu, revoke as revokeMenu, type MenuRoleRelation, type TreedMenu } from '@/api/auth/menu'
 import { getAllTreedMenu } from '@/api/menu'
 import { setTreeId } from '@/utils/menu'
+import { findMissingPermissionParent as findPermissionDependency } from '@/utils/menu/permissionDependencies'
 import { useColumn } from '@/hooks/useColumn'
 import type { IdType } from '@/api/common'
 import { useRouter } from 'vue-router'
@@ -341,31 +342,7 @@ function sortMenuTree(nodes: TreedMenu[]): TreedMenu[] {
 }
 const sameId = (left: IdType, right: IdType) => String(left) === String(right)
 
-function findMissingPermissionParent(ids: Array<IdType | number | string>) {
-  const selected = new Set(ids.map(String))
-  const nodes = new Map<string, { label: string; parentId?: string }>()
-  const collect = (items: TreedMenu[], parentId?: string) => {
-    items.forEach(item => {
-      const id = String(item.id ?? item.menu.menuId)
-      nodes.set(id, {label: item.menu.menuName, parentId})
-      collect(item.children || [], id)
-    })
-  }
-  collect(menuTree)
-
-  for (const id of selected) {
-    const child = nodes.get(id)
-    let parentId = child?.parentId
-    while (child && parentId) {
-      if (!selected.has(parentId)) {
-        const parent = nodes.get(parentId)
-        return `“${child.label}”权限依赖于“${parent?.label || parentId}”权限，请检查父级权限。`
-      }
-      parentId = nodes.get(parentId)?.parentId
-    }
-  }
-  return ''
-}
+const findMissingPermissionParent = (ids: Array<IdType | number | string>) => findPermissionDependency(menuTree, ids)
 
 const isPermissionSessionActive = (session: number, roleId?: IdType) => {
   if (session !== permissionSession || !openDataScope.value) return false

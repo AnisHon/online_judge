@@ -1,6 +1,8 @@
 <template>
-  <ContestSubPageShell title="用户统计" kicker="ANALYTICS / USERS" description="查看参与用户的提交状态和得分，跟进未完成或迟交情况。" :icon="User" tone="green" :stats="stats">
-    <template #actions><el-button v-has="'problem:contest:statistic'" :loading="loading" :icon="Refresh" @click="getList">刷新统计</el-button></template>
+  <ContestSubPageShell :class="{'final-rank-mode': rankOpen && canViewFinalRank}" title="用户统计" kicker="ANALYTICS / USERS" description="查看参与用户的提交状态和得分，跟进未完成或迟交情况。" :icon="User" tone="green" :stats="stats">
+    <template #actions><el-button v-if="canViewFinalRank" @click="rankOpen = !rankOpen">{{ rankOpen ? '返回统计' : '最终成绩' }}</el-button><el-button v-has="'problem:contest:statistic'" :loading="loading" :icon="Refresh" @click="getList">刷新统计</el-button></template>
+    <div v-if="rankOpen && canViewFinalRank" class="final-rank-region"><ContestFinalRank :contest-id="contestId" admin @close="rankOpen = false" /></div>
+    <template v-else>
     <div class="table-heading"><div><strong>用户表现</strong><span>可按提交状态筛选，退回提交需要竞赛编辑权限</span></div><div class="filters"><el-input v-model="keyword" clearable placeholder="搜索昵称或用户 ID" :prefix-icon="Search" /><el-select v-model="statusFilter" clearable placeholder="全部状态"><el-option label="已提交" value="submitted" /><el-option label="未提交" value="pending" /><el-option label="迟交" value="late" /></el-select></div></div>
     <el-table v-loading="loading" :data="filteredList" class="stat-table" stripe>
       <el-table-column label="用户" min-width="190"><template #default="{row}"><div class="user-cell"><span class="user-avatar">{{ String(row.nikeName || '?').slice(0, 1) }}</span><span><strong>{{ row.nikeName || '未命名用户' }}</strong><small>ID: {{ row.userId }}</small></span></div></template></el-table-column>
@@ -11,6 +13,7 @@
       <el-table-column label="操作" width="175" fixed="right" align="right"><template #default="{row}"><el-button v-has="'problem:contest:statistic'" link type="primary" :icon="View" @click="toUserScore(row)">用户分数</el-button><el-button v-has="'problem:contest:edit'" link type="warning" :disabled="!row.submitted" :icon="RefreshLeft" @click="handleReturn(row)">退回提交</el-button></template></el-table-column>
       <template #empty><el-empty description="没有找到符合条件的用户" /></template>
     </el-table>
+    </template>
   </ContestSubPageShell>
 </template>
 
@@ -22,11 +25,28 @@ import {Refresh, RefreshLeft, Search, User, View} from "@element-plus/icons-vue"
 import {getUserStatistic, returnUserSubmit, type UserStatistic} from "@/api/record";
 import type {IdType} from "@/api/common.ts";
 import ContestSubPageShell from "@/views/backend/teacher/contest-manage/component/ContestSubPageShell.vue";
+import ContestFinalRank from '@/components/ContestFinalRank/ContestFinalRank.vue';
+import {ContestType, fetchContestById} from '@/api/contest';
+import {hasPerm} from '@/utils/authUtil';
+import {getActivityTimeState} from '@/utils/contest';
 
 const route = useRoute();
 const router = useRouter();
 const contestId = computed(() => String(route.params.contestId || '') as IdType);
 const loading = ref(false);
+const rankOpen = ref(false);
+const endedContest = ref(false);
+const canViewFinalRank = computed(() => endedContest.value && hasPerm('problem:contest:rank'));
+let metadataSequence = 0;
+watch(contestId, async id => {
+  const sequence = ++metadataSequence;
+  rankOpen.value = false; endedContest.value = false;
+  try {
+    const activity = await fetchContestById(id);
+    const time = getActivityTimeState(activity.startTime, activity.endTime);
+    if (sequence === metadataSequence) endedContest.value = activity.type === ContestType.CONTEST && time.valid && time.over;
+  } catch { /* Statistics remain available when result metadata cannot be loaded. */ }
+}, {immediate: true});
 const list = ref<UserStatistic[]>([]);
 const keyword = ref('');
 const statusFilter = ref('');
@@ -41,6 +61,10 @@ getList();
 </script>
 
 <style scoped>
+.final-rank-mode { height: var(--backend-content-no-padding-height, 80vh); display: flex; flex-direction: column; min-height: 0; }
+.final-rank-mode :deep(.subpage-heading), .final-rank-mode :deep(.subpage-stats) { flex: none; }
+.final-rank-mode :deep(.subpage-content) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.final-rank-region { flex: 1; min-height: 0; overflow: hidden; }
 .table-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.table-heading strong, .table-heading span { display: block; }.table-heading strong { font-size: 15px; }.table-heading span { margin-top: 3px; color: var(--el-text-color-secondary); font-size: 11px; }.filters { display: flex; gap: 8px; }.filters :deep(.el-input) { width: 190px; }.filters :deep(.el-select) { width: 110px; }.user-cell { display: flex; align-items: center; gap: 10px; }.user-avatar { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; color: var(--el-color-primary); background: var(--el-color-primary-light-9); font-size: 13px; font-weight: 700; }.user-cell > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 2px; }.user-cell strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }.user-cell small { color: var(--el-text-color-secondary); font-size: 11px; }.state-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }.state-tag i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }.state-tag--success { color: var(--el-color-success); }.state-tag--muted { color: var(--el-text-color-placeholder); }.state-tag--warning { color: var(--el-color-warning); }.muted { color: var(--el-text-color-placeholder); }.score { color: var(--el-color-primary); }.completion { display: flex; align-items: center; gap: 10px; color: var(--el-text-color-secondary); font-size: 11px; }.completion :deep(.el-progress) { width: 72px; }
 @media (max-width: 760px) { .table-heading { align-items: flex-start; flex-direction: column; }.filters { width: 100%; }.filters :deep(.el-input), .filters :deep(.el-select) { width: 100%; }.filters :deep(.el-input) { flex: 1; } }
 </style>

@@ -1,6 +1,7 @@
 <template>
   <section class="profile-activity">
     <template v-if="section === 'practice'">
+      <ProfileActivityHeatmap v-if="activity.heatmap" :heatmap="activity.heatmap" />
       <div class="difficulty-grid">
         <section
           v-for="group in difficultyGroups"
@@ -60,7 +61,10 @@
     </template>
 
     <template v-else>
-      <div v-if="visibleSolutions.length" class="activity-list">
+      <el-alert v-if="activity.solutionsError" :title="activity.solutionsError" type="warning" :closable="false">
+        <el-button size="small" text @click="emit('retry-solutions')">重试</el-button>
+      </el-alert>
+      <div v-else-if="visibleSolutions.length" class="activity-list">
         <button
           v-for="solution in visibleSolutions"
           :key="solution.solutionId"
@@ -76,13 +80,13 @@
             <strong>{{ solution.title }}</strong>
             <small>{{ solution.problemTitle || '题目' }} · ID {{ shortProfileId(solution.problemId) }}</small>
           </span>
-          <el-tag v-if="solution.private_ && activity.owner" size="small" type="info" effect="plain">仅自己可见</el-tag>
+          <el-tag v-if="(solution.effectiveVisibility === 'AUTHOR_ONLY' || solution.private_) && activity.owner" size="small" type="info" effect="plain">仅自己可见</el-tag>
           <span class="activity-item__date">{{ formatProfileDate(solution.createTime) }}</span>
           <el-icon class="activity-item__arrow"><ArrowRight /></el-icon>
         </button>
       </div>
       <el-empty v-else :description="activity.owner ? '还没有写过题解' : '还没有公开题解'" />
-      <p v-if="activity.solutionsTruncated" class="activity-limit">
+      <p v-if="!activity.solutionsError && activity.solutionsTruncated" class="activity-limit">
         仅展示最近 {{ PROFILE_ACTIVITY_LIMITS.solutions }} 篇题解
       </p>
     </template>
@@ -96,12 +100,14 @@ import {ContestType} from '@/api/contest'
 import {PROFILE_ACTIVITY_LIMITS, type ProfileActivity} from '@/api/profile'
 import type {IdType} from '@/api/common'
 import {formatProfileDate, shortProfileId} from '@/utils/profile'
+import ProfileActivityHeatmap from './ProfileActivityHeatmap.vue'
 
 const props = defineProps<{activity: ProfileActivity; section: 'practice' | 'contests' | 'solutions'}>()
 const emit = defineEmits<{
   (event: 'open-problem', id: IdType): void
   (event: 'open-contest', id: IdType): void
   (event: 'open-solution', id: IdType): void
+  (event: 'retry-solutions'): void
 }>()
 
 const difficultyGroups = computed(() => [
@@ -113,7 +119,7 @@ const difficultyGroups = computed(() => [
 
 const visibleSolutions = computed(() => props.activity.owner
   ? props.activity.solutions
-  : props.activity.solutions.filter(solution => !solution.private_))
+  : props.activity.solutions.filter(solution => !solution.private_ && solution.effectiveVisibility !== 'AUTHOR_ONLY'))
 
 const contestTypeLabel = (type: ContestType | null) => {
   if (type === ContestType.HOMEWORK) return '作业'

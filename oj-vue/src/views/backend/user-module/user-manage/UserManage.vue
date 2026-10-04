@@ -127,7 +127,7 @@
         <el-table-column v-if="columns[5].visible" label="标记" min-width="180" prop="remark" show-overflow-tooltip>
           <template #default="{ row }">{{ row.remark || '—' }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="230" fixed="right" align="right">
+        <el-table-column label="操作" width="310" fixed="right" align="right">
           <template #default="{ row }">
             <el-space :size="4">
               <el-button v-has="'user:user:edit'" link type="primary" :icon="EditPen" @click="handleUpdate(row)">编辑
@@ -138,6 +138,8 @@
               <el-button v-else v-has="'user:auth:unban'" link type="success" :icon="Unlock" @click="handleUnban(row)">
                 解封
               </el-button>
+              <el-button v-has="'user:user:reset-avatar'" link type="warning" :disabled="actionLoading"
+                         @click="handleResetAvatar(row)">重置头像</el-button>
               <el-dropdown v-if="canEditUser" trigger="click"
                            @command="(command: string) => handleCommand(command, row)">
                 <el-button link type="info" :icon="MoreFilled">更多</el-button>
@@ -263,6 +265,7 @@ import {
   dict,
   type QueryUser,
   resetToDefault,
+  resetUserAvatar,
   unbanUser,
   type UserAddForm,
   UserStatus,
@@ -468,6 +471,20 @@ const finishDialog = () => {
   getList()
 }
 const isCancelled = (error: unknown) => error === 'cancel' || error === 'close'
+const handleResetAvatar = async (row: UserView) => {
+  try {
+    await ElMessageBox.confirm(`重置用户 @${row.userName} 的头像为默认头像，继续吗？`, '重置头像', {
+      confirmButtonText: '确认重置', cancelButtonText: '取消', type: 'warning'
+    });
+    actionLoading.value = true;
+    await resetUserAvatar(row.userId);
+    ElMessage.success('头像已重置');
+  } catch (error) {
+    if (!isCancelled(error)) ElMessage.error('头像重置失败，请稍后重试');
+  } finally {
+    actionLoading.value = false;
+  }
+}
 const handleBan = async (row?: UserView) => {
   const ids = row ? [row.userId] : selectedIds.value;
   if (!ids.length) return;

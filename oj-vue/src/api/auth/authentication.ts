@@ -1,4 +1,4 @@
-import {get, post, put} from '@/utils/http'
+import {get, post} from '@/utils/http'
 import {type LoginUser} from "@/stores/useUserStore";
 import {useUserStore} from "@/stores/useUserStore";
 import {useToken} from "@/stores/useToken";
@@ -81,6 +81,7 @@ const finishLogin = async (accessToken: string) => {
         await userStore.loadUser();
         // 动态路由统一由路由守卫构建，避免登录流程和路由守卫同时请求、互相覆盖。
         await router.replace({name: "home"});
+        userStore.requestEmailReminder();
     } catch (error) {
         tokenStore.clearToken();
         useMenuStore().clear();
@@ -122,25 +123,22 @@ async function forgetPassword(data: ForgetPasswordForm) {
 
 
 
-async function resetPassword(data: {code: string, password: string}) {
-    const param = {code: data.code, password: data.password};
-    const result = await put<typeof param, ForgetPasswordResponse | null>('/user-api/auth/reset-pass', param, handledByAuthPage);
-    if (!result.data) throw new Error(result.message || '密码更新响应缺少数据');
-    if (!result.data.success) throw new Error(result.data.message || '密码更新失败');
-    return result.data.message;
-}
-
 async function logout() {
     try {
         await get("/user-api/auth/logout");
     } catch {
         // 本地退出不能依赖服务端登出接口可用。
     } finally {
-        useToken().clearToken();
-        useMenuStore().clear();
-        broadcastAuthState('LOGOUT');
-        await router.replace({name: "login"});
+        await endLocalSession();
     }
+}
+
+/** Use after the server has already revoked sessions (for example, password changes). */
+export async function endLocalSession() {
+    useToken().clearToken();
+    useMenuStore().clear();
+    broadcastAuthState('LOGOUT');
+    await router.replace({name: 'login'});
 }
 
 async function refreshLogin() {
@@ -155,6 +153,5 @@ export {
     signUp,
     logout,
     forgetPassword,
-    resetPassword,
     refreshLogin
 }

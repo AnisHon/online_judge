@@ -152,6 +152,10 @@ const joinActivity = async (activity: ContestView) => {
   if (isActivityLoading(activity.contestId) || !isTimeValid(activity) || isNotStarted(activity.startTime)) return;
   setActivityLoading(activity.contestId, true);
   try {
+    if (kind === 'CONTEST' && isActivityOver(activity.endTime) && activity.auth === ContestAuth.PUBLIC) {
+      enter(activity.contestId);
+      return;
+    }
     const joined = await isContestJoined(activity.contestId);
     if (isActivityOver(activity.endTime) && !joined) {
       ElNotification.warning(`您未参加该${activityMeta.value.title}`);
@@ -215,7 +219,7 @@ const submit = async () => {
 
 const buttonText = (item: ContestView) => {
   const state = getActivityTimeState(item.startTime, item.endTime, now.value);
-  return !state.valid ? '时间异常' : state.over ? '查看活动' : state.notStarted ? '未开始' : '进入活动';
+  return !state.valid ? '时间异常' : state.over ? (kind === 'CONTEST' ? '查看结果' : '查看活动') : state.notStarted ? '未开始' : '进入活动';
 };
 const buttonType = (item: ContestView) => {
   const state = getActivityTimeState(item.startTime, item.endTime, now.value);

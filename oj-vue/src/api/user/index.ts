@@ -124,6 +124,12 @@ export const resetToDefault = async (id: IdType) => {
     }
 }
 
+export const resetUserAvatar = async (id: IdType) => {
+    const {data} = await put<undefined, boolean>(`/user-api/user/${id}/reset-avatar`, undefined);
+    if (!data) throw new Error('头像重置失败');
+    useUserStore().refreshAvatar(id);
+}
+
 
 
 const addUser = async (form: UserAddForm) => {

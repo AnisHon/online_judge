@@ -20,7 +20,7 @@
     <article class="solution-article">
       <div v-if="loadError" class="solution-state solution-state--error">
         <el-empty :description="loadError" />
-        <el-button type="primary" plain @click="loadSolution">重新加载</el-button>
+        <el-button type="primary" plain @click="loadSolution()">重新加载</el-button>
       </div>
       <div v-else-if="solution">
 
@@ -50,7 +50,7 @@
               <el-tag v-if="solution.topUp" type="warning">置顶</el-tag>
 
               <el-tag type="info">
-                {{ solution.private_ ? "私有" : "公开" }}
+                {{ solutionVisibilityLabel(solution) }}
               </el-tag>
 
               <el-tag type="info">
@@ -99,6 +99,13 @@
         </div>
       </div>
     </article>
+    <SolutionInteractions
+      v-if="solution"
+      :key="`interactions-${solution.solutionId}`"
+      :solution="solution"
+      @focus-comments="focusComments"
+      @comments-state-change="updateCommentsState"
+    />
     <el-divider/>
     <div v-if="!loadError" class="solution-content">
       <MarkdownPreview v-if="solution" :text="solution.content" />
@@ -106,12 +113,21 @@
         <el-skeleton-item variant="p"/>
       </el-skeleton>
     </div>
+    <CommentThread
+      v-if="solution && !loadError"
+      :key="`comments-${solution.solutionId}`"
+      ref="commentThread"
+      :solution-id="solution.solutionId"
+      :comment-count="solution.commentCount"
+      :comments-open="solution.commentsOpen"
+      @comments-changed="adjustCommentCount"
+    />
 
   </main>
 </template>
 
 <script setup lang="ts">
-import {ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {deleteSolution, getSolution, type Solution} from "@/api/solution";
 import {useRoute, useRouter} from "vue-router";
 import {Calendar} from "@element-plus/icons-vue";
@@ -120,24 +136,57 @@ import {isUserIdEqual} from "@/utils/authUtil.ts";
 import {ElMessageBox, ElNotification} from "element-plus";
 import useLoading from "@/hooks/useLoading.ts";
 import Avatar from "@/components/Avatar/Avatar.vue";
+import {solutionVisibilityLabel} from '@/utils/solutionVisibility';
+import SolutionInteractions from '@/components/SolutionInteractions/SolutionInteractions.vue'
+import CommentThread from '@/components/CommentThread/CommentThread.vue'
+import type {IdType} from '@/api/common'
 
 const router = useRouter();
 
 const route = useRoute();
 
+const routeSolutionId = computed(() => {
+  const value = route.params.id
+  return Array.isArray(value) ? String(value[0] ?? '') : String(value ?? '')
+})
+
 const solution = ref<Solution>();
 const loadError = ref('');
+const commentThread = ref<{focus: () => void} | null>(null)
+let solutionLoadGeneration = 0
 
 const {loading, isLoading, finish} = useLoading();
 
-const loadSolution = async () => {
+const loadSolution = async (id = routeSolutionId.value) => {
+  const generation = ++solutionLoadGeneration
   loadError.value = ''
   solution.value = undefined
   try {
-    solution.value = await getSolution(<string>route.params.id);
+    const loaded = await getSolution(id as IdType);
+    if (generation === solutionLoadGeneration && routeSolutionId.value === id) solution.value = loaded
   } catch (error) {
+    if (generation !== solutionLoadGeneration || routeSolutionId.value !== id) return
     loadError.value = error instanceof Error ? error.message : '题解加载失败，请稍后重试'
-    ElNotification.error(loadError.value)
+    // Inbox destinations may have become private/deleted after notification delivery.
+    // Keep that expected 404 in the page's local state instead of showing a global toast.
+    if (route.query.fromInbox !== '1') ElNotification.error(loadError.value)
+  }
+}
+
+watch(routeSolutionId, id => { void loadSolution(id) }, {immediate: true})
+
+const focusComments = () => commentThread.value?.focus()
+const updateCommentsState = (open: boolean) => {
+  if (solution.value) solution.value.commentsOpen = open
+}
+const adjustCommentCount = (delta: 1 | -1) => {
+  if (!solution.value) return
+  try {
+    const current = BigInt(solution.value.commentCount ?? '0')
+    const next = current + BigInt(delta)
+    solution.value.commentCount = (next < 0n ? 0n : next).toString()
+  } catch (_) {
+    solution.value.commentCount = delta > 0 ? '1' : '0'
   }
 }
 
@@ -165,8 +214,6 @@ const handleDelete = async () => {
   }
 
 }
-
-loadSolution();
 
 </script>
 

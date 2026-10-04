@@ -1,6 +1,7 @@
 import type {IdType} from "@/api/common";
 import {ContestType} from '@/api/contest'
 import {ApiError, get} from "@/utils/http";
+import {useToken} from '@/stores/useToken';
 
 export interface UserProfile {
     userId: IdType;
@@ -27,6 +28,7 @@ export interface ProfileSolution {
     problemId: IdType;
     problemTitle?: string;
     private_?: boolean;
+    effectiveVisibility?: 'PUBLIC' | 'AUTHOR_ONLY';
     createTime?: string;
 }
 
@@ -42,12 +44,63 @@ export interface ProfileActivity {
     owner: boolean;
     solvedCount: number;
     attemptedCount: number;
+    heatmap?: ProfileActivityHeatmap;
     solvedProblems: ProfileDifficultyGroups;
     contests: ProfileContest[];
     solutions: ProfileSolution[];
     solvedProblemsTruncated: boolean;
     contestsTruncated: boolean;
     solutionsTruncated: boolean;
+    solutionsError?: string;
+}
+
+export interface ProfileActivityDay {
+    date: string;
+    count: number;
+}
+
+export interface ProfileActivityHeatmap {
+    startDate: string;
+    endDate: string;
+    timeZone: 'Asia/Shanghai';
+    days: ProfileActivityDay[];
+}
+
+const dateTimestamp = (value: unknown): number => {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return NaN
+    const timestamp = Date.parse(`${value}T00:00:00Z`)
+    return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value ? timestamp : NaN
+}
+
+// 兼容旧响应；只接收一年以内的日汇总，不按浏览器时区重新解释日期。
+const normalizeHeatmap = (value: unknown): ProfileActivityHeatmap | undefined => {
+    if (!value || typeof value !== 'object') return undefined
+    const raw = value as Record<string, unknown>
+    const start = dateTimestamp(raw.startDate)
+    const end = dateTimestamp(raw.endDate)
+    const dayCount = (end - start) / 86400000 + 1
+    if (!Number.isInteger(dayCount) || dayCount < 365 || dayCount > 366 || raw.timeZone !== 'Asia/Shanghai') return undefined
+    const counts = new Map<string, number>()
+    if (Array.isArray(raw.days)) {
+        for (const item of raw.days.slice(0, 366)) {
+            if (!item || typeof item !== 'object') continue
+            const day = item as Record<string, unknown>
+            const timestamp = dateTimestamp(day.date)
+            if (timestamp < start || timestamp > end || !Number.isFinite(timestamp)) continue
+            if (typeof day.count === 'number' && Number.isSafeInteger(day.count) && day.count >= 0) {
+                counts.set(String(day.date), day.count)
+            }
+        }
+    }
+    return {
+        startDate: String(raw.startDate),
+        endDate: String(raw.endDate),
+        timeZone: 'Asia/Shanghai',
+        days: Array.from({length: dayCount}, (_, index) => {
+            const date = new Date(start + index * 86400000).toISOString().slice(0, 10)
+            return {date, count: counts.get(date) ?? 0}
+        }),
+    }
 }
 
 export interface ProfileData {
@@ -124,6 +177,8 @@ const normalizeActivity = (value: unknown): ProfileActivity => {
                 problemId: asId(solution.problemId),
                 problemTitle: asText(solution.problemTitle, '题目'),
                 private_: asBoolean(solution.private_ ?? solution.private),
+                effectiveVisibility: solution.effectiveVisibility === 'AUTHOR_ONLY' ? 'AUTHOR_ONLY' as const
+                    : solution.effectiveVisibility === 'PUBLIC' ? 'PUBLIC' as const : undefined,
                 createTime: asDate(solution.createTime),
             }
         }).filter(item => Boolean(item.solutionId && item.problemId))
@@ -134,6 +189,7 @@ const normalizeActivity = (value: unknown): ProfileActivity => {
         owner: asBoolean(raw.owner),
         solvedCount: Number.isFinite(Number(raw.solvedCount)) ? Number(raw.solvedCount) : 0,
         attemptedCount: Number.isFinite(Number(raw.attemptedCount)) ? Number(raw.attemptedCount) : 0,
+        heatmap: normalizeHeatmap(raw.heatmap),
         solvedProblems: {easy: groups('easy'), medium: groups('medium'), hard: groups('hard'), unknown: groups('unknown')},
         contests,
         solutions,
@@ -153,10 +209,34 @@ export const getProfileActivity = async (userId: IdType): Promise<ProfileActivit
     return normalizeActivity(result.data)
 };
 
-export const getProfile = async (userId: IdType): Promise<ProfileData> => {
-    const [user, activity] = await Promise.all([
+export class StaleProfileResponseError extends Error {}
+
+export const getProfileSolutions = async (userId: IdType): Promise<Pick<ProfileActivity, 'solutions' | 'solutionsTruncated'>> => {
+    const result = await get<Record<string, unknown> | null>(
+        `/content-api/profile/${encodeURIComponent(String(userId))}/solutions`)
+    if (!result.data || asId(result.data.userId) !== String(userId) || !Array.isArray(result.data.solutions))
+        throw new ApiError('题解接口返回数据不完整', 502)
+    const normalized = normalizeActivity(result.data)
+    return {solutions: normalized.solutions, solutionsTruncated: normalized.solutionsTruncated}
+}
+
+// The caller owns request generation; sessionVersion additionally fences account changes.
+export const getProfile = async (userId: IdType, isCurrent: () => boolean = () => true): Promise<ProfileData> => {
+    const token = useToken()
+    const sessionVersion = token.getSessionVersion()
+    const [user, activity, solutions] = await Promise.all([
         getUserProfile(userId),
         getProfileActivity(userId),
+        getProfileSolutions(userId).then(data => ({data, error: undefined})).catch(() => ({
+            data: undefined, error: '题解暂时无法加载，请稍后重试'
+        })),
     ]);
+    if (!isCurrent() || sessionVersion !== token.getSessionVersion()) throw new StaleProfileResponseError()
+    if (String(user.userId) !== String(userId) || String(activity.userId) !== String(userId))
+        throw new ApiError('个人主页接口返回数据不匹配', 502)
+    // Never fall back to solutions embedded in an old problem-service response.
+    activity.solutions = solutions.data?.solutions ?? []
+    activity.solutionsTruncated = solutions.data?.solutionsTruncated ?? false
+    activity.solutionsError = solutions.error
     return {user, activity};
 };

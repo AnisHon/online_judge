@@ -1,6 +1,6 @@
 <template>
   <div class="solutions-list">
-    <el-card class="share-card" shadow="never">
+    <el-card v-if="!solutionDenied" class="share-card" shadow="never">
       <div class="share-card__content">
         <div><el-icon size="24"><DocumentAdd /></el-icon><div><strong>分享你的解题思路</strong><small>把方法沉淀下来，也帮助更多同学</small></div></div>
         <el-button type="primary" plain @click="addSolution">发布题解</el-button>
@@ -22,7 +22,8 @@
 
 <script setup lang="ts">
 
-import {ref} from "vue";
+import {computed, ref} from "vue";
+import {hasPerm} from '@/utils/authUtil';
 import Pagination from "@/components/pageination/Pagination.vue";
 import {listSolution, type QuerySolution, type Solution} from "@/api/solution";
 import {DocumentAdd} from "@element-plus/icons-vue";
@@ -31,6 +32,7 @@ import type {IdType} from "@/api/common.ts";
 import SolutionCard from "@/components/SolutionCard/SolutionCard.vue";
 
 const router = useRouter();
+const solutionDenied = computed(() => hasPerm('policy:solution:deny'));
 
 // 题解列表
 const solutions = ref<Solution[]>([]);

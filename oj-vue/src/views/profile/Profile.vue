@@ -3,7 +3,7 @@
     <template v-if="profile">
       <header class="profile-hero">
         <div class="profile-identity">
-          <button v-if="isOwner" class="profile-avatar profile-avatar--editable" type="button" aria-label="更换头像"
+          <button v-if="canChangeAvatar" class="profile-avatar profile-avatar--editable" type="button" aria-label="更换头像"
                   @click="avatarDialogVisible = true">
             <avatar shape="square" :user-id="profile.user.userId"/>
             <span class="avatar-edit"><el-icon><Camera/></el-icon>更换</span>
@@ -54,6 +54,17 @@
                 <dd>{{ formatProfileDate(profile.user.lastLoginTime) }}</dd>
               </div>
             </dl>
+            <section v-if="followAvailable" class="profile-follow" aria-label="关注关系">
+              <div class="profile-follow__stats">
+                <button type="button" @click="openFollowList('following')"><strong>{{ followSummary?.followingCount ?? '—' }}</strong><span>关注</span></button>
+                <button type="button" @click="openFollowList('followers')"><strong>{{ followSummary?.followersCount ?? '—' }}</strong><span>粉丝</span></button>
+              </div>
+              <FollowButton v-if="canFollow" :following="followSummary?.following ?? false" :pending="followPending"
+                            :disabled="followLoading || !followSummary" @toggle="void toggleFollow()"/>
+              <p v-if="followError" class="profile-follow__error" role="alert">{{ followError }}
+                <el-button v-if="!followSummary" text type="primary" :disabled="followLoading" @click="void refreshFollow()">重试</el-button>
+              </p>
+            </section>
           </div>
           <nav class="profile-tabs" aria-label="个人中心导航">
             <button v-for="tab in visibleTabs" :key="tab.key" type="button" class="profile-tab"
@@ -77,7 +88,7 @@
                     <h2>{{ activityTitle }}</h2></div>
                   <span class="panel-caption">内容按时间与难度整理</span></div>
                 <profile-activity-panel :activity="profile.activity" :section="activityTab" @open-problem="openProblem" @open-contest="openContest"
-                                        @open-solution="openSolution"/>
+                                        @open-solution="openSolution" @retry-solutions="retrySolutions"/>
               </template>
 
               <template v-else-if="activeTab === 'profile'">
@@ -112,48 +123,8 @@
                 <div class="panel-heading">
                   <div><span class="eyebrow">ACCOUNT SECURITY</span>
                     <h2>账号安全</h2></div>
-                  <span class="panel-caption">修改密码需要完成验证码校验</span></div>
-                <el-form ref="passwordFormRef" class="profile-form" label-position="top" :model="passwordForm"
-                         :rules="passwordRules" @submit.prevent="submitPassword">
-                  <el-form-item label="当前账号">
-                    <el-input :model-value="profile.user.userName" disabled/>
-                  </el-form-item>
-                  <div class="form-grid">
-                    <el-form-item label="新密码" prop="password">
-                      <el-input v-model="passwordForm.password" type="password" show-password autocomplete="new-password"
-                                placeholder="8—16 位密码"/>
-                    </el-form-item>
-                    <el-form-item label="确认新密码" prop="repeatPassword">
-                      <el-input v-model="passwordForm.repeatPassword" type="password" show-password
-                                autocomplete="new-password" placeholder="再次输入新密码"/>
-                    </el-form-item>
-                  </div>
-                  <div class="verify-grid">
-                    <el-form-item label="图形验证码" prop="captchaCode">
-                      <el-input v-model="passwordForm.captchaCode" :prefix-icon="IconCaptcha"
-                                placeholder="输入图片中的字符"/>
-                    </el-form-item>
-                    <button class="captcha-image" type="button" aria-label="刷新验证码" :disabled="captchaLoading"
-                            @click="void refreshCaptchaCode()">
-                      <img v-if="captchaImage" :src="captchaImage" alt="图形验证码"/>
-                      <span v-else>{{ captchaLoading ? '加载中' : '点击刷新' }}</span>
-                    </button>
-                    <span v-if="captchaError" class="profile-captcha-error" role="button" tabindex="0"
-                          aria-live="polite" @click="void refreshCaptchaCode()"
-                          @keydown.enter="void refreshCaptchaCode()">{{ captchaError }}</span>
-                  </div>
-                  <div class="verify-grid">
-                    <el-form-item label="邮箱验证码" prop="emailCode">
-                      <el-input v-model="passwordForm.emailCode" :prefix-icon="IconCaptcha" placeholder="输入邮箱验证码"/>
-                    </el-form-item>
-                    <el-button class="send-code-button" :loading="sendingCode" :disabled="sendingCode || emailCooldown > 0"
-                               @click="void sendEmailCode">{{ emailCodeLabel }}
-                    </el-button>
-                  </div>
-                  <div class="form-actions">
-                    <el-button type="primary" :loading="passwordSaving" @click="submitPassword">更新密码</el-button>
-                    <span>修改完成后请使用新密码重新登录</span></div>
-                </el-form>
+                  <span class="panel-caption">保护登录凭据与找回方式</span></div>
+                <AccountSecurityPanel :email="userStore.user?.email" />
               </template>
               </section>
             </Transition>
@@ -164,6 +135,7 @@
     <el-empty v-else-if="!loading" :description="profileError || '个人主页不存在或暂时无法访问'">
       <el-button v-if="profileError" type="primary" plain @click="void load()">重新加载</el-button>
     </el-empty>
+    <FollowListDialog v-model="followDialogVisible" :user-id="followTarget" :type="followListType"/>
 
     <el-dialog v-model="avatarDialogVisible" title="更换头像" width="min(560px, calc(100vw - 32px))" align-center
                append-to-body destroy-on-close :close-on-click-modal="!avatarUploading" :close-on-press-escape="!avatarUploading">
@@ -184,40 +156,55 @@
 import {computed, reactive, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {Camera, CircleCheck, Collection, EditPen, Trophy, TrendCharts} from "@element-plus/icons-vue";
-import {ElMessage, ElNotification, type FormInstance, type FormRules} from "element-plus";
+import {ElMessage, ElNotification} from "element-plus";
 import type {IdType} from "@/api/common";
 import type {UserForm} from "@/api/user";
 import {saveMyProfile} from "@/api/user";
-import {getProfile, type ProfileData} from "@/api/profile";
-import {resetPassword} from "@/api/auth/authentication";
-import {sendForgetEmailCode} from "@/api/auth/emailCode";
+import {getProfile, getProfileSolutions, StaleProfileResponseError, type ProfileData} from "@/api/profile";
+import {useToken} from '@/stores/useToken';
 import {uploadAvatar} from "@/api/file";
-import IconCaptcha from "@/assets/icons/IconCaptcha.vue";
 import Avatar from "@/components/Avatar/Avatar.vue";
 import AvatarCutter from "@/components/AvatarCutter/AvatarCutter.vue";
 import ProfileActivityPanel from "@/components/ProfileActivityPanel/ProfileActivityPanel.vue";
-import {useCaptchaCode} from "@/composables/auth/useCaptchaCode";
-import {useEmailCodeCooldown} from "@/composables/auth/useEmailCodeCooldown";
+import AccountSecurityPanel from "@/components/AccountSecurity/AccountSecurityPanel.vue";
+import FollowButton from '@/components/FollowButton/FollowButton.vue';
+import FollowListDialog from '@/components/FollowListDialog/FollowListDialog.vue';
+import {useFollow} from '@/composables/social/useFollow';
+import type {FollowListType} from '@/api/follow';
 import {formatProfileDate, shortProfileId} from "@/utils/profile";
 import {ApiError} from "@/utils/http";
 import {useUserStore} from "@/stores/useUserStore";
+import {hasPerm} from '@/utils/authUtil';
 
 type ActivityTab = 'practice' | 'contests' | 'solutions';
 type ProfileTab = ActivityTab | 'profile' | 'security';
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
+const tokenStore = useToken();
 const loading = ref(true);
 const profile = ref<ProfileData | null>(null);
+const followTarget = computed(() => profile.value?.user.userId === String(route.params.id || '')
+  ? profile.value.user.userId : null);
+const {summary: followSummary, loading: followLoading, pending: followPending, error: followError,
+  available: followAvailable, canFollow, refresh: refreshFollow, toggle: toggleFollow} = useFollow(followTarget);
+const followDialogVisible = ref(false);
+const followListType = ref<FollowListType>('following');
+const openFollowList = (type: FollowListType) => {
+  followListType.value = type;
+  followDialogVisible.value = true;
+};
+watch([() => route.params.id, () => tokenStore.sessionVersion], () => {
+  followDialogVisible.value = false;
+}, {flush: 'sync'});
 const profileError = ref('');
 const activeTab = ref<ProfileTab>('practice');
 const profileSaving = ref(false);
-const passwordSaving = ref(false);
 const avatarUploading = ref(false);
 const avatarDialogVisible = ref(false);
-const passwordFormRef = ref<FormInstance>();
 const profileForm = reactive<UserForm>({userId: undefined, userName: undefined, nikeName: '', signature: ''});
-const passwordForm = reactive({password: '', repeatPassword: '', captchaCode: '', token: '', emailCode: ''});
 const isOwner = computed(() => profile.value?.activity.owner === true);
+const canChangeAvatar = computed(() => isOwner.value && !hasPerm('policy:avatar:deny'));
 const profileRequestError = (error: unknown, fallback: string) => {
   if (error instanceof ApiError) return error.code === 0 || error.code >= 500 ? fallback : error.message || fallback;
   return error instanceof Error && error.message ? error.message : fallback;
@@ -265,7 +252,7 @@ const load = async (): Promise<boolean> => {
   profileError.value = '';
   profile.value = null;
   try {
-    const data = await getProfile(id);
+    const data = await getProfile(id, () => requestId === loadRequestId && id === String(route.params.id || ''));
     if (requestId !== loadRequestId || id !== String(route.params.id || '')) return false;
     profile.value = data;
     Object.assign(profileForm, {
@@ -277,6 +264,7 @@ const load = async (): Promise<boolean> => {
     syncTab();
     return true;
   } catch (error) {
+    if (error instanceof StaleProfileResponseError) return false;
     if (requestId !== loadRequestId || id !== String(route.params.id || '')) return false;
     profile.value = null;
     profileError.value = error instanceof ApiError && error.code === 404
@@ -288,6 +276,21 @@ const load = async (): Promise<boolean> => {
   }
 };
 const openProblem = (id: IdType) => router.push({name: 'problem', params: {id}});
+let solutionsRequestId = 0;
+const retrySolutions = async () => {
+  const current = profile.value;
+  if (!current) return;
+  const requestId = ++solutionsRequestId;
+  const sessionVersion = tokenStore.getSessionVersion();
+  try {
+    const data = await getProfileSolutions(current.user.userId);
+    if (requestId !== solutionsRequestId || current !== profile.value || sessionVersion !== tokenStore.getSessionVersion()) return;
+    Object.assign(current.activity, data, {solutionsError: undefined});
+  } catch {
+    if (requestId === solutionsRequestId && current === profile.value && sessionVersion === tokenStore.getSessionVersion())
+      current.activity.solutionsError = '题解暂时无法加载，请稍后重试';
+  }
+};
 const openContest = (id: IdType) => router.push({name: 'contest-problems', params: {id}});
 const openSolution = (id: IdType) => router.push({name: 'solution', params: {id}});
 const saveProfile = async () => {
@@ -306,54 +309,6 @@ const saveProfile = async () => {
   }
 };
 
-const validatePassword = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
-  if (!value) callback(new Error('请输入密码')); else if (value.length < 8 || value.length > 16) callback(new Error('密码长度需为 8—16 位')); else callback();
-};
-const validateRepeatPassword = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
-  if (value !== passwordForm.password) callback(new Error('两次密码不一致')); else callback();
-};
-const required = (_rule: unknown, value: string, callback: (error?: Error) => void) => value ? callback() : callback(new Error('请填写此项'));
-const passwordRules: FormRules = {
-  password: [{validator: validatePassword, trigger: 'blur'}],
-  repeatPassword: [{validator: validateRepeatPassword, trigger: 'blur'}],
-  captchaCode: [{validator: required, trigger: 'blur'}],
-  emailCode: [{validator: required, trigger: 'blur'}]
-};
-const {image: captchaImage, loading: captchaLoading, error: captchaError, refresh: refreshCaptchaCode} = useCaptchaCode(passwordForm);
-const {sending: sendingCode, remaining: emailCooldown, label: emailCodeLabel, run: runEmailCode} = useEmailCodeCooldown();
-const sendEmailCode = async () => {
-  if (emailCooldown.value > 0 || sendingCode.value) return;
-  if (!passwordForm.captchaCode || !passwordForm.token) return ElMessage.warning('请先填写有效的图形验证码');
-  try {
-    const sent = await runEmailCode(() => sendForgetEmailCode({
-      username: String(profile.value?.user.userName || ''),
-      captchaCode: passwordForm.captchaCode,
-      captchaToken: passwordForm.token,
-    }));
-    if (sent) ElMessage.success('验证码已发送');
-  } catch (error) {
-    ElMessage.error(profileRequestError(error, '验证码发送失败'));
-    void refreshCaptchaCode();
-  }
-};
-const submitPassword = async () => {
-  if (!passwordFormRef.value) return;
-  const valid = await passwordFormRef.value.validate().catch(() => false);
-  if (!valid) return;
-  passwordSaving.value = true;
-  try {
-    await resetPassword({password: passwordForm.password, code: passwordForm.emailCode});
-    ElMessage.success('密码已更新');
-    Object.assign(passwordForm, {password: '', repeatPassword: '', captchaCode: '', token: '', emailCode: ''});
-    passwordFormRef.value?.clearValidate();
-    void refreshCaptchaCode();
-  } catch (error) {
-    ElMessage.error(profileRequestError(error, '密码更新失败'));
-    void refreshCaptchaCode();
-  } finally {
-    passwordSaving.value = false;
-  }
-};
 const handleUploadAvatar = async (file: File) => {
   avatarUploading.value = true;
   try {
@@ -373,12 +328,9 @@ const closeAvatarDialog = () => {
 };
 
 watch(() => route.params.id, () => { void load(); }, {immediate: true});
+watch(() => tokenStore.sessionVersion, () => { void load(); });
 watch(() => route.query.tab, syncTab);
-watch(activeTab, (tab) => {
-  if (tab === 'security' && isOwner.value) void refreshCaptchaCode();
-});
 watch(() => isOwner.value, () => syncTab());
-watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 </script>
 
 <style scoped>
@@ -743,11 +695,37 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
   font-size: 12px;
 }
 
+.profile-follow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.profile-follow__stats { display: flex; gap: 20px; }
+.profile-follow__stats button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 0;
+  border: 0;
+  color: var(--el-text-color-primary);
+  background: transparent;
+  cursor: pointer;
+}
+.profile-follow__stats button span { color: var(--el-text-color-secondary); font-size: 12px; }
+.profile-follow__stats button:hover, .profile-follow__stats button:hover span { color: var(--el-color-primary); }
+.profile-follow__stats button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 3px; border-radius: 3px; }
+.profile-follow__error { margin: 0; color: var(--el-color-danger); font-size: 12px; }
+
 .profile-form {
   max-width: 680px;
 }
 
-.form-grid, .verify-grid {
+.form-grid {
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -769,50 +747,6 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
 .form-actions span {
   color: var(--el-text-color-secondary);
   font-size: 12px;
-}
-
-.captcha-image {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 40px;
-  margin-top: 30px;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--el-border-color);
-  border-radius: 8px;
-  background: var(--el-fill-color-lighter);
-  cursor: pointer;
-}
-
-.captcha-image:disabled {
-  cursor: wait;
-  opacity: .7;
-}
-
-.captcha-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.profile-captcha-error {
-  position: absolute;
-  top: 74px;
-  right: 0;
-  max-width: 150px;
-  color: var(--el-color-danger);
-  font-size: 11px;
-  line-height: 1.35;
-  text-align: right;
-  cursor: pointer;
-}
-
-.send-code-button {
-  width: 100%;
-  height: 40px;
-  margin-top: 30px;
 }
 
 .avatar-dialog__content {
@@ -934,14 +868,9 @@ watch(() => route.params.id, () => { passwordFormRef.value?.clearValidate(); });
     padding-top: 8px;
   }
 
-  .form-grid, .verify-grid {
+  .form-grid {
     grid-template-columns: 1fr;
     gap: 0;
-  }
-
-  .captcha-image, .send-code-button {
-    margin-top: 0;
-    margin-bottom: 18px;
   }
 
   .form-actions {

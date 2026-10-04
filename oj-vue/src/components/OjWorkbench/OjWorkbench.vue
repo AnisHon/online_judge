@@ -399,7 +399,8 @@ onUnmounted(() => {
   background: var(--el-bg-color-page);
 }
 
-.oj-workbench--activity {
+/* Activity panels fill their parent only outside focus mode; fixed insets own fullscreen height. */
+.oj-workbench--activity:not(.oj-workbench--fullscreen) {
   height: 100%;
   max-height: 100%;
 }

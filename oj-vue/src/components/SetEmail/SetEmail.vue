@@ -1,68 +1,36 @@
 <template>
-  <div class="app-container" style="display: none">
-    <el-dialog v-model="open" title="请设置邮箱" append-to-body :close-on-click-modal="false" modal>
-      <div class="dialog-content">
-
-        <el-form label-position="top" style="min-width: 300px" @submit.prevent>
-          <el-form-item label="邮箱">
-            <el-input  v-model="form.email"/>
-          </el-form-item>
-          <el-form-item label="邮箱验证码">
-            <el-input v-model="form.emailCode"/>
-          </el-form-item>
-          <el-form-item label="验证码">
-            <el-input v-model="form.captcha"/>
-          </el-form-item>
-          <el-form-item>
-            <el-button>设置邮箱</el-button>
-          </el-form-item>
-        </el-form>
-        <p>您的账号没有绑定任何邮箱，者可能会导致账号无法被找回，请您设置您的邮箱</p>
-      </div>
-
-    </el-dialog>
-  </div>
+  <el-dialog v-model="open" title="绑定邮箱，方便找回账号" width="min(440px, calc(100vw - 32px))"
+             append-to-body align-center :close-on-click-modal="false">
+    <p class="email-reminder">你的账号还未绑定邮箱。绑定后可以通过邮箱找回密码，也能验证重要的账号操作。</p>
+    <template #footer>
+      <el-button @click="userStore.dismissEmailReminder()">稍后设置</el-button>
+      <el-button type="primary" @click="goToSettings">前往绑定</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 
-import {computed, reactive, ref, watch} from "vue";
+import {computed} from 'vue';
+import {useRouter} from 'vue-router';
 import {useUserStore} from "@/stores/useUserStore.ts";
 
 const userStore = useUserStore();
 
-const form = reactive({
-  email: "",
-  captcha: "",
-  emailCode: ""
-})
-
-const close = ref(false);
-
+const router = useRouter();
 const open = computed({
-
-  get() {
-    return false;
-    // if (!userStore.user) {
-    //   return false;
-    // }
-    // return !userStore.user.email;
-  },
-  set(value) {
-  }
-})
-
-watch(open, () => {
-  console.log(open.value);
-})
+  get: () => userStore.emailReminderPending && !!userStore.user && !userStore.user.email,
+  set: (value: boolean) => { if (!value) userStore.dismissEmailReminder(); },
+});
+const goToSettings = async () => {
+  const id = userStore.user?.userId;
+  if (!id) return;
+  await router.push({name: 'profile', params: {id: String(id)}, query: {tab: 'security'}});
+  userStore.dismissEmailReminder();
+};
 
 </script>
 
 <style scoped>
-.dialog-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
+.email-reminder { margin: 0; color: var(--el-text-color-secondary); line-height: 1.8; }
 </style>

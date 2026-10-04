@@ -9,8 +9,10 @@
 <script setup lang="ts">
 import {ElConfigProvider} from 'element-plus'
 import SetEmail from "@/components/SetEmail/SetEmail.vue";
+import {useInboxPolling} from '@/composables/social/useInboxPolling'
 
 const elementLayerBase = 2000
+useInboxPolling()
 </script>
 
 <style scoped>

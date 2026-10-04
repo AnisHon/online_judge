@@ -19,6 +19,9 @@ export interface LoginUser {
 export const useUserStore = defineStore('user', () => {
     const user =  ref<LoginUser | null>(null)
     const avatarVersions = ref<Record<string, number>>({})
+    const emailReminderPending = ref(false)
+    const requestEmailReminder = () => { emailReminderPending.value = !!user.value && !user.value.email }
+    const dismissEmailReminder = () => { emailReminderPending.value = false }
     let loadPromise: Promise<LoginUser> | null = null;
     let sessionVersion = 0;
 
@@ -49,6 +52,7 @@ export const useUserStore = defineStore('user', () => {
         loadPromise = null;
         user.value = null
         avatarVersions.value = {}
+        emailReminderPending.value = false
     }
 
     const refreshAvatar = (userId?: IdType) => {
@@ -75,6 +79,9 @@ export const useUserStore = defineStore('user', () => {
         clear,
         avatarVersions,
         refreshAvatar,
+        emailReminderPending,
+        requestEmailReminder,
+        dismissEmailReminder,
         getAuths,
         getUser,
     }

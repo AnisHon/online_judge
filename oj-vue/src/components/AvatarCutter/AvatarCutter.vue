@@ -2,7 +2,11 @@
   <section class="avatar-cutter" aria-label="头像裁剪">
     <input ref="inputRef" class="avatar-cutter__input" type="file" accept="image/*" @change="handleFileChange" />
 
-    <template v-if="imageUrl">
+    <div v-if="avatarDenied" class="avatar-cutter__empty">
+      <strong>当前账号暂不能更换头像</strong>
+      <button class="avatar-cutter__button avatar-cutter__button--ghost" type="button" @click="cancel">关闭</button>
+    </div>
+    <template v-else-if="imageUrl">
       <div ref="stageRef" class="avatar-cutter__stage">
         <img
           ref="imageRef"
@@ -62,6 +66,9 @@
 <script setup lang="ts">
 import {computed, nextTick, onMounted, onUnmounted, ref, watch} from 'vue'
 import {Picture, RefreshLeft} from '@element-plus/icons-vue'
+import {hasPerm} from '@/utils/authUtil'
+
+const avatarDenied = computed(() => hasPerm('policy:avatar:deny'))
 
 const emit = defineEmits<{
   (event: 'cutDown', file: File): void
@@ -123,9 +130,10 @@ const resetCropState = () => {
   if (inputRef.value) inputRef.value.value = ''
 }
 
-const openFilePicker = () => inputRef.value?.click()
+const openFilePicker = () => { if (!avatarDenied.value) inputRef.value?.click() }
 
 const handleFileChange = (event: Event) => {
+  if (avatarDenied.value) return
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
@@ -243,6 +251,7 @@ const endPan = (event: PointerEvent) => {
 }
 
 const confirmCrop = () => {
+  if (avatarDenied.value) return
   const image = imageRef.value
   if (!ready.value || !image || isCropping.value) return
   isCropping.value = true
@@ -266,6 +275,7 @@ const confirmCrop = () => {
 
   canvas.toBlob((blob) => {
     isCropping.value = false
+    if (avatarDenied.value) return
     if (!blob) {
       errorMessage.value = '图片裁剪失败，请重试。'
       return

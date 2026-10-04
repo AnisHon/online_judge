@@ -10,7 +10,7 @@
         <p class="solution-card__excerpt">{{ solution.content }}</p>
         <div class="solution-card__meta">
           <span><el-icon><Calendar /></el-icon>{{ solution.createTime }}</span>
-          <span>{{ solution.private_ ? "私有" : "公开" }}</span>
+          <span>{{ solutionVisibilityLabel(solution) }}</span>
           <span class="solution-card__problem">{{ solution.problemTitle }}</span>
         </div>
       </div>
@@ -23,6 +23,7 @@
 import {ArrowRight, Calendar} from "@element-plus/icons-vue";
 import Avatar from "@/components/Avatar/Avatar.vue";
 import type {Solution} from "@/api/solution";
+import {solutionVisibilityLabel} from '@/utils/solutionVisibility';
 import {computed} from "vue";
 
 const props = defineProps<{solution: Solution}>();

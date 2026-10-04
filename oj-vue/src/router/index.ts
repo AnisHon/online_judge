@@ -198,6 +198,14 @@ export const constRoutes =  [
           name: "题解编辑"
         }
       },
+      {
+        path: "inbox",
+        name: "inbox",
+        component: () => import('@/views/inbox/Inbox.vue'),
+        meta: {
+          name: "消息"
+        }
+      },
       ...constMenu.filter(route => route.name !== 'notification')
     ]
   },
